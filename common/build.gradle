@@ -1,0 +1,30 @@
+plugins {
+    id 'org.jetbrains.intellij'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+}
+
+group 'io.nimbly.tzatziki'
+
+jar {
+    archiveBaseName = 'tzatziki-common'
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version '2020.3'
+    intellij.type = 'IU'
+}
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+compileKotlin { kotlinOptions.jvmTarget = "11" }
+compileTestKotlin { kotlinOptions.jvmTarget = "11" }
+
+dependencies {
+
+
+}
+
+tasks.buildSearchableOptions {
+    enabled = false
+}

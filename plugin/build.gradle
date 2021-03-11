@@ -1,0 +1,52 @@
+plugins {
+    id 'org.jetbrains.intellij'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+}
+
+group 'io.nimbly.tzatziki'
+
+dependencies {
+
+    implementation project(':common')
+}
+
+compileKotlin { kotlinOptions.jvmTarget = "11" }
+compileTestKotlin { kotlinOptions.jvmTarget = "11" }
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version = rootProject.ext.any2Json_idea_version
+    plugins = rootProject.ext.any2Json_idea_plugins
+}
+
+tasks.runPluginVerifier {
+    ideVersions("IC-203.7148.40, CL-211.5787.12, PS-211.5787.18") //IC-203.7148.40, IU-203.7148.40, CL-211.5787.12, PS-211.5787.18
+}
+
+patchPluginXml {
+    changeNotes """
+      <b>Please Rate and Review this plugin !</b><br/><br/>
+      Change notes :
+      <ul>
+        <li><b>1.0</b> Initial version</li>
+      </ul>
+      <br/>
+      Road map :
+      <ul
+        <li>Supports of other languages !</li>
+      </ul>
+      """
+}
+
+tasks.buildSearchableOptions {
+    enabled = false
+}
+
+jar {
+    archiveBaseName = 'tzatziki'
+}
+
+publishPlugin {
+    token = System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken")
+}
+

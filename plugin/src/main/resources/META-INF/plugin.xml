@@ -1,0 +1,42 @@
+<idea-plugin>
+    <id>io.nimbly.tzatziki</id>
+    <name>Cucumber to Tzatziki</name>
+    <vendor email="maxime.hamm@gmail.com"
+            url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
+
+    <description><![CDATA[
+
+       <br/>
+       Any suggestion ? Let me know !<br/>
+       <br/>
+
+       <i>@author Maxime HAMM</i>
+       <br/>
+       <br/>
+       <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a>
+
+    ]]></description>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
+
+        <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
+        <backspaceHandlerDelegate implementation="io.nimbly.tzatziki.TzBackspaceHandler"/>
+        <editorActionHandler action="EditorDelete" implementationClass="io.nimbly.tzatziki.TzEditorDeleteHandler"/>
+    </extensions>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <depends>gherkin</depends>
+
+    <applicationListeners>
+        <listener class="io.nimbly.tzatziki.TzTModuleListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
+
+</idea-plugin>
