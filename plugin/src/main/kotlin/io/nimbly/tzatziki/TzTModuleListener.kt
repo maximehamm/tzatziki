@@ -1,6 +1,5 @@
 package io.nimbly.tzatziki
 
-import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.editor.Caret
@@ -10,8 +9,7 @@ import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.intellij.psi.PsiReference
-import java.util.*
+import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 
 class TzTModuleListener : ProjectManagerListener {
 
@@ -26,9 +24,10 @@ class TzTModuleListener : ProjectManagerListener {
 
         val actionManager = EditorActionManager.getInstance()
 
-        // DELETE
-        val h = DeleteHandler()
-        actionManager.setActionHandler(h.getActionId(), h)
+        actionManager.replaceHandler(DeleteHandler())
+        actionManager.replaceHandler(BackSpaceHandler())
+        actionManager.replaceHandler(CutHandler())
+        actionManager.replaceHandler(PasteHandler())
     }
 
     private class DeleteHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_DELETE) {
@@ -38,29 +37,43 @@ class TzTModuleListener : ProjectManagerListener {
         }
     }
 
-
-    private abstract class AbstractWriteActionHandler(val id: String) : EditorWriteActionHandler() {
-        val orginHandler: EditorActionHandler
-
+    private class BackSpaceHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_BACKSPACE) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
+            editor.findTable(editor.caretModel.offset)?.format()
         }
+    }
 
-        open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?) {
-            orginHandler.execute(editor, caret, dataContext)
+    private class CutHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_CUT) {
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            doDefault(editor, caret, dataContext)
+            editor.findTable(editor.caretModel.offset)?.format()
         }
+    }
 
-        fun getActionId(): String {
-            return id
+    private class PasteHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_PASTE) {
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            doDefault(editor, caret, dataContext)
+            editor.findTable(editor.caretModel.offset)?.format()
         }
+    }
 
-        init {
-            val actionManager = EditorActionManager.getInstance()
-            orginHandler = actionManager.getActionHandler(id)
-        }
+    abstract class AbstractWriteActionHandler(val id: String) : EditorWriteActionHandler() {
+        private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext)
+            = doDefault(editor, caret, dataContext)
+        open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
+            = orginHandler.execute(editor, caret, dataContext)
+        fun getActionId()
+            = id
     }
 
     companion object {
         private var handlerInitialized = false
     }
+}
+
+private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandler) {
+    setActionHandler(handler.getActionId(), handler)
+
 }
