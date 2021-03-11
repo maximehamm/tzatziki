@@ -43,8 +43,6 @@
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
 
         <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
-<!--        <backspaceHandlerDelegate implementation="io.nimbly.tzatziki.TzBackspaceHandler"/>-->
-<!--        <editorActionHandler action="EditorDelete" implementationClass="io.nimbly.tzatziki.TzEditorDeleteHandler"/>-->
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
