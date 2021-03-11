@@ -9,7 +9,6 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
@@ -44,52 +43,103 @@ fun Editor.navigateInTable(way: Boolean, editor: Editor, offset: Int = editor.ca
     val file = getFile() ?: return false
     val element = file.findElementAt(offset) ?: return false
 
-    var pipe: PsiElement? = null
-    var el: PsiElement? =
-        if (element is GherkinTableCell)
-            element
-        else if (element is LeafPsiElement && element.parent is GherkinTableCell)
-            element.parent
-        else if (element is LeafPsiElement && element.parent is GherkinTableRow)
-            element.parent.firstChild
-        else if (element is LeafPsiElement && element.parent is GherkinTable)
-            element.parent.firstChild
-        else
-            element.nextSibling
+    fun goRight() : Boolean {
+        var el: PsiElement? =
+            if (element is GherkinTableCell)
+                element
+            else if (element is LeafPsiElement && element.parent is GherkinTableCell)
+                element.parent
+            else if (element is LeafPsiElement && element.parent is GherkinTableRow)
+                element.nextSibling
+            else if (element is LeafPsiElement && element.parent is GherkinTable)
+                element.parent.firstChild
+            else
+                element.nextSibling
 
-    while (el != null) {
-        if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
-            pipe = el
-            break
+        var pipe: PsiElement? = null
+        while (el != null) {
+            if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
+                pipe = el
+                break
+            }
+            el = el.nextSibling
         }
-        el = if (way) el.nextSibling else el.prevSibling
+
+        if (pipe == null)
+            return false
+
+        val target =
+            run {
+                val off = pipe!!.textOffset + 2
+                if (off > editor.document.textLength)
+                    return true
+                if (editor.document.getLineNumber(offset) != editor.document.getLineNumber(off)) {
+                    val nextRow = row.next()
+                        ?: table.allRows().firstOrNull()!!
+                    nextRow.psiCells.first().textOffset
+                } else {
+                    off
+                }
+            }
+
+        editor.caretModel.moveToOffset(target)
+        return true
     }
 
-    if (pipe ==null)
-        return false
+    fun goLeft() : Boolean {
 
-    val target =
-        if (way) {
-            val off =  pipe.textOffset +2
-            if (off>editor.document.textLength)
-                return true
-            if (editor.document.getLineNumber(offset) != editor.document.getLineNumber(off)) {
-                val nextRow = row.next()
-                    ?: return true
-                nextRow.psiCells.first().textOffset
+        var el: PsiElement? =
+            if (element is GherkinTableCell)
+                element
+            else if (element is LeafPsiElement && element.parent is GherkinTableCell)
+                element.parent
+            else if (element is LeafPsiElement && element.parent is GherkinTableRow)
+                element.prevSibling
+            else if (element is LeafPsiElement && element.parent is GherkinTable)
+                element.parent.lastChild
+            else
+                element.prevSibling
+
+        var pipe: PsiElement? = null
+        while (el != null) {
+            if (el is LeafPsiElement && (el as LeafPsiElement).elementType == GherkinTokenTypes.PIPE) {
+                el = el!!.prevSibling
+                break
+            }
+            el = el!!.prevSibling
+        }
+        while (el != null) {
+            if (el is LeafPsiElement && (el as LeafPsiElement).elementType == GherkinTokenTypes.PIPE) {
+                pipe = el
+                break
+            }
+            el = el!!.prevSibling
+        }
+
+        val target =
+            if (pipe == null) {
+                val nextRow = row.previous()
+                    ?: table.allRows().lastOrNull() !!
+                nextRow.psiCells.last().textOffset
             }
             else {
-                off
+                val off = pipe!!.textOffset + 2
+                if (off > editor.document.textLength)
+                    return true
+                if (editor.document.getLineNumber(offset) != editor.document.getLineNumber(off)) {
+                    val nextRow = row.next()
+                        ?: table.allRows().firstOrNull()!!
+                    nextRow.psiCells.first().textOffset
+                } else {
+                    off
+                }
             }
-        }
-        else {
-            pipe.textOffset
-            //TODO
-        }
 
+        editor.caretModel.moveToOffset(target)
+        return true
+    }
 
-    editor.caretModel.moveToOffset(target)
-    return true
+    return if (way) goRight() else goLeft()
 }
 
 private fun GherkinTableRow.next() : GherkinTableRow? {
@@ -101,6 +151,18 @@ private fun GherkinTable.nextRow(row: GherkinTableRow): GherkinTableRow? {
     val allRows = allRows()
     val i = allRows.indexOf(row) + 1
     return if (i < allRows.size)
+        allRows[i] else null
+}
+
+private fun GherkinTableRow.previous() : GherkinTableRow? {
+    val table = PsiTreeUtil.getParentOfType(this, GherkinTable::class.java) ?: return null
+    return table.previousRow(this)
+}
+
+private fun GherkinTable.previousRow(row: GherkinTableRow): GherkinTableRow? {
+    val allRows = allRows()
+    val i = allRows.indexOf(row) -1
+    return if (i >=0)
         allRows[i] else null
 }
 

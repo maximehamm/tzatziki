@@ -12,11 +12,11 @@
               <p><img src="https://plugins.jetbrains.com/files/16055/screenshot_838e390e-dcc2-4903-82fa-a1a7da16d257"
                  alt="Any to Json" width="419" height="233"></p>
          </li>
+         <li>Navigate from cell to cell with 'Tab' and 'Back-tab' keys</li>
        </ul>
 
        <b>Roadmap :</></b><br/>
        <ul>
-         <li>Navigate from cell to cell with 'Tab' and 'Back-tab' keys</li>
          <li>Add new line by pressing 'Enter'</li>
          <li>Add new column by pressing '|'</li>
          <li>Copy from Excel to Intellij IDEA Cucumber Editor</li>
