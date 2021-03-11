@@ -85,6 +85,8 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
         var el: PsiElement? =
             if (element is GherkinTableCell)
                 element
+            else if (element is LeafPsiElement && element.elementType == GherkinTokenTypes.PIPE)
+                element
             else if (element is LeafPsiElement && element.parent is GherkinTableCell)
                 element.parent
             else if (element is LeafPsiElement && element.parent is GherkinTableRow)
