@@ -1,10 +1,9 @@
 package io.nimbly.tzatziki
 
 import com.intellij.openapi.actionSystem.DataContext
-import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
@@ -24,41 +23,31 @@ class TzTModuleListener : ProjectManagerListener {
 
         val actionManager = EditorActionManager.getInstance()
 
-        actionManager.replaceHandler(DeleteHandler())
-        actionManager.replaceHandler(BackSpaceHandler())
-        actionManager.replaceHandler(CutHandler())
-        actionManager.replaceHandler(PasteHandler())
+        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_DELETE))
+        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_BACKSPACE))
+
+        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_CUT))
+        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_PASTE))
+
+        actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
+        actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))
     }
 
-    private class DeleteHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_DELETE) {
+    private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
             editor.findTable(editor.caretModel.offset)?.format()
         }
     }
 
-    private class BackSpaceHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_BACKSPACE) {
+    private class TabHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            doDefault(editor, caret, dataContext)
-            editor.findTable(editor.caretModel.offset)?.format()
+            if (!editor.navigateInTable(getActionId() == ACTION_EDITOR_TAB, editor))
+                doDefault(editor, caret, dataContext)
         }
     }
 
-    private class CutHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_CUT) {
-        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            doDefault(editor, caret, dataContext)
-            editor.findTable(editor.caretModel.offset)?.format()
-        }
-    }
-
-    private class PasteHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_PASTE) {
-        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            doDefault(editor, caret, dataContext)
-            editor.findTable(editor.caretModel.offset)?.format()
-        }
-    }
-
-    abstract class AbstractWriteActionHandler(val id: String) : EditorWriteActionHandler() {
+    abstract class AbstractWriteActionHandler(private val id: String) : EditorWriteActionHandler() {
         private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext)
             = doDefault(editor, caret, dataContext)
@@ -70,6 +59,7 @@ class TzTModuleListener : ProjectManagerListener {
 
     companion object {
         private var handlerInitialized = false
+        private const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
     }
 }
 
