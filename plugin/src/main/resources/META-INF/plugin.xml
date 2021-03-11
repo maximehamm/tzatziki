@@ -9,14 +9,15 @@
        <b>Cucumber y Tzatziki !</></b><br/>
        <ul>
          <li>Cucumber table formatting as you go :
-              <p><img src="https://plugins.jetbrains.com/files/16055/screenshot_838e390e-dcc2-4903-82fa-a1a7da16d257"
-                 alt="Any to Json" width="419" height="233"></p>
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_d40da540-75da-4a8e-88bb-17523e9c367e"
+                 alt="Tzatziki" width="419" height="233"></p>
          </li>
          <li>Navigate from cell to cell by 'Tab' and 'Back-tab' keys</li>
          <li>Navigate from row to row by 'Enter'</li>
          <li>Add new row by 'Enter' from end of line</li>
        </ul>
 
+       <br/>
        <b>Roadmap :</></b><br/>
        <ul>
          <li>Add new column by pressing '|'</li>
