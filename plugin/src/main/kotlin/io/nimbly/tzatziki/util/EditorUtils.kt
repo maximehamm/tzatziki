@@ -10,16 +10,14 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
-import org.jetbrains.plugins.cucumber.psi.GherkinTable
-import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import org.jetbrains.plugins.cucumber.psi.*
 
 fun Editor.findTable(offset: Int): GherkinTable? {
     val file = getFile() ?: return null
 
     val adjustedOffset =
         when (offset) {
+            getLineStartOffset() -> offset+2
             getLineStartOffset()+1 -> offset+1
             getLineEndOffset() -> offset-1
             else -> offset
@@ -92,7 +90,9 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
             else if (element is LeafPsiElement && element.parent is GherkinTableRow)
                 element.nextSibling
             else if (element is LeafPsiElement && element.parent is GherkinTable)
-                element.parent.firstChild
+                element.nextSibling.firstChild
+            else if (element is LeafPsiElement && element.nextSibling is GherkinTable)
+                element.nextSibling.firstChild.firstChild
             else
                 element.nextSibling
 
@@ -135,6 +135,10 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
                 element.parent
             else if (element is LeafPsiElement && element.parent is GherkinTableRow)
                 element.prevSibling
+            else if (element is LeafPsiElement && element.prevSibling is GherkinTableRow)
+                row.lastChild ?: return false
+            else if (element is LeafPsiElement && element.prevSibling is GherkinFeature)
+                row.lastChild
             else if (element is LeafPsiElement && element.parent is GherkinTable)
                 element.parent.lastChild
             else
@@ -209,7 +213,13 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
     val element = file.findElementAt(
         if (getLineEndOffset() == offset) offset-1 else offset)
 
-    return PsiTreeUtil.getContextOfType(element, GherkinTableRow::class.java)
+    var row = PsiTreeUtil.getContextOfType(element, GherkinTableRow::class.java)
+    if (row == null && element?.nextSibling is GherkinTableRow)
+        row = element.nextSibling as GherkinTableRow?
+    if (row == null && element?.nextSibling is GherkinTable)
+        row = element.nextSibling.firstChild as GherkinTableRow?
+
+    return row
 }
 
 fun Editor.getLineEndOffset(offset: Int = caretModel.offset): Int {
