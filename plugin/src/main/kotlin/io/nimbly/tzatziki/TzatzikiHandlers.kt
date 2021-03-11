@@ -13,6 +13,6 @@ import io.nimbly.tzatziki.util.format
 class TzTypedHandler : TypedHandlerDelegate() {
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
         editor.findTable(editor.caretModel.offset)?.format()
-        return super.charTyped(charTyped, project, editor, file)
+        return Result.CONTINUE
     }
 }

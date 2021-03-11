@@ -17,7 +17,15 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
 fun Editor.findTable(offset: Int): GherkinTable? {
     val file = getFile() ?: return null
-    val element = file.findElementAt(offset) ?: return null
+
+    val adjustedOffset =
+        when (offset) {
+            getLineStartOffset()+1 -> offset+1
+            getLineEndOffset() -> offset-1
+            else -> offset
+        }
+
+    val element = file.findElementAt(adjustedOffset) ?: return null
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
 }
 
@@ -206,4 +214,8 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
 
 fun Editor.getLineEndOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineEndOffset(offset, document)
+}
+
+fun Editor.getLineStartOffset(offset: Int = caretModel.offset): Int {
+    return DocumentUtil.getLineStartOffset(offset, document)
 }
