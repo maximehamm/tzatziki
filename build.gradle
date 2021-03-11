@@ -1,0 +1,42 @@
+plugins {
+    id 'org.jetbrains.intellij' version '0.7.2'
+}
+
+ext {
+    any2Json_idea_version = 'IU-203.7148.57'
+    any2Json_idea_plugins = ['java',
+                             'Kotlin',
+                             'gherkin:203.5981.155',
+                             'PsiViewer:203-SNAPSHOT']
+}
+
+allprojects {
+
+    group = 'io.nimbly.tzatziki'
+    version '0.1.0'
+
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            url 'https://dl.bintray.com/jetbrains/intellij-plugin-service'
+        }
+    }
+}
+
+// DEPENDENCY MANAGEMENT :
+//  Example : https://github.com/adelf/idea-php-dotenv-plugin/blob/master/build.gradle
+//  Other examples : https://www.programcreek.com/java-api-examples/?api=com.intellij.lang.javascript.psi.JSReferenceExpression
+dependencies {
+
+    implementation project(':plugin')
+    implementation project(':common')
+
+    testImplementation project(':tests')
+}
+
+tasks.buildSearchableOptions {
+    enabled = false
+}

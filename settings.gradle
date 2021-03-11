@@ -1,0 +1,8 @@
+rootProject.name = 'tzatziki'
+
+include 'plugin'
+include 'common'
+include 'extensions'
+
+include 'tests'
+
