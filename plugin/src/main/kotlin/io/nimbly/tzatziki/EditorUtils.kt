@@ -1,19 +1,15 @@
 package io.nimbly.tzatziki
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.*
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.elementType
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
-import org.jetbrains.plugins.cucumber.psi.GherkinTable
-import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import org.jetbrains.plugins.cucumber.psi.*
 
 fun Editor.findTable(offset: Int): GherkinTable? {
     val file = getFile() ?: return null
@@ -36,7 +32,78 @@ fun GherkinTable.format() {
     }
 }
 
-fun Editor.navigateInTable(way: Boolean, editor: Editor, offset: Int = editor.caretModel.offset): Boolean {
+fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
+
+    val row = getTableRowAt(offset) ?: return false
+    val colIdx = getTableColumnIndexAt(offset) ?: return false
+    val next = row.next() ?: return false
+    if (next.psiCells.size <= colIdx) return false
+
+    val cell = next.psiCells[colIdx]
+    val pipe = cell.previousPipe() ?: return false
+
+    caretModel.moveToOffset(pipe.textOffset +2)
+    return true
+}
+
+fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
+
+    val colIdx = getTableColumnIndexAt(offset) ?: return false
+    val table = findTable(offset) ?: return false
+    val row = getTableRowAt(offset) ?: return false
+
+    val application = ApplicationManager.getApplication()
+    application.runWriteAction {
+
+        val newRow = row.addRowAfter()
+
+        caretModel.moveToOffset(newRow.textOffset + 1 + colIdx*2)
+
+        CodeStyleManager.getInstance(project!!).reformatText(
+            table.containingFile,
+            table.textRange.startOffset, table.textRange.endOffset)
+
+        caretModel.moveToOffset(caretModel.offset +1)
+    }
+
+    return true
+}
+
+fun GherkinTableRow.addRowAfter() : GherkinTableRow {
+
+    val cellCount = psiCells.size
+    var header =
+        "Feature: x\n" +
+        "Scenario Outline: xx\n" +
+        "Examples: xxx\n"
+
+    var rowString = "|"
+    for (int in 1..cellCount)
+        rowString += " |"
+
+    val tempTable = CucumberElementFactory
+        .createTempPsiFile(project, header + rowString + '\n' + rowString)
+        .children[0].children[0].children[0].children[0]
+
+    val tempRow = tempTable.children[1]
+    val returnn = tempRow.prevSibling
+
+    this.parent.add(returnn)
+    return this.parent.add(tempRow) as GherkinTableRow
+}
+
+private fun PsiElement.previousPipe(): PsiElement? {
+    var el = prevSibling
+    while (el != null) {
+        if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
+            return el
+        }
+        el = el.prevSibling
+    }
+    return null
+}
+
+fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = editor.caretModel.offset): Boolean {
 
     val table = findTable(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
@@ -168,12 +235,14 @@ private fun GherkinTable.previousRow(row: GherkinTableRow): GherkinTableRow? {
 
 fun Editor.getTableColumnIndexAt(offset: Int): Int? {
     val file = getFile() ?: return null
-    val element = file.findElementAt(offset) ?: return null
+    var element = file.findElementAt(offset) ?: return null
+    if (element.parent is GherkinTableCell)
+        element = element.parent
 
     var col = -1
     var el: PsiElement? = element
     while (el != null) {
-        if (el is GherkinTableCell)
+        if (el.elementType == GherkinTokenTypes.PIPE)
             col++
         el = el.prevSibling
     }

@@ -19,27 +19,27 @@ class TzTypedHandler : TypedHandlerDelegate() {
     }
 }
 
-/**
- * BACKSPACE
- */
-class TzBackspaceHandler : BackspaceHandlerDelegate() {
-    override fun charDeleted(c: Char, file: PsiFile, editor: Editor): Boolean {
-        editor.findTable(editor.caretModel.offset)?.format()
-        return true
-    }
-    override fun beforeCharDeleted(c: Char, file: PsiFile, editor: Editor){
-    }
-}
+///**
+// * BACKSPACE
+// */
+//class TzBackspaceHandler : BackspaceHandlerDelegate() {
+//    override fun charDeleted(c: Char, file: PsiFile, editor: Editor): Boolean {
+//        editor.findTable(editor.caretModel.offset)?.format()
+//        return true
+//    }
+//    override fun beforeCharDeleted(c: Char, file: PsiFile, editor: Editor){
+//    }
+//}
 
-/**
- * DELETE
- */
-class TzEditorDeleteHandler : EditorActionHandler() {
-    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext?) {
-        editor.findTable(editor.caretModel.offset)?.format()
-    }
-
-    override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
-        return super.isEnabledForCaret(editor, caret, dataContext)
-    }
-}
+///**
+// * DELETE
+// */
+//class TzEditorDeleteHandler : EditorActionHandler() {
+//    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext?) {
+//        editor.findTable(editor.caretModel.offset)?.format()
+//    }
+//
+//    override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
+//        return super.isEnabledForCaret(editor, caret, dataContext)
+//    }
+//}

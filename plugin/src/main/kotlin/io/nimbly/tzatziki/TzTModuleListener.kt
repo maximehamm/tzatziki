@@ -31,6 +31,8 @@ class TzTModuleListener : ProjectManagerListener {
 
         actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
         actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))
+
+        actionManager.replaceHandler(EnterHandler())
     }
 
     private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
@@ -42,8 +44,16 @@ class TzTModuleListener : ProjectManagerListener {
 
     private class TabHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!editor.navigateInTable(getActionId() == ACTION_EDITOR_TAB, editor))
+            if (!editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
                 doDefault(editor, caret, dataContext)
+        }
+    }
+
+    private class EnterHandler : AbstractWriteActionHandler(ACTION_EDITOR_ENTER) {
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            if (!editor.navigateInTableWithEnter())
+                if (!editor.addTableRow())
+                    doDefault(editor, caret, dataContext)
         }
     }
 
