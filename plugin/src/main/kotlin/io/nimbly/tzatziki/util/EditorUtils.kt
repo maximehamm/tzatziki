@@ -9,6 +9,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
+import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
@@ -45,11 +46,16 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     val table = findTable(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
 
+    val insert = offset == getLineEndOffset(offset)
+
     ApplicationManager.getApplication().runWriteAction {
 
         val newRow = row.addRowAfter()
 
-        caretModel.moveToOffset(newRow.textOffset + 1 + colIdx * 2)
+        var newCaret = newRow.textOffset + 1
+        if (!insert)
+            newCaret += colIdx * 2
+        caretModel.moveToOffset(newCaret)
 
         CodeStyleManager.getInstance(project!!).reformatText(
             table.containingFile,
@@ -192,6 +198,12 @@ fun Editor.getTableColumnIndexAt(offset: Int): Int? {
 fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
 
     val file = getFile() ?: return null
-    val element = file.findElementAt(offset) ?: return null
+    val element = file.findElementAt(
+        if (getLineEndOffset() == offset) offset-1 else offset)
+
     return PsiTreeUtil.getContextOfType(element, GherkinTableRow::class.java)
+}
+
+fun Editor.getLineEndOffset(offset: Int = caretModel.offset): Int {
+    return DocumentUtil.getLineEndOffset(offset, document)
 }

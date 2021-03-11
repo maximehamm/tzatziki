@@ -24,7 +24,7 @@ fun GherkinTable.format() {
 fun GherkinTableRow.addRowAfter() : GherkinTableRow {
 
     val cellCount = psiCells.size
-    var header =
+    val header =
         "Feature: x\n" +
             "Scenario Outline: xx\n" +
             "Examples: xxx\n"
@@ -40,8 +40,10 @@ fun GherkinTableRow.addRowAfter() : GherkinTableRow {
     val tempRow = tempTable.children[1]
     val returnn = tempRow.prevSibling
 
-    this.parent.add(returnn)
-    return this.parent.add(tempRow) as GherkinTableRow
+    val newRow = this.parent.addAfter(tempRow, this)
+    this.parent.addAfter(returnn, this)
+
+    return newRow as GherkinTableRow
 }
 
 fun PsiElement.previousPipe(): PsiElement? {
