@@ -12,16 +12,13 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiFileFactory
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import io.nimbly.tzatziki.TzTModuleListener.Companion.EDITOR_UNINDENT_SELECTION
 import io.nimbly.tzatziki.format.createEditorContext
 import io.nimbly.tzatziki.format.getDocument
 import io.nimbly.tzatziki.format.getIndexOf
 import org.apache.log4j.Logger
-import org.jetbrains.kotlin.cli.jvm.compiler.registerExtensionPointAndExtensionsEx
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
-import org.jetbrains.plugins.cucumber.psi.GherkinLanguage
 import org.junit.Assert
 import org.junit.Ignore
 import java.awt.event.InputEvent
@@ -51,13 +48,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         val featureName = regex.find(text.trimIndent())!!.groupValues.last()
 
         FileTypeRegistry.getInstance().registeredFileTypes.map { it.name }
-        //PsiFileFactory.getInstance(project).createFileFromText(GherkinLanguage.INSTANCE, t)
-
         configuredFile = myFixture.configureByText("$featureName.feature", t)
-
-        assertEquals(configuredFile!!.fileType, GherkinFileType.INSTANCE)
-
-//        configuredFile = myFixture.configureByText(GherkinFileType.INSTANCE, t)
+        assertEquals(GherkinFileType.INSTANCE, configuredFile!!.fileType)
     }
 
     protected open fun checkContent(expected: String) {

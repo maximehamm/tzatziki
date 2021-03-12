@@ -7,15 +7,16 @@ plugins {
 ext {
     plugin_idea_version = 'IU-203.7148.57'
     plugin_idea_plugins = ['java',
-                             'Kotlin',
-                             'gherkin:203.5981.155',
-                             'PsiViewer:203-SNAPSHOT']
+                           'Kotlin',
+                           'org.intellij.intelliLang',
+                           'Gherkin:203.5981.155',
+                           'PsiViewer:203-SNAPSHOT']
 }
 
 allprojects {
 
     group = 'io.nimbly.tzatziki'
-    version '0.3.4'
+    version '0.3.5'
 
     repositories {
         mavenCentral()

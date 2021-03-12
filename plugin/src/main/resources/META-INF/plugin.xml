@@ -42,14 +42,15 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
-
         <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
-
-<!--        <fileType name="Cucumber" implementationClass="org.jetbrains.plugins.cucumber.psi.GherkinFileType" fieldName="INSTANCE" language="Gherkin" extensions="feature"/>-->
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
+
+    <depends>com.intellij.modules.xml</depends>
+    <depends>org.intellij.intelliLang</depends>
+
     <depends>gherkin</depends>
 
     <applicationListeners>
