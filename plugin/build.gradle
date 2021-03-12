@@ -28,12 +28,9 @@ patchPluginXml {
       <b>Please Rate and Review this plugin !</b><br/><br/>
       Change notes :
       <ul>
-        <li><b>1.0</b> Initial version</li>
-      </ul>
-      <br/>
-      Road map :
-      <ul
-        <li>Supports of other languages !</li>
+        <li><b>0.3</b> Add new lines by pressing from line end</li>
+        <li><b>0.2</b> Navigate between cells using tab, backtab and enter</li>
+        <li><b>0.1</b> Cucumber table formatting as you go</li>
       </ul>
       """
 }
