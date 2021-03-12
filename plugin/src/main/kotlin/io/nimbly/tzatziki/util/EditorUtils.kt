@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
@@ -25,6 +26,25 @@ fun Editor.findTable(offset: Int): GherkinTable? {
 
     val element = file.findElementAt(adjustedOffset) ?: return null
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
+}
+
+fun Editor.findCell(offset: Int): GherkinTableCell? {
+    val file = getFile() ?: return null
+
+    val adjustedOffset = offset
+//        when (offset) {
+//            getLineStartOffset() -> offset+2
+//            getLineStartOffset()+1 -> offset+1
+//            getLineEndOffset() -> offset-1
+//            else -> offset
+//        }
+
+    val element = file.findElementAt(adjustedOffset) ?: return null
+    if (element is GherkinTableCell)
+        return element
+    if (element is PsiWhiteSpace && element.nextSibling is GherkinTableCell)
+        return element.nextSibling as GherkinTableCell
+    return null
 }
 
 fun Editor.getFile(): PsiFile? {

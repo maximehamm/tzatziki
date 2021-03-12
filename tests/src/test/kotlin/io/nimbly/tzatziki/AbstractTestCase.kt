@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
@@ -17,6 +18,7 @@ import io.nimbly.tzatziki.TzTModuleListener.Companion.EDITOR_UNINDENT_SELECTION
 import io.nimbly.tzatziki.format.createEditorContext
 import io.nimbly.tzatziki.format.getDocument
 import io.nimbly.tzatziki.format.getIndexOf
+import io.nimbly.tzatziki.util.findCell
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Assert
@@ -200,6 +202,51 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     protected open fun findFileInTempDir(filePath: String): VirtualFile? {
         val fullPath = myFixture.tempDirPath + "/" + filePath
         return LocalFileSystem.getInstance().refreshAndFindFileByPath(fullPath.replace(File.separatorChar, '/'))
+    }
+
+    protected open fun backspace(count: Int) {
+        _backspace(count)
+    }
+
+    protected open fun backspace(count: Int, lookFor: String) {
+        val indexOf: Int = getIndexOf(configuredFile!!.text, lookFor)
+        moveCarretTo(indexOf)
+        _backspace(count)
+    }
+
+    open fun _backspace(count: Int) {
+        for (i in 0 until count) {
+            executeHandler(ACTION_EDITOR_BACKSPACE)
+        }
+    }
+
+    protected open fun setCursor(lookFor: String) {
+        var l = lookFor
+        l = l.replace("`".toRegex(), "\"")
+        val indexOf: Int = getIndexOf(configuredFile!!.text, l)
+        assert(indexOf >= 0)
+        moveCarretTo(indexOf)
+    }
+
+    protected fun navigate(string: Char, expectedCellValue: String) {
+
+        // enter keyboard
+        insert(string)
+
+        // check element content
+        val offset = myFixture.editor.caretModel.offset - 1
+        val cell = myFixture.editor.findCell(offset)
+
+        assertNotNull("Cell not found : $expectedCellValue", cell)
+        assertEquals(expectedCellValue, cell!!.text.trim())
+    }
+
+    fun executeHandler(handlerId: String) {
+        WriteCommandAction.runWriteCommandAction(getProject(), "Execute handler", "Tzatziki", {
+            val actionManager = EditorActionManager.getInstance()
+            val actionHandler = actionManager.getActionHandler(handlerId!!)
+            actionHandler.execute(myFixture.getEditor(), createEditorContext(myFixture.getEditor()))
+        })
     }
 
     override fun getTestDataPath(): String? {
