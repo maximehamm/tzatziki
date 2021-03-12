@@ -70,7 +70,7 @@ class TzTModuleListener : ProjectManagerListener {
 
     companion object {
         private var handlerInitialized = false
-        private const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
+        const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
     }
 }
 

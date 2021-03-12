@@ -6,7 +6,6 @@ plugins {
 group 'io.nimbly.tzatziki'
 
 dependencies {
-
     implementation project(':common')
 }
 
@@ -15,8 +14,8 @@ compileTestKotlin { kotlinOptions.jvmTarget = "11" }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version = rootProject.ext.any2Json_idea_version
-    plugins = rootProject.ext.any2Json_idea_plugins
+    version = rootProject.ext.plugin_idea_version
+    plugins = rootProject.ext.plugin_idea_plugins
 }
 
 tasks.runPluginVerifier {

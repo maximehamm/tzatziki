@@ -11,8 +11,8 @@ jar {
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version '2020.3'
-    intellij.type = 'IU'
+    version = rootProject.ext.plugin_idea_version
+    plugins = rootProject.ext.plugin_idea_plugins
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -20,10 +20,9 @@ targetCompatibility = JavaVersion.VERSION_11
 compileKotlin { kotlinOptions.jvmTarget = "11" }
 compileTestKotlin { kotlinOptions.jvmTarget = "11" }
 
-dependencies {
-
-
-}
+//dependencies {
+//
+//}
 
 tasks.buildSearchableOptions {
     enabled = false
