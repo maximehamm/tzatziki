@@ -55,7 +55,7 @@ class FormatTests  : AbstractTestCase() {
         checkCursorAt("| YesXABCD")
 
         // insert char and check
-        backspace(1, "| Berlutti")
+        backspace(1, "| YesXABCD")
 
         // language=feature
         checkContent(

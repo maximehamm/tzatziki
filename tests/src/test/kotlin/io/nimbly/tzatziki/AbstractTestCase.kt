@@ -133,20 +133,14 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     @Suppress("NAME_SHADOWING")
     protected open fun insert(insertString: CharSequence, lookFor: String?) {
 
-        var insertString = insertString
-        var lookFor = lookFor
-        insertString = insertString.toString().replace("`".toRegex(), "\"")
-        if (lookFor != null) {
-            lookFor = lookFor.replace("`".toRegex(), "\"")
-            val indexOf: Int = getIndexOf(configuredFile!!.text, lookFor)
-            assert(indexOf >= 0)
-            moveCarretTo(indexOf)
-        }
+        val ins = insertString.toString().replace("`".toRegex(), "\"")
+        moveTo(lookFor)
+        
         val project = myFixture.project
         PsiDocumentManager.getInstance(project).commitAllDocuments()
         WriteCommandAction.runWriteCommandAction(project, "Format table", "Tmar",
             {
-                for (element in insertString) {
+                for (element in ins) {
                     pressKey(element)
                     PsiDocumentManager.getInstance(project).commitAllDocuments()
                 }
@@ -156,7 +150,19 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             })
     }
 
-    open fun pressKey(c: Char) {
+    private fun moveTo(lookFor: String?) {
+        if (lookFor != null) {
+            val lf = lookFor.replace("`".toRegex(), "\"")
+            val indexOf: Int = getIndexOf(configuredFile!!.text, lf)
+            assert(indexOf >= 0)
+            moveCarretTo(indexOf)
+        }
+    }
+
+    open fun pressKey(c: Char, lookFor: String? = null) {
+
+        moveTo(lookFor)
+
         val editor = myFixture.editor
         when (c) {
             TAB -> executeAction(editor, ACTION_EDITOR_TAB)
