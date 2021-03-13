@@ -71,15 +71,15 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
         val newRow = newTable.row(currentRow)
 
         // Find caret target
-        val caretTarget =
+        val targetColumn =
             when {
-                where <0 -> newRow.psiCells.first().previousPipe().textOffset + 2
-                where >0 -> newRow.psiCells.last().previousPipe().textOffset + 2
-                else -> newRow.cell(currentCol!!+1).previousPipe().textOffset + 2
+                where <0 -> 0
+                where >0 -> newRow.psiCells.size-1
+                else -> currentCol!! +1
             }
 
         // Move caret
-        editor.caretModel.moveToOffset(caretTarget)
+        editor.caretModel.moveToOffset(newRow.cell(targetColumn).previousPipe().textOffset + 2)
 
         // Format table
         newTable.format()

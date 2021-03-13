@@ -1,16 +1,22 @@
 package io.nimbly.tzatziki.util
 
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.codeInsight.highlighting.HighlightManager
+import com.intellij.lang.ASTNode
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.colors.EditorColors
+import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.psi.*
+import java.util.ArrayList
+import java.util.function.Consumer
 
 fun Editor.findTable(offset: Int): GherkinTable? {
     val file = getFile() ?: return null
@@ -208,4 +214,56 @@ fun Editor.getLineEndOffset(offset: Int = caretModel.offset): Int {
 
 fun Editor.getLineStartOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineStartOffset(offset, document)
+}
+
+val HIGHLIGHTERS: List<RangeHighlighter> = ArrayList()
+val HIGHLIGHTERS_RANGE: List<TextRange> = ArrayList()
+
+fun Editor.highlight(range: TextRange) {
+    highlight(range.startOffset, range.endOffset, null)
+}
+
+fun Editor.highlight(start: Int, end: Int) {
+    highlight(start, end, null)
+}
+
+private fun Editor.highlight(
+    start: Int,
+    end: Int,
+    outHighlightersRanges: MutableCollection<TextRange>?,
+) {
+    var end = end
+    if (document.getText(TextRange(end - 1, end)).trim { it <= ' ' }.isEmpty())
+        end--
+    val editorColorsManager = EditorColorsManager.getInstance()
+    val globalScheme = editorColorsManager.globalScheme
+    val textattributes = globalScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)
+    val highlightManager = HighlightManager.getInstance(project)
+    
+    highlightManager.addOccurrenceHighlight(
+        this,
+        start,
+        end,
+        textattributes,
+        HighlightManager.HIDE_BY_ESCAPE,
+        null,
+        null
+    )
+    outHighlightersRanges?.add(TextRange(start, end))
+}
+
+fun clearHighlights(
+    outHighlighters: MutableCollection<RangeHighlighter?>,
+    outHighlightersRanges: MutableCollection<TextRange?>?,
+    editor: Editor
+) {
+    val highlightManager = HighlightManager.getInstance(editor.project)
+    outHighlighters.forEach(Consumer { r: RangeHighlighter? ->
+        highlightManager.removeSegmentHighlighter(
+            editor,
+            r!!
+        )
+    })
+    outHighlighters.clear()
+    outHighlightersRanges?.clear()
 }
