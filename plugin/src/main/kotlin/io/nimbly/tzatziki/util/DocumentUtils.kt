@@ -13,3 +13,8 @@ fun PsiElement.getDocument(): Document? {
     return if (file == null) null else
         FileDocumentManager.getInstance().getDocument(file)
 }
+
+fun Document.getColumnAt(offset: Int): Int {
+    val line = getLineNumber(offset)
+    return offset - getLineStartOffset(line)
+}

@@ -117,12 +117,18 @@ fun GherkinTable.rowNumberAt(offset: Int): Int? {
 }
 
 fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
-    val row = cellAt(offset)?.row()
+    var row = cellAt(offset)?.row()
     if (row != null)
         return row
 
-    val el : PsiElement? = findElementAt(offset) ?: return null
-    return PsiTreeUtil.getContextOfType(el, GherkinTableRow::class.java)
+    // Try from end of line
+    val document = getDocument() ?: return null
+    val line = document.getLineNumber(offset)
+    row = cellAt(document.getLineEndOffset(line)-1)?.row()
+    if (row != null)
+        return row
+
+    return null
 }
 
 fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell = psiCells[columnNumber]

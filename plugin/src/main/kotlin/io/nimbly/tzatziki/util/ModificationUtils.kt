@@ -7,6 +7,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleManager
+import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -21,18 +23,31 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
     if (fileType != GherkinFileType.INSTANCE) return false
     val offset = editor.caretModel.offset
     val table = editor.findTable(offset) ?: return false
-
-    // Build new table as string
+    val document = file.getDocument() ?: return false
     val currentCol = table.columnNumberAt(offset)
     val currentRow = table.rowNumberAt(offset) ?: return false
+
+    // Where I am ? In table ? At its left ? At its right ?
+    val origineColumn = document.getColumnAt(offset)
+    val tableColumnStart = document.getColumnAt(table.row(0).cell(0).startOffset)
+    val tableColumnEnd = document.getColumnAt(table.row(0).psiCells.last().endOffset)
+    val where = when {
+        origineColumn<tableColumnStart -> -1 // Left
+        origineColumn>tableColumnEnd -> 1    // Right
+        else -> 0
+    }
+
+    // Build new table as string
     val s = StringBuilder()
     table.allRows().forEachIndexed { y, row ->
+        if (where<0)
+            s.append("|   ")
         row.psiCells.forEachIndexed { x, cell ->
             s.append('|').append(cell.text)
             if (x == currentCol)
                 s.append("|   ")
         }
-        if (currentCol == null)
+        if (where>0)
             s.append("|   ")
 
         s.append('|').append('\n')
@@ -54,13 +69,20 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
 
         val newTable = table.replace(tempTable) as GherkinTable
         val newRow = newTable.row(currentRow)
-        val newCell = newRow.cell(if (currentCol !=null ) currentCol +1 else newRow.psiCells.lastIndex +1)
+
+        // Find caret target
+        val caretTarget =
+            when {
+                where <0 -> newRow.psiCells.first().previousPipe().textOffset + 2
+                where >0 -> newRow.psiCells.last().previousPipe().textOffset + 2
+                else -> newRow.cell(currentCol!!+1).previousPipe().textOffset + 2
+            }
 
         // Move caret
-        editor.caretModel.moveToOffset(newCell.previousPipe().textOffset + 2)
+        editor.caretModel.moveToOffset(caretTarget)
 
         // Format table
-        newCell.row().table().format()
+        newTable.format()
     }
 
     return true

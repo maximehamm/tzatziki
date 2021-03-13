@@ -147,7 +147,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         WriteCommandAction.runWriteCommandAction(project, "Format table", "Tmar",
             {
                 for (element in insertString) {
-                    performTypingAction(myFixture.editor, element)
+                    pressKey(element)
                     PsiDocumentManager.getInstance(project).commitAllDocuments()
                 }
 
@@ -156,7 +156,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             })
     }
 
-    open fun performTypingAction(editor: Editor, c: Char) {
+    open fun pressKey(c: Char) {
+        val editor = myFixture.editor
         when (c) {
             TAB -> executeAction(editor, ACTION_EDITOR_TAB)
             BACK -> executeAction(editor, EDITOR_UNINDENT_SELECTION)

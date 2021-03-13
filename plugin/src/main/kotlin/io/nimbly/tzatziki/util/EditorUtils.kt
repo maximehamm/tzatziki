@@ -24,6 +24,9 @@ fun Editor.findTable(offset: Int): GherkinTable? {
         }
 
     val element = file.findElementAt(adjustedOffset) ?: return null
+    if (element.nextSibling is GherkinTable)
+        return element.nextSibling as GherkinTable
+
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
 }
 
