@@ -1,0 +1,62 @@
+<idea-plugin>
+    <id>io.nimbly.tzatziki</id>
+    <name>Cucumber to Tzatziki</name>
+    <vendor email="maxime.hamm@gmail.com"
+            url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
+
+    <description><![CDATA[
+
+       <b>Cucumber y Tzatziki !</></b><br/>
+       <ul>
+         <li>Cucumber table formatting as you go :
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_d40da540-75da-4a8e-88bb-17523e9c367e"
+                 alt="Tzatziki" width="419" height="233"></p>
+         </li>
+         <li>Navigate from cell to cell by 'Tab' and 'Back-tab' keys</li>
+         <li>Navigate from row to row by 'Enter'</li>
+         <li>Add new row by 'Enter' from end of line</li>
+       </ul>
+
+       <br/>
+       <b>Roadmap :</></b><br/>
+       <ul>
+         <li>Add new column by pressing '|'</li>
+         <li>Copy from Excel to Intellij IDEA Cucumber Editor</li>
+         <li>Copy from Intellij IDEA Cucumber Editor to Excel</li>
+         <li>...</li>
+       </ul>
+
+       <br/>
+       Any suggestion ? Let me know !<br/>
+       <br/>
+
+       <i>@author Maxime HAMM</i>
+       <br/>
+       <br/>
+       <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a>
+
+    ]]></description>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
+        <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
+    </extensions>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <depends>com.intellij.modules.xml</depends>
+    <depends>org.intellij.intelliLang</depends>
+
+    <depends>gherkin</depends>
+
+    <applicationListeners>
+        <listener class="io.nimbly.tzatziki.TzTModuleListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
+
+</idea-plugin>

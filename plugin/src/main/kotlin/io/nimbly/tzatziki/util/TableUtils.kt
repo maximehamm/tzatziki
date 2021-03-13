@@ -2,12 +2,15 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiUtil
+import com.intellij.refactoring.suggested.startOffset
+import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
+import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
@@ -21,7 +24,7 @@ fun GherkinTable.format() {
     }
 }
 
-fun GherkinTableRow.addRowAfter() : GherkinTableRow {
+fun GherkinTableRow.addRowAfter(): GherkinTableRow {
 
     val cellCount = psiCells.size
     val header =
@@ -46,7 +49,7 @@ fun GherkinTableRow.addRowAfter() : GherkinTableRow {
     return newRow as GherkinTableRow
 }
 
-fun PsiElement.previousPipe(): PsiElement? {
+fun PsiElement.previousPipe(): PsiElement {
     var el = prevSibling
     while (el != null) {
         if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
@@ -54,10 +57,10 @@ fun PsiElement.previousPipe(): PsiElement? {
         }
         el = el.prevSibling
     }
-    return null
+    throw Exception("Psi structure corrupted !")
 }
 
-fun GherkinTableRow.next() : GherkinTableRow? {
+fun GherkinTableRow.next(): GherkinTableRow? {
     val table = PsiTreeUtil.getParentOfType(this, GherkinTable::class.java) ?: return null
     return table.nextRow(this)
 }
@@ -69,35 +72,19 @@ fun GherkinTable.nextRow(row: GherkinTableRow): GherkinTableRow? {
         allRows[i] else null
 }
 
-fun GherkinTableRow.previous() : GherkinTableRow? {
+fun GherkinTableRow.previous(): GherkinTableRow? {
     val table = PsiTreeUtil.getParentOfType(this, GherkinTable::class.java) ?: return null
     return table.previousRow(this)
 }
 
 fun GherkinTable.previousRow(row: GherkinTableRow): GherkinTableRow? {
     val allRows = allRows()
-    val i = allRows.indexOf(row) -1
-    return if (i >=0)
+    val i = allRows.indexOf(row) - 1
+    return if (i >= 0)
         allRows[i] else null
 }
 
-fun GherkinTable.adaptColumnWidths(colIdx: Int, width: Int) {
-
-    allRows().forEach {
-        if (width > it.getColumnFullWidth(colIdx)) {
-
-            val cell = it.psiCells[colIdx]
-            if (cell.nextSibling is PsiWhiteSpace) {
-                val blank = CucumberElementFactory.createTempPsiFile(project, "| |").children[1];
-                cell.nextSibling.replace(blank)
-            }
-
-            CucumberElementFactory.createTempPsiFile(project, "| |").getChildren();
-        }
-    }
-}
-
-fun GherkinTable.allRows() : List<GherkinTableRow> {
+fun GherkinTable.allRows(): List<GherkinTableRow> {
     if (headerRow == null)
         return dataRows
 
@@ -107,28 +94,39 @@ fun GherkinTable.allRows() : List<GherkinTableRow> {
     return rows
 }
 
-fun GherkinTable.getColumnFullWidth(columnIndex: Int): Int {
+fun GherkinTable.cellAt(offset: Int): GherkinTableCell? = containingFile.cellAt(offset)
 
-    var result = 0
-    val headerRow = this.headerRow
-    if (headerRow != null) {
-        result = headerRow.getColumnFullWidth(columnIndex)
-    }
+fun GherkinTableRow.cellAt(offset: Int): GherkinTableCell? = containingFile.cellAt(offset)
 
-    val iter = this.dataRows.iterator()
-    while (iter.hasNext()) {
-        var row = iter.next()
-        result = Math.max(result, row.getColumnFullWidth(columnIndex))
-    }
-    return result
+fun GherkinTableRow.columnNumberAt(offset: Int): Int? {
+    val cell = cellAt(offset) ?: return null
+    return psiCells.indexOf(cell)
 }
 
-fun GherkinTableRow.getColumnFullWidth(columnIndex: Int): Int {
-    var result = getColumnWidth(columnIndex)
-    if (prevSibling is PsiWhiteSpace)
-        result += prevSibling.textLength
-    if (nextSibling is PsiWhiteSpace)
-        result += nextSibling.textLength
-    return result
+fun GherkinTableRow.table(): GherkinTable = parent as GherkinTable
+
+fun GherkinTableCell.row(): GherkinTableRow = parent as GherkinTableRow
+
+fun GherkinTable.columnNumberAt(offset: Int): Int? {
+    return cellAt(offset)?.row()?.columnNumberAt(offset)
 }
+
+fun GherkinTable.rowNumberAt(offset: Int): Int? {
+    val row = rowAt(offset) ?: return null
+    return allRows().indexOf(row)
+}
+
+fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
+    val row = cellAt(offset)?.row()
+    if (row != null)
+        return row
+
+    val el : PsiElement? = findElementAt(offset) ?: return null
+    return PsiTreeUtil.getContextOfType(el, GherkinTableRow::class.java)
+}
+
+fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell = psiCells[columnNumber]
+
+fun GherkinTable.row(rowNumber: Int): GherkinTableRow = allRows()[rowNumber]
+
 

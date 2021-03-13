@@ -5,7 +5,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
@@ -28,24 +27,8 @@ fun Editor.findTable(offset: Int): GherkinTable? {
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
 }
 
-fun Editor.findCell(offset: Int): GherkinTableCell? {
-    val file = getFile() ?: return null
-
-    val adjustedOffset = offset
-//        when (offset) {
-//            getLineStartOffset() -> offset+2
-//            getLineStartOffset()+1 -> offset+1
-//            getLineEndOffset() -> offset-1
-//            else -> offset
-//        }
-
-    val element = file.findElementAt(adjustedOffset) ?: return null
-    if (element is GherkinTableCell)
-        return element
-    if (element is PsiWhiteSpace && element.nextSibling is GherkinTableCell)
-        return element.nextSibling as GherkinTableCell
-    return null
-}
+fun Editor.cellAt(offset: Int)
+    = getFile()?.cellAt(offset)
 
 fun Editor.getFile(): PsiFile? {
     val project = project ?: return null
@@ -63,34 +46,6 @@ fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
     val pipe = cell.previousPipe() ?: return false
 
     caretModel.moveToOffset(pipe.textOffset +2)
-    return true
-}
-
-fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
-
-    val colIdx = getTableColumnIndexAt(offset) ?: return false
-    val table = findTable(offset) ?: return false
-    val row = getTableRowAt(offset) ?: return false
-
-    val insert = offset == getLineEndOffset(offset)
-
-    ApplicationManager.getApplication().runWriteAction {
-
-        val newRow = row.addRowAfter()
-
-        var newCaret = newRow.textOffset + 1
-        if (!insert)
-            newCaret += colIdx * 2
-        caretModel.moveToOffset(newCaret)
-
-        CodeStyleManager.getInstance(project!!).reformatText(
-            table.containingFile,
-            table.textRange.startOffset, table.textRange.endOffset
-        )
-
-        caretModel.moveToOffset(caretModel.offset + 1)
-    }
-
     return true
 }
 

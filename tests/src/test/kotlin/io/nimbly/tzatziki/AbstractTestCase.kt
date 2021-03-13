@@ -16,9 +16,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import io.nimbly.tzatziki.TzTModuleListener.Companion.EDITOR_UNINDENT_SELECTION
 import io.nimbly.tzatziki.format.createEditorContext
-import io.nimbly.tzatziki.format.getDocument
 import io.nimbly.tzatziki.format.getIndexOf
-import io.nimbly.tzatziki.util.findCell
+import io.nimbly.tzatziki.util.cellAt
+import io.nimbly.tzatziki.util.getDocument
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Assert
@@ -65,7 +65,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     protected open fun checkContent(file: PsiFile, expected: String) {
 
         val exp = expected.replace("`".toRegex(), "\"")
-        val document = getDocument(file)!!
+        val document = file.getDocument()!!
         val project = myFixture.project
         PsiDocumentManager.getInstance(project).commitDocument(document)
         val text = file.text
@@ -235,7 +235,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         // check element content
         val offset = myFixture.editor.caretModel.offset - 1
-        val cell = myFixture.editor.findCell(offset)
+        val cell = myFixture.editor.cellAt(offset)
 
         assertNotNull("Cell not found : $expectedCellValue", cell)
         assertEquals(expectedCellValue, cell!!.text.trim())
