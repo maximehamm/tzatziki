@@ -94,9 +94,11 @@ fun GherkinTable.allRows(): List<GherkinTableRow> {
     return rows
 }
 
-fun GherkinTable.cellAt(offset: Int): GherkinTableCell? = containingFile.cellAt(offset)
+fun GherkinTable.cellAt(offset: Int): GherkinTableCell?
+    = containingFile.cellAt(offset)
 
-fun GherkinTableRow.cellAt(offset: Int): GherkinTableCell? = containingFile.cellAt(offset)
+fun GherkinTableRow.cellAt(offset: Int): GherkinTableCell?
+    = containingFile.cellAt(offset)
 
 fun GherkinTableRow.columnNumberAt(offset: Int): Int? {
     val cell = cellAt(offset) ?: return null

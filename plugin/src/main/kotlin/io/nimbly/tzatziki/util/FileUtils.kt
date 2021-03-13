@@ -7,29 +7,33 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
-    var element = findElementAt(offset) ?: return null
-    if (element is GherkinTableCell)
-        return element
+    var l = findElementAt(offset) ?: return null
+    if (l is GherkinTableCell)
+        return l
 
-    if (element is LeafPsiElement && element.parent is GherkinTableCell)
-        return element.parent as GherkinTableCell
+    if (l is LeafPsiElement && l.parent is GherkinTableCell)
+        return l.parent as GherkinTableCell
+    if (l is LeafPsiElement && l.prevSibling is GherkinTableCell)
+        return l.prevSibling as GherkinTableCell
+    if (l is LeafPsiElement && l.nextSibling is GherkinTableCell)
+        return l.nextSibling as GherkinTableCell
 
-    if (element is LeafPsiElement && element.parent is PsiWhiteSpace)
-        element = element.parent
-    if (element is LeafPsiElement && element.prevSibling is PsiWhiteSpace)
-        element = element.prevSibling
-    if (element is LeafPsiElement && element.nextSibling is PsiWhiteSpace)
-        element = element.nextSibling
+    if (l is LeafPsiElement && l.parent is PsiWhiteSpace)
+        l = l.parent
+    if (l is LeafPsiElement && l.prevSibling is PsiWhiteSpace)
+        l = l.prevSibling
+    if (l is LeafPsiElement && l.nextSibling is PsiWhiteSpace)
+        l = l.nextSibling
 
-    if (element is LeafPsiElement && element.nextSibling == null && element.parent is GherkinTableRow)
-        return (element.parent as GherkinTableRow).psiCells.last()
+    if (l is LeafPsiElement && l.nextSibling == null && l.parent is GherkinTableRow)
+        return (l.parent as GherkinTableRow).psiCells.last()
 
-    if (element is PsiWhiteSpace && element.parent is GherkinTableCell)
-        return element.parent as GherkinTableCell
-    if (element is PsiWhiteSpace && element.prevSibling is GherkinTableCell)
-        return element.prevSibling as GherkinTableCell
-    if (element is PsiWhiteSpace && element.nextSibling is GherkinTableCell)
-        return element.nextSibling as GherkinTableCell
+    if (l is PsiWhiteSpace && l.parent is GherkinTableCell)
+        return l.parent as GherkinTableCell
+    if (l is PsiWhiteSpace && l.prevSibling is GherkinTableCell)
+        return l.prevSibling as GherkinTableCell
+    if (l is PsiWhiteSpace && l.nextSibling is GherkinTableCell)
+        return l.nextSibling as GherkinTableCell
 
     return null
 }
