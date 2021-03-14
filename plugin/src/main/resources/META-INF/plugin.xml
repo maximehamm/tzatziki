@@ -29,7 +29,7 @@
          <br/>
          <li>Smart copy table and paste to <u>Excel</u> :<br/>
              - Swith automatically to column mode when focusing a Cucumber table.<br/>
-             - Triple-click a header cell to select an entire he entire column, or anywhere else for a row.<br/>
+             - Double-click a header cell to select an entire he entire column, or anywhere else for a row.<br/>
              - Copy to clipboard to transfert to Excel for example !
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_98501815-1487-4047-82cb-11dc751b503e"
                  alt="Tzatziki" width="419" height="233"></p>

@@ -97,7 +97,7 @@ class TzatzikiTransferableData(table: GherkinTable, startOffsets: IntArray, endO
     }
 }
 
-fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
+fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
 
     if (!TZATZIKI_SMART_COPY)
         return false
@@ -182,13 +182,13 @@ object TZMouseAdapter : EditorMouseListener {
 
         val me = e.mouseEvent
         if (me.button == MouseEvent.BUTTON1
-            && me.clickCount == 3) {
+            && me.clickCount == 2) {
             val editor = e.editor
             val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
             val offset = editor.logicalPositionToOffset(logicalPosition)
             val table = editor.findTableAt(offset)
             if (table != null) {
-                manageTripleClicTableSelection(table, editor, offset)
+                manageDoubleClicTableSelection(table, editor, offset)
             }
         }
     }

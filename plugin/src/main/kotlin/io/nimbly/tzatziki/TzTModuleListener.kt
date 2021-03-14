@@ -95,7 +95,7 @@ class TzTModuleListener : ProjectManagerListener {
                 val table = editor.findTableAt(editor.caretModel.offset)
                 if (table != null) {
                     table.format()
-                    editor.selectionModel.removeSelection()
+                    editor.caretModel.removeSecondaryCarets()
                 }
             }
         }
