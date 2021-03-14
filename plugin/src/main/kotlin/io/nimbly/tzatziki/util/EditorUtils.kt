@@ -43,6 +43,9 @@ fun Editor.findTableAt(offset: Int): GherkinTable? {
     if (element.nextSibling is GherkinTable)
         return element.nextSibling as GherkinTable
 
+    if (element.prevSibling is GherkinExamplesBlock)
+        return (element.prevSibling as GherkinExamplesBlock).table
+
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
 }
 

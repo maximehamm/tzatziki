@@ -44,6 +44,10 @@
        <br/>
        <b>Roadmap :</></b><br/>
        <ul>
+
+         <!-- Select modified cells after pasting -->
+         <!-- Paste as new table -->
+
          <li>Copy from Excel to IDEA Cucumber Editor</li>
          <li>Copy-Paste or Cut-Paste within Cucumber table</li>
 

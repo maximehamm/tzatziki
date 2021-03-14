@@ -92,5 +92,115 @@ class CopyPasteTests  : AbstractTestCase() {
                 Then Finished !
             """)
     }
+
+    fun testCopyPasteAfterLastColumn() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                Then Finished !
+                        """)
+
+        selectAsColumn("|", "| No    ")
+        copy()
+
+        setCursor("| Details |")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details | NAF | Ready |
+                  | 78  | Yes   |         | 78  | Yes   |
+                  | 79  | No    | D2      | 79  | No    |
+                Then Finished !
+            """)
+    }
+
+    fun testCopyPasteAfterLastLine() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                
+                Then Finished !
+                        """)
+
+        selectAsColumn("|", "| No    ")
+        copy()
+
+        setCursor("| D2      |\n ")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                  | NAF | Ready |         |
+                  | 78  | Yes   |         |
+                  | 79  | No    |         |
+                
+                Then Finished !
+            """)
+    }
+
+    fun testCopyPasteBeforeFirstColumn() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                Then Finished !
+                        """)
+
+        selectAsColumn("|", "| No    ")
+        copy()
+
+        setCursor("Examples: One\n  ")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | NAF | Ready | Details |
+                  | 78  | Yes   | 78  | Yes   |         |
+                  | 79  | No    | 79  | No    | D2      |
+                Then Finished !
+            """)
+    }
 }
 

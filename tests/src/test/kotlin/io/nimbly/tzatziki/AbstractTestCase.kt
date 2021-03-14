@@ -270,7 +270,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
     protected fun checkClipboard(expected: String) {
         val found = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor)
-        assertEquals(expected, found)
+        assertEquals(expected.trimIndent(), found)
     }
 
     override fun getTestDataPath(): String? {

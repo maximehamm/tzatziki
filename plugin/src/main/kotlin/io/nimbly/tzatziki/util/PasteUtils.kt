@@ -5,10 +5,12 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.refactoring.suggested.endOffset
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import java.awt.datatransfer.DataFlavor
+import kotlin.math.abs
 import kotlin.math.max
 
 fun Editor.smartPaste(dataContext: DataContext): Boolean {
@@ -30,14 +32,37 @@ private fun Editor.pasteNewTable(text: String, offset: Int) : Boolean {
 }
 
 private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) : Boolean {
+
+    // Load added cells
     val addedCells = loadCells(text)
+
+    // Load actual cells
     val actualCells = loadCells(table)
 
-    val x = table.columnNumberAt(offset)!!
-    val y = table.rowNumberAt(offset)!!
+    // Find target coordinates
+    var x = table.columnNumberAt(offset)
+    if (x == null) {
+        val where = where(table)
+        x = when {
+            where <0 -> -1
+            where >0 -> table.allRows().first().psiCells.size
+            else -> return false
+        }
+    }
 
+    var y = table.rowNumberAt(offset)
+    if (y == null) {
+        y = when {
+                offset > table.endOffset -> table.allRows().size
+                else -> return false
+            }
+        x = 0
+    }
+
+    // Merge cells
     val merged = merge(actualCells, addedCells, x, y)
 
+    // Build table as text
     val tableText = buildTableText(merged)
 
     // Apply modifications
@@ -52,6 +77,9 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         // Move caret
         val targetCell = newTable.row(y).cell(x)
         caretModel.moveToOffset(targetCell.previousPipe().textOffset + 2)
+
+        // Select modified cells
+        //TODO
 
         // Format table
         newTable.format()
@@ -73,7 +101,7 @@ fun buildTableText(merged: Array<Array<String?>>): String {
 
 private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX: Int, targetY: Int): Array<Array<String?>> {
 
-    val width = max(targetX+added[0].size, actual[0].size)
+    val width = max(abs(targetX)+added[0].size, actual[0].size)
     val height = max(targetY+added.size, actual.size)
 
     val target: Array<Array<String?>> = Array(height) { Array(width) { null } }
@@ -84,8 +112,15 @@ private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX
             }
         }
     }
-    feed(actual, 0, 0)
-    feed(added, targetX, targetY)
+
+    if (targetX == -1) {
+        feed(actual, 1, 0)
+        feed(added, 0, targetY)
+    }
+    else {
+        feed(actual, 0, 0)
+        feed(added, targetX, targetY)
+    }
 
     return target
 }

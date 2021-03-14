@@ -18,7 +18,21 @@ const val FEATURE_HEAD =
         "Scenario Outline: xx\n" +
         "Examples: xxx\n"
 
+fun Editor.where(table: GherkinTable) : Int {
+
+    val offset = caretModel.offset
+    val origineColumn = document.getColumnAt(offset)
+    val tableColumnStart = document.getColumnAt(table.row(0).cell(0).startOffset)
+    val tableColumnEnd = document.getColumnAt(table.row(0).psiCells.last().endOffset)
+    return when {
+        origineColumn<tableColumnStart -> -1 // Left
+        origineColumn>tableColumnEnd -> 1    // Right
+        else -> 0
+    }
+}
+
 fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileType: FileType): Boolean {
+
     if (c != '|') return false
     if (fileType != GherkinFileType.INSTANCE) return false
     val offset = editor.caretModel.offset
@@ -28,14 +42,7 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
     val currentRow = table.rowNumberAt(offset) ?: return false
 
     // Where I am ? In table ? At its left ? At its right ?
-    val origineColumn = document.getColumnAt(offset)
-    val tableColumnStart = document.getColumnAt(table.row(0).cell(0).startOffset)
-    val tableColumnEnd = document.getColumnAt(table.row(0).psiCells.last().endOffset)
-    val where = when {
-        origineColumn<tableColumnStart -> -1 // Left
-        origineColumn>tableColumnEnd -> 1    // Right
-        else -> 0
-    }
+    val where = editor.where(table)
 
     // Build new table as string
     val s = StringBuilder()
