@@ -38,8 +38,8 @@ class TzTModuleListener : ProjectManagerListener {
         actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_DELETE))
         actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_BACKSPACE))
 
-        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_CUT))
-        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_PASTE))
+//        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_CUT))
+//        actionManager.replaceHandler(FormatterHandler(ACTION_ EDITOR_PASTE))
 
         actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
         actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))
@@ -47,6 +47,7 @@ class TzTModuleListener : ProjectManagerListener {
         actionManager.replaceHandler(EnterHandler())
 
         actionManager.replaceHandler(CopyHandler())
+        actionManager.replaceHandler(CutHandler())
         actionManager.replaceHandler(PasteHandler())
     }
 
@@ -84,6 +85,19 @@ class TzTModuleListener : ProjectManagerListener {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             if (!TZATZIKI_SMART_COPY || !editor.smartCopy())
                 doDefault(editor, caret, dataContext)
+        }
+    }
+
+    private class CutHandler : AbstractWriteActionHandler(ACTION_EDITOR_CUT) {
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            doDefault(editor, caret, dataContext)
+            if (TZATZIKI_AUTO_FORMAT) {
+                val table = editor.findTableAt(editor.caretModel.offset)
+                if (table != null) {
+                    table.format()
+                    editor.selectionModel.removeSelection()
+                }
+            }
         }
     }
 

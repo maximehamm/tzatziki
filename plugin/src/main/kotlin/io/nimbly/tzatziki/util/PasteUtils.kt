@@ -85,7 +85,7 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         val endHighlight = newTable
             .row(y + addedCells.size -1)
             .cell((if (x<0) 0 else x) + addedCells[0].size -1)
-            .nextPipe().endOffset-1
+            .nextPipe().endOffset
         highlight(startHighlight, endHighlight)
 
     }
