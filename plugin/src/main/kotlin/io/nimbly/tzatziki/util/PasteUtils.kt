@@ -17,6 +17,8 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
     val offset = CommonDataKeys.CARET.getData(dataContext)?.offset ?: return true
     val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return true
 
+    if (editor.selectionModel.hasSelection()) return false
+
     val text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return false
     if (text.indexOf('\t') <0 && text.indexOf('\n') <0) return false
 

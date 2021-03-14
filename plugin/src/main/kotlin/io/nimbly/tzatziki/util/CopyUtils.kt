@@ -21,7 +21,7 @@ import java.io.StringReader
 
 fun Editor.smartCopy(): Boolean {
 
-    val offset = caretModel.offset
+    val offset = selectionModel.selectionStart
     val table = findTableAt(offset) ?: return false
     if (!selectionModel.selectedText!!.contains("|")) return false
 
