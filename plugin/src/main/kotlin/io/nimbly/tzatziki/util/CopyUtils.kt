@@ -191,11 +191,6 @@ object TZMouseAdapter : EditorMouseListener {
                     manageDoubleClicTableSelection(table, editor, offset)
                 else if (me.clickCount == 2)
                     editor.selectionModel.selectWordAtCaret(false)
-
-//                e.consume()
-//                e.mouseEvent.consume()
-//                JavaUtil.updateField(e.mouseEvent, "popupTrigger", true)
-//                JavaUtil.updateField(e.mouseEvent, "button", 0)
             }
         }
     }

@@ -34,9 +34,6 @@ class NewColumnTests  : AbstractTestCase() {
         )
         checkCursorAt("Ready | ")
 
-
-
-
         // insert pipe
         pressKey('|', "Details |")
         // language=feature
@@ -54,10 +51,6 @@ class NewColumnTests  : AbstractTestCase() {
         )
         checkCursorAt("Details | ")
 
-
-
-
-
         // insert pipe
         pressKey('|', "    Examples:\n  ")
         // language=feature
@@ -74,6 +67,23 @@ class NewColumnTests  : AbstractTestCase() {
             """
         )
         checkCursorAt("| ")
+
+        // insert pipe
+        pressKey('|', "| NAF   | ")
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  |  | NAF   |  | Ready |  | Details |  |
+                  |  | 78.10 |  | Yes   |  | D1      |  |
+                  |  | 78.2Z |  | No    |  | D2      |  |
+            """
+        )
+        checkCursorAt("| NAF   | ")
     }
 
     fun testNewColumnFromAnyLine() {
@@ -106,9 +116,6 @@ class NewColumnTests  : AbstractTestCase() {
         )
         checkCursorAt("| Yes   | ")
 
-
-
-
         // insert pipe
         pressKey('|', "| D2      |")
         // language=feature
@@ -125,10 +132,6 @@ class NewColumnTests  : AbstractTestCase() {
             """
         )
         checkCursorAt("| D2      | ")
-
-
-
-
 
         // insert pipe
         pressKey('|', "D1      |  |\n  ")

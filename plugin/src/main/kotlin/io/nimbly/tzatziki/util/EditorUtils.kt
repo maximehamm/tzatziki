@@ -49,7 +49,7 @@ fun Editor.findTableAt(offset: Int): GherkinTable? {
     return PsiTreeUtil.getContextOfType(element, GherkinTable::class.java)
 }
 
-fun Editor.cellAt(offset: Int)
+fun Editor.cellAt(offset: Int): GherkinTableCell?
     = getFile()?.cellAt(offset)
 
 fun Editor.getFile(): PsiFile? {

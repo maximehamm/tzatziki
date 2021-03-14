@@ -37,12 +37,24 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
     if (fileType != GherkinFileType.INSTANCE) return false
     val offset = editor.caretModel.offset
     val table = editor.findTableAt(offset) ?: return false
-    val document = file.getDocument() ?: return false
-    val currentCol = table.columnNumberAt(offset)
+    var currentCol = table.columnNumberAt(offset)
     val currentRow = table.rowNumberAt(offset) ?: return false
 
     // Where I am ? In table ? At its left ? At its right ?
-    val where = editor.where(table)
+    var where = editor.where(table)
+
+    // adjust left of right of current column
+    if (where == 0 && currentCol != null) {
+        val startOfCell = editor.cellAt(offset)?.previousPipe()?.startOffset
+        if (startOfCell != null) {
+            val margin = offset - startOfCell
+            if (margin in 1..2) {
+                currentCol -= 1
+                if (currentCol<0)
+                    where = -1
+            }
+        }
+    }
 
     // Build new table as string
     val s = StringBuilder()
