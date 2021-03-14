@@ -3,10 +3,7 @@ package io.nimbly.tzatziki.util
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.openapi.editor.RawText
-import com.intellij.openapi.editor.event.CaretAdapter
-import com.intellij.openapi.editor.event.CaretEvent
-import com.intellij.openapi.editor.event.EditorMouseAdapter
-import com.intellij.openapi.editor.event.EditorMouseEvent
+import com.intellij.openapi.editor.event.*
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.util.Comparing
 import com.intellij.openapi.util.TextRange
@@ -124,11 +121,11 @@ fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
             val lastCell = if (cells.size > index) cells[index] else null
             if (firstCell != null && lastCell != null) {
 
-                val start = editor.offsetToLogicalPosition(firstCell.textOffset-2)
-                val end = editor.offsetToLogicalPosition(lastCell.nextPipe().textRange.startOffset)
+                val start = editor.offsetToLogicalPosition(firstCell.textOffset-1)
+                val end = editor.offsetToLogicalPosition(lastCell.nextPipe().textRange.startOffset+1)
                 val caretStates = EditorModificationUtil.calcBlockSelectionState(editor, start, end)
 
-                editor.caretModel.setCaretsAndSelections(caretStates, false)
+                editor.caretModel.setCaretsAndSelections(caretStates, true)
                 return true
             }
         }
@@ -142,7 +139,7 @@ fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
     return true
 }
 
-object TmarSelectionModeManager {
+object TzSelectionModeManager {
 
     var isSelectionSwitchBlocked = false
         private set
@@ -153,24 +150,16 @@ object TmarSelectionModeManager {
         val f = editor.getFile() ?: return
         if (f !is GherkinFile) return
 
-        val file = f as GherkinFile
-        val needColumnMode = file.isColumnSeletionModeZone(offset)
+        val needColumnMode = f.isColumnSeletionModeZone(offset)
         if (needColumnMode && !editor.isColumnMode
             || !needColumnMode && editor.isColumnMode) {
-
-            try {
-                editor.executeAction("EditorToggleColumnMode")
-            } catch (ignored: Exception) {
-            }
+            editor.setColumnMode(!editor.isColumnMode)
         }
     }
 
     fun Editor.disableColumnSelectionMode() {
         if (isColumnMode) {
-            try {
-                executeAction("EditorToggleColumnMode")
-            } catch (ignored: Exception) {
-            }
+            setColumnMode(false)
         }
     }
 
@@ -189,7 +178,7 @@ object TZMouseAdapter : EditorMouseAdapter() {
         if (!TZATZIKI_SMART_COPY)
             return
 
-        TmarSelectionModeManager.releaseSelectionSwitch()
+        TzSelectionModeManager.releaseSelectionSwitch()
 
         val me = e.mouseEvent
         if (me.button == MouseEvent.BUTTON1
@@ -219,8 +208,8 @@ object TZMouseAdapter : EditorMouseAdapter() {
         val offset = editor.logicalPositionToOffset(logicalPosition)
 
         // swith mode if needed
-        TmarSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
-        TmarSelectionModeManager.blockSelectionSwitch()
+        TzSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
+        TzSelectionModeManager.blockSelectionSwitch()
 
         //
         // TRICKY : avoid Intellij to manage double clic !
@@ -240,7 +229,7 @@ object TZMouseAdapter : EditorMouseAdapter() {
     }
 }
 
-object TZCaretAdapter : CaretAdapter() {
+object TZCaretAdapter : CaretListener {
     override fun caretPositionChanged(e: CaretEvent) {
 
         if (!TZATZIKI_SMART_COPY)
@@ -248,7 +237,7 @@ object TZCaretAdapter : CaretAdapter() {
 
         val editor = e.editor
         val offset = editor.logicalPositionToOffset(e.newPosition)
-        TmarSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
+        //TzSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
     }
 }
 

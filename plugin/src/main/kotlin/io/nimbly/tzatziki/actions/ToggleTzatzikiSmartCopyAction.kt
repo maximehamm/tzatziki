@@ -4,9 +4,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
-import io.nimbly.tzatziki.TZATZIKI_AUTO_FORMAT
 import io.nimbly.tzatziki.TZATZIKI_SMART_COPY
-import io.nimbly.tzatziki.util.TmarSelectionModeManager.disableColumnSelectionMode
+import io.nimbly.tzatziki.util.TzSelectionModeManager.disableColumnSelectionMode
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
 class ToggleTzatzikiSmartCopyAction : ToggleAction(), DumbAware {

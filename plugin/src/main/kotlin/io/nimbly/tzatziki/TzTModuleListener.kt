@@ -3,16 +3,18 @@ package io.nimbly.tzatziki
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
+import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
+import com.sun.java.accessibility.util.SwingEventMonitor.addCaretListener
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.util.TmarSelectionModeManager.blockSelectionSwitch
-import io.nimbly.tzatziki.util.TmarSelectionModeManager.releaseSelectionSwitch
+import io.nimbly.tzatziki.util.TzSelectionModeManager.blockSelectionSwitch
+import io.nimbly.tzatziki.util.TzSelectionModeManager.releaseSelectionSwitch
 
 var TZATZIKI_AUTO_FORMAT : Boolean = true
 var TZATZIKI_SMART_COPY : Boolean = true
