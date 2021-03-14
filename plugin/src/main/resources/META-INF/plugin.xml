@@ -12,15 +12,22 @@
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_56576887-38ae-4f53-8ac7-4baf79153863"
                  alt="Tzatziki" width="419" height="233"></p>
          </li>
+
+         <br/>
          <li>Navigate <u>from cell to cell</u> by pressing 'Tab', 'Shift tab' or 'Enter'
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_9ceaf385-b474-453e-81fa-e2b4ec58cac7"
                  alt="Tzatziki" width="419" height="233"></p>
          </li>
-         <li>Add <u>new row</u> by pressing 'Enter' from last line or from end of line.<br/>
-             Add a <u>new column</u> by pressing 'Pipe' from anywere
+
+         <br/>
+         <li>Add <u>new row</u> by pressing 'Enter' from last line or from end of line.<br/></li>
+         <li>Add a <u>new column</u> by pressing 'Pipe' from anywere
              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_14a9e777-c607-4e0a-bb80-f12e0d8db029"
                  alt="Tzatziki" width="419" height="233"></p>
          </li>
+
+         <br/>
+         <li>Toggle table auto-formatting from editor context menu</li>
        </ul>
 
        <br/>
@@ -28,6 +35,8 @@
        <ul>
          <li>Copy from Excel to Intellij IDEA Cucumber Editor</li>
          <li>Copy from Intellij IDEA Cucumber Editor to Excel</li>
+         <li>Move column left / right</li>
+         <li>Move line up / down</li>
          <li>...</li>
        </ul>
 

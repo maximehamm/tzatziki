@@ -27,6 +27,7 @@ patchPluginXml {
       <b>Please Rate and Review this plugin !</b><br/><br/>
       Change notes :
       <ul>
+        <li><b>1.0</b> Toggle table auto-formatting from editor context menu</li>
         <li><b>0.4</b> Add new column by pressing pipe</li>
         <li><b>0.3</b> Add new lines by pressing from line end or from last line</li>
         <li><b>0.2</b> Navigate between cells using tab, backtab and enter</li>
