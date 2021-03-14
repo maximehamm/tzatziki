@@ -14,7 +14,6 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
-import io.nimbly.tzatziki.TzTModuleListener.Companion.EDITOR_UNINDENT_SELECTION
 import io.nimbly.tzatziki.format.createEditorContext
 import io.nimbly.tzatziki.format.getIndexOf
 import io.nimbly.tzatziki.util.cellAt

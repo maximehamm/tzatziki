@@ -11,6 +11,9 @@ import com.intellij.openapi.project.ProjectManagerListener
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.util.*
 
+var TZATZIKI_AUTO_FORMAT : Boolean = true
+const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
+
 class TzTModuleListener : ProjectManagerListener {
 
     override fun projectOpened(project: Project) {
@@ -39,21 +42,22 @@ class TzTModuleListener : ProjectManagerListener {
     private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
-            editor.findTable(editor.caretModel.offset)?.format()
+            if (TZATZIKI_AUTO_FORMAT)
+                editor.findTable(editor.caretModel.offset)?.format()
         }
     }
 
     private class TabHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
+            if (!TZATZIKI_AUTO_FORMAT || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
                 doDefault(editor, caret, dataContext)
         }
     }
 
     private class EnterHandler : AbstractWriteActionHandler(ACTION_EDITOR_ENTER) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!editor.navigateInTableWithEnter())
-                if (!editor.addTableRow())
+            if (!TZATZIKI_AUTO_FORMAT || !editor.navigateInTableWithEnter())
+                if (!TZATZIKI_AUTO_FORMAT || !editor.addTableRow())
                     doDefault(editor, caret, dataContext)
         }
     }
@@ -70,7 +74,6 @@ class TzTModuleListener : ProjectManagerListener {
 
     companion object {
         private var handlerInitialized = false
-        const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
     }
 }
 

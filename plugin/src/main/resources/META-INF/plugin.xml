@@ -63,5 +63,18 @@
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 
+    <actions>
+
+        <group id="io.nimbly.tzatziki.group">
+            <separator/>
+            <action class="io.nimbly.tzatziki.actions.ToggleTzatzikiFormattingAction"
+                    id="io.nimbly.tzatziki.ToggleTzatzikiFormattingAction"
+                    text="Toggle Cucumber auto-formatting">
+            </action>
+            <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
+        </group>
+    </actions>
+
 
 </idea-plugin>
