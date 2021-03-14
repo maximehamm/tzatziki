@@ -1,13 +1,11 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiUtil
-import com.intellij.refactoring.suggested.startOffset
-import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
@@ -56,6 +54,17 @@ fun PsiElement.previousPipe(): PsiElement {
             return el
         }
         el = el.prevSibling
+    }
+    throw Exception("Psi structure corrupted !")
+}
+
+fun PsiElement.nextPipe(): PsiElement {
+    var el = nextSibling
+    while (el != null) {
+        if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
+            return el
+        }
+        el = el.nextSibling
     }
     throw Exception("Psi structure corrupted !")
 }
@@ -135,6 +144,26 @@ fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
 
 fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell = psiCells[columnNumber]
 
+fun GherkinTableRow.isHeader()
+    = table().allRows().first() == this
+
 fun GherkinTable.row(rowNumber: Int): GherkinTableRow = allRows()[rowNumber]
 
+fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {
 
+    val found = mutableListOf<GherkinTableCell>()
+    for (row in allRows()) {
+        if (!row.intersects(range)) continue
+        row.psiCells.forEach { cell ->
+            if (cell.textRange.intersects(range))
+                found.add(cell)
+        }
+        val lastCell = row.psiCells[row.psiCells.size - 1]
+        if (range.startOffset > lastCell.textOffset + lastCell.textLength)
+            found.add(lastCell)
+    }
+    return found
+}
+
+private fun GherkinTableRow.intersects(range: TextRange)
+    = textRange.intersects(range)

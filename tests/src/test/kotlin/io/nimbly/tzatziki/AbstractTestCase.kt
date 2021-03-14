@@ -1,11 +1,8 @@
 package io.nimbly.tzatziki
 
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.IdeActions.*
-import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -14,15 +11,14 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
-import io.nimbly.tzatziki.format.createEditorContext
 import io.nimbly.tzatziki.format.getIndexOf
 import io.nimbly.tzatziki.util.cellAt
+import io.nimbly.tzatziki.util.createEditorContext
+import io.nimbly.tzatziki.util.executeAction
 import io.nimbly.tzatziki.util.getDocument
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
-import org.junit.Assert
 import org.junit.Ignore
-import java.awt.event.InputEvent
 import java.io.File
 
 @Ignore
@@ -164,39 +160,15 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         val editor = myFixture.editor
         when (c) {
-            TAB -> executeAction(editor, ACTION_EDITOR_TAB)
-            BACK -> executeAction(editor, EDITOR_UNINDENT_SELECTION)
-            ENTER -> executeAction(editor, ACTION_EDITOR_ENTER)
-            BACKSPACE_FAKE_CHAR -> executeAction(editor, ACTION_EDITOR_BACKSPACE)
-            DELETE_FAKE_CHAR -> executeAction(editor, ACTION_EDITOR_DELETE)
+            TAB -> editor.executeAction(ACTION_EDITOR_TAB)
+            BACK -> editor.executeAction(EDITOR_UNINDENT_SELECTION)
+            ENTER -> editor.executeAction(ACTION_EDITOR_ENTER)
+            BACKSPACE_FAKE_CHAR -> editor.executeAction(ACTION_EDITOR_BACKSPACE)
+            DELETE_FAKE_CHAR -> editor.executeAction(ACTION_EDITOR_DELETE)
             else -> {
                 myFixture.type(c)
                 TzTypedHandler().charTyped(c, project, editor, configuredFile!!)
            }
-        }
-    }
-
-    open fun executeAction(editor: Editor, actionId: String) {
-        executeAction(editor, actionId, false)
-    }
-
-    open fun executeAction(editor: Editor, actionId: String, assertActionIsEnabled: Boolean) {
-        val actionManager = ActionManagerEx.getInstanceEx()
-        val action = actionManager.getAction(actionId)
-        Assert.assertNotNull(action)
-        val event = AnActionEvent.createFromAnAction(
-            action,
-            null as InputEvent?,
-            "",
-            createEditorContext(editor)
-        )
-        action.beforeActionPerformedUpdate(event)
-        if (!event.presentation.isEnabled) {
-            Assert.assertFalse("Action $actionId is disabled", assertActionIsEnabled)
-        } else {
-            actionManager.fireBeforeActionPerformed(action, event.dataContext, event)
-            action.actionPerformed(event)
-            actionManager.fireAfterActionPerformed(action, event.dataContext, event)
         }
     }
 
@@ -248,10 +220,10 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     }
 
     fun executeHandler(handlerId: String) {
-        WriteCommandAction.runWriteCommandAction(getProject(), "Execute handler", "Tzatziki", {
+        WriteCommandAction.runWriteCommandAction(project, "Execute handler", "Tzatziki", {
             val actionManager = EditorActionManager.getInstance()
             val actionHandler = actionManager.getActionHandler(handlerId!!)
-            actionHandler.execute(myFixture.getEditor(), createEditorContext(myFixture.getEditor()))
+            actionHandler.execute(myFixture.editor, myFixture.editor.createEditorContext())
         })
     }
 

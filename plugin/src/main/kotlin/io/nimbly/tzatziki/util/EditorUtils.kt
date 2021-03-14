@@ -1,11 +1,19 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.codeInsight.highlighting.HighlightManager
+import com.intellij.ide.DataManager
+import com.intellij.injected.editor.EditorWindow
 import com.intellij.lang.ASTNode
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.ex.ActionManagerEx
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -14,7 +22,10 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
+import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.plugins.cucumber.psi.*
+import org.junit.Assert
+import java.awt.event.InputEvent
 import java.util.ArrayList
 import java.util.function.Consumer
 
@@ -266,4 +277,44 @@ fun clearHighlights(
     })
     outHighlighters.clear()
     outHighlightersRanges?.clear()
+}
+
+fun Editor.executeAction(actionId: String) {
+    executeAction(actionId, false)
+}
+
+fun Editor.executeAction(actionId: String, assertActionIsEnabled: Boolean) {
+    val actionManager = ActionManagerEx.getInstanceEx()
+    val action = actionManager.getAction(actionId)
+    Assert.assertNotNull(action)
+    val event = AnActionEvent.createFromAnAction(
+        action,
+        null as InputEvent?,
+        "",
+        createEditorContext()
+    )
+    action.beforeActionPerformedUpdate(event)
+    if (!event.presentation.isEnabled) {
+        Assert.assertFalse("Action $actionId is disabled", assertActionIsEnabled)
+    } else {
+        actionManager.fireBeforeActionPerformed(action, event.dataContext, event)
+        action.actionPerformed(event)
+        actionManager.fireAfterActionPerformed(action, event.dataContext, event)
+    }
+}
+
+fun Editor.createEditorContext(): DataContext {
+    val hostEditor: Any = if (this is EditorWindow) this.delegate else this
+    val map: Map<String, Any> = ContainerUtil.newHashMap(
+        Pair.create(CommonDataKeys.HOST_EDITOR.name, hostEditor),
+        Pair.createNonNull(CommonDataKeys.EDITOR.name, this)
+    )
+    val parent = DataManager.getInstance().getDataContext(this.contentComponent)
+    return SimpleDataContext.getSimpleContext(map, parent)
+}
+
+fun Editor.setColumnMode(columnnMode: Boolean) {
+    if (isColumnMode != columnnMode)
+        executeAction( "EditorToggleColumnMode"
+    )
 }

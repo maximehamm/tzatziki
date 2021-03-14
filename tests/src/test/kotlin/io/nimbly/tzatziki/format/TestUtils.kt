@@ -16,13 +16,3 @@ fun getIndexOf(contents: String, lookFor: String): Int {
     val i = contents.indexOf(lookFor)
     return if (i < 0) i else i + lookFor.length
 }
-
-fun createEditorContext(editor: Editor): DataContext {
-    val hostEditor: Any = if (editor is EditorWindow) editor.delegate else editor
-    val map: Map<String, Any> = ContainerUtil.newHashMap(
-        Pair.create(CommonDataKeys.HOST_EDITOR.name, hostEditor),
-        Pair.createNonNull(CommonDataKeys.EDITOR.name, editor)
-    )
-    val parent = DataManager.getInstance().getDataContext(editor.contentComponent)
-    return SimpleDataContext.getSimpleContext(map, parent)
-}

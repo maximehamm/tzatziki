@@ -20,23 +20,34 @@
          </li>
 
          <br/>
-         <li>Add <u>new row</u> by pressing 'Enter' from last line or from end of line.<br/></li>
+         <li>Add <u>new row</u> by pressing 'Enter' from last row or from end of row.<br/></li>
          <li>Add a <u>new column</u> by pressing 'Pipe' from anywere
              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_14a9e777-c607-4e0a-bb80-f12e0d8db029"
                  alt="Tzatziki" width="419" height="233"></p>
          </li>
 
          <br/>
-         <li>Toggle table auto-formatting from editor context menu</li>
+         <li>Smart copy table and paste to <u>Excel</u> :<br/>
+             - Swith automatically to column mode when focusing a Cucumber table.<br/>
+             - Triple-click a header cell to select an entire he entire column, or anywhere else for a row.<br/>
+             - Copy to clipboard to transfert to Excel for example !
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_98501815-1487-4047-82cb-11dc751b503e"
+                 alt="Tzatziki" width="419" height="233"></p>
+         </li>
+
+         <br/>
+         <li>Toggle table auto-formatting from Edit menu</li>
+         <li>Toggle table smart copy from Edit menu</li>
+
        </ul>
 
        <br/>
        <b>Roadmap :</></b><br/>
        <ul>
-         <li>Copy from Excel to Intellij IDEA Cucumber Editor</li>
-         <li>Copy from Intellij IDEA Cucumber Editor to Excel</li>
-         <li>Move column left / right</li>
-         <li>Move line up / down</li>
+         <li>Copy from Excel to IDEA Cucumber Editor</li>
+         <li>Smart column and rows deletion</li>
+         <li>Move columns left/right and rows up/down</li>
+         <li>Table cell completion to suggest already used values</li>
          <li>...</li>
        </ul>
 
@@ -79,6 +90,10 @@
             <action class="io.nimbly.tzatziki.actions.ToggleTzatzikiFormattingAction"
                     id="io.nimbly.tzatziki.ToggleTzatzikiFormattingAction"
                     text="Toggle Cucumber auto-formatting">
+            </action>
+            <action class="io.nimbly.tzatziki.actions.ToggleTzatzikiSmartCopyAction"
+                    id="io.nimbly.tzatziki.ToggleTzatzikiSmartCopyAction"
+                    text="Toggle Cucumber smart copy">
             </action>
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
