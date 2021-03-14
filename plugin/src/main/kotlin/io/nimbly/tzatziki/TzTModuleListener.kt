@@ -11,6 +11,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.util.*
+import io.nimbly.tzatziki.util.TmarSelectionModeManager.blockSelectionSwitch
+import io.nimbly.tzatziki.util.TmarSelectionModeManager.releaseSelectionSwitch
 
 var TZATZIKI_AUTO_FORMAT : Boolean = true
 var TZATZIKI_SMART_COPY : Boolean = true
@@ -43,6 +45,7 @@ class TzTModuleListener : ProjectManagerListener {
         actionManager.replaceHandler(EnterHandler())
 
         actionManager.replaceHandler(CopyHandler())
+        actionManager.replaceHandler(PasteHandler())
     }
 
     private fun initMouseListener(project: Project) {
@@ -56,7 +59,7 @@ class TzTModuleListener : ProjectManagerListener {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
             if (TZATZIKI_AUTO_FORMAT)
-                editor.findTable(editor.caretModel.offset)?.format()
+                editor.findTableAt(editor.caretModel.offset)?.format()
         }
     }
 
@@ -79,6 +82,20 @@ class TzTModuleListener : ProjectManagerListener {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             if (!TZATZIKI_SMART_COPY || !editor.smartCopy())
                 doDefault(editor, caret, dataContext)
+        }
+    }
+
+    private class PasteHandler : AbstractWriteActionHandler(ACTION_EDITOR_PASTE) {
+        override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            if (TZATZIKI_SMART_COPY && editor.smartPaste(dataContext))
+                return
+
+            blockSelectionSwitch()
+            try {
+                super.doExecute(editor, null, dataContext)
+            } finally {
+                releaseSelectionSwitch()
+            }
         }
     }
 

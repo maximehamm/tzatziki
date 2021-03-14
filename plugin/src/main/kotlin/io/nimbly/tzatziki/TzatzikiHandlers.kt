@@ -6,14 +6,14 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import io.nimbly.tzatziki.util.addNewColum
-import io.nimbly.tzatziki.util.findTable
+import io.nimbly.tzatziki.util.findTableAt
 import io.nimbly.tzatziki.util.format
 
 class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
         if (TZATZIKI_AUTO_FORMAT)
-            editor.findTable(editor.caretModel.offset)?.format()
+            editor.findTableAt(editor.caretModel.offset)?.format()
         return Result.CONTINUE
     }
 

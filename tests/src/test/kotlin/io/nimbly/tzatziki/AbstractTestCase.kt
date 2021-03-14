@@ -5,6 +5,7 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.fileTypes.FileTypeRegistry
+import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
@@ -19,6 +20,8 @@ import io.nimbly.tzatziki.util.getDocument
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Ignore
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
 import java.io.File
 
 @Ignore
@@ -78,8 +81,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             fail(
                 """
                 Expected file content not found.
-                The file (with ⭑ at diff) :
-                ${s.replace(" ".toRegex(), ".")}
+                The file (with ⭑ at diff) :\n
+                ${s.replace(" ".toRegex(), " ").trimIndent()}
                 """.trimIndent()
             )
         }
@@ -227,12 +230,51 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         })
     }
 
+    protected open fun selectAsColumn(lookForStart: String, lookForEnd: String) {
+        val start: Int = getIndexOf(configuredFile!!.text, lookForStart)
+        val end: Int = getIndexOf(configuredFile!!.text, lookForEnd)
+        selectAsColumn(start, end)
+    }
+
+    protected open fun selectAsColumn(offsetStart: Int, offsetEnd: Int) {
+        assert(offsetStart >= 0)
+        assert(offsetEnd >= 0)
+        val start = myFixture.editor.offsetToLogicalPosition(offsetStart)
+        val end = myFixture.editor.offsetToLogicalPosition(offsetEnd)
+        moveCarretTo(offsetStart)
+        val selectionModel = myFixture.editor.selectionModel
+        selectionModel.removeSelection(true)
+        selectionModel.setBlockSelection(start, end)
+    }
+
+    protected open fun select(lookForSelectionStart: String, selectedText: String) {
+        var l = lookForSelectionStart
+        l = l.replace("`".toRegex(), "\"")
+        val indexOf = getIndexOf(configuredFile!!.text, l)
+        assert(indexOf > 0)
+
+        moveCarretTo(indexOf + selectedText.length)
+        select(indexOf, selectedText.length)
+    }
+    protected open fun select(offset: Int, length: Int) {
+        myFixture.editor.selectionModel.setSelection(offset, offset + length)
+    }
+
+    protected open fun copy() {
+        executeHandler(ACTION_EDITOR_COPY)
+    }
+
+    protected open fun paste() {
+        executeHandler(ACTION_EDITOR_PASTE)
+    }
+
+    protected fun checkClipboard(expected: String) {
+        val found = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor)
+        assertEquals(expected, found)
+    }
+
     override fun getTestDataPath(): String? {
         return "src/test/resources"
     }
 
-    override fun setUp() {
-        super.setUp()
-
-    }
 }

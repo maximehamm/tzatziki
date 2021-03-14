@@ -25,7 +25,7 @@ import java.io.StringReader
 fun Editor.smartCopy(): Boolean {
 
     val offset = caretModel.offset
-    val table = findTable(offset) ?: return false
+    val table = findTableAt(offset) ?: return false
     if (!selectionModel.selectedText!!.contains("|")) return false
 
     // Prepare table content
@@ -197,7 +197,7 @@ object TZMouseAdapter : EditorMouseAdapter() {
             val editor = e.editor
             val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
             val offset = editor.logicalPositionToOffset(logicalPosition)
-            val table = editor.findTable(offset)
+            val table = editor.findTableAt(offset)
             if (table != null) {
                 manageDoubleClicTableSelection(table, editor, offset)
             }
@@ -229,7 +229,7 @@ object TZMouseAdapter : EditorMouseAdapter() {
         if (me.button == MouseEvent.BUTTON1
             && me.clickCount == 3
         ) {
-            val table = editor.findTable(offset)
+            val table = editor.findTableAt(offset)
             if (table != null) {
                 e.consume()
                 e.mouseEvent.consume()

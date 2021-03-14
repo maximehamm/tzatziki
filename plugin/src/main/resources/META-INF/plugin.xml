@@ -45,7 +45,11 @@
        <b>Roadmap :</></b><br/>
        <ul>
          <li>Copy from Excel to IDEA Cucumber Editor</li>
+         <li>Copy-Paste or Cut-Paste within Cucumber table</li>
+
          <li>Smart column and rows deletion</li>
+         <li>Smart cell content deletion</li>
+
          <li>Move columns left/right and rows up/down</li>
          <li>Table cell completion to suggest already used values</li>
          <li>...</li>

@@ -3,7 +3,6 @@ package io.nimbly.tzatziki.util
 import com.intellij.codeInsight.highlighting.HighlightManager
 import com.intellij.ide.DataManager
 import com.intellij.injected.editor.EditorWindow
-import com.intellij.lang.ASTNode
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
@@ -29,7 +28,7 @@ import java.awt.event.InputEvent
 import java.util.ArrayList
 import java.util.function.Consumer
 
-fun Editor.findTable(offset: Int): GherkinTable? {
+fun Editor.findTableAt(offset: Int): GherkinTable? {
     val file = getFile() ?: return null
 
     val adjustedOffset =
@@ -71,7 +70,7 @@ fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
 
 fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = editor.caretModel.offset): Boolean {
 
-    val table = findTable(offset) ?: return false
+    val table = findTableAt(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
     val file = getFile() ?: return false
     val element = file.findElementAt(offset) ?: return false

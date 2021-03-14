@@ -142,6 +142,9 @@ fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
     return null
 }
 
+fun GherkinTable.rowAtLine(line: Int): GherkinTableRow?
+    = allRows().find { it.getDocumentLine() == line }
+
 fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell = psiCells[columnNumber]
 
 fun GherkinTableRow.isHeader()

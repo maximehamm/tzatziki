@@ -22,7 +22,7 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
     if (c != '|') return false
     if (fileType != GherkinFileType.INSTANCE) return false
     val offset = editor.caretModel.offset
-    val table = editor.findTable(offset) ?: return false
+    val table = editor.findTableAt(offset) ?: return false
     val document = file.getDocument() ?: return false
     val currentCol = table.columnNumberAt(offset)
     val currentRow = table.rowNumberAt(offset) ?: return false
@@ -91,7 +91,7 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
 fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
 
     val colIdx = getTableColumnIndexAt(offset) ?: return false
-    val table = findTable(offset) ?: return false
+    val table = findTableAt(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
 
     val insert = offset == getLineEndOffset(offset)
