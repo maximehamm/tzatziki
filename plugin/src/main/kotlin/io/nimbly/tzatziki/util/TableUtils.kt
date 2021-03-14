@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.psi.impl.source.tree.LeafPsiElement

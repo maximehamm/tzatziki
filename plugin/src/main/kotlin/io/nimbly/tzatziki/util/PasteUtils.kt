@@ -6,11 +6,10 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import java.awt.datatransfer.DataFlavor
-import kotlin.math.abs
 import kotlin.math.max
 
 fun Editor.smartPaste(dataContext: DataContext): Boolean {
@@ -75,14 +74,20 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         val newTable = table.replace(tempTable) as GherkinTable
 
         // Move caret
-        val targetCell = newTable.row(y).cell(x)
-        caretModel.moveToOffset(targetCell.previousPipe().textOffset + 2)
-
-        // Select modified cells
-        //TODO
+        val targetCell = newTable.row(y).cell(if (x<0) 0 else x)
+        caretModel.moveToOffset(targetCell.previousPipe().startOffset + 1)
 
         // Format table
         newTable.format()
+
+        // Highlight modified cells
+        val startHighlight = targetCell.previousPipe().startOffset
+        val endHighlight = newTable
+            .row(y + addedCells.size -1)
+            .cell((if (x<0) 0 else x) + addedCells[0].size -1)
+            .nextPipe().endOffset
+        highlight(startHighlight, endHighlight)
+
     }
 
     return true
@@ -101,7 +106,8 @@ fun buildTableText(merged: Array<Array<String?>>): String {
 
 private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX: Int, targetY: Int): Array<Array<String?>> {
 
-    val width = max(abs(targetX)+added[0].size, actual[0].size)
+    val width = if (targetX == -1) added[0].size + actual[0].size
+                else max(targetX+added[0].size, actual[0].size)
     val height = max(targetY+added.size, actual.size)
 
     val target: Array<Array<String?>> = Array(height) { Array(width) { null } }
@@ -114,7 +120,7 @@ private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX
     }
 
     if (targetX == -1) {
-        feed(actual, 1, 0)
+        feed(actual, added[0].size, 0)
         feed(added, 0, targetY)
     }
     else {

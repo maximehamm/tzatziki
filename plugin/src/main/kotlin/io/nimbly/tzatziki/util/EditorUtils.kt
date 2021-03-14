@@ -232,22 +232,30 @@ fun Editor.getLineStartOffset(offset: Int = caretModel.offset): Int {
 val HIGHLIGHTERS: List<RangeHighlighter> = ArrayList()
 val HIGHLIGHTERS_RANGE: List<TextRange> = ArrayList()
 
-fun Editor.highlight(range: TextRange) {
-    highlight(range.startOffset, range.endOffset, null)
-}
+fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
 
-fun Editor.highlight(start: Int, end: Int) {
-    highlight(start, end, null)
-}
-
-private fun Editor.highlight(
-    start: Int,
-    end: Int,
-    outHighlightersRanges: MutableCollection<TextRange>?,
-) {
     var end = end
     if (document.getText(TextRange(end - 1, end)).trim { it <= ' ' }.isEmpty())
         end--
+
+    if (columnMode) {
+        val colStart = document.getColumnAt(start)
+        val width = document.getColumnAt(end) - colStart
+        val lineStart = document.getLineNumber(start)
+        val lineEnd = document.getLineNumber(end)
+        for (line in lineStart..lineEnd) {
+            val start1 = document.getLineStartOffset(line) + colStart
+            val end1 = start1 + width
+            highlight(start1, end1, null)
+        }
+    }
+    else {
+        highlight(start, end, null)
+    }
+}
+
+private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableCollection<TextRange>?) {
+
     val editorColorsManager = EditorColorsManager.getInstance()
     val globalScheme = editorColorsManager.globalScheme
     val textattributes = globalScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)
@@ -255,13 +263,9 @@ private fun Editor.highlight(
     
     highlightManager.addOccurrenceHighlight(
         this,
-        start,
-        end,
-        textattributes,
-        HighlightManager.HIDE_BY_ESCAPE,
-        null,
-        null
+        start, end, textattributes, HighlightManager.HIDE_BY_ANY_KEY, null, null
     )
+
     outHighlightersRanges?.add(TextRange(start, end))
 }
 
