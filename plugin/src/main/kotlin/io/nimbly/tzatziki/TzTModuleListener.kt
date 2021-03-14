@@ -5,19 +5,12 @@ import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
-import com.intellij.openapi.editor.event.*
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.intellij.refactoring.suggested.endOffset
-import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinTable
-import java.awt.event.MouseEvent
 
 var TZATZIKI_AUTO_FORMAT : Boolean = true
 var TZATZIKI_SMART_COPY : Boolean = true
@@ -53,80 +46,10 @@ class TzTModuleListener : ProjectManagerListener {
     }
 
     private fun initMouseListener(project: Project) {
-
-        val mouseAdapter = object : EditorMouseAdapter() {
-            override fun mouseReleased(e: EditorMouseEvent) {
-
-                if (!TZATZIKI_SMART_COPY)
-                    return
-
-                TmarSelectionModeManager.releaseSelectionSwitch()
-
-                val me = e.mouseEvent
-                if (me.button == MouseEvent.BUTTON1
-                    && me.clickCount == 3) {
-                    val editor = e.editor
-                    val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
-                    val offset = editor.logicalPositionToOffset(logicalPosition)
-                    val table = editor.findTable(offset)
-                    if (table != null) {
-                        manageDoubleClicTableSelection(table, editor, offset)
-                    }
-                }
-            }
-
-            override fun mousePressed(e: EditorMouseEvent) {
-
-                if (!TZATZIKI_SMART_COPY)
-                    return
-
-                val editor = e.editor
-
-                // Swith selection mode
-                if (editor.selectionModel.hasSelection()) return
-
-                //System.out.println("M");
-                val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
-                val offset = editor.logicalPositionToOffset(logicalPosition)
-
-                // swith mode if needed
-                TmarSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
-                TmarSelectionModeManager.blockSelectionSwitch()
-
-                //
-                // TRICKY : avoid Intellij to manage double clic !
-                // Because  e.getMouseEvent().consume() is not manage by default implementation !
-                val me = e.mouseEvent
-                if (me.button == MouseEvent.BUTTON1
-                    && me.clickCount == 3
-                ) {
-                    val table = editor.findTable(offset)
-                    if (table != null) {
-                        e.consume()
-                        e.mouseEvent.consume()
-                        JavaUtil.updateField(e.mouseEvent, "popupTrigger", true)
-                        JavaUtil.updateField(e.mouseEvent, "button", 0)
-                    }
-                }
-            }
+        EditorFactory.getInstance().eventMulticaster.apply {
+            addEditorMouseListener(TZMouseAdapter, project)
+            addCaretListener(TZCaretAdapter, project)
         }
-
-        val caretAdapter: CaretListener = object : CaretAdapter() {
-            override fun caretPositionChanged(e: CaretEvent) {
-
-                if (!TZATZIKI_SMART_COPY)
-                    return
-
-                val editor = e.editor
-                val offset = editor.logicalPositionToOffset(e.newPosition)
-                TmarSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
-            }
-        }
-
-        val editorFactory = EditorFactory.getInstance()
-        val multicaster = editorFactory.eventMulticaster
-        multicaster.addEditorMouseListener(mouseAdapter, project)
-        multicaster.addCaretListener(caretAdapter, project)
     }
 
     private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {

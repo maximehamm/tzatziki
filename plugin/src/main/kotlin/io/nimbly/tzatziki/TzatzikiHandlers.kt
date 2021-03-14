@@ -9,9 +9,6 @@ import io.nimbly.tzatziki.util.addNewColum
 import io.nimbly.tzatziki.util.findTable
 import io.nimbly.tzatziki.util.format
 
-/**
- * CHAR TYPED
- */
 class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
