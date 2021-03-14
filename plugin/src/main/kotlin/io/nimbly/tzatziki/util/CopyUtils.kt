@@ -172,7 +172,7 @@ object TzSelectionModeManager {
     }
 }
 
-object TZMouseAdapter : EditorMouseAdapter() {
+object TZMouseAdapter : EditorMouseListener {
     override fun mouseReleased(e: EditorMouseEvent) {
 
         if (!TZATZIKI_SMART_COPY)
