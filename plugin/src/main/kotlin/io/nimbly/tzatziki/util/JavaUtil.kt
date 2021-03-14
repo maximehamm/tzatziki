@@ -1,24 +1,24 @@
-package io.nimbly.tzatziki.util;
+package io.nimbly.tzatziki.util
 
-import java.lang.reflect.Field;
+import java.lang.Exception
 
-public class JavaUtil {
+object JavaUtil {
 
-    public static void updateField(Object object, String field, boolean bool) {
+    fun updateField(`object`: Any, field: String?, bool: Boolean) {
         try {
-            Field f1 = object.getClass().getDeclaredField(field);
-            f1.setAccessible(true);
-            f1.setBoolean(object, bool);
-        } catch (Exception ignored) {
+            val f1 = `object`.javaClass.getDeclaredField(field)
+            f1.isAccessible = true
+            f1.setBoolean(`object`, bool)
+        } catch (ignored: Exception) {
         }
     }
 
-    public static void updateField(Object object, String field, int inte) {
+    fun updateField(`object`: Any, field: String?, inte: Int) {
         try {
-            Field f1 = object.getClass().getDeclaredField(field);
-            f1.setAccessible(true);
-            f1.setInt(object, inte);
-        } catch (Exception ignored) {
+            val f1 = `object`.javaClass.getDeclaredField(field)
+            f1.isAccessible = true
+            f1.setInt(`object`, inte)
+        } catch (ignored: Exception) {
         }
     }
 }

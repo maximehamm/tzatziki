@@ -181,14 +181,21 @@ object TZMouseAdapter : EditorMouseListener {
         TzSelectionModeManager.releaseSelectionSwitch()
 
         val me = e.mouseEvent
-        if (me.button == MouseEvent.BUTTON1
-            && me.clickCount == 2) {
+        if (me.button == MouseEvent.BUTTON1 && me.clickCount >= 2) {
             val editor = e.editor
             val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
             val offset = editor.logicalPositionToOffset(logicalPosition)
             val table = editor.findTableAt(offset)
             if (table != null) {
-                manageDoubleClicTableSelection(table, editor, offset)
+                if (me.clickCount == 3)
+                    manageDoubleClicTableSelection(table, editor, offset)
+                else if (me.clickCount == 2)
+                    editor.selectionModel.selectWordAtCaret(false)
+
+//                e.consume()
+//                e.mouseEvent.consume()
+//                JavaUtil.updateField(e.mouseEvent, "popupTrigger", true)
+//                JavaUtil.updateField(e.mouseEvent, "button", 0)
             }
         }
     }
@@ -199,11 +206,6 @@ object TZMouseAdapter : EditorMouseListener {
             return
 
         val editor = e.editor
-
-        // Swith selection mode
-        if (editor.selectionModel.hasSelection()) return
-
-        //System.out.println("M");
         val logicalPosition = editor.xyToLogicalPosition(e.mouseEvent.point)
         val offset = editor.logicalPositionToOffset(logicalPosition)
 
@@ -211,13 +213,10 @@ object TZMouseAdapter : EditorMouseListener {
         TzSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
         TzSelectionModeManager.blockSelectionSwitch()
 
-        //
         // TRICKY : avoid Intellij to manage double clic !
         // Because  e.getMouseEvent().consume() is not manage by default implementation !
         val me = e.mouseEvent
-        if (me.button == MouseEvent.BUTTON1
-            && me.clickCount == 3
-        ) {
+        if (me.button == MouseEvent.BUTTON1 && me.clickCount >= 2) {
             val table = editor.findTableAt(offset)
             if (table != null) {
                 e.consume()
