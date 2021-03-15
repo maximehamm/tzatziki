@@ -23,10 +23,12 @@ tasks.runPluginVerifier {
 }
 
 patchPluginXml {
+    sinceBuild '203.*'
     changeNotes """
       <b>Please Rate and Review this plugin !</b><br/><br/>
       Change notes :
       <ul>
+        <li><b>1.2</b> Intellij IDEA 2021.1 EAP Compatibility</li>
         <li><b>1.1</b> Copy from Excel to table</li>
         <li><b>1.0</b> Copy from table to Excel</li>
         <li><b>0.4</b> Add new column by pressing pipe</li>

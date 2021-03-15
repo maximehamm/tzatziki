@@ -12,7 +12,6 @@ import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColors.SEARCH_RESULT_ATTRIBUTES
 import com.intellij.openapi.editor.markup.RangeHighlighter
-import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -21,7 +20,6 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
-import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.plugins.cucumber.psi.*
 import org.junit.Assert
 import java.awt.event.InputEvent
@@ -303,13 +301,11 @@ fun Editor.executeAction(actionId: String, assertActionIsEnabled: Boolean) {
 }
 
 fun Editor.createEditorContext(): DataContext {
-    val hostEditor: Any = if (this is EditorWindow) this.delegate else this
-    val map: Map<String, Any> = ContainerUtil.newHashMap(
-        Pair.create(CommonDataKeys.HOST_EDITOR.name, hostEditor),
-        Pair.createNonNull(CommonDataKeys.EDITOR.name, this)
-    )
-    val parent = DataManager.getInstance().getDataContext(this.contentComponent)
-    return SimpleDataContext.getSimpleContext(map, parent)
+    return SimpleDataContext.builder()
+        .setParent(DataManager.getInstance().getDataContext(contentComponent))
+        .add(CommonDataKeys.HOST_EDITOR, if (this is EditorWindow) delegate else this)
+        .add(CommonDataKeys.EDITOR, this)
+        .build()
 }
 
 fun Editor.setColumnMode(columnnMode: Boolean) {

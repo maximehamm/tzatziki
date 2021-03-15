@@ -14,7 +14,6 @@ import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.util.TzSelectionModeManager.blockSelectionSwitch
 import io.nimbly.tzatziki.util.TzSelectionModeManager.releaseSelectionSwitch
 
-var TZATZIKI_AUTO_FORMAT : Boolean = true
 var SMART_EDIT : Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
@@ -35,9 +34,6 @@ class TzTModuleListener : ProjectManagerListener {
 
         actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_DELETE))
         actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_BACKSPACE))
-
-//        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_CUT))
-//        actionManager.replaceHandler(FormatterHandler(ACTION_ EDITOR_PASTE))
 
         actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
         actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))

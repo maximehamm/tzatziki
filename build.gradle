@@ -4,19 +4,31 @@ plugins {
 
 // https://plugins.jetbrains.com/plugin/9164-gherkin
 // https://plugins.jetbrains.com/plugin/227-psiviewer
-ext {
-    plugin_idea_version = 'IU-203.7148.57'
+// https://plugins.jetbrains.com/docs/intellij/gradle-build-system.html
+
+// https://github.com/JetBrains/gradle-intellij-plugin/
+ext { // 2021.1 EAP
+    plugin_idea_version = 'IC-LATEST-EAP-SNAPSHOT'
     plugin_idea_plugins = ['java',
                            'Kotlin',
                            'org.intellij.intelliLang',
-                           'Gherkin:203.5981.155',
-                           'PsiViewer:203-SNAPSHOT']
+                           'Gherkin:211.6432.7',
+                           'PsiViewer:211.6305.21-EAP-SNAPSHOT']
 }
+
+//ext { // 2020.3
+//    plugin_idea_version = 'IU-203.7148.57'
+//    plugin_idea_plugins = ['java',
+//                           'Kotlin',
+//                           'org.intellij.intelliLang',
+//                           'Gherkin:203.5981.155',
+//                           'PsiViewer:203-SNAPSHOT']
+//}
 
 allprojects {
 
     group = 'io.nimbly.tzatziki'
-    version '1.1.0'
+    version '1.2.0'
 
     repositories {
         mavenCentral()
