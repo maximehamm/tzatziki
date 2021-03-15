@@ -45,8 +45,7 @@
          </li>
 
          <br/>
-         <li>Toggle table auto-formatting from Edit menu</li>
-         <li>Toggle table smart copy from Edit menu</li>
+         <li>Toggle Cucumber table smart editing (from Edit menu)</li>
 
        </ul>
 
@@ -104,13 +103,9 @@
 
         <group id="io.nimbly.tzatziki.group">
             <separator/>
-            <action class="io.nimbly.tzatziki.actions.ToggleTzatzikiFormattingAction"
-                    id="io.nimbly.tzatziki.ToggleTzatzikiFormattingAction"
-                    text="Toggle Cucumber auto-formatting">
-            </action>
             <action class="io.nimbly.tzatziki.actions.ToggleTzatzikiSmartCopyAction"
                     id="io.nimbly.tzatziki.ToggleTzatzikiSmartCopyAction"
-                    text="Toggle Cucumber smart copy">
+                    text="Toggle Cucumber smart editing">
             </action>
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>

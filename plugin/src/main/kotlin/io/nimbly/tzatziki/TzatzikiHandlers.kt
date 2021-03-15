@@ -12,13 +12,13 @@ import io.nimbly.tzatziki.util.format
 class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
-        if (TZATZIKI_AUTO_FORMAT)
+        if (SMART_EDIT)
             editor.findTableAt(editor.caretModel.offset)?.format()
         return Result.CONTINUE
     }
 
     override fun beforeCharTyped(c: Char, project: Project, editor: Editor, file: PsiFile, fileType: FileType): Result {
-        return if (TZATZIKI_AUTO_FORMAT && addNewColum(c, editor, file, project, fileType))
+        return if (SMART_EDIT && addNewColum(c, editor, file, project, fileType))
             Result.STOP
         else
             Result.CONTINUE

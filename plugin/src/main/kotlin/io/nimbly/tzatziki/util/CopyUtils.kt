@@ -9,7 +9,7 @@ import com.intellij.openapi.util.Comparing
 import com.intellij.openapi.util.TextRange
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import io.nimbly.tzatziki.TZATZIKI_SMART_COPY
+import io.nimbly.tzatziki.SMART_EDIT
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
@@ -99,7 +99,7 @@ class TzatzikiTransferableData(table: GherkinTable, startOffsets: IntArray, endO
 
 fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
 
-    if (!TZATZIKI_SMART_COPY)
+    if (!SMART_EDIT)
         return false
 
     val cell = table.cellAt(offset) ?: return false
@@ -175,7 +175,7 @@ object TzSelectionModeManager {
 object TZMouseAdapter : EditorMouseListener {
     override fun mouseReleased(e: EditorMouseEvent) {
 
-        if (!TZATZIKI_SMART_COPY)
+        if (!SMART_EDIT)
             return
 
         TzSelectionModeManager.releaseSelectionSwitch()
@@ -197,7 +197,7 @@ object TZMouseAdapter : EditorMouseListener {
 
     override fun mousePressed(e: EditorMouseEvent) {
 
-        if (!TZATZIKI_SMART_COPY)
+        if (!SMART_EDIT)
             return
 
         val editor = e.editor
@@ -226,7 +226,7 @@ object TZMouseAdapter : EditorMouseListener {
 object TZCaretAdapter : CaretListener {
     override fun caretPositionChanged(e: CaretEvent) {
 
-        if (!TZATZIKI_SMART_COPY)
+        if (!SMART_EDIT)
             return
 
         val editor = e.editor

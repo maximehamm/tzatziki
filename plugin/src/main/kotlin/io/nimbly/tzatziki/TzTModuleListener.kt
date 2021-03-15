@@ -3,21 +3,19 @@ package io.nimbly.tzatziki
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
-import com.intellij.openapi.editor.CaretModel
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.sun.java.accessibility.util.SwingEventMonitor.addCaretListener
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.util.TzSelectionModeManager.blockSelectionSwitch
 import io.nimbly.tzatziki.util.TzSelectionModeManager.releaseSelectionSwitch
 
 var TZATZIKI_AUTO_FORMAT : Boolean = true
-var TZATZIKI_SMART_COPY : Boolean = true
+var SMART_EDIT : Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
@@ -61,29 +59,29 @@ class TzTModuleListener : ProjectManagerListener {
     private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
-            if (TZATZIKI_AUTO_FORMAT)
+            if (SMART_EDIT)
                 editor.findTableAt(editor.caretModel.offset)?.format()
         }
     }
 
     private class TabHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!TZATZIKI_AUTO_FORMAT || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
+            if (!SMART_EDIT || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
                 doDefault(editor, caret, dataContext)
         }
     }
 
     private class EnterHandler : AbstractWriteActionHandler(ACTION_EDITOR_ENTER) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!TZATZIKI_AUTO_FORMAT || !editor.navigateInTableWithEnter())
-                if (!TZATZIKI_AUTO_FORMAT || !editor.addTableRow())
+            if (!SMART_EDIT || !editor.navigateInTableWithEnter())
+                if (!SMART_EDIT || !editor.addTableRow())
                     doDefault(editor, caret, dataContext)
         }
     }
 
     private class CopyHandler : AbstractWriteActionHandler(ACTION_EDITOR_COPY) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!TZATZIKI_SMART_COPY || !editor.smartCopy())
+            if (!SMART_EDIT || !editor.smartCopy())
                 doDefault(editor, caret, dataContext)
         }
     }
@@ -91,7 +89,7 @@ class TzTModuleListener : ProjectManagerListener {
     private class CutHandler : AbstractWriteActionHandler(ACTION_EDITOR_CUT) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             doDefault(editor, caret, dataContext)
-            if (TZATZIKI_AUTO_FORMAT) {
+            if (SMART_EDIT) {
                 val table = editor.findTableAt(editor.caretModel.offset)
                 if (table != null) {
                     table.format()
@@ -103,7 +101,7 @@ class TzTModuleListener : ProjectManagerListener {
 
     private class PasteHandler : AbstractWriteActionHandler(ACTION_EDITOR_PASTE) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (TZATZIKI_SMART_COPY && editor.smartPaste(dataContext))
+            if (SMART_EDIT && editor.smartPaste(dataContext))
                 return
 
             blockSelectionSwitch()
