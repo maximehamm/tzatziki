@@ -21,9 +21,10 @@ import java.io.StringReader
 
 fun Editor.smartCopy(): Boolean {
 
+    if (! isColumnMode) return false
     val offset = selectionModel.selectionStart
     val table = findTableAt(offset) ?: return false
-    if (!selectionModel.selectedText!!.contains("|")) return false
+    if (!selectionModel.getSelectedText(true)!!.contains("|")) return false
 
     // Prepare table content
     val transferable = TzatzikiTransferableData(table, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds)

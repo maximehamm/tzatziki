@@ -10,6 +10,7 @@ import com.intellij.psi.PsiFile
 import io.nimbly.tzatziki.util.addNewColum
 import io.nimbly.tzatziki.util.findTableAt
 import io.nimbly.tzatziki.util.format
+import io.nimbly.tzatziki.util.stopBeforeDeletion
 
 class TzTypedHandler : TypedHandlerDelegate() {
 
@@ -21,10 +22,18 @@ class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun beforeCharTyped(c: Char, project: Project, editor: Editor, file: PsiFile, fileType: FileType): Result {
         if (!SMART_EDIT)
-            CONTINUE
+            return CONTINUE
 
-        if (addNewColum(c, editor, file, project, fileType))
-            STOP
+        if (editor.addNewColum(c, project, fileType))
+            return STOP
+
+        return CONTINUE
+    }
+
+    override fun beforeSelectionRemoved(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
+
+        if (editor.stopBeforeDeletion(false))
+            return STOP
 
         return CONTINUE
     }

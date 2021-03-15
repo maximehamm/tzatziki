@@ -171,3 +171,10 @@ fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {
 
 private fun GherkinTableRow.intersects(range: TextRange)
     = textRange.intersects(range)
+
+fun GherkinTableCell.coordinate(): Pair<Int, Int> {
+    val row = row()
+    val y = row.table().allRows().indexOf(row)
+    val x = row.psiCells.indexOf(this)
+    return Pair(x, y)
+}

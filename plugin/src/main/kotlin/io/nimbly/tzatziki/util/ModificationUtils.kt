@@ -2,23 +2,23 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 import java.util.*
 
 const val FEATURE_HEAD =
@@ -39,26 +39,26 @@ fun Editor.where(table: GherkinTable) : Int {
     }
 }
 
-fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileType: FileType): Boolean {
+fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
 
     if (c != '|') return false
     if (fileType != GherkinFileType.INSTANCE) return false
-    val offset = editor.caretModel.offset
-    val table = editor.findTableAt(offset) ?: return false
+    val offset = this.caretModel.offset
+    val table = this.findTableAt(offset) ?: return false
     var currentCol = table.columnNumberAt(offset)
     val currentRow = table.rowNumberAt(offset) ?: return false
 
     // Where I am ? In table ? At its left ? At its right ?
-    var where = editor.where(table)
+    var where = this.where(table)
 
     // adjust left of right of current column
     if (where == 0 && currentCol != null) {
-        val startOfCell = editor.cellAt(offset)?.previousPipe()?.startOffset
+        val startOfCell = this.cellAt(offset)?.previousPipe()?.startOffset
         if (startOfCell != null) {
             val margin = offset - startOfCell
             if (margin in 1..2) {
                 currentCol -= 1
-                if (currentCol<0)
+                if (currentCol < 0)
                     where = -1
             }
         }
@@ -67,14 +67,14 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
     // Build new table as string
     val s = StringBuilder()
     table.allRows().forEachIndexed { y, row ->
-        if (where<0)
+        if (where < 0)
             s.append("|   ")
         row.psiCells.forEachIndexed { x, cell ->
             s.append('|').append(cell.text)
             if (x == currentCol)
                 s.append("|   ")
         }
-        if (where>0)
+        if (where > 0)
             s.append("|   ")
 
         s.append('|').append('\n')
@@ -82,8 +82,8 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
 
     // Commit document
     PsiDocumentManager.getInstance(project).let {
-        it.commitDocument(editor.document)
-        it.doPostponedOperationsAndUnblockDocument(editor.document)
+        it.commitDocument(this.document)
+        it.doPostponedOperationsAndUnblockDocument(this.document)
     }
 
     // Apply modifications
@@ -100,13 +100,13 @@ fun addNewColum(c: Char, editor: Editor, file: PsiFile, project: Project, fileTy
         // Find caret target
         val targetColumn =
             when {
-                where <0 -> 0
-                where >0 -> newRow.psiCells.size-1
-                else -> currentCol!! +1
+                where < 0 -> 0
+                where > 0 -> newRow.psiCells.size - 1
+                else -> currentCol!! + 1
             }
 
         // Move caret
-        editor.caretModel.moveToOffset(newRow.cell(targetColumn).previousPipe().textOffset + 2)
+        this.caretModel.moveToOffset(newRow.cell(targetColumn).previousPipe().textOffset + 2)
 
         // Format table
         newTable.format()
@@ -143,17 +143,25 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     return true
 }
 
-fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset): Boolean {
-
-    if (selectionModel.hasSelection()) {
-        val table = findTableAt(offset)
-        if (table != null) {
-            val text = selectionModel.selectedText
-            if (text != null && text.contains(Regex("[\\n|]"))) {
-                if (table.cleanSelection(selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds) > 0)
-                    return true
+fun Editor.stopBeforeDeletion(clean: Boolean): Boolean {
+    if (!selectionModel.hasSelection(true))
+        return false
+    val table = findTableAt(selectionModel.selectionStart)
+    if (table != null) {
+        val text = selectionModel.getSelectedText(true)
+        if (text != null && text.contains(Regex("[\\n|]"))) {
+            if (!clean || cleanSelection(this, table, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds) > 0) {
+                return true
             }
         }
+    }
+    return false
+}
+
+fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset): Boolean {
+
+    if (stopBeforeDeletion(true)) {
+        return true
     }
     else {
         val table = findTableAt(offset)
@@ -173,36 +181,62 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
     return false
 }
 
-private fun GherkinTable.cleanSelection(starts: IntArray, ends: IntArray): Int {
+private fun cleanSelection(editor: Editor, table: GherkinTable, starts: IntArray, ends: IntArray): Int {
 
-    val lines = allRows()
+    val lines = table.allRows()
     if (lines.size < 2) return 0
 
-    val document = getDocument() ?: return 0
-    val cellRangesToClean = mutableListOf<Pair<GherkinTableCell, TextRange>>()
-
+    // Find cells to delete
+    val toClean = mutableListOf<GherkinTableCell>()
     starts.indices.forEach { i ->
         val r = TextRange(starts[i], ends[i])
-        val cells = findCellsInRange(r)
-        for (c in cells) {
-            var inter = c.textRange.intersection(r)
-            if (inter == null) continue
-            inter = inter.shiftRight(-c.textOffset)
-            cellRangesToClean.add(Pair<GherkinTableCell, TextRange>(c, inter))
-        }
+        table.findCellsInRange(r, false)
+//            .filter { it.textRange.intersection(r) != null }
+            .forEach {
+                toClean.add(it)
+            }
     }
-    if (cellRangesToClean.size < 2) return 0
-    val project: Project = lines[0].project
-    WriteCommandAction.runWriteCommandAction(project, "Clean table", "Tzatziki", {
-            DocumentUtil.executeInBulk(document, true) {
-                doCleanSeletion(cellRangesToClean) }
-        })
-    return cellRangesToClean.size
+    if (toClean.size < 1) return 0
+
+    // Build temp string
+    val sb = StringBuilder()
+    table.allRows().forEach { row ->
+        sb.append("| ")
+        row.psiCells.forEach {
+            sb.append(if (toClean.contains(it)) " " else it.text)
+            sb.append(" |")
+        }
+        sb.append('\n')
+    }
+
+    // Replace table
+    val coordinate = toClean[0].coordinate()
+    ApplicationManager.getApplication().runWriteAction {
+
+        // replace table
+        val tempTable = CucumberElementFactory
+            .createTempPsiFile(table.project, FEATURE_HEAD + sb.toString())
+            .children[0].children[0].children[0].children[0]
+        val newTable = table.replace(tempTable) as GherkinTable
+
+        // Move cursor
+        val targetCell = newTable.row(coordinate.second).cell(coordinate.first)
+        editor.caretModel.removeSecondaryCarets()
+        editor.caretModel.moveToOffset(targetCell.previousPipe().startOffset+2)
+        editor.selectionModel.removeSelection()
+
+        // Format table
+        newTable.format()
+    }
+
+    return toClean.size
 }
 
-fun GherkinTable.findCellsInRange(range: TextRange): List<GherkinTableCell> {
+fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<GherkinTableCell> {
     val found = mutableListOf<GherkinTableCell>()
-    allRows().forEach { row ->
+
+    val rows = if (withHeader) allRows() else dataRows
+    rows.forEach { row ->
 
         if (!row.textRange.intersects(range)) return@forEach
         val cells = row.psiCells ?: return@forEach
@@ -216,17 +250,6 @@ fun GherkinTable.findCellsInRange(range: TextRange): List<GherkinTableCell> {
             found.add(lastCell)
     }
     return found
-}
-
-private fun doCleanSeletion(cellRangesToClean: List<Pair<GherkinTableCell, TextRange>>) {
-    for (pair in cellRangesToClean) {
-
-        val cell = pair.getFirst()
-        if (cell.textLength == 0)
-            continue
-
-        cell.setName(" ")
-    }
 }
 
 private fun Document.charAt(offset: Int): Char? {

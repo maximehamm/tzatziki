@@ -2,7 +2,7 @@ package io.nimbly.tzatziki.format
 
 import io.nimbly.tzatziki.AbstractTestCase
 
-class DeleteTests  : AbstractTestCase() {
+class DeleteTests : AbstractTestCase() {
 
     fun testDeletionBlocked() {
 
@@ -18,6 +18,67 @@ class DeleteTests  : AbstractTestCase() {
                   | 79  | No    | D2      |
                 Then FInished !
             """
+
+        configure(content)
+        selectAsColumn("Examples:\n     ", "| Yes   |         |")
+        pressKey('x')
+        checkContent(content)
+
+
+        configure(content)
+        selectAsColumn("Examples:\n    ", "| No    | D2")
+        pressKey('x')
+        checkContent(content)
+
+
+        configure(content)
+        selectAsColumn("Examples:\n   ", " | 79")
+        pressKey('x')
+        checkContent(content)
+
+
+        configure(content)
+        selectAsColumn("Examples:\n  ", "| Ready |")
+        pressKey('x')
+        checkContent(content)
+
+
+
+        configure(content)
+        selectAsColumn("Examples:\n ", "| 79  |")
+        pressKey('x')
+        checkContent(content)
+
+
+
+        configure(content)
+        selectAsColumn("Examples:\n", "| 79  |")
+        pressKey('x')
+        checkContent(content)
+
+
+
+        configure(content)
+        selectAsColumn(" Details |", " Details |")
+        backspace()
+        checkContent(content)
+    }
+
+
+    fun testDeletioCleaning() {
+
+        // language=feature
+        val content = """
+                    Feature: Tzatziki y Cucumber
+                      Scenario Outline: Auto formating
+                        When I enter any character into <NAF> or <Ready> or <Details>
+                        Then The Cucumber table is formatted !
+                        Examples:
+                          | NAF | Ready | Details |
+                          | 78  | Yes   |         |
+                          | 79  | No    | D2      |
+                        Then FInished !
+                    """
 
         configure(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
@@ -71,21 +132,23 @@ class DeleteTests  : AbstractTestCase() {
         checkContent(content)
     }
 
-    fun testDeletionOk() {
+
+    fun testDeletionInCellOk() {
 
         // language=feature
         configure(
             """
-Feature: Tzatziki y Cucumber
-  Scenario Outline: Auto formating
-    When I enter any character into <NAF> or <Ready> or <Details>
-    Then The Cucumber table is formatted !
-    Examples:
-      | NAF | Ready | Details |
-      | 78  | Yes   |         |
-      | 79  | No    | D2      |
-    Then FInished !
-                """)
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF | Ready | Details |
+                      | 78  | Yes   |         |
+                      | 79  | No    | D2      |
+                    Then FInished !
+                """
+        )
         selectAsColumn("|", "| NA")
         delete()
         // language=feature
@@ -100,7 +163,8 @@ Feature: Tzatziki y Cucumber
                       | 78  | Yes   |         |
                       | 79  | No    | D2      |
                     Then FInished !
-                """)
+                """
+        )
 
         backspace()
         // language=feature
@@ -115,7 +179,8 @@ Feature: Tzatziki y Cucumber
                       | 78 | Yes   |         |
                       | 79 | No    | D2      |
                     Then FInished !
-                """)
+                """
+        )
 
         backspace(5)
         // language=feature
@@ -130,7 +195,8 @@ Feature: Tzatziki y Cucumber
                       | 78 | Yes   |         |
                       | 79 | No    | D2      |
                     Then FInished !
-                """)
+                """
+        )
 
 
         select("Then The Cucumber", "Then FInished")
@@ -142,7 +208,8 @@ Feature: Tzatziki y Cucumber
                   Scenario Outline: Auto formating
                     When I enter any character into <NAF> or <Ready> or <Details>
                     Then The Cucumber !
-                """)
+                """
+        )
     }
 
 }
