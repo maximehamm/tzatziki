@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.codeInsight.highlighting.HighlightManager
+import com.intellij.codeInsight.highlighting.HighlightManager.HIDE_BY_ANY_KEY
 import com.intellij.ide.DataManager
 import com.intellij.injected.editor.EditorWindow
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,8 +10,7 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.colors.EditorColors
-import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorColors.SEARCH_RESULT_ATTRIBUTES
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.TextRange
@@ -25,7 +25,7 @@ import com.intellij.util.containers.ContainerUtil
 import org.jetbrains.plugins.cucumber.psi.*
 import org.junit.Assert
 import java.awt.event.InputEvent
-import java.util.ArrayList
+import java.util.*
 import java.util.function.Consumer
 
 fun Editor.findTableAt(offset: Int): GherkinTable? {
@@ -256,15 +256,8 @@ fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
 
 private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableCollection<TextRange>?) {
 
-    val editorColorsManager = EditorColorsManager.getInstance()
-    val globalScheme = editorColorsManager.globalScheme
-    val textattributes = globalScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)
-    val highlightManager = HighlightManager.getInstance(project)
-    
-    highlightManager.addOccurrenceHighlight(
-        this,
-        start, end, textattributes, HighlightManager.HIDE_BY_ANY_KEY, null, null
-    )
+    HighlightManager.getInstance(project)
+        .addOccurrenceHighlight(this, start, end, SEARCH_RESULT_ATTRIBUTES, HIDE_BY_ANY_KEY, null)
 
     outHighlightersRanges?.add(TextRange(start, end))
 }

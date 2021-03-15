@@ -264,6 +264,14 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         executeHandler(ACTION_EDITOR_COPY)
     }
 
+    protected open fun delete() {
+        executeHandler(ACTION_EDITOR_DELETE)
+    }
+
+    protected open fun backspace() {
+        executeHandler(ACTION_EDITOR_BACKSPACE)
+    }
+
     protected open fun paste() {
         executeHandler(ACTION_EDITOR_PASTE)
     }

@@ -16,14 +16,17 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
 
     val offset = CommonDataKeys.CARET.getData(dataContext)?.offset ?: return true
     val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return true
-
-    if (editor.selectionModel.hasSelection()) return false
-
     val text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return false
     if (text.indexOf('\t') <0 && text.indexOf('\n') <0) return false
 
     val table = findTableAt(offset) ?:
         return editor.pasteNewTable(text, offset)
+
+    if (editor.selectionModel.hasSelection()) {
+        if (editor.selectionModel.selectionStart < table.startOffset
+            || editor.selectionModel.selectionStart > table.endOffset)
+            return false
+    }
 
     return editor.pasteToTable(table, offset, text)
 }
@@ -144,7 +147,9 @@ fun loadCells(table: GherkinTable): List<List<String>> {
 private fun loadCells(text: String):  List<List<String>> {
     val lines = mutableListOf<List<String>>()
     text.split("\n").forEach { line ->
-       lines.add(line.split("\t"))
+       lines.add(
+           line.split("\t")
+               .map { it.trim() })
     }
     return lines
 }
