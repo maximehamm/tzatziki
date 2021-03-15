@@ -322,3 +322,8 @@ fun Editor.createEditorContext(): DataContext {
     val parent = DataManager.getInstance().getDataContext(this.contentComponent)
     return SimpleDataContext.getSimpleContext(map, parent)
 }
+
+fun Editor.setColumnMode(columnnMode: Boolean) {
+    if (isColumnMode != columnnMode)
+        executeAction( "EditorToggleColumnMode")
+}
