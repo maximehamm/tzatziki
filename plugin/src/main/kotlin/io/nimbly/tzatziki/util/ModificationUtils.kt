@@ -1,17 +1,25 @@
 package io.nimbly.tzatziki.util
 
+import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Pair
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.util.DocumentUtil
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
+import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import java.util.*
 
 const val FEATURE_HEAD =
     "Feature: x\n" +
@@ -134,3 +142,96 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
 
     return true
 }
+
+fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset): Boolean {
+
+    if (selectionModel.hasSelection()) {
+        val table = findTableAt(offset)
+        if (table != null) {
+            val text = selectionModel.selectedText
+            if (text != null && text.contains(Regex("[\\n|]"))) {
+                if (table.cleanSelection(selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds) > 0)
+                    return true
+            }
+        }
+    }
+    else {
+        val table = findTableAt(offset)
+        if (table != null) {
+
+            val c : Char? =
+                if (actionId == IdeActions.ACTION_EDITOR_DELETE)
+                    document.charAt(offset+1)
+                else
+                    document.charAt(offset-1)
+
+            if (c!=null && (c == '|' || c == '\n'))
+                return true
+        }
+    }
+
+    return false
+}
+
+private fun GherkinTable.cleanSelection(starts: IntArray, ends: IntArray): Int {
+
+    val lines = allRows()
+    if (lines.size < 2) return 0
+
+    val document = getDocument() ?: return 0
+    val cellRangesToClean = mutableListOf<Pair<GherkinTableCell, TextRange>>()
+
+    starts.indices.forEach { i ->
+        val r = TextRange(starts[i], ends[i])
+        val cells = findCellsInRange(r)
+        for (c in cells) {
+            var inter = c.textRange.intersection(r)
+            if (inter == null) continue
+            inter = inter.shiftRight(-c.textOffset)
+            cellRangesToClean.add(Pair<GherkinTableCell, TextRange>(c, inter))
+        }
+    }
+    if (cellRangesToClean.size < 2) return 0
+    val project: Project = lines[0].project
+    WriteCommandAction.runWriteCommandAction(project, "Clean table", "Tzatziki", {
+            DocumentUtil.executeInBulk(document, true) {
+                doCleanSeletion(cellRangesToClean) }
+        })
+    return cellRangesToClean.size
+}
+
+fun GherkinTable.findCellsInRange(range: TextRange): List<GherkinTableCell> {
+    val found = mutableListOf<GherkinTableCell>()
+    allRows().forEach { row ->
+
+        if (!row.textRange.intersects(range)) return@forEach
+        val cells = row.psiCells ?: return@forEach
+        cells.forEach { cell ->
+            if (cell.textRange.intersects(range)) {
+                found.add(cell)
+            }
+        }
+        val lastCell = cells[cells.size - 1]
+        if (range.startOffset > lastCell.textOffset + lastCell.textLength)
+            found.add(lastCell)
+    }
+    return found
+}
+
+private fun doCleanSeletion(cellRangesToClean: List<Pair<GherkinTableCell, TextRange>>) {
+    for (pair in cellRangesToClean) {
+
+        val cell = pair.getFirst()
+        if (cell.textLength == 0)
+            continue
+
+        cell.setName(" ")
+    }
+}
+
+private fun Document.charAt(offset: Int): Char? {
+    if (textLength <= offset)
+        return null
+    return getText(TextRange.create(offset, offset+1))[0]
+}
+

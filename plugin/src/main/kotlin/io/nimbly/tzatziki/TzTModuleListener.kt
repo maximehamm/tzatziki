@@ -32,8 +32,8 @@ class TzTModuleListener : ProjectManagerListener {
 
         val actionManager = EditorActionManager.getInstance()
 
-        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_DELETE))
-        actionManager.replaceHandler(FormatterHandler(ACTION_EDITOR_BACKSPACE))
+        actionManager.replaceHandler(DeletionHandler(ACTION_EDITOR_DELETE))
+        actionManager.replaceHandler(DeletionHandler(ACTION_EDITOR_BACKSPACE))
 
         actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
         actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))
@@ -52,8 +52,10 @@ class TzTModuleListener : ProjectManagerListener {
         }
     }
 
-    private class FormatterHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
+    private class DeletionHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+            if (SMART_EDIT && editor.stopBeforeDeletion(getActionId()))
+                return
             doDefault(editor, caret, dataContext)
             if (SMART_EDIT)
                 editor.findTableAt(editor.caretModel.offset)?.format()
