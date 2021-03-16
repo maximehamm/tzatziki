@@ -40,3 +40,10 @@ fun  Document.getTextLineAfter(offset: Int): String {
     val lineEnd = getLineEndOffset(line)
     return getText(TextRange(offset, lineEnd))
 }
+
+fun  Document.getTextLine(offset: Int): String {
+    val line = getLineNumber(offset)
+    val lineStart = getLineStartOffset(line)
+    val lineEnd = getLineEndOffset(line)
+    return getText(TextRange(lineStart, lineEnd))
+}

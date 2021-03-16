@@ -8,18 +8,13 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import org.jetbrains.kotlin.idea.core.util.range
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 import java.util.*
 
 const val FEATURE_HEAD =
@@ -199,8 +194,10 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
                 val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset - 1
                 if (table.offsetIsOnAnyLine(o)) {
 
-                    if (table.offsetIsOnLeft(o))
-                        return true
+                    val eof = document.charAt(offset) == '\n'
+                    val oo = if (eof) o+1 else o
+                    if (table.offsetIsOnLeft(oo))
+                        return document.getTextLine(oo).isNotBlank()
 
                     val c = document.charAt(o)
                     if (c != null && (c == '|' || c == '\n'))
