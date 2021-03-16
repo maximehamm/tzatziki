@@ -49,10 +49,8 @@ class CopyPasteTests  : AbstractTestCase() {
 
         selectAsColumn("|", "| No    ")
         copy()
-
         setCursor("Title | Si")
         paste()
-
         // language=feature
         checkContent("""
             Feature: Tzatziki y Cucumber
@@ -69,10 +67,10 @@ class CopyPasteTests  : AbstractTestCase() {
                   | C     | 79  | No    |
                 Then Finished !
             """)
+        checkHighlighted("| Title ", "| C     | 79  | No    |")
 
         setCursor("| C     | 79  | No")
         paste()
-
         // language=feature
         checkContent("""
             Feature: Tzatziki y Cucumber
@@ -91,6 +89,8 @@ class CopyPasteTests  : AbstractTestCase() {
                   |       |     | 79    | No    |
                 Then Finished !
             """)
+        checkHighlighted("| C     | 79  ", "|       |     | 79    | No    |")
+
     }
 
     fun testCopyPasteAfterLastColumn() {

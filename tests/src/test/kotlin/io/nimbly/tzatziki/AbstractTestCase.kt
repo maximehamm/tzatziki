@@ -6,6 +6,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
@@ -13,10 +14,8 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import io.nimbly.tzatziki.format.getIndexOf
-import io.nimbly.tzatziki.util.cellAt
-import io.nimbly.tzatziki.util.createEditorContext
-import io.nimbly.tzatziki.util.executeAction
-import io.nimbly.tzatziki.util.getDocument
+import io.nimbly.tzatziki.util.*
+import junit.framework.TestCase
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Ignore
@@ -230,8 +229,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     }
 
     protected open fun selectAsColumn(lookForStart: String, lookForEnd: String) {
-        val start: Int = getIndexOf(configuredFile!!.text, lookForStart)
-        val end: Int = getIndexOf(configuredFile!!.text, lookForEnd)
+        val start = getIndexOf(configuredFile!!.text, lookForStart)
+        val end = getIndexOf(configuredFile!!.text, lookForEnd)
         selectAsColumn(start, end)
     }
 
@@ -240,7 +239,9 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         assert(offsetEnd >= 0)
         val start = myFixture.editor.offsetToLogicalPosition(offsetStart)
         val end = myFixture.editor.offsetToLogicalPosition(offsetEnd)
+
         moveCarretTo(offsetStart)
+        myFixture.editor.setColumnMode(true)
         val selectionModel = myFixture.editor.selectionModel
         selectionModel.removeSelection(true)
         selectionModel.setBlockSelection(start, end)
@@ -280,6 +281,33 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     protected fun checkClipboard(expected: String) {
         val found = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor)
         assertEquals(expected.trimIndent(), found)
+    }
+
+    protected fun checkHighlighted(lookForStart: String, lookForEnd: String) {
+        val start = getIndexOf(configuredFile!!.text, lookForStart)
+        val end = getIndexOf(configuredFile!!.text, lookForEnd)
+
+        assert(start > 0)
+        assert(start < end)
+
+
+        val ranges = mutableListOf<TextRange>()
+        myFixture.editor.document.let {
+            val colStart = it.getColumnAt(start)
+            val width = it.getColumnAt(end) - colStart
+            val lineStart = it.getLineNumber(start)
+            val lineEnd = it.getLineNumber(end)
+            for (line in lineStart..lineEnd) {
+                val start1 = it.getLineStartOffset(line) + colStart
+                val end1 = start1 + width
+                ranges.add(TextRange(start1, end1))
+            }
+        }
+
+        assertEquals(ranges.size, HIGHLIGHTERS_RANGE.size)
+        ranges.forEachIndexed { i, range ->
+            assertEquals(range, HIGHLIGHTERS_RANGE[i])
+        }
     }
 
     override fun getTestDataPath(): String? {

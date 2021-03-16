@@ -229,10 +229,11 @@ fun Editor.getLineStartOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineStartOffset(offset, document)
 }
 
-val HIGHLIGHTERS: List<RangeHighlighter> = ArrayList()
-val HIGHLIGHTERS_RANGE: List<TextRange> = ArrayList()
+val HIGHLIGHTERS_RANGE = mutableListOf<TextRange>()
 
 fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
+
+    HIGHLIGHTERS_RANGE.clear()
 
     var end = end
     if (document.getText(TextRange(end - 1, end)).trim { it <= ' ' }.isEmpty())
@@ -246,15 +247,15 @@ fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
         for (line in lineStart..lineEnd) {
             val start1 = document.getLineStartOffset(line) + colStart
             val end1 = start1 + width
-            highlight(start1, end1, null)
+            highlight(start1, end1, HIGHLIGHTERS_RANGE)
         }
     }
     else {
-        highlight(start, end, null)
+        highlight(start, end, HIGHLIGHTERS_RANGE)
     }
 }
 
-private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableCollection<TextRange>?) {
+private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableList<TextRange>?) {
 
     HighlightManager.getInstance(project)
         .addOccurrenceHighlight(this, start, end, SEARCH_RESULT_ATTRIBUTES, HIDE_BY_ANY_KEY, null)
