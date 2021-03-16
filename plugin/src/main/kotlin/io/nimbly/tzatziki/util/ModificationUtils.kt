@@ -168,16 +168,23 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
         val table = findTableAt(offset)
         if (table != null) {
 
-            val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset-1
+            if (selectionModel.hasSelection(true)) {
 
-            if (table.offsetIsOnAnyLine(o)) {
-
-                if (table.offsetIsOnLeft(o))
+                if (table.offsetIsOnAnyLine(selectionModel.selectionStart)
+                    && table.offsetIsOnAnyLine(selectionModel.selectionEnd))
                     return true
+            }
+            else {
+                val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset - 1
+                if (table.offsetIsOnAnyLine(o)) {
 
-                val c = document.charAt(o)
-                if (c!=null && (c == '|' || c == '\n'))
-                    return true
+                    if (table.offsetIsOnLeft(o))
+                        return true
+
+                    val c = document.charAt(o)
+                    if (c != null && (c == '|' || c == '\n'))
+                        return true
+                }
             }
         }
     }

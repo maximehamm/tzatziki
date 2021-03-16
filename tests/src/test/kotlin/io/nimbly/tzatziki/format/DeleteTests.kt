@@ -399,7 +399,8 @@ class DeleteTests : AbstractTestCase() {
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character
-                Then The Cucumber table is automatically 
+                Then The Cucumber table is automatically formatted !
+            
             
             
                 Then End""")

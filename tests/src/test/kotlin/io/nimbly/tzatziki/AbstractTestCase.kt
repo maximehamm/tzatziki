@@ -79,7 +79,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             fail(
                 """
                 Expected file content not found.
-                The file (with ⭑ at diff) :\n
+                The file (with ⭑ at diff) :
                 ${s.replace(" ".toRegex(), " ").trimIndent()}
                 """.trimIndent()
             )
