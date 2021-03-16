@@ -522,12 +522,7 @@ class DeleteTests : AbstractTestCase() {
                   | 39%  | OUI | 39%     |  | 39%   |
                   | 20%  | OUI | 11%     |  | 10%   |
                   | 99%  | OUI | 89%     |  | 69%   |"""
-
         configure(content)
-        selectAsColumn("| Q170 | OK? | Percent |", "| OUI | 10%     |  |")
-        delete()
-        checkContent(content)
-
 
         selectAsColumn("| Q170 | OK? | Percent |", "| OUI | 89%     |  |")
         delete()
@@ -544,8 +539,7 @@ class DeleteTests : AbstractTestCase() {
                   | 10%  | OUI | 10%     | 10%   |
                   | 39%  | OUI | 39%     | 39%   |
                   | 20%  | OUI | 11%     | 10%   |
-                  | 99%  | OUI | 89%     | 69%   |""".trimIndent()
-        )
+                  | 99%  | OUI | 89%     | 69%   |""")
     }
 
     fun testDeletionOfEmptyLines() {
@@ -564,18 +558,28 @@ class DeleteTests : AbstractTestCase() {
                   | 39%  | OUI | 39%     |  | 39%   |
                   | 20%  | OUI | 11%     |  | 10%   |
                   | 99%  | OUI | 89%     |  | 69%   |"""
-
         configure(content)
-        selectAsColumn("| 10%     |  | 10%   |\n", "|      |     |         |  |")
-        delete()
-        checkContent(content)
-
 
         selectAsColumn("| 10%     |  | 10%   |\n", "|      |     |         |  |       |")
         delete()
         // language=feature
-        checkContent(
-            """
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 39%  | OUI | 39%     |  | 14%   |
+                  | 10%  | OUI | 10%     |  | 10%   |
+            
+                  | 39%  | OUI | 39%     |  | 39%   |
+                  | 20%  | OUI | 11%     |  | 10%   |
+                  | 99%  | OUI | 89%     |  | 69%   |""")
+
+        backspace()
+        // language=feature
+        checkContent("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character
@@ -586,7 +590,7 @@ class DeleteTests : AbstractTestCase() {
                   | 10%  | OUI | 10%     |  | 10%   |
                   | 39%  | OUI | 39%     |  | 39%   |
                   | 20%  | OUI | 11%     |  | 10%   |
-                  | 99%  | OUI | 89%     |  | 69%   |""".trimIndent()
-        )
+                  | 99%  | OUI | 89%     |  | 69%   |""")
+
     }
 }

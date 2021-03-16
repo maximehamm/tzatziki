@@ -174,7 +174,11 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
 
     if (selectionModel.hasSelection(true)) {
         val text = selectionModel.getSelectedText(true)
-        if (text != null && text.isNotEmpty() && !text.contains("|") && !text.startsWith("\n"))
+        if (text != null
+            && text.isNotEmpty()
+            && !text.startsWith("\n")
+            && (!text.contains("|")
+                || text.matches(Regex("^[ |\\n]+$"))))
             return false
     }
 
