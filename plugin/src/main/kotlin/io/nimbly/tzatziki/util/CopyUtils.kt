@@ -24,7 +24,7 @@ fun Editor.smartCut(): Boolean {
     if (!smartCopy())
         return false
 
-    if (stopBeforeDeletion(true))
+    if (stopBeforeDeletion(true, true))
         return true
 
     return false

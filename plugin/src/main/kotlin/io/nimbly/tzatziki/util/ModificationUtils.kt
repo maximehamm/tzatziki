@@ -149,7 +149,7 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     return true
 }
 
-fun Editor.stopBeforeDeletion(clean: Boolean): Boolean {
+fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolean {
     if (!selectionModel.hasSelection(true))
         return false
     val table = findTableAt(selectionModel.selectionStart)
@@ -160,9 +160,11 @@ fun Editor.stopBeforeDeletion(clean: Boolean): Boolean {
 
         val text = selectionModel.getSelectedText(true)
         if (text != null && text.contains(Regex("[\\n|]"))) {
-            if (!clean || cleanSelection(this, table, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds) > 0) {
+            if (!cleanCells && !cleanHeader)
                 return true
-            }
+
+            cleanSelection(this, table, cleanHeader, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds)
+            return true
         }
     }
     return false
@@ -170,7 +172,7 @@ fun Editor.stopBeforeDeletion(clean: Boolean): Boolean {
 
 fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset): Boolean {
 
-    if (stopBeforeDeletion(true)) {
+    if (stopBeforeDeletion(true, false)) {
         return true
     }
     else {
@@ -221,16 +223,13 @@ private fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
     return offset in from..to
 }
 
-private fun cleanSelection(editor: Editor, table: GherkinTable, starts: IntArray, ends: IntArray): Int {
-
-    val lines = table.allRows()
-    if (lines.size < 2) return 0
+private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boolean, starts: IntArray, ends: IntArray): Int {
 
     // Find cells to delete
     val toClean = mutableListOf<GherkinTableCell>()
     starts.indices.forEach { i ->
         val r = TextRange(starts[i], ends[i])
-        table.findCellsInRange(r, false)
+        table.findCellsInRange(r, cleanHeader)
             .forEach {
                 toClean.add(it)
             }

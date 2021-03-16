@@ -32,7 +32,7 @@ class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun beforeSelectionRemoved(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
 
-        if (editor.stopBeforeDeletion(false))
+        if (editor.stopBeforeDeletion(false, false))
             return STOP
 
         return CONTINUE
