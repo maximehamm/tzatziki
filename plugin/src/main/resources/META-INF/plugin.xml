@@ -27,7 +27,7 @@
          </li>
 
          <br/>
-         <li>Smart copy table cells and <u>paste to Excel</u> :<br/>
+         <li>Smart copy or cut table cells and <u>paste to Excel</u> :<br/>
              - Swith automatically to column mode when focusing a Cucumber table.<br/>
              - Triple-click a header cell to select an entire he entire column, or anywhere else for a row.<br/>
              - Copy to clipboard to transfert to Excel for example !
@@ -53,7 +53,6 @@
        <b>Roadmap :</></b><br/>
        <ul>
 
-         <!-- Action CUT : Do not break table -->
          <!-- Paste a new table where allowed -->
 
          <li>Preserve table separator when deleting selection</li>
@@ -73,6 +72,25 @@
        <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a>
 
     ]]></description>
+
+
+    <change-notes><![CDATA[
+       <b>Please
+          Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
+          <br/>
+          Change notes :
+          <ul>
+            <li><b>1.3</b> Prevent table structure to be corrupted while using DELETE, BACKSPACE, CUT, etc.</li>
+            <li><b>1.2</b> Intellij IDEA 2021.1 EAP Compatibility</li>
+            <li><b>1.1</b> Copy from Excel to table</li>
+            <li><b>1.0</b> Copy from table to Excel</li>
+            <li><b>0.4</b> Add new column by pressing pipe</li>
+            <li><b>0.3</b> Add new lines by pressing from line end or from last line</li>
+            <li><b>0.2</b> Navigate between cells using tab, backtab and enter</li>
+            <li><b>0.1</b> Cucumber table formatting as you go</li>
+          </ul>
+       ]]>
+    </change-notes>
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->

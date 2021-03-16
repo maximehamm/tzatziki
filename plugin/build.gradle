@@ -26,19 +26,19 @@ tasks.runPluginVerifier {
 patchPluginXml {
     sinceBuild '202'
     untilBuild '211.*'
-    changeNotes """
-      <b>Please Rate and Review this plugin !</b><br/><br/>
-      Change notes :
-      <ul>
-        <li><b>1.2</b> Intellij IDEA 2021.1 EAP Compatibility</li>
-        <li><b>1.1</b> Copy from Excel to table</li>
-        <li><b>1.0</b> Copy from table to Excel</li>
-        <li><b>0.4</b> Add new column by pressing pipe</li>
-        <li><b>0.3</b> Add new lines by pressing from line end or from last line</li>
-        <li><b>0.2</b> Navigate between cells using tab, backtab and enter</li>
-        <li><b>0.1</b> Cucumber table formatting as you go</li>
-      </ul>
-      """
+//    changeNotes """
+//      <b>Please Rate and Review this plugin !</b><br/><br/>
+//      Change notes :
+//      <ul>
+//        <li><b>1.2</b> Intellij IDEA 2021.1 EAP Compatibility</li>
+//        <li><b>1.1</b> Copy from Excel to table</li>
+//        <li><b>1.0</b> Copy from table to Excel</li>
+//        <li><b>0.4</b> Add new column by pressing pipe</li>
+//        <li><b>0.3</b> Add new lines by pressing from line end or from last line</li>
+//        <li><b>0.2</b> Navigate between cells using tab, backtab and enter</li>
+//        <li><b>0.1</b> Cucumber table formatting as you go</li>
+//      </ul>
+//      """
 }
 
 tasks.buildSearchableOptions {
