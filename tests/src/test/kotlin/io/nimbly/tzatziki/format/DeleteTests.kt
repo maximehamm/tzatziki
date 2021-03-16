@@ -24,32 +24,25 @@ class DeleteTests : AbstractTestCase() {
         pressKey('x')
         checkContent(content)
 
-
         configure(content)
         selectAsColumn("Examples:\n    ", "| No    | D2")
         pressKey('x')
         checkContent(content)
-
 
         configure(content)
         selectAsColumn("Examples:\n   ", " | 79")
         pressKey('x')
         checkContent(content)
 
-
         configure(content)
         selectAsColumn("Examples:\n  ", "| Ready |")
         pressKey('x')
         checkContent(content)
 
-
-
         configure(content)
         selectAsColumn("Examples:\n ", "| 79  |")
         pressKey('x')
         checkContent(content)
-
-
 
         configure(content)
         selectAsColumn("Examples:\n", "| 79  |")
@@ -59,13 +52,23 @@ class DeleteTests : AbstractTestCase() {
 
 
         configure(content)
-        selectAsColumn(" Details |", " Details |")
+        setCursor(" Details |")
         backspace()
+        checkContent(content)
+
+        configure(content)
+        setCursor("| No    |")
+        backspace()
+        checkContent(content)
+
+        configure(content)
+        setCursor("| No    ")
+        delete()
         checkContent(content)
     }
 
 
-    fun testDeletioCleaning() {
+    fun testDeletionCleaning() {
 
         // language=feature
         val content = """
@@ -78,32 +81,61 @@ class DeleteTests : AbstractTestCase() {
                           | 78  | Yes   |         |
                           | 79  | No    | D2      |
                         Then FInished !
-                    """
+                    """.trimIndent()
 
         configure(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
         delete()
-        backspace()
-        checkContent(content)
+        // language=feature
+        checkContent("""
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF | Ready | Details |
+                      |     |       |         |
+                      | 79  | No    | D2      |
+                    Then FInished !
+                """)
 
 
         configure(content)
         selectAsColumn("Examples:\n    ", "| No    | D2")
         delete()
+        // language=feature
         backspace()
-        checkContent(content)
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  |     |       |         |
+                  |     |       |         |
+                Then FInished !
+            """)
 
 
         configure(content)
         selectAsColumn("Examples:\n   ", " | 79")
-        delete()
         backspace()
-        checkContent(content)
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  |     | Yes   |         |
+                  |     | No    | D2      |
+                Then FInished !
+            """)
 
 
         configure(content)
         selectAsColumn("Examples:\n  ", "| Ready |")
-        delete()
         backspace()
         checkContent(content)
 
@@ -112,22 +144,41 @@ class DeleteTests : AbstractTestCase() {
         configure(content)
         selectAsColumn("Examples:\n ", "| 79  |")
         delete()
-        backspace()
-        checkContent(content)
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  |     | Yes   |         |
+                  |     | No    | D2      |
+                Then FInished !
+            """)
 
 
 
         configure(content)
         selectAsColumn("Examples:\n", "| 79  |")
         delete()
-        backspace()
-        checkContent(content)
+        // language=feature
+        checkContent("""
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF | Ready | Details |
+                      |     | Yes   |         |
+                      |     | No    | D2      |
+                    Then FInished !
+                """)
 
 
 
         configure(content)
-        selectAsColumn(" Details |", " Details |\n")
-        delete()
+        select(" Details |", " Details |\n")
         backspace()
         checkContent(content)
     }
@@ -149,8 +200,8 @@ class DeleteTests : AbstractTestCase() {
                     Then FInished !
                 """
         )
-        selectAsColumn("|", "| NA")
-        delete()
+        setCursor("| NAF")
+        backspace()
         // language=feature
         checkContent(
             """
@@ -159,9 +210,9 @@ class DeleteTests : AbstractTestCase() {
                     When I enter any character into <NAF> or <Ready> or <Details>
                     Then The Cucumber table is formatted !
                     Examples:
-                      | NA  | Ready | Details |
-                      | 78  | Yes   |         |
-                      | 79  | No    | D2      |
+                      | NA | Ready | Details |
+                      | 78 | Yes   |         |
+                      | 79 | No    | D2      |
                     Then FInished !
                 """
         )
@@ -201,7 +252,6 @@ class DeleteTests : AbstractTestCase() {
 
         select("Then The Cucumber", "Then FInished")
         delete()
-        // language=feature
         checkContent(
             """
                 Feature: Tzatziki y Cucumber

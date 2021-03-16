@@ -167,12 +167,7 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
         val table = findTableAt(offset)
         if (table != null) {
 
-            val c : Char? =
-                if (actionId == IdeActions.ACTION_EDITOR_DELETE)
-                    document.charAt(offset+1)
-                else
-                    document.charAt(offset-1)
-
+            val c = document.charAt(if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset-1)
             if (c!=null && (c == '|' || c == '\n'))
                 return true
         }
@@ -191,7 +186,6 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, starts: IntArray
     starts.indices.forEach { i ->
         val r = TextRange(starts[i], ends[i])
         table.findCellsInRange(r, false)
-//            .filter { it.textRange.intersection(r) != null }
             .forEach {
                 toClean.add(it)
             }

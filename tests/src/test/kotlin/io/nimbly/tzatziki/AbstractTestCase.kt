@@ -20,7 +20,6 @@ import io.nimbly.tzatziki.util.getDocument
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Ignore
-import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.File
 
@@ -247,17 +246,19 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         selectionModel.setBlockSelection(start, end)
     }
 
-    protected open fun select(lookForSelectionStart: String, selectedText: String) {
+    protected open fun select(lookForSelectionStart: String, lookForSelectionEnd: String) {
         var l = lookForSelectionStart
         l = l.replace("`".toRegex(), "\"")
-        val indexOf = getIndexOf(configuredFile!!.text, l)
-        assert(indexOf > 0)
+        val start = getIndexOf(configuredFile!!.text, l)
+        assert(start > 0)
 
-        moveCarretTo(indexOf + selectedText.length)
-        select(indexOf, selectedText.length)
-    }
-    protected open fun select(offset: Int, length: Int) {
-        myFixture.editor.selectionModel.setSelection(offset, offset + length)
+        l = lookForSelectionEnd
+        l = l.replace("`".toRegex(), "\"")
+        val end = getIndexOf(configuredFile!!.text, l)
+        assert(end > 0)
+
+        moveCarretTo(end)
+        myFixture.editor.selectionModel.setSelection(start, end)
     }
 
     protected open fun copy() {
