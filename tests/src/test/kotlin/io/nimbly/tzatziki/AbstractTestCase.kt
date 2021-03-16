@@ -134,7 +134,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         
         val project = myFixture.project
         PsiDocumentManager.getInstance(project).commitAllDocuments()
-        WriteCommandAction.runWriteCommandAction(project, "Format table", "Tmar",
+        WriteCommandAction.runWriteCommandAction(project, "Format table", "Tzatziki",
             {
                 for (element in ins) {
                     pressKey(element)
@@ -226,7 +226,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         WriteCommandAction.runWriteCommandAction(project, "Execute handler", "Tzatziki", {
             val actionManager = EditorActionManager.getInstance()
             val actionHandler = actionManager.getActionHandler(handlerId)
-            actionHandler.execute(myFixture.editor, myFixture.editor.createEditorContext())
+            actionHandler.execute(myFixture.editor, myFixture.editor.caretModel.currentCaret, myFixture.editor.createEditorContext())
         })
     }
 
@@ -260,12 +260,18 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         val end = getIndexOf(configuredFile!!.text, l)
         assert(end > 0)
 
+        myFixture.editor.setColumnMode(false)
+        myFixture.editor.caretModel.removeSecondaryCarets()
         moveCarretTo(end)
         myFixture.editor.selectionModel.setSelection(start, end)
     }
 
     protected open fun copy() {
         executeHandler(ACTION_EDITOR_COPY)
+    }
+
+    protected open fun cut() {
+        executeHandler(ACTION_EDITOR_CUT)
     }
 
     protected open fun delete() {

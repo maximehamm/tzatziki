@@ -71,22 +71,30 @@ class TzTModuleListener : ProjectManagerListener {
 
     private class EnterHandler : AbstractWriteActionHandler(ACTION_EDITOR_ENTER) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!SMART_EDIT || !editor.navigateInTableWithEnter())
-                if (!SMART_EDIT || !editor.addTableRow())
-                    doDefault(editor, caret, dataContext)
+            if (SMART_EDIT && editor.navigateInTableWithEnter())
+                return
+            if (SMART_EDIT && editor.addTableRow())
+                return
+            doDefault(editor, caret, dataContext)
         }
     }
 
     private class CopyHandler : AbstractWriteActionHandler(ACTION_EDITOR_COPY) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!SMART_EDIT || !editor.smartCopy())
-                doDefault(editor, caret, dataContext)
+            if (SMART_EDIT && editor.smartCopy())
+                return
+
+            doDefault(editor, caret, dataContext)
         }
     }
 
     private class CutHandler : AbstractWriteActionHandler(ACTION_EDITOR_CUT) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            doDefault(editor, caret, dataContext)
+
+            if (SMART_EDIT && editor.smartCut())
+                return
+
+            doDefault(editor, null, dataContext)
             if (SMART_EDIT) {
                 val table = editor.findTableAt(editor.caretModel.offset)
                 if (table != null) {
@@ -99,6 +107,7 @@ class TzTModuleListener : ProjectManagerListener {
 
     private class PasteHandler : AbstractWriteActionHandler(ACTION_EDITOR_PASTE) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+
             if (SMART_EDIT && editor.smartPaste(dataContext))
                 return
 

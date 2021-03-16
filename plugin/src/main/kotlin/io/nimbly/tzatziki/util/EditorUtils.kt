@@ -319,7 +319,8 @@ fun Editor.createEditorContext(): DataContext {
     val hostEditor: Any = if (this is EditorWindow) this.delegate else this
     val map: Map<String, Any> = ContainerUtil.newHashMap(
         Pair.create(CommonDataKeys.HOST_EDITOR.name, hostEditor),
-        Pair.createNonNull(CommonDataKeys.EDITOR.name, this)
+        Pair.createNonNull(CommonDataKeys.EDITOR.name, this),
+        Pair.createNonNull(CommonDataKeys.CARET.name, this.caretModel.currentCaret)
     )
     val parent = DataManager.getInstance().getDataContext(this.contentComponent)
     return SimpleDataContext.getSimpleContext(map, parent)

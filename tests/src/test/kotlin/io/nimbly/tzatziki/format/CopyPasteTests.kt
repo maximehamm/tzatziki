@@ -194,6 +194,130 @@ class CopyPasteTests  : AbstractTestCase() {
                 Then Finished !""")
     }
 
+    fun testCutPaste() {
 
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                Examples: Two
+                  | Title | Size |
+                  | A     | 22   |
+                  | C     | 144  |
+                Then Finished !"""
+
+        configure(content)
+        selectAsColumn("|", "| No    ")
+        cut()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  |     |       |         |
+                  |     |       | D2      |
+                Examples: Two
+                  | Title | Size |
+                  | A     | 22   |
+                  | C     | 144  |
+                Then Finished !""")
+
+
+        selectAsColumn("Examples: Two\n      |", "| 144")
+        cut()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  |     |       |         |
+                  |     |       | D2      |
+                Examples: Two
+                  | Title | Size |
+                  |       |      |
+                  |       |      |
+                Then Finished !""")
+        checkClipboard("""
+                Title	Size
+                A	22
+                C	144""")
+
+
+        selectAsColumn("|", "| Details")
+        cut()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  |     |       |         |
+                  |     |       | D2      |
+                Examples: Two
+                  | Title | Size |
+                  |       |      |
+                  |       |      |
+                Then Finished !""")
+        checkClipboard("""
+                NAF Ready   Details""")
+    }
+
+
+
+    fun testCutPasteOutsideTable() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                Examples: Two
+                  | Title | Size |
+                  | A     | 22   |
+                  | C     | 144  |
+                Then Finished !"""
+        configure(content)
+
+
+        select("formatted !\n", "| D2      |\n")
+        cut()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: Two
+                  | Title | Size |
+                  | A     | 22   |
+                  | C     | 144  |
+                Then Finished !""")
+
+        checkClipboard("""
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+            """)
+    }
 }
 

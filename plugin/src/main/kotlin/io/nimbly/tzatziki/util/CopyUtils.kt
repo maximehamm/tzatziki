@@ -19,6 +19,17 @@ import java.awt.datatransfer.UnsupportedFlavorException
 import java.awt.event.MouseEvent
 import java.io.StringReader
 
+fun Editor.smartCut(): Boolean {
+
+    if (!smartCopy())
+        return false
+
+    if (stopBeforeDeletion(true))
+        return true
+
+    return false
+}
+
 fun Editor.smartCopy(): Boolean {
 
     if (! isColumnMode) return false
