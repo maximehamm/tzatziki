@@ -151,6 +151,9 @@ fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell = psiCells[columnN
 fun GherkinTableRow.isHeader()
     = table().allRows().first() == this
 
+fun GherkinTableRow.isLastRow()
+    = table().allRows().last() == this
+
 fun GherkinTable.row(rowNumber: Int): GherkinTableRow = allRows()[rowNumber]
 
 fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {

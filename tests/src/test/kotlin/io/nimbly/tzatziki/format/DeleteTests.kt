@@ -407,4 +407,28 @@ class DeleteTests : AbstractTestCase() {
 
     }
 
+    fun testDeletionJustAfterIsBlocked() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | ok    |
+
+
+                Then End !"""
+
+        configure(content)
+        select("| 40%  | OUI          | ok    |", "Then End !")
+        backspace()
+        checkContent(content)
+    }
+
 }

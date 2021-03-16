@@ -123,6 +123,11 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     val row = getTableRowAt(offset) ?: return false
 
     val insert = offset == getLineEndOffset(offset)
+    if (insert && row.isLastRow())
+        return false
+
+    if (offset < row.startOffset)
+        return false
 
     ApplicationManager.getApplication().runWriteAction {
 

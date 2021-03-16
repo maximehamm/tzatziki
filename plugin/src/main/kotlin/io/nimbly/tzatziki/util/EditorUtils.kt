@@ -61,6 +61,7 @@ fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
 
     val row = getTableRowAt(offset) ?: return false
     val colIdx = getTableColumnIndexAt(offset) ?: return false
+    if (colIdx<0) return false
     val next = row.next() ?: return false
     if (next.psiCells.size <= colIdx) return false
 

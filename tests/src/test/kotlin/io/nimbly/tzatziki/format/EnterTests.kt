@@ -99,7 +99,7 @@ class EnterTests  : AbstractTestCase() {
         setCursor("| D2      |")
 
         // Navigate
-        navigate(ENTER)
+        pressKey(ENTER)
         // language=feature
         checkContent(
             """
@@ -111,11 +111,10 @@ class EnterTests  : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   | D1      |
                   | 79  | No    | D2      |
-            """
-        )
+            """)
 
         // Navigate
-        navigate(ENTER)
+        pressKey(ENTER)
         // language=feature
         checkContent(
             """
@@ -130,6 +129,56 @@ class EnterTests  : AbstractTestCase() {
             
             """
         )
+    }
+
+    fun testEnterLEFT() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+                  | 79  | No    | D2      |""")
+
+
+        setCursor("Examples:\n ")
+        pressKey(ENTER)
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+             
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+                  | 79  | No    | D2      |""")
+        checkCursorAt("Examples:\n \n ")
+
+
+        setCursor("| D1      |\n ")
+        pressKey(ENTER)
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+             
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+             
+                  | 79  | No    | D2      |
+                """)
+        checkCursorAt("| D1      |\n \n ")
     }
 
 }
