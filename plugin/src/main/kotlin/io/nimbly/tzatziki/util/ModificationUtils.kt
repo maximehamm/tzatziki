@@ -154,6 +154,10 @@ fun Editor.stopBeforeDeletion(clean: Boolean): Boolean {
         return false
     val table = findTableAt(selectionModel.selectionStart)
     if (table != null) {
+
+        if (selectionModel.selectionStart >= table.allRows().last().endOffset)
+            return false
+
         val text = selectionModel.getSelectedText(true)
         if (text != null && text.contains(Regex("[\\n|]"))) {
             if (!clean || cleanSelection(this, table, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds) > 0) {

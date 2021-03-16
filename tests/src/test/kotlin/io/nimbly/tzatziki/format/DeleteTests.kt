@@ -420,15 +420,69 @@ class DeleteTests : AbstractTestCase() {
                   | Q170 | elligibilite | motif |
                   | 10%  | OUI          | ok    |
                   | 39%  | OUI          | ok    |
-                  | 40%  | OUI          | ok    |
+                  | 40%  | OUI          | stop  |
 
 
-                Then End !"""
 
+
+                Then close to end !   
+                Then End end !
+                """
         configure(content)
-        select("| 40%  | OUI          | ok    |", "Then End !")
+
+        select("| stop  |", "| stop  |\n\n")
+        backspace(2)
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | stop  |
+
+
+                Then close to end !   
+                Then End end !
+                """)
+
+        select("| stop  |", "| stop  |\n\n")
+        delete()
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | stop  |
+                Then close to end !   
+                Then End end !
+                """)
+
+        //
+        configure(content)
+        select("| stop  |", "Then close to end !")
         backspace()
-        checkContent(content)
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | stop  |   
+                Then End end !
+                """)
     }
 
 }
