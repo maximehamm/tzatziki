@@ -35,15 +35,10 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     val BACKSPACE_FAKE_CHAR = '\uffff'
     val DELETE_FAKE_CHAR = '\ufffe'
 
-    fun String.configure(): String {
-        configure(this)
-        return this
-    }
-
     protected open fun configure(text: String) {
-        val t = text.trimIndent().trim()
+        val t = text.smartTrim()
         val regex = """(Feature:) *([\w]+)""".toRegex()
-        val featureName = regex.find(text.trimIndent())!!.groupValues.last()
+        val featureName = regex.find(text.smartTrim())!!.groupValues.last()
 
         FileTypeRegistry.getInstance().registeredFileTypes.map { it.name }
         configuredFile = myFixture.configureByText("$featureName.feature", t)
@@ -51,13 +46,18 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     }
 
     protected open fun checkContent(expected: String) {
-        checkContent(this.configuredFile!!, expected.trimIndent())
+        var t = expected.smartTrim()
+        checkContent(this.configuredFile!!, t)
     }
 
-    protected open fun checkContent(clazz: PsiClass, expected: String) {
-        checkContent(clazz.containingFile, expected)
+    private fun String.smartTrim() : String {
+        split("\n").lastOrNull()?.let {
+            if (it.isBlank()) {
+                return ("$this§").trimIndent().removeSuffix("§")
+            }
+        }
+        return trimIndent()
     }
-
     protected open fun checkContent(file: PsiFile, expected: String) {
 
         val exp = expected.replace("`".toRegex(), "\"")
@@ -80,8 +80,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
                 """
                 Expected file content not found.
                 The file (with ⭑ at diff) :
-                ${s.replace(" ".toRegex(), " ").trimIndent()}
-                """.trimIndent()
+                ${s.replace(" ".toRegex(), ".").smartTrim()}
+                """.smartTrim()
             )
         }
     }
@@ -282,7 +282,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
     protected fun checkClipboard(expected: String) {
         val found = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor)
-        assertEquals(expected.trimIndent(), found)
+        assertEquals(expected.smartTrim(), found)
     }
 
     protected fun checkHighlighted(lookForStart: String, lookForEnd: String) {

@@ -16,8 +16,7 @@ class DeleteTests : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then FInished !
-            """
+                Then FInished !"""
 
         configure(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
@@ -101,8 +100,7 @@ class DeleteTests : AbstractTestCase() {
                           | NAF | Ready | Details |
                           | 78  | Yes   |         |
                           | 79  | No    | D2      |
-                        Then FInished !
-                    """.trimIndent()
+                        Then FInished !""".trimIndent()
 
         configure(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
@@ -117,8 +115,7 @@ class DeleteTests : AbstractTestCase() {
                       | NAF | Ready | Details |
                       |     |       |         |
                       | 79  | No    | D2      |
-                    Then FInished !
-                """)
+                    Then FInished !""")
 
 
         configure(content)
@@ -135,8 +132,7 @@ class DeleteTests : AbstractTestCase() {
                   | NAF | Ready | Details |
                   |     |       |         |
                   |     |       |         |
-                Then FInished !
-            """)
+                Then FInished !""")
 
 
         configure(content)
@@ -152,8 +148,7 @@ class DeleteTests : AbstractTestCase() {
                   | NAF | Ready | Details |
                   |     | Yes   |         |
                   |     | No    | D2      |
-                Then FInished !
-            """)
+                Then FInished !""")
 
 
         configure(content)
@@ -176,8 +171,7 @@ class DeleteTests : AbstractTestCase() {
                   | NAF | Ready | Details |
                   |     | Yes   |         |
                   |     | No    | D2      |
-                Then FInished !
-            """)
+                Then FInished !""")
 
 
 
@@ -194,8 +188,7 @@ class DeleteTests : AbstractTestCase() {
                       | NAF | Ready | Details |
                       |     | Yes   |         |
                       |     | No    | D2      |
-                    Then FInished !
-                """)
+                    Then FInished !""")
 
 
 
@@ -219,8 +212,7 @@ class DeleteTests : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then FInished !
-            """)
+                Then FInished !""")
         checkCursorAt("| NAF")
     }
 
@@ -238,8 +230,7 @@ class DeleteTests : AbstractTestCase() {
                       | NAF | Ready | Details |
                       | 78  | Yes   |         |
                       | 79  | No    | D2      |
-                    Then FInished !
-                """
+                    Then FInished !"""
         )
         setCursor("| NAF")
         backspace()
@@ -254,8 +245,7 @@ class DeleteTests : AbstractTestCase() {
                       | NA | Ready | Details |
                       | 78 | Yes   |         |
                       | 79 | No    | D2      |
-                    Then FInished !
-                """
+                    Then FInished !"""
         )
 
         backspace()
@@ -270,8 +260,7 @@ class DeleteTests : AbstractTestCase() {
                       | N  | Ready | Details |
                       | 78 | Yes   |         |
                       | 79 | No    | D2      |
-                    Then FInished !
-                """
+                    Then FInished !"""
         )
 
         backspace(5)
@@ -286,8 +275,7 @@ class DeleteTests : AbstractTestCase() {
                       |    | Ready | Details |
                       | 78 | Yes   |         |
                       | 79 | No    | D2      |
-                    Then FInished !
-                """
+                    Then FInished !"""
         )
 
 
@@ -298,8 +286,7 @@ class DeleteTests : AbstractTestCase() {
                 Feature: Tzatziki y Cucumber
                   Scenario Outline: Auto formating
                     When I enter any character into <NAF> or <Ready> or <Details>
-                    Then The Cucumber !
-                """
+                    Then The Cucumber !"""
         )
     }
 
@@ -426,8 +413,7 @@ class DeleteTests : AbstractTestCase() {
 
 
                 Then close to end !   
-                Then End end !
-                """
+                Then End end !"""
         configure(content)
 
         select("| stop  |", "| stop  |\n\n")
@@ -446,8 +432,7 @@ class DeleteTests : AbstractTestCase() {
 
 
                 Then close to end !   
-                Then End end !
-                """)
+                Then End end !""")
 
         select("| stop  |", "| stop  |\n\n")
         delete()
@@ -463,8 +448,7 @@ class DeleteTests : AbstractTestCase() {
                   | 39%  | OUI          | ok    |
                   | 40%  | OUI          | stop  |
                 Then close to end !   
-                Then End end !
-                """)
+                Then End end !""")
 
         //
         configure(content)
@@ -481,8 +465,7 @@ class DeleteTests : AbstractTestCase() {
                   | 10%  | OUI          | ok    |
                   | 39%  | OUI          | ok    |
                   | 40%  | OUI          | stop  |   
-                Then End end !
-                """)
+                Then End end !""")
     }
 
 }

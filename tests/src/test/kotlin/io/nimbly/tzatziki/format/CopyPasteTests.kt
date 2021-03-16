@@ -44,8 +44,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | Title | Size |
                   | A     | 22   |
                   | C     | 144  |
-                Then Finished !
-                        """)
+                Then Finished !""")
 
         selectAsColumn("|", "| No    ")
         copy()
@@ -65,8 +64,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | Title | NAF | Ready |
                   | A     | 78  | Yes   |
                   | C     | 79  | No    |
-                Then Finished !
-            """)
+                Then Finished !""")
         checkHighlighted("| Title ", "| C     | 79  | No    |")
 
         setCursor("| C     | 79  | No")
@@ -87,8 +85,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | C     | 79  | NAF   | Ready |
                   |       |     | 78    | Yes   |
                   |       |     | 79    | No    |
-                Then Finished !
-            """)
+                Then Finished !""")
         checkHighlighted("| C     | 79  ", "|       |     | 79    | No    |")
 
     }
@@ -105,8 +102,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then Finished !
-                        """)
+                Then Finished !""")
 
         selectAsColumn("|", "| No    ")
         copy()
@@ -124,8 +120,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | NAF | Ready | Details | NAF | Ready |
                   | 78  | Yes   |         | 78  | Yes   |
                   | 79  | No    | D2      | 79  | No    |
-                Then Finished !
-            """)
+                Then Finished !""")
     }
 
     fun testCopyPasteAfterLastLine() {
@@ -141,8 +136,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
                 
-                Then Finished !
-                        """)
+                Then Finished !""")
 
         selectAsColumn("|", "| No    ")
         copy()
@@ -164,8 +158,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | 78  | Yes   |         |
                   | 79  | No    |         |
                 
-                Then Finished !
-            """)
+                Then Finished !""")
     }
 
     fun testCopyPasteBeforeFirstColumn() {
@@ -180,8 +173,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then Finished !
-                        """)
+                Then Finished !""")
 
         selectAsColumn("|", "| No    ")
         copy()
@@ -199,8 +191,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | NAF | Ready | NAF | Ready | Details |
                   | 78  | Yes   | 78  | Yes   |         |
                   | 79  | No    | 79  | No    | D2      |
-                Then Finished !
-            """)
+                Then Finished !""")
     }
 
 

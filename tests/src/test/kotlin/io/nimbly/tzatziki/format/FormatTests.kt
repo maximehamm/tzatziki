@@ -16,7 +16,7 @@ class FormatTests  : AbstractTestCase() {
                   | NAF   | Ready | Details |
                   | 78.10 | Yes   |         |
                   | 78.2Z |       |         |
-            """)
+                """)
 
         // insert char and check
         insert("X", "| Yes")
@@ -32,7 +32,7 @@ class FormatTests  : AbstractTestCase() {
                   | NAF   | Ready | Details |
                   | 78.10 | YesX  |         |
                   | 78.2Z |       |         |
-            """
+                """
         )
         checkCursorAt("| YesX")
 
@@ -50,7 +50,7 @@ class FormatTests  : AbstractTestCase() {
                   | NAF   | Ready    | Details |
                   | 78.10 | YesXABCD |         |
                   | 78.2Z |          |         |
-            """
+                """
         )
         checkCursorAt("| YesXABCD")
 
@@ -68,7 +68,7 @@ class FormatTests  : AbstractTestCase() {
                   | NAF   | Ready   | Details |
                   | 78.10 | YesXABC |         |
                   | 78.2Z |         |         |
-            """
+                """
         )
         checkCursorAt("| YesXABC")
     }

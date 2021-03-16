@@ -16,8 +16,7 @@ class TabTests  : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then FInished !
-            """)
+                Then FInished !""")
 
         //
         setCursor("| NAF")
@@ -48,8 +47,7 @@ class TabTests  : AbstractTestCase() {
                   | NAF | Ready | Details |
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
-                Then FInished !
-            """
+                Then FInished !"""
         )
     }
 
