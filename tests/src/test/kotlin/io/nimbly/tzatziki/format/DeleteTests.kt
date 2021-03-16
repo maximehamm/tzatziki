@@ -65,6 +65,27 @@ class DeleteTests : AbstractTestCase() {
         setCursor("| No    ")
         delete()
         checkContent(content)
+
+
+        // End of table
+        configure(content)
+        setCursor("| D2      |")
+        backspace()
+        checkContent(content)
+
+        // Left of table
+        configure(content)
+        setCursor("| Details |\n  ")
+        backspace()
+        delete()
+        checkContent(content)
+
+        // Left of first row table
+        configure(content)
+        setCursor("Examples:\n ")
+        backspace()
+        delete()
+        checkContent(content)
     }
 
 
@@ -121,6 +142,7 @@ class DeleteTests : AbstractTestCase() {
         configure(content)
         selectAsColumn("Examples:\n   ", " | 79")
         backspace()
+        // language=feature
         checkContent("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
@@ -181,6 +203,25 @@ class DeleteTests : AbstractTestCase() {
         select(" Details |", " Details |\n")
         backspace()
         checkContent(content)
+
+
+
+        configure(content)
+        setCursor("| NAF ")
+        backspace()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                Then FInished !
+            """)
+        checkCursorAt("| NAF")
     }
 
 
@@ -262,5 +303,107 @@ class DeleteTests : AbstractTestCase() {
         )
     }
 
-}
 
+    fun testDeletionInCellOutsideTableIsOk() {
+
+        // language=feature
+        configure(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | ok    |
+                
+                
+                Then Bla, bla
+                Examples: xx
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+            
+                Then End""")
+
+        setCursor("      | 40%  | OUI          | ok    |\n" +
+                  "    \n")
+
+        backspace()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | ok    |
+                
+                Then Bla, bla
+                Examples: xx
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+            
+                Then End""")
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | ok    |
+                    Then Bla, bla
+                Examples: xx
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+            
+                Then End""")
+
+    }
+
+    fun testDeletionInCellOutsideTableIsOk2() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+            
+            
+                Examples:zz
+                  | Q170 | elligibilite | motif |
+                  | 10%  | OUI          | ok    |
+                  | 39%  | OUI          | ok    |
+                  | 40%  | OUI          | ok    |
+            
+            
+                Then End""")
+
+        select("formatted !\n", "| 40%  | OUI          | ok    |")
+        backspace()
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically 
+            
+            
+                Then End""")
+
+    }
+
+}

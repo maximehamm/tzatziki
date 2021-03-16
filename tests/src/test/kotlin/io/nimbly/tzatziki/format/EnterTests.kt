@@ -82,5 +82,55 @@ class EnterTests  : AbstractTestCase() {
         )
     }
 
+    fun testEnterEOF() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+                  | 79  | No    | D2      |""")
+
+        //
+        setCursor("| D2      |")
+
+        // Navigate
+        navigate(ENTER)
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+                  | 79  | No    | D2      |
+            """
+        )
+
+        // Navigate
+        navigate(ENTER)
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                  | 78  | Yes   | D1      |
+                  | 79  | No    | D2      |
+            
+            """
+        )
+    }
+
 }
 

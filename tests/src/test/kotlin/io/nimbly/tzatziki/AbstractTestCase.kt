@@ -207,7 +207,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         moveCarretTo(indexOf)
     }
 
-    protected fun navigate(string: Char, expectedCellValue: String) {
+    protected fun navigate(string: Char, expectedCellValue: String? = null) {
 
         // enter keyboard
         insert(string)
@@ -217,7 +217,9 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         val cell = myFixture.editor.cellAt(offset)
 
         assertNotNull("Cell not found : $expectedCellValue", cell)
-        assertEquals(expectedCellValue, cell!!.text.trim())
+
+        if (expectedCellValue!=null)
+            assertEquals(expectedCellValue, cell!!.text.trim())
     }
 
     fun executeHandler(handlerId: String) {

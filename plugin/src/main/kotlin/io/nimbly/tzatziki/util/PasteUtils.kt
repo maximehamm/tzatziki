@@ -91,8 +91,8 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
             .row(y + addedCells.size -1)
             .cell((if (x<0) 0 else x) + addedCells[0].size -1)
             .nextPipe().endOffset
-        highlight(startHighlight, endHighlight)
 
+        highlight(startHighlight, endHighlight)
     }
 
     return true

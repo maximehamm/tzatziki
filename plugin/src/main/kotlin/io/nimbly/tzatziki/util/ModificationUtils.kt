@@ -13,6 +13,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import org.jetbrains.kotlin.idea.core.util.range
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -167,13 +168,41 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
         val table = findTableAt(offset)
         if (table != null) {
 
-            val c = document.charAt(if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset-1)
-            if (c!=null && (c == '|' || c == '\n'))
-                return true
+            val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset-1
+
+            if (table.offsetIsOnAnyLine(o)) {
+
+                if (table.offsetIsOnLeft(o))
+                    return true
+
+                val c = document.charAt(o)
+                if (c!=null && (c == '|' || c == '\n'))
+                    return true
+            }
         }
     }
 
     return false
+}
+
+private fun GherkinTable.offsetIsOnLeft(offset: Int): Boolean {
+
+    val document = getDocument() ?: return false
+
+    val col1 = document.getColumnAt(offset)
+    val col2 = document.getColumnAt(allRows().first().startOffset)
+
+    return col1<col2
+}
+
+private fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
+
+    val document = getDocument() ?: return false
+
+    val from = document.getLineStart(allRows().first().startOffset)
+    val to = document.getLineEnd(allRows().last().endOffset)
+
+    return offset in from..to
 }
 
 private fun cleanSelection(editor: Editor, table: GherkinTable, starts: IntArray, ends: IntArray): Int {

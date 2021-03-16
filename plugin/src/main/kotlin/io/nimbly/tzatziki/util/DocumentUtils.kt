@@ -18,6 +18,12 @@ fun PsiElement.getDocument(): Document? {
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
 
+fun Document.getLineStart(offset: Int)
+    = getLineStartOffset(getLineNumber(offset))
+
+fun Document.getLineEnd(offset: Int)
+    = getLineEndOffset(getLineNumber(offset))
+
 fun Document.getColumnAt(offset: Int): Int {
     val line = getLineNumber(offset)
     return offset - getLineStartOffset(line)
