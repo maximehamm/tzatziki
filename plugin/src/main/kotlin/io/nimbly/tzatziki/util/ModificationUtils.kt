@@ -172,6 +172,12 @@ fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolea
 
 fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset): Boolean {
 
+    if (selectionModel.hasSelection(true)) {
+        val text = selectionModel.getSelectedText(true)
+        if (text != null && text.isNotEmpty() && !text.contains("|") && !text.startsWith("\n"))
+            return false
+    }
+
     if (stopBeforeDeletion(true, false)) {
         return true
     }

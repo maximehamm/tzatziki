@@ -92,15 +92,15 @@ class DeleteTests : AbstractTestCase() {
 
         // language=feature
         val content = """
-                    Feature: Tzatziki y Cucumber
-                      Scenario Outline: Auto formating
-                        When I enter any character into <NAF> or <Ready> or <Details>
-                        Then The Cucumber table is formatted !
-                        Examples:
-                          | NAF | Ready | Details |
-                          | 78  | Yes   |         |
-                          | 79  | No    | D2      |
-                        Then FInished !""".trimIndent()
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF | Ready | Details |
+                      | 78  | Yes   |         |
+                      | 79  | No    | D2      |
+                    Then FInished !"""
 
         configure(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
@@ -316,7 +316,7 @@ class DeleteTests : AbstractTestCase() {
                 Then End""")
 
         setCursor("      | 40%  | OUI          | ok    |\n" +
-                  "    \n")
+            "    \n")
 
         backspace()
         // language=feature
@@ -468,4 +468,125 @@ class DeleteTests : AbstractTestCase() {
                 Then End end !""")
     }
 
+    fun testDeletionOfPartOfColum() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent | Reason | Count |
+                  | 39%  | OUI | 3%      | OUI    | 14%   |
+                  | 10%  | OUI | 1%      | OUI    | 10%   |
+                  | 39%  | OUI | 3%      | OUI    | 39%   |
+                  | 10%  | OUI | 1%      | OUI    | 10%   |
+                  | 39%  | OUI | 3%      | OUI    | 39%   |
+                  | 10%  | OUI | 1%      | OUI    | 10%   |
+                  | 39%  | OUI | 3%      | OUI    | 39%   |"""
+
+        configure(content)
+        selectAsColumn("| 3%      | OUI    | 14",
+                        "| 3%      | OUI    | 39%")
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent | Reason | Count |
+                  | 39%  | OUI | 3%      | OUI    | 14    |
+                  | 10%  | OUI | 1%      | OUI    | 10    |
+                  | 39%  | OUI | 3%      | OUI    | 39    |
+                  | 10%  | OUI | 1%      | OUI    | 10%   |
+                  | 39%  | OUI | 3%      | OUI    | 39%   |
+                  | 10%  | OUI | 1%      | OUI    | 10%   |
+                  | 39%  | OUI | 3%      | OUI    | 39%   |""")
+    }
+
+    fun testDeletionOfEmptyColumns() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 39%  | OUI | 39%     |  | 14%   |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  | 39%  | OUI | 39%     |  | 39%   |
+                  | 20%  | OUI | 11%     |  | 10%   |
+                  | 99%  | OUI | 89%     |  | 69%   |"""
+
+        configure(content)
+        selectAsColumn("| Q170 | OK? | Percent |", "| OUI | 10%     |  |")
+        delete()
+        checkContent(content)
+
+
+        selectAsColumn("| Q170 | OK? | Percent |", "| OUI | 89%     |  |")
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent | Count |
+                  | 39%  | OUI | 39%     | 14%   |
+                  | 10%  | OUI | 10%     | 10%   |
+                  | 39%  | OUI | 39%     | 39%   |
+                  | 20%  | OUI | 11%     | 10%   |
+                  | 99%  | OUI | 89%     | 69%   |""".trimIndent()
+        )
+    }
+
+    fun testDeletionOfEmptyLines() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 39%  | OUI | 39%     |  | 14%   |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  |      |     |         |  |       |
+                  | 39%  | OUI | 39%     |  | 39%   |
+                  | 20%  | OUI | 11%     |  | 10%   |
+                  | 99%  | OUI | 89%     |  | 69%   |"""
+
+        configure(content)
+        selectAsColumn("| 10%     |  | 10%   |\n", "|      |     |         |  |")
+        delete()
+        checkContent(content)
+
+
+        selectAsColumn("| 10%     |  | 10%   |\n", "|      |     |         |  |       |")
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 39%  | OUI | 39%     |  | 14%   |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  | 39%  | OUI | 39%     |  | 39%   |
+                  | 20%  | OUI | 11%     |  | 10%   |
+                  | 99%  | OUI | 89%     |  | 69%   |""".trimIndent()
+        )
+    }
 }

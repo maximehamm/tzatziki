@@ -226,7 +226,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         WriteCommandAction.runWriteCommandAction(project, "Execute handler", "Tzatziki", {
             val actionManager = EditorActionManager.getInstance()
             val actionHandler = actionManager.getActionHandler(handlerId)
-            actionHandler.execute(myFixture.editor, myFixture.editor.caretModel.currentCaret, myFixture.editor.createEditorContext())
+            actionHandler.execute(myFixture.editor, null, myFixture.editor.createEditorContext())
         })
     }
 
