@@ -46,8 +46,8 @@ in modules `plugin` and `common`. i.e do not change
 this in `build.gradle` files :
 ```
 intellij {
-    version '2020.3'
-    intellij.type = 'IC' 
+    version 'xxxx'
+    intellij.type = 'xx' 
 }
  ```
 
