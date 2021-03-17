@@ -55,8 +55,6 @@
 
          <!-- Paste a new table where allowed -->
 
-         <li>Preserve table separator when deleting selection</li>
-
          <li>Move columns left/right and rows up/down</li>
          <li>Table cell completion to suggest already used values</li>
          <li>...</li>

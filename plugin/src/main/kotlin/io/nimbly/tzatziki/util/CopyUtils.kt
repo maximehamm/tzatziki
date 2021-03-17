@@ -11,6 +11,7 @@ import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.SMART_EDIT
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import java.awt.datatransfer.DataFlavor
@@ -18,6 +19,7 @@ import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.awt.event.MouseEvent
 import java.io.StringReader
+import java.util.*
 
 fun Editor.smartCut(): Boolean {
 
@@ -111,7 +113,7 @@ class TzatzikiTransferableData(table: GherkinTable, startOffsets: IntArray, endO
 
 fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
 
-    if (!SMART_EDIT)
+    if (! SMART_EDIT)
         return false
 
     val cell = table.cellAt(offset) ?: return false
@@ -187,7 +189,7 @@ object TzSelectionModeManager {
 object TZMouseAdapter : EditorMouseListener {
     override fun mouseReleased(e: EditorMouseEvent) {
 
-        if (!SMART_EDIT)
+        if (!e.gherkin)
             return
 
         TzSelectionModeManager.releaseSelectionSwitch()
@@ -209,7 +211,7 @@ object TZMouseAdapter : EditorMouseListener {
 
     override fun mousePressed(e: EditorMouseEvent) {
 
-        if (!SMART_EDIT)
+        if (!e.gherkin)
             return
 
         val editor = e.editor
@@ -238,12 +240,23 @@ object TZMouseAdapter : EditorMouseListener {
 object TZCaretAdapter : CaretListener {
     override fun caretPositionChanged(e: CaretEvent) {
 
-        if (!SMART_EDIT)
+        if (!e.gherkin)
             return
 
         val editor = e.editor
         val offset = editor.logicalPositionToOffset(e.newPosition)
+
+        //
+        // Too risky... throws concurent acces to editor selectionModel...
         //TzSelectionModeManager.switchEditorSelectionModeIfNeeded(editor, offset)
     }
 }
+
+private val EditorMouseEvent.gherkin: Boolean
+    get() = SMART_EDIT
+        && GherkinFileType.INSTANCE == this.editor.getFile()?.fileType
+
+private val CaretEvent.gherkin: Boolean
+    get() = SMART_EDIT
+                && GherkinFileType.INSTANCE == this.editor.getFile()?.fileType
 

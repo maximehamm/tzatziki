@@ -8,17 +8,18 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import io.nimbly.tzatziki.util.*
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
 class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
-        if (SMART_EDIT && editor.document.getTextLine(editor.caretModel.offset).contains("|"))
+        if (file.gherkin && editor.document.getTextLine(editor.caretModel.offset).contains("|"))
             editor.findTableAt(editor.caretModel.offset)?.format()
         return CONTINUE
     }
 
     override fun beforeCharTyped(c: Char, project: Project, editor: Editor, file: PsiFile, fileType: FileType): Result {
-        if (!SMART_EDIT)
+        if (!file.gherkin)
             return CONTINUE
 
         if (editor.addNewColum(c, project, fileType))
@@ -29,9 +30,12 @@ class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun beforeSelectionRemoved(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
 
-        if (editor.stopBeforeDeletion(false, false))
+        if (file.gherkin && editor.stopBeforeDeletion(false, false))
             return STOP
 
         return CONTINUE
     }
+
+    private val PsiFile.gherkin: Boolean
+        get() = SMART_EDIT && fileType == GherkinFileType.INSTANCE
 }
