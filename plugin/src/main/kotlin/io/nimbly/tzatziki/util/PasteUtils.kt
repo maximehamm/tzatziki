@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.util.elementType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
@@ -96,19 +97,23 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
 
         // Move caret
         val targetCell = newTable.row(y).cell(if (x<0) 0 else x)
-        caretModel.moveToOffset(targetCell.previousPipe.startOffset + 1)
+        val smartCell = SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(targetCell, getFile()!!)
 
         // Format table
         newTable.format()
 
         // Highlight modified cells
-        val startHighlight = targetCell.previousPipe.startOffset
-        val endHighlight = newTable
-            .row(y + addedCells.size -1)
-            .cell((if (x<0) 0 else x) + addedCells[0].size -1)
-            .nextPipe.endOffset
+        smartCell.element?.let {
 
-        highlight(startHighlight, endHighlight)
+            caretModel.moveToOffset(it.previousPipe.startOffset + 2)
+
+            val startHighlight = it.previousPipe.startOffset
+            val endHighlight = newTable
+                .row(y + addedCells.size -1)
+                .cell((if (x<0) 0 else x) + addedCells[0].size -1)
+                .nextPipe.endOffset
+            highlight(startHighlight, endHighlight)
+        }
     }
 
     return true
