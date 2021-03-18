@@ -17,6 +17,7 @@ import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import java.util.*
 
 const val FEATURE_HEAD =
@@ -240,18 +241,22 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
     // Find cells to delete
     val toClean = mutableListOf<GherkinTableCell>()
+    val toCleanRows = mutableSetOf<GherkinTableRow>()
     starts.indices.forEach { i ->
         val r = TextRange(starts[i], ends[i])
         table.findCellsInRange(r, cleanHeader)
             .forEach {
                 toClean.add(it)
+                toCleanRows.add(it.row)
             }
     }
     if (toClean.size < 1) return 0
 
     // Remember deleted column
-    val emptyColumn = editor.isSelectionEmptyColumns()
-    val targetColumn = toClean.first().columnNumber + (if (emptyColumn) 1 else 0)
+    val blankSelection = editor.isSelectionOfBlankCells()
+    val fullLine = toCleanRows.size == 1
+    val targetColumn = toClean.first().columnNumber + (if (blankSelection) 1 else 0)
+    val targetRow = toClean.first().row.rowNumber
 
     // Build temp string
     val sb = StringBuilder()
@@ -266,7 +271,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
     // Replace table
     val coordinate = toClean[0].coordinate
-    val elt = SmartPointerManager.getInstance(editor.project).createSmartPsiElementPointer(table, editor.getFile()!!)
+    val tableSmart = SmartPointerManager.getInstance(editor.project).createSmartPsiElementPointer(table, editor.getFile()!!)
     ApplicationManager.getApplication().runWriteAction {
 
         // replace table
@@ -286,9 +291,12 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
     }
 
     // Select next column
-    elt.element?.let {
+    tableSmart.element?.let {
         if (it.columnCount > targetColumn) {
-            editor.selectTableColumn(elt.element!!, targetColumn)
+            if (fullLine)
+                editor.selectTableRow(tableSmart.element!!, targetRow)
+            else
+                editor.selectTableColumn(tableSmart.element!!, targetColumn)
         }
     }
 

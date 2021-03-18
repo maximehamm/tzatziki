@@ -273,7 +273,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         assertTrue(offsetStart >= 0)
         assertTrue(offsetEnd >= 0)
-        assertTrue(editor.isColumnMode)
+        //assertTrue(editor.isColumnMode)
 
         val selectionStart = editor.selectionModel.blockSelectionStarts.firstOrNull()
         val selectionEnd = editor.selectionModel.blockSelectionEnds.lastOrNull()

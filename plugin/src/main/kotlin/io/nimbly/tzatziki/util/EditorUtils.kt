@@ -342,7 +342,17 @@ fun Editor.selectTableColumn(table: GherkinTable, columnNumber: Int) {
     val end = offsetToLogicalPosition(cellEnd.nextPipe.textRange.startOffset + 1)
 
     val caretStates = EditorModificationUtil.calcBlockSelectionState(this, start, end)
+    caretModel.setCaretsAndSelections(caretStates, true)
+}
 
+fun Editor.selectTableRow(table: GherkinTable, rowNumber: Int) {
+
+    val row = table.row(rowNumber)
+
+    val start = offsetToLogicalPosition(row.firstCell!!.previousPipe.textOffset)
+    val end = offsetToLogicalPosition(row.lastCell!!.nextPipe.textRange.startOffset + 1)
+
+    val caretStates = EditorModificationUtil.calcBlockSelectionState(this, start, end)
     caretModel.setCaretsAndSelections(caretStates, true)
 }
 
@@ -363,7 +373,7 @@ fun Editor.select(position: kotlin.Pair<LogicalPosition, LogicalPosition>) {
     caretModel.setCaretsAndSelections(caretStates, true)
 }
 
-fun Editor.isSelectionEmptyColumns(): Boolean {
+fun Editor.isSelectionOfBlankCells(): Boolean {
 
     if (!selectionModel.hasSelection(true))
         return false
