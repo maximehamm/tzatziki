@@ -266,6 +266,28 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         myFixture.editor.selectionModel.setSelection(start, end)
     }
 
+    protected open fun checkSelectionColumn(lookForStart: String, lookForEnd: String) {
+        val offsetStart = getIndexOf(configuredFile!!.text, lookForStart)
+        val offsetEnd = getIndexOf(configuredFile!!.text, lookForEnd)
+        val editor = myFixture.editor
+
+        assertTrue(offsetStart >= 0)
+        assertTrue(offsetEnd >= 0)
+        assertTrue(editor.isColumnMode)
+
+        val start = editor.offsetToLogicalPosition(offsetStart)
+        val end = editor.offsetToLogicalPosition(offsetEnd)
+
+        val selectionStart = editor.selectionModel.blockSelectionStarts.firstOrNull()
+        val selectionEnd = editor.selectionModel.blockSelectionEnds.lastOrNull()
+        assertEquals(start, selectionStart)
+        assertEquals(end, selectionEnd)
+    }
+
+    protected open fun checkSelectionEmpty() {
+        assertTrue(!myFixture.editor.selectionModel.hasSelection())
+    }
+
     protected open fun copy() {
         executeHandler(ACTION_EDITOR_COPY)
     }

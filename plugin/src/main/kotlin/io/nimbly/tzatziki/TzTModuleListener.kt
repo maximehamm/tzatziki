@@ -10,8 +10,8 @@ import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.intellij.psi.PsiFile
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
+import io.nimbly.tzatziki.psi.format
 import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.util.TzSelectionModeManager.blockSelectionSwitch
 import io.nimbly.tzatziki.util.TzSelectionModeManager.releaseSelectionSwitch

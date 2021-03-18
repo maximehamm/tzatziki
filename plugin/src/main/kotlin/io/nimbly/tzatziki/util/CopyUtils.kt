@@ -10,6 +10,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.SMART_EDIT
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -19,7 +20,6 @@ import java.awt.datatransfer.Transferable
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.awt.event.MouseEvent
 import java.io.StringReader
-import java.util.*
 
 fun Editor.smartCut(): Boolean {
 
@@ -120,10 +120,10 @@ fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
     val selectionModel = editor.selectionModel
 
     val row = table.rowAt(offset)!!
-    if (row.isHeader()) {
+    if (row.isHeader) {
 
         val index: Int = row.psiCells.indexOf(cell)
-        val rows = table.allRows()
+        val rows = table.allRows
         val first = rows[0]
         val last = rows[rows.size - 1]
         if (first !== last) {
@@ -136,7 +136,7 @@ fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
             if (firstCell != null && lastCell != null) {
 
                 val start = editor.offsetToLogicalPosition(firstCell.textOffset-1)
-                val end = editor.offsetToLogicalPosition(lastCell.nextPipe().textRange.startOffset+1)
+                val end = editor.offsetToLogicalPosition(lastCell.nextPipe.textRange.startOffset+1)
                 val caretStates = EditorModificationUtil.calcBlockSelectionState(editor, start, end)
 
                 editor.caretModel.setCaretsAndSelections(caretStates, true)

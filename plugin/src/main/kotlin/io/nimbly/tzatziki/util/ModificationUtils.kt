@@ -11,6 +11,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -49,7 +50,7 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
 
     // adjust left of right of current column
     if (where == 0 && currentCol != null) {
-        val startOfCell = this.cellAt(offset)?.previousPipe()?.startOffset
+        val startOfCell = this.cellAt(offset)?.previousPipe?.startOffset
         if (startOfCell != null) {
             val margin = offset - startOfCell
             if (margin in 1..2) {
@@ -62,7 +63,7 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
 
     // Build new table as string
     val s = StringBuilder()
-    table.allRows().forEachIndexed { y, row ->
+    table.allRows.forEachIndexed { y, row ->
         if (where < 0)
             s.append("|   ")
         row.psiCells.forEachIndexed { x, cell ->
@@ -102,7 +103,7 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
             }
 
         // Move caret
-        this.caretModel.moveToOffset(newRow.cell(targetColumn).previousPipe().textOffset + 2)
+        this.caretModel.moveToOffset(newRow.cell(targetColumn).previousPipe.textOffset + 2)
 
         // Format table
         newTable.format()
@@ -118,7 +119,7 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     val row = getTableRowAt(offset) ?: return false
 
     val insert = offset == getLineEndOffset(offset)
-    if (insert && row.isLastRow())
+    if (insert && row.isLastRow)
         return false
 
     if (offset < row.startOffset)
@@ -126,7 +127,7 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
 
     ApplicationManager.getApplication().runWriteAction {
 
-        val newRow = row.addRowAfter()
+        val newRow = row.createRowAfter()
 
         var newCaret = newRow.textOffset + 1
         if (!insert)
@@ -150,7 +151,7 @@ fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolea
     val table = findTableAt(selectionModel.selectionStart)
     if (table != null) {
 
-        if (selectionModel.selectionStart >= table.allRows().last().endOffset)
+        if (selectionModel.selectionStart >= table.allRows.last().endOffset)
             return false
 
         val text = selectionModel.getSelectedText(true)
@@ -215,7 +216,7 @@ private fun GherkinTable.offsetIsOnLeft(offset: Int): Boolean {
     val document = getDocument() ?: return false
 
     val col1 = document.getColumnAt(offset)
-    val col2 = document.getColumnAt(allRows().first().startOffset)
+    val col2 = document.getColumnAt(allRows.first().startOffset)
 
     return col1<col2
 }
@@ -224,8 +225,8 @@ private fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
 
     val document = getDocument() ?: return false
 
-    val from = document.getLineStart(allRows().first().startOffset)
-    val to = document.getLineEnd(allRows().last().endOffset)
+    val from = document.getLineStart(allRows.first().startOffset)
+    val to = document.getLineEnd(allRows.last().endOffset)
 
     return offset in from..to
 }
@@ -245,7 +246,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
     // Build temp string
     val sb = StringBuilder()
-    table.allRows().forEach { row ->
+    table.allRows.forEach { row ->
         sb.append("| ")
         row.psiCells.forEach {
             sb.append(if (toClean.contains(it)) " " else it.text)
@@ -255,7 +256,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
     }
 
     // Replace table
-    val coordinate = toClean[0].coordinate()
+    val coordinate = toClean[0].coordinate
     ApplicationManager.getApplication().runWriteAction {
 
         // replace table
@@ -267,7 +268,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
         // Move cursor
         val targetCell = newTable.row(coordinate.second).cell(coordinate.first)
         editor.caretModel.removeSecondaryCarets()
-        editor.caretModel.moveToOffset(targetCell.previousPipe().startOffset+2)
+        editor.caretModel.moveToOffset(targetCell.previousPipe.startOffset+2)
         editor.selectionModel.removeSelection()
 
         // Format table
@@ -280,7 +281,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<GherkinTableCell> {
     val found = mutableListOf<GherkinTableCell>()
 
-    val rows = if (withHeader) allRows() else dataRows
+    val rows = if (withHeader) allRows else dataRows
     rows.forEach { row ->
 
         if (!row.textRange.intersects(range)) return@forEach

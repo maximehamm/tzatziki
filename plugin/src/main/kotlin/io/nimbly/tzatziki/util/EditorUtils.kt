@@ -22,10 +22,13 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
 import com.intellij.util.containers.ContainerUtil
+import io.nimbly.tzatziki.psi.allRows
+import io.nimbly.tzatziki.psi.next
+import io.nimbly.tzatziki.psi.previous
+import io.nimbly.tzatziki.psi.previousPipe
 import org.jetbrains.plugins.cucumber.psi.*
 import org.junit.Assert
 import java.awt.event.InputEvent
-import java.util.*
 import java.util.function.Consumer
 
 fun Editor.findTableAt(offset: Int): GherkinTable? {
@@ -62,11 +65,11 @@ fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
     val row = getTableRowAt(offset) ?: return false
     val colIdx = getTableColumnIndexAt(offset) ?: return false
     if (colIdx<0) return false
-    val next = row.next() ?: return false
+    val next = row.next ?: return false
     if (next.psiCells.size <= colIdx) return false
 
     val cell = next.psiCells[colIdx]
-    val pipe = cell.previousPipe() ?: return false
+    val pipe = cell.previousPipe ?: return false
 
     caretModel.moveToOffset(pipe.textOffset +2)
     return true
@@ -114,8 +117,8 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
                 if (off > editor.document.textLength)
                     return true
                 if (editor.document.getLineNumber(offset) != editor.document.getLineNumber(off)) {
-                    val nextRow = row.next()
-                        ?: table.allRows().firstOrNull()!!
+                    val nextRow = row.next
+                        ?: table.allRows.firstOrNull()!!
                     nextRow.psiCells.first().textOffset
                 } else {
                     off
@@ -162,8 +165,8 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
 
         val target =
             if (pipe == null) {
-                val nextRow = row.previous()
-                    ?: table.allRows().lastOrNull() !!
+                val nextRow = row.previous
+                    ?: table.allRows.lastOrNull() !!
                 nextRow.psiCells.last().textOffset
             }
             else {
@@ -171,8 +174,8 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
                 if (off > editor.document.textLength)
                     return true
                 if (editor.document.getLineNumber(offset) != editor.document.getLineNumber(off)) {
-                    val nextRow = row.next()
-                        ?: table.allRows().firstOrNull()!!
+                    val nextRow = row.next
+                        ?: table.allRows.firstOrNull()!!
                     nextRow.psiCells.first().textOffset
                 } else {
                     off

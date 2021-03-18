@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import java.awt.datatransfer.DataFlavor
@@ -49,7 +50,7 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         val where = where(table)
         x = when {
             where <0 -> -1
-            where >0 -> table.allRows().first().psiCells.size
+            where >0 -> table.allRows.first().psiCells.size
             else -> return false
         }
     }
@@ -57,7 +58,7 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
     var y = table.rowNumberAt(offset)
     if (y == null) {
         y = when {
-                offset > table.endOffset -> table.allRows().size
+                offset > table.endOffset -> table.allRows.size
                 else -> return false
             }
         x = 0
@@ -80,17 +81,17 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
 
         // Move caret
         val targetCell = newTable.row(y).cell(if (x<0) 0 else x)
-        caretModel.moveToOffset(targetCell.previousPipe().startOffset + 1)
+        caretModel.moveToOffset(targetCell.previousPipe.startOffset + 1)
 
         // Format table
         newTable.format()
 
         // Highlight modified cells
-        val startHighlight = targetCell.previousPipe().startOffset
+        val startHighlight = targetCell.previousPipe.startOffset
         val endHighlight = newTable
             .row(y + addedCells.size -1)
             .cell((if (x<0) 0 else x) + addedCells[0].size -1)
-            .nextPipe().endOffset
+            .nextPipe.endOffset
 
         highlight(startHighlight, endHighlight)
     }
@@ -138,7 +139,7 @@ private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX
 
 fun loadCells(table: GherkinTable): List<List<String>> {
     val lines = mutableListOf<List<String>>()
-    table.allRows().forEach { row ->
+    table.allRows.forEach { row ->
         lines.add(row.psiCells.map { it.text })
     }
     return lines
