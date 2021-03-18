@@ -29,6 +29,12 @@ val GherkinTableRow.previous: GherkinTableRow?
         return table.previousRow(this)
     }
 
+val GherkinTableRow.firstCell
+    get() = psiCells.firstOrNull()
+
+val GherkinTableRow.lastCell
+    get() = psiCells.lastOrNull()
+
 fun GherkinTableRow.cellAt(offset: Int): GherkinTableCell?
     = containingFile.cellAt(offset)
 

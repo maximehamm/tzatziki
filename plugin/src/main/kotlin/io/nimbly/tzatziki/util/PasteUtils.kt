@@ -5,11 +5,14 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.util.elementType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
+import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 import java.awt.datatransfer.DataFlavor
 import kotlin.math.max
 
@@ -17,10 +20,20 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
 
     val offset = CommonDataKeys.CARET.getData(dataContext)?.offset ?: return true
     val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return true
+    val file = CommonDataKeys.PSI_FILE.getData(dataContext) ?: return true
     val text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return false
     if (text.indexOf('\t') <0 && text.indexOf('\n') <0) return false
 
-    val table = findTableAt(offset) ?:
+    var table = findTableAt(offset)
+    if (table == null) {
+        val element = file.findElementAt(offset)
+        if (element is PsiWhiteSpace
+            && element.textOffset>0
+            && file.findElementAt(element.textOffset-1)?.elementType == GherkinTokenTypes.PIPE)
+        table = findTableAt(element.textOffset-1)
+    }
+
+    if (table == null)
         return editor.pasteNewTable(text, offset)
 
     if (editor.selectionModel.hasSelection()) {
@@ -49,6 +62,7 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
     if (x == null) {
         val where = where(table)
         x = when {
+            table.textLength == 1 -> 0 // Empty table, just a pipe
             where <0 -> -1
             where >0 -> table.allRows.first().psiCells.size
             else -> return false
@@ -58,9 +72,10 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
     var y = table.rowNumberAt(offset)
     if (y == null) {
         y = when {
-                offset > table.endOffset -> table.allRows.size
-                else -> return false
-            }
+            table.textLength == 1 -> 0 // Empty table, just a pipe
+            offset > table.endOffset -> table.allRows.size
+            else -> return false
+        }
         x = 0
     }
 

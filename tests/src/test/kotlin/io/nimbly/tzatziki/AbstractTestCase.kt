@@ -280,6 +280,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         val selectionStart = editor.selectionModel.blockSelectionStarts.firstOrNull()
         val selectionEnd = editor.selectionModel.blockSelectionEnds.lastOrNull()
+
         assertEquals(start, selectionStart)
         assertEquals(end, selectionEnd)
     }

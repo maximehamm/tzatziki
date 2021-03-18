@@ -255,8 +255,6 @@ class CopyPasteTests  : AbstractTestCase() {
                 C	144""")
     }
 
-
-
     fun testCutPasteOutsideTable() {
 
         // language=feature
@@ -297,6 +295,87 @@ class CopyPasteTests  : AbstractTestCase() {
                   | 78  | Yes   |         |
                   | 79  | No    | D2      |
             """)
+    }
+
+    fun testCopyPasteTinyTable() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  |
+                  
+                Examples: Two
+                  | Title | NAF | Ready |
+                  | A     | 78  | Yes   |
+                  | C     | 79  | No    |
+                Then Finished !""")
+
+        selectAsColumn("| Title |", "| 79  | No    |")
+        copy()
+
+        setCursor("|")
+        paste()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready |
+                  | 78  | Yes   |
+                  | 79  | No    |
+                  
+                Examples: Two
+                  | Title | NAF | Ready |
+                  | A     | 78  | Yes   |
+                  | C     | 79  | No    |
+                Then Finished !""")
+        checkHighlighted("Examples: One\n      ", "| 79  | No    |")
+
+
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  |    
+                  
+                Examples: Two
+                  | Title | NAF | Ready |
+                  | A     | 78  | Yes   |
+                  | C     | 79  | No    |
+                Then Finished !""")
+
+        selectAsColumn("| Title |", "| 79  | No    |")
+        copy()
+
+        setCursor("|    ")
+        paste()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready |
+                  | 78  | Yes   |
+                  | 79  | No    |    
+                  
+                Examples: Two
+                  | Title | NAF | Ready |
+                  | A     | 78  | Yes   |
+                  | C     | 79  | No    |
+                Then Finished !""")
+        checkHighlighted("Examples: One\n      ", "| 79  | No    |")
     }
 }
 

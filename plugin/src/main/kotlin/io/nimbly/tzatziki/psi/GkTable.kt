@@ -19,6 +19,12 @@ val GherkinTable.allRows: List<GherkinTableRow>
         return rows
     }
 
+val GherkinTable.firstRow
+    get() = allRows.first()
+
+val GherkinTable.lastRow
+    get() = allRows.last()
+
 fun GherkinTable.format() {
     val range = textRange
     WriteCommandAction.runWriteCommandAction(project) {
@@ -49,6 +55,10 @@ fun GherkinTable.rowNumberAt(offset: Int): Int? {
 }
 
 fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
+
+    if (textLength == 1)
+        return null // Table is just a single pipe !
+
     var row = cellAt(offset)?.row
     if (row != null)
         return row
@@ -66,7 +76,9 @@ fun GherkinTable.rowAt(offset: Int): GherkinTableRow? {
 fun GherkinTable.rowAtLine(line: Int): GherkinTableRow?
     = allRows.find { it.getDocumentLine() == line }
 
-fun GherkinTable.row(rowNumber: Int): GherkinTableRow = allRows[rowNumber]
+fun GherkinTable.row(rowNumber: Int): GherkinTableRow
+    = allRows[rowNumber]
+
 fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {
 
     val found = mutableListOf<GherkinTableCell>()

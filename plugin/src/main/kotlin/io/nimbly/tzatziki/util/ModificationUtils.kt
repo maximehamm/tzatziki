@@ -27,8 +27,11 @@ fun Editor.where(table: GherkinTable) : Int {
 
     val offset = caretModel.offset
     val origineColumn = document.getColumnAt(offset)
-    val tableColumnStart = document.getColumnAt(table.row(0).cell(0).startOffset)
-    val tableColumnEnd = document.getColumnAt(table.row(0).psiCells.last().endOffset)
+
+    val firstCell = table.firstRow.firstCell ?: return 0
+
+    val tableColumnStart = document.getColumnAt(firstCell.startOffset)
+    val tableColumnEnd = document.getColumnAt(table.firstRow.lastCell!!.endOffset)
     return when {
         origineColumn<tableColumnStart -> -1 // Left
         origineColumn>tableColumnEnd -> 1    // Right
@@ -181,30 +184,31 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
     if (stopBeforeDeletion(true, false)) {
         return true
     }
+
+    val table = findTableAt(offset) ?:
+        return false
+
+    if (table.textLength == 1)
+        return false // Table is a single pipe !!
+
+    if (selectionModel.hasSelection(true)) {
+
+        if (table.offsetIsOnAnyLine(selectionModel.selectionStart)
+            && table.offsetIsOnAnyLine(selectionModel.selectionEnd))
+            return true
+    }
     else {
-        val table = findTableAt(offset)
-        if (table != null) {
+        val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset - 1
+        if (table.offsetIsOnAnyLine(o)) {
 
-            if (selectionModel.hasSelection(true)) {
+            val eof = document.charAt(offset) == '\n'
+            val oo = if (eof) o+1 else o
+            if (table.offsetIsOnLeft(oo))
+                return document.getTextLine(oo).isNotBlank()
 
-                if (table.offsetIsOnAnyLine(selectionModel.selectionStart)
-                    && table.offsetIsOnAnyLine(selectionModel.selectionEnd))
-                    return true
-            }
-            else {
-                val o = if (actionId == IdeActions.ACTION_EDITOR_DELETE) offset else offset - 1
-                if (table.offsetIsOnAnyLine(o)) {
-
-                    val eof = document.charAt(offset) == '\n'
-                    val oo = if (eof) o+1 else o
-                    if (table.offsetIsOnLeft(oo))
-                        return document.getTextLine(oo).isNotBlank()
-
-                    val c = document.charAt(o)
-                    if (c != null && (c == '|' || c == '\n'))
-                        return true
-                }
-            }
+            val c = document.charAt(o)
+            if (c != null && (c == '|' || c == '\n'))
+                return true
         }
     }
 
