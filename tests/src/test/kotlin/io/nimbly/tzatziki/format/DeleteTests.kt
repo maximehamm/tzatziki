@@ -111,9 +111,9 @@ class DeleteTests : AbstractTestCase() {
                     When I enter any character into <NAF> or <Ready> or <Details>
                     Then The Cucumber table is formatted !
                     Examples:
-                      | NAF | Ready | Details |
-                      |     |       |         |
-                      | 79  | No    | D2      |
+                      |    |    |    |
+                      |    |    |    |
+                      | 79 | No | D2 |
                     Then FInished !""")
 
 
@@ -128,9 +128,9 @@ class DeleteTests : AbstractTestCase() {
                 When I enter any character into <NAF> or <Ready> or <Details>
                 Then The Cucumber table is formatted !
                 Examples:
-                  | NAF | Ready | Details |
-                  |     |       |         |
-                  |     |       |         |
+                  |  |  |
+                  |  |  |
+                  |  |  |
                 Then FInished !""")
 
 
@@ -144,16 +144,26 @@ class DeleteTests : AbstractTestCase() {
                 When I enter any character into <NAF> or <Ready> or <Details>
                 Then The Cucumber table is formatted !
                 Examples:
-                  | NAF | Ready | Details |
-                  |     | Yes   |         |
-                  |     | No    | D2      |
+                  |  | Ready | Details |
+                  |  | Yes   |         |
+                  |  | No    | D2      |
                 Then FInished !""")
 
 
         configure(content)
         selectAsColumn("Examples:\n  ", "| Ready |")
         backspace()
-        checkContent(content)
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  |    |     | Details |
+                  | 78 | Yes |         |
+                  | 79 | No  | D2      |
+                Then FInished !""")
 
 
 
@@ -167,9 +177,9 @@ class DeleteTests : AbstractTestCase() {
                 When I enter any character into <NAF> or <Ready> or <Details>
                 Then The Cucumber table is formatted !
                 Examples:
-                  | NAF | Ready | Details |
-                  |     | Yes   |         |
-                  |     | No    | D2      |
+                  |  | Ready | Details |
+                  |  | Yes   |         |
+                  |  | No    | D2      |
                 Then FInished !""")
 
 
@@ -184,17 +194,11 @@ class DeleteTests : AbstractTestCase() {
                     When I enter any character into <NAF> or <Ready> or <Details>
                     Then The Cucumber table is formatted !
                     Examples:
-                      | NAF | Ready | Details |
-                      |     | Yes   |         |
-                      |     | No    | D2      |
+                      |  | Ready | Details |
+                      |  | Yes   |         |
+                      |  | No    | D2      |
                     Then FInished !""")
 
-
-
-        configure(content)
-        select(" Details |", " Details |\n")
-        backspace()
-        checkContent(content)
 
 
 
@@ -530,13 +534,13 @@ class DeleteTests : AbstractTestCase() {
                 When I enter any character
                 Then The Cucumber table is automatically formatted !
                 Examples:
-                  | Q170 | OK? | Percent | Test | Count |
-                  | 39%  | OUI | 39%     |      | 14%   |
-                  | 10%  | OUI | 10%     |      | 10%   |
-                  | 39%  | OUI | 39%     |      | 39%   |
-                  | 20%  | OUI | 11%     |      | 10%   |
-                  | 99%  | OUI | 89%     |      | 69%   |""")
-        checkSelectionColumn("| Percent |", "| 89%     |      |")
+                  | Q170 | OK? | Percent |  | Count |
+                  | 39%  | OUI | 39%     |  | 14%   |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  | 39%  | OUI | 39%     |  | 39%   |
+                  | 20%  | OUI | 11%     |  | 10%   |
+                  | 99%  | OUI | 89%     |  | 69%   |""")
+        checkSelectionColumn("| Percent |", "| 89%     |  |")
 
         delete()
         // language=feature

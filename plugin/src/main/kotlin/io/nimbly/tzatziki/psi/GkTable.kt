@@ -25,6 +25,9 @@ val GherkinTable.firstRow
 val GherkinTable.lastRow
     get() = allRows.last()
 
+val GherkinTable.columnCount: Int
+    get() = firstRow.psiCells.size
+
 fun GherkinTable.format() {
     val range = textRange
     WriteCommandAction.runWriteCommandAction(project) {

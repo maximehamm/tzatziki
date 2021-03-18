@@ -111,7 +111,7 @@ class TzatzikiTransferableData(table: GherkinTable, startOffsets: IntArray, endO
     }
 }
 
-fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
+fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
 
     if (! SMART_EDIT)
         return false
@@ -135,7 +135,7 @@ fun manageDoubleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
             val lastCell = if (cells.size > index) cells[index] else null
             if (firstCell != null && lastCell != null) {
 
-                val start = editor.offsetToLogicalPosition(firstCell.textOffset-1)
+                val start = editor.offsetToLogicalPosition(firstCell.previousPipe.textOffset+1)
                 val end = editor.offsetToLogicalPosition(lastCell.nextPipe.textRange.startOffset+1)
                 val caretStates = EditorModificationUtil.calcBlockSelectionState(editor, start, end)
 
@@ -202,7 +202,7 @@ object TZMouseAdapter : EditorMouseListener {
             val table = editor.findTableAt(offset)
             if (table != null) {
                 if (me.clickCount == 3)
-                    manageDoubleClicTableSelection(table, editor, offset)
+                    manageTripleClicTableSelection(table, editor, offset)
                 else if (me.clickCount == 2)
                     editor.selectionModel.selectWordAtCaret(false)
             }

@@ -8,6 +8,9 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 val GherkinTableCell.row: GherkinTableRow
     get() = parent as GherkinTableRow
 
+val GherkinTableCell.columnNumber: Int
+    get() = row.psiCells.indexOf(this)
+
 val GherkinTableCell.coordinate: Pair<Int, Int>
     get() {
         val row = row

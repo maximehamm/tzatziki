@@ -10,6 +10,8 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorModificationUtil
+import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorColors.SEARCH_RESULT_ATTRIBUTES
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.util.Pair
@@ -17,16 +19,12 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
 import com.intellij.util.containers.ContainerUtil
-import io.nimbly.tzatziki.psi.allRows
-import io.nimbly.tzatziki.psi.next
-import io.nimbly.tzatziki.psi.previous
-import io.nimbly.tzatziki.psi.previousPipe
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.junit.Assert
 import java.awt.event.InputEvent
@@ -333,4 +331,52 @@ fun Editor.createEditorContext(): DataContext {
 fun Editor.setColumnMode(columnnMode: Boolean) {
     if (isColumnMode != columnnMode)
         executeAction( "EditorToggleColumnMode")
+}
+
+fun Editor.selectTableColumn(table: GherkinTable, columnNumber: Int) {
+
+    val cellStart = table.firstRow.cell(columnNumber)
+    val cellEnd = table.lastRow.cell(columnNumber)
+
+    val start = offsetToLogicalPosition(cellStart.previousPipe.textOffset+1)
+    val end = offsetToLogicalPosition(cellEnd.nextPipe.textRange.startOffset + 1)
+
+    val caretStates = EditorModificationUtil.calcBlockSelectionState(this, start, end)
+
+    caretModel.setCaretsAndSelections(caretStates, true)
+}
+
+
+fun Editor.tableColumn(table: GherkinTable, columnNumber: Int, shift: Int = 0): kotlin.Pair<LogicalPosition, LogicalPosition> {
+
+    var start = offsetToLogicalPosition(table.firstRow.cell(columnNumber).previousPipe.textOffset+1)
+    var end = offsetToLogicalPosition(table.lastRow.cell(columnNumber).nextPipe.textOffset+1)
+
+    start = LogicalPosition(start.line, start.column -shift)
+    end = LogicalPosition(end.line, end.column -shift)
+
+    return start to end
+}
+
+fun Editor.select(position: kotlin.Pair<LogicalPosition, LogicalPosition>) {
+    val caretStates = EditorModificationUtil.calcBlockSelectionState(this, position.first, position.second)
+    caretModel.setCaretsAndSelections(caretStates, true)
+}
+
+fun Editor.isSelectionEmptyColumns(): Boolean {
+
+    if (!selectionModel.hasSelection(true))
+        return false
+
+    val cell = cellAt(selectionModel.selectionStart)
+        ?: return false
+
+    selectionModel.blockSelectionStarts.forEachIndexed { index, start ->
+        val end = selectionModel.blockSelectionEnds[index]
+        val text = document.getText(TextRange(start, end))
+        if (!text.matches(Regex("^[ |]+\$")))
+            return false
+    }
+
+    return true
 }

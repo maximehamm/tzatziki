@@ -8,6 +8,7 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
@@ -181,7 +182,7 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
             return false
     }
 
-    if (stopBeforeDeletion(true, false)) {
+    if (stopBeforeDeletion(true, true)) {
         return true
     }
 
@@ -248,6 +249,10 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
     }
     if (toClean.size < 1) return 0
 
+    // Remember deleted column
+    val emptyColumn = editor.isSelectionEmptyColumns()
+    val targetColumn = toClean.first().columnNumber + (if (emptyColumn) 1 else 0)
+
     // Build temp string
     val sb = StringBuilder()
     table.allRows.forEach { row ->
@@ -261,6 +266,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
     // Replace table
     val coordinate = toClean[0].coordinate
+    val elt = SmartPointerManager.getInstance(editor.project).createSmartPsiElementPointer(table, editor.getFile()!!)
     ApplicationManager.getApplication().runWriteAction {
 
         // replace table
@@ -277,6 +283,13 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
         // Format table
         newTable.format()
+    }
+
+    // Select next column
+    elt.element?.let {
+        if (it.columnCount > targetColumn) {
+            editor.selectTableColumn(elt.element!!, targetColumn)
+        }
     }
 
     return toClean.size

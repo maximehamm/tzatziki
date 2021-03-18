@@ -275,14 +275,11 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         assertTrue(offsetEnd >= 0)
         assertTrue(editor.isColumnMode)
 
-        val start = editor.offsetToLogicalPosition(offsetStart)
-        val end = editor.offsetToLogicalPosition(offsetEnd)
-
         val selectionStart = editor.selectionModel.blockSelectionStarts.firstOrNull()
         val selectionEnd = editor.selectionModel.blockSelectionEnds.lastOrNull()
 
-        assertEquals(start, selectionStart)
-        assertEquals(end, selectionEnd)
+        assertEquals(offsetStart, selectionStart)
+        assertEquals(offsetEnd, selectionEnd)
     }
 
     protected open fun checkSelectionEmpty() {
