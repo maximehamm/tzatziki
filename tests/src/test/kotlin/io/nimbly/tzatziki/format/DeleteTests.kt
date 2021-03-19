@@ -219,6 +219,52 @@ class DeleteTests : AbstractTestCase() {
         checkCursorAt("| NAF")
     }
 
+    fun testDeletionCleaningMulti() {
+
+        // language=feature
+        val content = """
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF | Ready | Details | Go   | Size | Origin |
+                      | 78  | Yes   | D1      | No   | 43   | Paris  |
+                      | 79  | No    | D2      | Yes! | 17   | Berlin |
+                    Then FInished !"""
+
+        configure(content)
+        selectAsColumn("| NAF |", "| D2      |")
+        delete()
+        // language=feature
+        checkContent("""
+                Feature: Tzatziki y Cucumber
+                  Scenario Outline: Auto formating
+                    When I enter any character into <NAF> or <Ready> or <Details>
+                    Then The Cucumber table is formatted !
+                    Examples:
+                      | NAF |  |  | Go   | Size | Origin |
+                      | 78  |  |  | No   | 43   | Paris  |
+                      | 79  |  |  | Yes! | 17   | Berlin |
+                    Then FInished !""")
+        checkSelectionColumn("| NAF |", "| 79  |  |  |")
+
+        delete()
+        // language=feature
+        backspace()
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Go   | Size | Origin |
+                  | 78  | No   | 43   | Paris  |
+                  | 79  | Yes! | 17   | Berlin |
+                Then FInished !""")
+        checkSelectionColumn("| NAF |", "| 17   |")
+    }
+
     fun testDeletionInCellOk() {
 
         // language=feature

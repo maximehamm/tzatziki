@@ -2,7 +2,6 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
@@ -18,7 +17,6 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import java.util.*
 
 const val FEATURE_HEAD =
     "Feature: x\n" +
@@ -217,26 +215,6 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
     return false
 }
 
-private fun GherkinTable.offsetIsOnLeft(offset: Int): Boolean {
-
-    val document = getDocument() ?: return false
-
-    val col1 = document.getColumnAt(offset)
-    val col2 = document.getColumnAt(allRows.first().startOffset)
-
-    return col1<col2
-}
-
-private fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
-
-    val document = getDocument() ?: return false
-
-    val from = document.getLineStart(allRows.first().startOffset)
-    val to = document.getLineEnd(allRows.last().endOffset)
-
-    return offset in from..to
-}
-
 private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boolean, starts: IntArray, ends: IntArray): Int {
 
     // Find cells to delete
@@ -301,31 +279,5 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
     }
 
     return toClean.size
-}
-
-fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<GherkinTableCell> {
-    val found = mutableListOf<GherkinTableCell>()
-
-    val rows = if (withHeader) allRows else dataRows
-    rows.forEach { row ->
-
-        if (!row.textRange.intersects(range)) return@forEach
-        val cells = row.psiCells ?: return@forEach
-        cells.forEach { cell ->
-            if (cell.textRange.intersects(range)) {
-                found.add(cell)
-            }
-        }
-        val lastCell = cells[cells.size - 1]
-        if (range.startOffset > lastCell.textOffset + lastCell.textLength)
-            found.add(lastCell)
-    }
-    return found
-}
-
-private fun Document.charAt(offset: Int): Char? {
-    if (textLength <= offset)
-        return null
-    return getText(TextRange.create(offset, offset+1))[0]
 }
 

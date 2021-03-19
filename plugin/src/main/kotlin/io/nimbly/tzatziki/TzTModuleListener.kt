@@ -11,10 +11,14 @@ import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
+import io.nimbly.tzatziki.clipboard.smartCopy
+import io.nimbly.tzatziki.clipboard.smartCut
+import io.nimbly.tzatziki.clipboard.smartPaste
+import io.nimbly.tzatziki.mouse.TZMouseAdapter
+import io.nimbly.tzatziki.mouse.TzSelectionModeManager.blockSelectionSwitch
+import io.nimbly.tzatziki.mouse.TzSelectionModeManager.releaseSelectionSwitch
 import io.nimbly.tzatziki.psi.format
 import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.util.TzSelectionModeManager.blockSelectionSwitch
-import io.nimbly.tzatziki.util.TzSelectionModeManager.releaseSelectionSwitch
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
 var SMART_EDIT : Boolean = true
@@ -51,7 +55,6 @@ class TzTModuleListener : ProjectManagerListener {
     private fun initMouseListener(project: Project) {
         EditorFactory.getInstance().eventMulticaster.apply {
             addEditorMouseListener(TZMouseAdapter, project)
-            addCaretListener(TZCaretAdapter, project)
         }
     }
 

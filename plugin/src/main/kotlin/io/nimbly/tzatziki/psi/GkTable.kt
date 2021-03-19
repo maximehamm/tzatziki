@@ -3,6 +3,8 @@ package io.nimbly.tzatziki.psi
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.codeStyle.CodeStyleManager
+import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
@@ -103,4 +105,44 @@ fun GherkinTable.nextRow(row: GherkinTableRow): GherkinTableRow? {
     val i = allRows.indexOf(row) + 1
     return if (i < allRows.size)
         allRows[i] else null
+}
+
+fun GherkinTable.offsetIsOnLeft(offset: Int): Boolean {
+
+    val document = getDocument() ?: return false
+
+    val col1 = document.getColumnAt(offset)
+    val col2 = document.getColumnAt(allRows.first().startOffset)
+
+    return col1<col2
+}
+
+fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
+
+    val document = getDocument() ?: return false
+
+    val from = document.getLineStart(allRows.first().startOffset)
+    val to = document.getLineEnd(allRows.last().endOffset)
+
+    return offset in from..to
+}
+
+fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<GherkinTableCell> {
+    val found = mutableListOf<GherkinTableCell>()
+
+    val rows = if (withHeader) allRows else dataRows
+    rows.forEach { row ->
+
+        if (!row.textRange.intersects(range)) return@forEach
+        val cells = row.psiCells ?: return@forEach
+        cells.forEach { cell ->
+            if (cell.textRange.intersects(range)) {
+                found.add(cell)
+            }
+        }
+        val lastCell = cells[cells.size - 1]
+        if (range.startOffset > lastCell.textOffset + lastCell.textLength)
+            found.add(lastCell)
+    }
+    return found
 }

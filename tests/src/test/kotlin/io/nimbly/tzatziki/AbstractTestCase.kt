@@ -9,13 +9,12 @@ import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import io.nimbly.tzatziki.format.getIndexOf
+import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
-import junit.framework.TestCase
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Ignore

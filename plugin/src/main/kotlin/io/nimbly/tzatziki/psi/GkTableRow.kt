@@ -2,8 +2,6 @@ package io.nimbly.tzatziki.psi
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.util.PsiTreeUtil
-import io.nimbly.tzatziki.util.cellAt
-import io.nimbly.tzatziki.util.row
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell

@@ -266,15 +266,13 @@ private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: Mutabl
     outHighlightersRanges?.add(TextRange(start, end))
 }
 
-fun clearHighlights(
+fun Editor.clearHighlights(
     outHighlighters: MutableCollection<RangeHighlighter?>,
-    outHighlightersRanges: MutableCollection<TextRange?>?,
-    editor: Editor
-) {
-    val highlightManager = HighlightManager.getInstance(editor.project)
+    outHighlightersRanges: MutableCollection<TextRange?>?) {
+    val highlightManager = HighlightManager.getInstance(project)
     outHighlighters.forEach(Consumer { r: RangeHighlighter? ->
         highlightManager.removeSegmentHighlighter(
-            editor,
+            this,
             r!!
         )
     })
@@ -355,7 +353,6 @@ fun Editor.selectTableRow(table: GherkinTable, rowNumber: Int) {
     val caretStates = EditorModificationUtil.calcBlockSelectionState(this, start, end)
     caretModel.setCaretsAndSelections(caretStates, true)
 }
-
 
 fun Editor.tableColumn(table: GherkinTable, columnNumber: Int, shift: Int = 0): kotlin.Pair<LogicalPosition, LogicalPosition> {
 

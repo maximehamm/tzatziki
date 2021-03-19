@@ -1,22 +1,8 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-
-fun PsiElement.getDocument(): Document? {
-    val containingFile = containingFile ?: return null
-    var file = containingFile.virtualFile
-    if (file == null) {
-        file = containingFile.originalFile.virtualFile
-    }
-    return if (file == null) null else
-        FileDocumentManager.getInstance().getDocument(file)
-}
-
-fun PsiElement.getDocumentLine()
-    = getDocument()?.getLineNumber(textOffset)
 
 fun Document.getLineStart(offset: Int)
     = getLineStartOffset(getLineNumber(offset))
@@ -46,4 +32,10 @@ fun  Document.getTextLine(offset: Int): String {
     val lineStart = getLineStartOffset(line)
     val lineEnd = getLineEndOffset(line)
     return getText(TextRange(lineStart, lineEnd))
+}
+
+fun Document.charAt(offset: Int): Char? {
+    if (textLength <= offset)
+        return null
+    return getText(TextRange.create(offset, offset+1))[0]
 }

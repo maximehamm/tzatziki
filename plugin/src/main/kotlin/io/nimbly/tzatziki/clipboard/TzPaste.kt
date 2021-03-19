@@ -1,4 +1,4 @@
-package io.nimbly.tzatziki.util
+package io.nimbly.tzatziki.clipboard
 
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
@@ -11,6 +11,7 @@ import com.intellij.psi.util.elementType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.psi.*
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes

@@ -1,20 +1,17 @@
-package io.nimbly.tzatziki.util
+package io.nimbly.tzatziki.psi
 
 import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import java.util.ArrayList
+import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
 fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
     var l = findElementAt(offset) ?: return null
@@ -48,7 +45,6 @@ fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
     return null
 }
 
-
 fun PsiFile.isColumnSeletionModeZone(offset: Int): Boolean {
     val line = PsiTreeUtil.findElementOfClassAtOffset(
         this, offset,
@@ -56,3 +52,39 @@ fun PsiFile.isColumnSeletionModeZone(offset: Int): Boolean {
     ) ?: return false
     return !(offset < line.startOffset || offset > line.endOffset)
 }
+
+fun PsiElement.getDocument(): Document? {
+    val containingFile = containingFile ?: return null
+    var file = containingFile.virtualFile
+    if (file == null) {
+        file = containingFile.originalFile.virtualFile
+    }
+    return if (file == null) null else
+        FileDocumentManager.getInstance().getDocument(file)
+}
+
+val PsiElement.previousPipe: PsiElement
+    get() {
+        var el = prevSibling
+        while (el != null) {
+            if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
+                return el
+            }
+            el = el.prevSibling
+        }
+        throw Exception("Psi structure corrupted !")
+    }
+val PsiElement.nextPipe: PsiElement
+    get() {
+        var el = nextSibling
+        while (el != null) {
+            if (el is LeafPsiElement && el.elementType == GherkinTokenTypes.PIPE) {
+                return el
+            }
+            el = el.nextSibling
+        }
+        throw Exception("Psi structure corrupted !")
+    }
+
+fun PsiElement.getDocumentLine()
+    = getDocument()?.getLineNumber(textOffset)

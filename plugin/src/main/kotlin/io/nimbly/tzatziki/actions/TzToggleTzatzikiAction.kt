@@ -5,10 +5,10 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
 import io.nimbly.tzatziki.SMART_EDIT
-import io.nimbly.tzatziki.util.TzSelectionModeManager.disableColumnSelectionMode
+import io.nimbly.tzatziki.mouse.TzSelectionModeManager.disableColumnSelectionMode
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
-class ToggleTzatzikiSmartCopyAction : ToggleAction(), DumbAware {
+class TzToggleTzatzikiAction : ToggleAction(), DumbAware {
 
     override fun isSelected(e: AnActionEvent)
         = SMART_EDIT
