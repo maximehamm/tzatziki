@@ -27,6 +27,8 @@ import com.intellij.util.containers.ContainerUtil
 import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.junit.Assert
+import java.awt.Dimension
+import java.awt.Point
 import java.awt.event.InputEvent
 import java.util.function.Consumer
 
@@ -354,6 +356,19 @@ fun Editor.selectTableRow(table: GherkinTable, rowNumber: Int) {
     caretModel.setCaretsAndSelections(caretStates, true)
 }
 
+fun Editor.selectTableCells(table: GherkinTable, coordinates: Point, dimension: Dimension) {
+
+    val fromCell = table.cellAt(coordinates) ?: return
+    val toCell = table.cellAt(coordinates.shift(dimension)) ?:return
+
+    val margin = if (table.columnCount == dimension.width) 0 else 1
+    val start = offsetToLogicalPosition(fromCell.previousPipe.textOffset+ margin)
+    val end = offsetToLogicalPosition(toCell.nextPipe.textRange.startOffset + 1)
+
+    val caretStates = EditorModificationUtil.calcBlockSelectionState(this, start, end)
+    caretModel.setCaretsAndSelections(caretStates, true)
+}
+
 fun Editor.tableColumn(table: GherkinTable, columnNumber: Int, shift: Int = 0): kotlin.Pair<LogicalPosition, LogicalPosition> {
 
     var start = offsetToLogicalPosition(table.firstRow.cell(columnNumber).previousPipe.textOffset+1)
@@ -387,3 +402,6 @@ fun Editor.isSelectionOfBlankCells(): Boolean {
 
     return true
 }
+
+fun Point.shift(dimension: Dimension)
+    = Point(x + dimension.width -1, y + dimension.height -1)

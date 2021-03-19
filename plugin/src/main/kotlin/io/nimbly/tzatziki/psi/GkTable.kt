@@ -9,6 +9,8 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import java.awt.Dimension
+import java.awt.Point
 
 val GherkinTable.allRows: List<GherkinTableRow>
     get() {
@@ -49,6 +51,17 @@ fun GherkinTable.previousRow(row: GherkinTableRow): GherkinTableRow? {
 
 fun GherkinTable.cellAt(offset: Int): GherkinTableCell?
     = containingFile.cellAt(offset)
+
+fun GherkinTable.cellAt(coordinates: Point): GherkinTableCell? {
+    if (coordinates.y >= allRows.size)
+        return null
+
+    val row = allRows[coordinates.y]
+    if (coordinates.x >= row.psiCells.size)
+        return null
+
+    return row.psiCells[coordinates.x]
+}
 
 fun GherkinTable.columnNumberAt(offset: Int): Int? {
     return cellAt(offset)?.row?.columnNumberAt(offset)
@@ -127,8 +140,9 @@ fun GherkinTable.offsetIsOnAnyLine(offset: Int): Boolean {
     return offset in from..to
 }
 
-fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<GherkinTableCell> {
+fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): Pair<Dimension, List<GherkinTableCell>> {
     val found = mutableListOf<GherkinTableCell>()
+    val dimension = Dimension(0, 0)
 
     val rows = if (withHeader) allRows else dataRows
     rows.forEach { row ->
@@ -140,9 +154,20 @@ fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): List<G
                 found.add(cell)
             }
         }
+        if (dimension.width==0)
+            dimension.width = found.size
+
         val lastCell = cells[cells.size - 1]
-        if (range.startOffset > lastCell.textOffset + lastCell.textLength)
+        if (range.startOffset > lastCell.textOffset + lastCell.textLength && !cells.contains(lastCell)) {
             found.add(lastCell)
+            cells.add(lastCell)
+            dimension.width = cells.size +1
+        }
+
+        if (cells.isNotEmpty()) {
+            dimension.height++
+        }
     }
-    return found
+
+    return dimension to found
 }

@@ -1,9 +1,8 @@
-package io.nimbly.tzatziki.util
+package io.nimbly.tzatziki.psi
 
-import io.nimbly.tzatziki.psi.allRows
-import io.nimbly.tzatziki.psi.table
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import java.awt.Point
 
 val GherkinTableCell.row: GherkinTableRow
     get() = parent as GherkinTableRow
@@ -11,10 +10,10 @@ val GherkinTableCell.row: GherkinTableRow
 val GherkinTableCell.columnNumber: Int
     get() = row.psiCells.indexOf(this)
 
-val GherkinTableCell.coordinate: Pair<Int, Int>
+val GherkinTableCell.coordinate: Point
     get() {
         val row = row
         val y = row.table.allRows.indexOf(row)
         val x = row.psiCells.indexOf(this)
-        return Pair(x, y)
+        return Point(x, y)
     }

@@ -121,16 +121,15 @@ class DeleteTests : AbstractTestCase() {
         selectAsColumn("Examples:\n    ", "| No    | D2")
         delete()
         // language=feature
-        backspace()
         checkContent("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
                 Then The Cucumber table is formatted !
                 Examples:
-                  |  |  |
-                  |  |  |
-                  |  |  |
+                  |  |  |  |
+                  |  |  |  |
+                  |  |  |  |
                 Then FInished !""")
 
 
@@ -641,7 +640,6 @@ class DeleteTests : AbstractTestCase() {
                   | 20%  | OUI | 11%     |  | 10%   |
                   | 99%  | OUI | 89%     |  | 69%   |""")
         checkSelectionColumn("| 10%     |  | 10%   |\n      ", "|      |     |         |  |       |")
-
 
         delete()
         // language=feature

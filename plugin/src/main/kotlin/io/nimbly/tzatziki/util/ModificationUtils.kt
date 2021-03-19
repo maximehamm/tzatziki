@@ -17,6 +17,8 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import java.awt.Dimension
+import kotlin.math.max
 
 const val FEATURE_HEAD =
     "Feature: x\n" +
@@ -162,7 +164,12 @@ fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolea
             if (!cleanCells && !cleanHeader)
                 return true
 
-            cleanSelection(this, table, cleanHeader, selectionModel.blockSelectionStarts, selectionModel.blockSelectionEnds)
+            this.cleanSelection(
+                table,
+                cleanHeader,
+                selectionModel.blockSelectionStarts,
+                selectionModel.blockSelectionEnds
+            )
             return true
         }
     }
@@ -215,26 +222,31 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
     return false
 }
 
-private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boolean, starts: IntArray, ends: IntArray): Int {
+private fun Editor.cleanSelection(table: GherkinTable, cleanHeader: Boolean, starts: IntArray, ends: IntArray): Int {
 
     // Find cells to delete
     val toClean = mutableListOf<GherkinTableCell>()
     val toCleanRows = mutableSetOf<GherkinTableRow>()
+    val cleanedDimension = Dimension(0,0)
     starts.indices.forEach { i ->
-        val r = TextRange(starts[i], ends[i])
-        table.findCellsInRange(r, cleanHeader)
+        val (dimension, cells) = table.findCellsInRange(TextRange(starts[i], ends[i]), cleanHeader)
+        cells
             .forEach {
                 toClean.add(it)
                 toCleanRows.add(it.row)
             }
+        if (dimension.height >0)
+            cleanedDimension.height++
+        if (dimension.width >0)
+            cleanedDimension.width = max(cleanedDimension.width, dimension.width)
     }
     if (toClean.size < 1) return 0
 
     // Remember deleted column
-    val blankSelection = editor.isSelectionOfBlankCells()
-    val fullLine = toCleanRows.size == 1
-    val targetColumn = toClean.first().columnNumber + (if (blankSelection) 1 else 0)
-    val targetRow = toClean.first().row.rowNumber
+    val blankSelection = isSelectionOfBlankCells()
+    var coordinates = toClean.first().coordinate
+    if (blankSelection)
+        coordinates = coordinates.shift(cleanedDimension)
 
     // Build temp string
     val sb = StringBuilder()
@@ -248,8 +260,7 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
     }
 
     // Replace table
-    val coordinate = toClean[0].coordinate
-    val tableSmart = SmartPointerManager.getInstance(editor.project).createSmartPsiElementPointer(table, editor.getFile()!!)
+    val tableSmart = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(table, getFile()!!)
     ApplicationManager.getApplication().runWriteAction {
 
         // replace table
@@ -259,10 +270,10 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
         val newTable = table.replace(tempTable) as GherkinTable
 
         // Move cursor
-        val targetCell = newTable.row(coordinate.second).cell(coordinate.first)
-        editor.caretModel.removeSecondaryCarets()
-        editor.caretModel.moveToOffset(targetCell.previousPipe.startOffset+2)
-        editor.selectionModel.removeSelection()
+        val targetCell = newTable.row(coordinates.y).cell(coordinates.x)
+        caretModel.removeSecondaryCarets()
+        caretModel.moveToOffset(targetCell.previousPipe.startOffset+2)
+        selectionModel.removeSelection()
 
         // Format table
         newTable.format()
@@ -270,14 +281,8 @@ private fun cleanSelection(editor: Editor, table: GherkinTable, cleanHeader: Boo
 
     // Select next column
     tableSmart.element?.let {
-        if (it.columnCount > targetColumn) {
-            if (fullLine)
-                editor.selectTableRow(tableSmart.element!!, targetRow)
-            else
-                editor.selectTableColumn(tableSmart.element!!, targetColumn)
-        }
+        selectTableCells(tableSmart.element!!, coordinates, cleanedDimension)
     }
 
     return toClean.size
 }
-
