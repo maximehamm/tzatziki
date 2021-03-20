@@ -92,7 +92,13 @@ fun GherkinTable.rowAtLine(line: Int): GherkinTableRow?
     = allRows.find { it.getDocumentLine() == line }
 
 fun GherkinTable.row(rowNumber: Int): GherkinTableRow
-    = allRows.let { if (rowNumber<it.size) it[rowNumber] else it.last() }
+    = allRows.let {
+        when {
+            rowNumber<0 -> it[0]
+            rowNumber<it.size -> it[rowNumber]
+            else -> it.last()
+        }
+    }
 
 fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {
 

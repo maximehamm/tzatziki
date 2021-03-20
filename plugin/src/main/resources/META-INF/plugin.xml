@@ -74,6 +74,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
         <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
+        <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
@@ -92,11 +93,38 @@
     <actions>
 
         <group id="io.nimbly.tzatziki.group">
+
             <separator/>
+
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"
                     id="io.nimbly.tzatziki.ToggleTzatzikiSmartCopyAction"
                     text="Toggle Cucumber smart editing">
             </action>
+
+            <action id="io.nimbly.tzatziki.actions.ShiftUpLine"
+                    class="io.nimbly.tzatziki.actions.TableShiftAction"
+                    text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
+            </action>
+            <action id="io.nimbly.tzatziki.actions.ShiftDownLine"
+                    class="io.nimbly.tzatziki.actions.TableShiftAction"
+                    text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN"   >
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
+            </action>
+
+            <action id="io.nimbly.tzatziki.actions.ShiftLeftLine"
+                    class="io.nimbly.tzatziki.actions.TableShiftAction"
+                    text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
+            </action>
+            <action id="io.nimbly.tzatziki.actions.ShiftRightLine"
+                    class="io.nimbly.tzatziki.actions.TableShiftAction"
+                    text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
+                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
+            </action>
+
+            <separator/>
+
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
         </group>

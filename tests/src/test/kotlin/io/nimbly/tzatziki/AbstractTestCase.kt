@@ -12,7 +12,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
-import io.nimbly.tzatziki.format.getIndexOf
 import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
 import org.apache.log4j.Logger
@@ -342,4 +341,9 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         return "src/test/resources"
     }
 
+}
+
+fun getIndexOf(contents: String, lookFor: String): Int {
+    val i = contents.indexOf(lookFor)
+    return if (i < 0) i else i + lookFor.length
 }

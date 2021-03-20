@@ -260,7 +260,7 @@ fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
     }
 }
 
-private fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableList<TextRange>?) {
+fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableList<TextRange>?) {
 
     HighlightManager.getInstance(project)
         .addOccurrenceHighlight(this, start, end, SEARCH_RESULT_ATTRIBUTES, HIDE_BY_ANY_KEY, null)
