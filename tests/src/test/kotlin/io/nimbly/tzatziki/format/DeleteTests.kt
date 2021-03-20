@@ -533,7 +533,7 @@ class DeleteTests : AbstractTestCase() {
 
         configure(content)
         selectAsColumn("| 3%      | OUI    | 14",
-                        "| 3%      | OUI    | 39%")
+            "| 3%      | OUI    | 39%")
         delete()
         // language=feature
         checkContent("""

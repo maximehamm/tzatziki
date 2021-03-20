@@ -101,23 +101,23 @@
                     text="Toggle Cucumber smart editing">
             </action>
 
-            <action id="io.nimbly.tzatziki.actions.ShiftUpLine"
+            <action id="io.nimbly.tzatziki.actions.ShiftUp"
                     class="io.nimbly.tzatziki.actions.TableShiftAction"
                     text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
             </action>
-            <action id="io.nimbly.tzatziki.actions.ShiftDownLine"
+            <action id="io.nimbly.tzatziki.actions.ShiftDown"
                     class="io.nimbly.tzatziki.actions.TableShiftAction"
                     text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN"   >
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
             </action>
 
-            <action id="io.nimbly.tzatziki.actions.ShiftLeftLine"
+            <action id="io.nimbly.tzatziki.actions.ShiftLeft"
                     class="io.nimbly.tzatziki.actions.TableShiftAction"
                     text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
             </action>
-            <action id="io.nimbly.tzatziki.actions.ShiftRightLine"
+            <action id="io.nimbly.tzatziki.actions.ShiftRight"
                     class="io.nimbly.tzatziki.actions.TableShiftAction"
                     text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
