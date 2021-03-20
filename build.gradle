@@ -4,7 +4,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '1.4.1'
+    version '1.5.0'
 }
 
 ext {
@@ -13,7 +13,8 @@ ext {
        <br/>
        Change notes :
        <ul>
-         <li><b>1.4</b> Column and line deletion improvements</li>
+         <li><b>1.5</b> Moving rows and lines uo/down and left/right</li>
+         <li><b>1.4</b> Deleting rows and lines improvements</li>
          <li><b>1.3</b> Prevent table structure to be corrupted while using DELETE, BACKSPACE, CUT, etc.</li>
          <li><b>1.2</b> Intellij IDEA 2021.1 EAP Compatibility</li>
          <li><b>1.1</b> Copy from Excel to table</li>

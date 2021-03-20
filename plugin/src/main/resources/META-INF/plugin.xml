@@ -14,12 +14,6 @@
          </li>
 
          <br/>
-         <li>Navigate <u>from cell to cell</u> by pressing 'Tab', 'Shift tab' or 'Enter'
-              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_9ceaf385-b474-453e-81fa-e2b4ec58cac7"
-                 alt="Tzatziki" width="419" height="233"></p>
-         </li>
-
-         <br/>
          <li>Add <u>new row</u> by pressing 'Enter' from last row or from end of row.<br/></li>
          <li>Add a <u>new column</u> by pressing 'Pipe' from anywere
              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_14a9e777-c607-4e0a-bb80-f12e0d8db029"
@@ -45,16 +39,34 @@
          </li>
 
          <br/>
+         <li><u>Moving rows and colums</u> up/down and left/right :<br/>
+             - Move caret to a table cell<br/>
+             - Press Shift+Ctrl and ▼▲ to move row up or down (or Shift+⌘ on MacOs)<br>
+             - Press Shift+Ctrl and ◀︎▶ to move column left or right (or Shift+⌘ on MacOs)<br>
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_e5736c06-6104-47b7-944e-7e999a4a4dd9"
+                 alt="Tzatziki" width="419" height="233"></p>
+         </li>
+
+         <br/>
+         <li><u>Quick selection</u> of rows and colums,<br/>
+             <u>Blanking cells</u> facilities :<br/>
+             - Double click header cell to select a column<br/>
+             - Double click non-header cell to select a row<br/>
+             - Press 'Del' to clear cells content<br/>
+             - Press 'Del' again to delete the row or column<br/>
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_7a36072e-0286-4075-9b40-189ab0615d70"
+                 alt="Tzatziki" width="419" height="233"></p>
+         </li>
+
+         <br/>
+         <li>Navigate <u>from cell to cell</u> by pressing 'Tab', 'Shift tab' or 'Enter'
+              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_9ceaf385-b474-453e-81fa-e2b4ec58cac7"
+                 alt="Tzatziki" width="419" height="233"></p>
+         </li>
+
+         <br/>
          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
 
-       </ul>
-
-       <br/>
-       <b>Roadmap :</></b><br/>
-       <ul>
-         <li>Move columns left/right and rows up/down</li>
-         <li>Table cell completion to suggest already used values</li>
-         <li>...</li>
        </ul>
 
        <br/>
