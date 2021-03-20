@@ -46,7 +46,7 @@ fun GherkinTableRow.columnNumberAt(offset: Int): Int? {
 }
 
 fun GherkinTableRow.cell(columnNumber: Int): GherkinTableCell
-    = psiCells[columnNumber]
+    = psiCells.let { if (columnNumber<it.size) it[columnNumber] else it.last() }
 
 fun GherkinTableRow.intersects(range: TextRange)
     = textRange.intersects(range)

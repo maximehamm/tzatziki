@@ -32,6 +32,9 @@ val GherkinTable.lastRow
 val GherkinTable.columnCount: Int
     get() = firstRow.psiCells.size
 
+val GherkinTable.rowCount: Int
+    get() = allRows.size
+
 fun GherkinTable.format() {
     val range = textRange
     WriteCommandAction.runWriteCommandAction(project) {
@@ -53,14 +56,8 @@ fun GherkinTable.cellAt(offset: Int): GherkinTableCell?
     = containingFile.cellAt(offset)
 
 fun GherkinTable.cellAt(coordinates: Point): GherkinTableCell? {
-    if (coordinates.y >= allRows.size)
-        return null
-
-    val row = allRows[coordinates.y]
-    if (coordinates.x >= row.psiCells.size)
-        return null
-
-    return row.psiCells[coordinates.x]
+    val row = row(coordinates.y)
+    return row.cell(coordinates.x)
 }
 
 fun GherkinTable.columnNumberAt(offset: Int): Int? {
@@ -95,7 +92,7 @@ fun GherkinTable.rowAtLine(line: Int): GherkinTableRow?
     = allRows.find { it.getDocumentLine() == line }
 
 fun GherkinTable.row(rowNumber: Int): GherkinTableRow
-    = allRows[rowNumber]
+    = allRows.let { if (rowNumber<it.size) it[rowNumber] else it.last() }
 
 fun GherkinTable.cellsInRange(range: TextRange): List<GherkinTableCell> {
 

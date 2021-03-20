@@ -248,7 +248,6 @@ class DeleteTests : AbstractTestCase() {
                     Then FInished !""")
         checkSelectionColumn("| NAF |", "| 79  |  |  |")
 
-        delete()
         // language=feature
         backspace()
         checkContent("""
@@ -602,8 +601,121 @@ class DeleteTests : AbstractTestCase() {
                   | 39%  | OUI | 39%     | 39%   |
                   | 20%  | OUI | 11%     | 10%   |
                   | 99%  | OUI | 89%     | 69%   |""")
+        checkSelectionColumn("| Percent |", "| 69%   |")
 
-        checkSelectionEmpty()
+        backspace()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  |
+                  | 39%  | OUI | 39%     |  |
+                  | 10%  | OUI | 10%     |  |
+                  | 39%  | OUI | 39%     |  |
+                  | 20%  | OUI | 11%     |  |
+                  | 99%  | OUI | 89%     |  |""")
+        checkSelectionColumn("| Percent |", "| 89%     |  |")
+
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |
+                  | 39%  | OUI | 39%     |
+                  | 10%  | OUI | 10%     |
+                  | 39%  | OUI | 39%     |
+                  | 20%  | OUI | 11%     |
+                  | 99%  | OUI | 89%     |""")
+        checkSelectionColumn("| OK? |", "| 89%     |")
+
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? |  |
+                  | 39%  | OUI |  |
+                  | 10%  | OUI |  |
+                  | 39%  | OUI |  |
+                  | 20%  | OUI |  |
+                  | 99%  | OUI |  |""")
+        checkSelectionColumn("| OK? |", "| 99%  | OUI |  |")
+
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? |
+                  | 39%  | OUI |
+                  | 10%  | OUI |
+                  | 39%  | OUI |
+                  | 20%  | OUI |
+                  | 99%  | OUI |""")
+        checkSelectionColumn("| Q170 |", "| 99%  | OUI |")
+
+
+        delete(2)
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 |
+                  | 39%  |
+                  | 10%  |
+                  | 39%  |
+                  | 20%  |
+                  | 99%  |""")
+        checkSelectionColumn("\n      ", "| 99%  |")
+
+
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  |  |
+                  |  |
+                  |  |
+                  |  |
+                  |  |
+                  |  |""")
+
+        delete()
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  """)
     }
 
     fun testDeletionOfEmptyLines() {
@@ -616,12 +728,10 @@ class DeleteTests : AbstractTestCase() {
                 Then The Cucumber table is automatically formatted !
                 Examples:
                   | Q170 | OK? | Percent |  | Count |
-                  | 39%  | OUI | 39%     |  | 14%   |
                   | 10%  | OUI | 10%     |  | 10%   |
                   | 20%  | OUI | 11%     |  | 10%   |
                   | 39%  | OUI | 39%     |  | 39%   |
-                  | 20%  | OUI | 11%     |  | 10%   |
-                  | 99%  | OUI | 89%     |  | 69%   |"""
+                  | 20%  | OUI | 11%     |  | 10%   |"""
         configure(content)
         selectAsColumn("| 10%     |  | 10%   |\n      ", "| 20%  | OUI | 11%     |  | 10%   |")
         delete()
@@ -633,12 +743,10 @@ class DeleteTests : AbstractTestCase() {
                 Then The Cucumber table is automatically formatted !
                 Examples:
                   | Q170 | OK? | Percent |  | Count |
-                  | 39%  | OUI | 39%     |  | 14%   |
                   | 10%  | OUI | 10%     |  | 10%   |
                   |      |     |         |  |       |
                   | 39%  | OUI | 39%     |  | 39%   |
-                  | 20%  | OUI | 11%     |  | 10%   |
-                  | 99%  | OUI | 89%     |  | 69%   |""")
+                  | 20%  | OUI | 11%     |  | 10%   |""")
         checkSelectionColumn("| 10%     |  | 10%   |\n      ", "|      |     |         |  |       |")
 
         delete()
@@ -650,13 +758,112 @@ class DeleteTests : AbstractTestCase() {
                 Then The Cucumber table is automatically formatted !
                 Examples:
                   | Q170 | OK? | Percent |  | Count |
-                  | 39%  | OUI | 39%     |  | 14%   |
                   | 10%  | OUI | 10%     |  | 10%   |
-            
                   | 39%  | OUI | 39%     |  | 39%   |
-                  | 20%  | OUI | 11%     |  | 10%   |
-                  | 99%  | OUI | 89%     |  | 69%   |""")
+                  | 20%  | OUI | 11%     |  | 10%   |""")
+        checkSelectionColumn("| 10%     |  | 10%   |\n      ", "| 39%   |")
 
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  |      |     |         |  |       |
+                  | 20%  | OUI | 11%     |  | 10%   |""")
+        checkSelectionColumn("| 10%   |\n      ", "|      |     |         |  |       |")
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  | 20%  | OUI | 11%     |  | 10%   |""")
+        checkSelectionColumn("| 10%     |  | 10%   |\n      ", "| 20%  | OUI | 11%     |  | 10%   |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 10%  | OUI | 10%     |  | 10%   |
+                  |      |     |         |  |       |""")
+        checkSelectionColumn("| 10%     |  | 10%   |\n      ", "|      |     |         |  |       |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  | 10%  | OUI | 10%     |  | 10%   |""")
+        checkSelectionColumn("| Count |\n      ", "| 10%  | OUI | 10%     |  | 10%   |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |
+                  |      |     |         |  |       |""")
+        checkSelectionColumn("| Count |\n      ", "|      |     |         |  |       |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  | Q170 | OK? | Percent |  | Count |""")
+        checkSelectionColumn("\n      ", "| Count |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  |  |  |  |  |  |""")
+        checkSelectionColumn("\n      ", "|  |  |  |  |  |")
+
+
+        delete()
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character
+                Then The Cucumber table is automatically formatted !
+                Examples:
+                  """)
     }
 
     fun testDeletionOfSinglePipe() {

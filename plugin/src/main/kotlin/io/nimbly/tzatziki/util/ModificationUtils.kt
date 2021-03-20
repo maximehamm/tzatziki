@@ -19,6 +19,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import java.awt.Dimension
 import kotlin.math.max
+import kotlin.math.min
 
 const val FEATURE_HEAD =
     "Feature: x\n" +
@@ -183,8 +184,7 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
         if (text != null
             && text.isNotEmpty()
             && !text.startsWith("\n")
-            && (!text.contains("|")
-                || text.matches(Regex("^[ |\\n]+$"))))
+            && !text.contains("|"))
             return false
     }
 
@@ -242,21 +242,42 @@ private fun Editor.cleanSelection(table: GherkinTable, cleanHeader: Boolean, sta
     }
     if (toClean.size < 1) return 0
 
-    // Remember deleted column
+    // Remember deletion coordinates
     val blankSelection = isSelectionOfBlankCells()
-    var coordinates = toClean.first().coordinate
-    if (blankSelection)
-        coordinates = coordinates.shift(cleanedDimension)
+    val coordinates = toClean.first().coordinate
+
+    // Define column abd rows to remove completely
+    val excludedRows =
+        if (blankSelection && cleanedDimension.width == table.columnCount)
+            coordinates.y until coordinates.y + cleanedDimension.height
+        else -1..-1
+    val excludedColumns =
+        if (blankSelection && cleanedDimension.height == table.rowCount)
+           coordinates.x until coordinates.x + cleanedDimension.width
+        else -1..-1
 
     // Build temp string
     val sb = StringBuilder()
-    table.allRows.forEach { row ->
-        sb.append("| ")
-        row.psiCells.forEach {
-            sb.append(if (toClean.contains(it)) " " else it.text)
-            sb.append(" |")
+    table.allRows.forEachIndexed{ y, row ->
+        if (y !in excludedRows) {
+            sb.append("| ")
+            row.psiCells.forEachIndexed { x, cell ->
+                if (x !in excludedColumns) {
+                    sb.append(if (toClean.contains(cell)) " " else cell.text)
+                    sb.append(" |")
+                }
+            }
+            sb.append('\n')
         }
-        sb.append('\n')
+    }
+
+    // Delete all !
+    if (sb.isEmpty()) {
+        ApplicationManager.getApplication().runWriteAction {
+           table.delete()
+            return@runWriteAction
+        }
+        return  toClean.size
     }
 
     // Replace table

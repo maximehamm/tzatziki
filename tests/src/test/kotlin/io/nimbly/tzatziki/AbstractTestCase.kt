@@ -293,8 +293,9 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         executeHandler(ACTION_EDITOR_CUT)
     }
 
-    protected open fun delete() {
-        executeHandler(ACTION_EDITOR_DELETE)
+    protected open fun delete(repeat: Int=1) {
+        for (i in 0 until repeat)
+            executeHandler(ACTION_EDITOR_DELETE)
     }
 
     protected open fun backspace() {
