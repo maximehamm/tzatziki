@@ -94,15 +94,16 @@ private fun Editor.shift(table: GherkinTable, cell: GherkinTableCell, direction:
 
             // Move cursor
             val refCell = table.cellAt(coordinate)!!
-            val newCaret = caret.go(direction)
-            caretModel.moveToOffset(logicalPositionToOffset(newCaret))
+            val newCaret = when (direction) {
+                LEFT, RIGHT -> refCell.row.cell(coordinate.x + direction.toInt()).previousPipe.startOffset +2
+                UP, DOWN -> logicalPositionToOffset(caret.go(direction))
+            }
+            caretModel.moveToOffset(newCaret)
 
             // Highlight section
             val ref = when (direction) {
-                LEFT -> refCell.row.cell(coordinate.x -1)
-                RIGHT -> refCell.row.cell(coordinate.x +1)
-                UP -> table.row(coordinate.y - 1)
-                DOWN -> table.row(coordinate.y + 1)
+                LEFT, RIGHT -> refCell.row.cell(coordinate.x + direction.toInt())
+                UP, DOWN -> table.row(coordinate.y + direction.toInt())
             }
             val startHighlight =
                 if (ref is GherkinTableCell) table.firstRow.cell(ref.columnNumber).previousPipe.startOffset +1
@@ -119,7 +120,9 @@ private fun Editor.shift(table: GherkinTable, cell: GherkinTableCell, direction:
 
 }
 
-private enum class Direction { UP, DOWN, LEFT, RIGHT }
+private enum class Direction { UP, DOWN, LEFT, RIGHT;
+    fun toInt() = if (this == UP || this == LEFT) -1 else +1
+}
 
 private fun LogicalPosition.go(direction: Direction)
     = when (direction) {
