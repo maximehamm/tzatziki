@@ -1,12 +1,11 @@
 <idea-plugin>
     <id>io.nimbly.tzatziki</id>
-    <name>Cucumber to Tzatziki</name>
+    <name>Cucumber Table➕ </name>
     <vendor email="maxime.hamm@gmail.com"
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
-
     <description><![CDATA[
 
-       <b>Cucumber y Tzatziki</></b><br/>
+       <b>Easy handling of Cucumber tables</></b><br/><br/>
        <ul>
          <li>Cucumber table <u>formatting as you go</u> :
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_56576887-38ae-4f53-8ac7-4baf79153863"
