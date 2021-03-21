@@ -25,7 +25,7 @@ class TzExportAction : TzAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Ma,age Cucumber "Rule" sections
+        //TODO : Manage Cucumber "Rule" sections
         //TODO : Traduire les mots clef au moment d'editer
         //TODO : Manage tril quote ?
         //TODO : Manage comments
@@ -52,14 +52,15 @@ class TzExportAction : TzAction(), DumbAware {
                 h1 { font-size: 24px; margin-bottom: 10px; } 
                 h2 { font-size: 20px; border-bottom: 5px; } 
                 
-                table { margin-top: 10px; max-width: 100%; margin-left: 15px;}
+                table { margin-top: 10px; margin-left: 10px; margin-right: 10px;
+                    max-width: 100%; }
                 table, th, td {  
                     font-size: 14px; 
                     vertical-align: top; 
                     border: 1px solid midnightblue;  
                     border-collapse: collapse;  
                 }  
-                th, td { padding: 5px;  white-space: nowrap; }
+                th, td { padding: 5px; white-space: break-spaces; }
                 th { color: chocolate }
                 
                 div { display: inline-block; }
