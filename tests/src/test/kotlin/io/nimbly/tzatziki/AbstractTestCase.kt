@@ -337,10 +337,10 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         }
     }
 
-    fun moveLeft() = myFixture.editor.executeAction("io.nimbly.tzatziki.actions.ShiftLeft")
-    fun moveRight() = myFixture.editor.executeAction("io.nimbly.tzatziki.actions.ShiftRight")
-    fun moveUp() = myFixture.editor.executeAction("io.nimbly.tzatziki.actions.ShiftUp")
-    fun moveDown() = myFixture.editor.executeAction("io.nimbly.tzatziki.actions.ShiftDown")
+    fun moveLeft() = myFixture.editor.executeAction("io.nimbly.tzatziki.ShiftLeft")
+    fun moveRight() = myFixture.editor.executeAction("io.nimbly.tzatziki.ShiftRight")
+    fun moveUp() = myFixture.editor.executeAction("io.nimbly.tzatziki.ShiftUp")
+    fun moveDown() = myFixture.editor.executeAction("io.nimbly.tzatziki.ShiftDown")
 
 
     override fun getTestDataPath(): String? {
