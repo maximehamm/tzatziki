@@ -7,6 +7,16 @@ group 'io.nimbly.tzatziki'
 
 dependencies {
     implementation project(':common')
+
+    implementation("com.openhtmltopdf:openhtmltopdf-core:1.0.7")
+    implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.7")
+    implementation("com.openhtmltopdf:openhtmltopdf-java2d:1.0.7")
+    implementation("com.openhtmltopdf:openhtmltopdf-svg-support:1.0.7")
+}
+
+configurations {
+    all*.exclude group: "xml-apis", module: "xml-apis"
+    all*.exclude group: "xml-apis", module: "xml-apis-ext"
 }
 
 compileKotlin { kotlinOptions.jvmTarget = "11" }

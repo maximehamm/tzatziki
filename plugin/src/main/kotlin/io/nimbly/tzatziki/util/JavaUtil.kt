@@ -1,6 +1,8 @@
 package io.nimbly.tzatziki.util
 
 import java.lang.Exception
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object JavaUtil {
 
@@ -22,3 +24,19 @@ object JavaUtil {
         }
     }
 }
+
+fun <E> MutableList<E>.push(element: E) = add(element)
+
+fun <E> MutableList<E>.peek() = this.lastOrNull()
+
+fun <T> MutableList<T>.pop() = removeAt(size-1)
+
+fun now(): LocalDate {
+    return LocalDate.now()
+}
+
+val NOW: String
+    get() = now().format(DATE_FORMAT)
+
+val DATE_FORMAT: DateTimeFormatter
+    get() = DateTimeFormatter.ofPattern("dd-MM-yyyy")

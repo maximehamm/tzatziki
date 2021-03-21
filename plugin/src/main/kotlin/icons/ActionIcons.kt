@@ -13,4 +13,6 @@ object ActionIcons {
     @JvmField val INSERT_COLUMN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-insert-16x16.png", javaClass)
     @JvmField val DELETE_LINE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/line-delete-16x16.png", javaClass)
     @JvmField val DELETE_COLUMN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/culumn-delete-16x16.png", javaClass)
+
+    @JvmField val EXPORT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/export-16x16.png", javaClass)
 }

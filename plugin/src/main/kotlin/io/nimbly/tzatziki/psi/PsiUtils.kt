@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.psi
 
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
@@ -12,6 +13,9 @@ import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+
+fun PsiFile.getModule()
+    = ModuleUtilCore.findModuleForPsiElement(this)
 
 fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
     var l = findElementAt(offset) ?: return null

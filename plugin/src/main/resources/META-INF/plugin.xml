@@ -139,17 +139,21 @@
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
             </action>
 
-            <separator/>
-
-<!--            <action class="io.nimbly.tzatziki.actions.TzExportToPdfAction"-->
-<!--                    id="io.nimbly.tzatziki.ExportToPdf"-->
-<!--                    text="Toggle Cucumber smart editing">-->
-<!--            </action>-->
-<!--            -->
-<!--            <separator/>-->
-
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
+
+        </group>
+
+        <group>
+
+            <action class="io.nimbly.tzatziki.actions.TzExportAction"
+                    id="io.nimbly.tzatziki.ExportToPdf"
+                    text="Export to Cucumber PDF" icon="ActionIcons.EXPORT">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl G"/>
+            </action>
+
+            <add-to-group group-id="FileMenu" anchor="after" relative-to-action="PrintExportGroup"/>
+
         </group>
     </actions>
 
