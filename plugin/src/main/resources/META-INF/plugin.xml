@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>io.nimbly.tzatziki</id>
-    <name>Cucumber Table➕ </name>
+    <name>Cucumber ➕</name>
     <vendor email="maxime.hamm@gmail.com"
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
@@ -81,6 +81,11 @@
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
+
+    <!-- Formatin ideas :
+
+       http://www.picklesdoc.com/#download
+    -->
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
