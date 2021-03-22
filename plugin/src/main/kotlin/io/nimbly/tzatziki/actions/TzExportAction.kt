@@ -18,6 +18,7 @@ import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getModule
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
+import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
 import org.jetbrains.plugins.cucumber.psi.impl.*
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.io.ByteArrayOutputStream
@@ -53,10 +54,7 @@ class TzExportAction : TzAction(), DumbAware {
             """
                 * { font-size: 16px; margin: 0 0 0 0 }
                 p { margin: 0 }
-                
-                h1 { font-size: 24px; margin-bottom: 10px; } 
-                h2 { font-size: 20px; border-bottom: 5px; } 
-                
+
                 table { margin-top: 10px; margin-left: 10px; margin-right: 10px;
                     max-width: 100%; }
                 table, th, td {  
@@ -71,11 +69,18 @@ class TzExportAction : TzAction(), DumbAware {
                 div { display: inline-block; }
                 
                 .feature { margin-left: 5px; }
+                .featureTitle { font-size: 24px; margin-bottom: 10px; }
                 .featureHeader { margin-left: 5px; font-weight: bolder }
+                
                 .rule { margin-left: 10px; }
-                .scenario, .scenarioOutline { margin-left: 15px; }
+                .ruleTitle { font-size: 24px; margin-bottom: 10px; }
+                
+                .scenario { margin-left: 15px; }
+                .scenarioTitle { font-size: 20px; border-bottom: 10px;  }
+                
                 .step { margin-left: 20px; }
                 .stepParameter { color: chocolate; font-weight: bolder }
+                
                 .examples { margin-left: 20px; }
                 .stepKeyword { color: grey; }
                 .comment { color: grey}
@@ -83,7 +88,9 @@ class TzExportAction : TzAction(), DumbAware {
                 """.trimIndent()
 
         // Build as Html
-        file.accept(TzatizkiVisitor(generator))
+        val visitor = TzatizkiVisitor(generator)
+        file.accept(visitor)
+        visitor.closeAllTags()
 
         // Generate Pdf
         val output = ByteArrayOutputStream()
@@ -107,181 +114,159 @@ class TzExportAction : TzAction(), DumbAware {
 
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()
-        private var stepParams : List<TextRange>? = null
+        private var stepParams: List<TextRange>? = null
 
-        override fun visitElement(element: PsiElement) {
+        override fun visitElement(elt: PsiElement) {
 
             ProgressIndicatorProvider.checkCanceled()
 
             fun append() {
-                if (element !is LeafPsiElement) return
-                if (context.isRow() && element.text == "|") return
-                if (element.elementType == GherkinTokenTypes.STEP_PARAMETER_BRACE) return
+                if (elt !is LeafPsiElement) return
+                if (context.isRow() && elt.text == "|") return
+                if (elt.elementType == STEP_PARAMETER_BRACE) return
 
-                if (element.elementType == GherkinTokenTypes.STEP_KEYWORD) {
-                    openClass("stepKeyword")
-                    append(element.text)
-                    closeClass()
-                    return
-                }
+                if (elt.elementType == FEATURE_KEYWORD || context.isFeature())
+                    return span("featureTitle") { append(elt.text) }
+
+                if (elt.elementType == RULE_KEYWORD || context.isRule())
+                    return span("ruleTitle") { append(elt.text) }
+
+                if (elt.elementType == SCENARIO_KEYWORD || elt.elementType == SCENARIO_OUTLINE_KEYWORD || context.isScenario())
+                    return span("scenarioTitle") { append(elt.text) }
+
+                if (elt.elementType == STEP_KEYWORD)
+                    return span("stepKeyword") { append(elt.text) }
 
                 if (context.isStep() && stepParams?.isNotEmpty() == true) {
 
                     val shiftedSlices = stepParams!!
-                        .filter { it.startOffset>element.startOffset }
-                        .map { it.shiftLeft(element.startOffset) }
+                        .filter { it.startOffset > elt.startOffset }
+                        .map { it.shiftLeft(elt.startOffset) }
 
-                    element.text.shopUp(shiftedSlices)
+                    elt.text.shopUp(shiftedSlices)
                         .forEach {
-                            if (!it.isInterRange) openClass("stepParameter")
-                            append(it.text)
-                            if (!it.isInterRange) closeClass()
+                            if (it.isInterRange)
+                                append(it.text)
+                            else
+                                span("stepParameter") { append(it.text) }
+
                         }
                     return
                 }
 
-                append(element.text)
+                append(elt.text)
             }
 
             append()
 
-            context.push(element)
-            element.acceptChildren(this)
+            context.push(elt)
+            elt.acceptChildren(this)
             context.pop()
         }
 
         override fun visitWhiteSpace(space: PsiWhiteSpace) {
             if (!context.isTable()) {
-                if (space.text.startsWith("\n") && stackTags.peek()?.startsWith("h") == true) {
-                    closeTag()
-                }
                 append(space.text)
             }
             super.visitElement(space)
         }
 
         override fun visitFeature(feature: GherkinFeature) {
-            openParagrah("feature")
-            openTag("h1")
-            super.visitFeature(feature)
-            closeParagraph()
+            p("feature") { super.visitFeature(feature) }
 
             if (feature != (feature.parent as GherkinFile).features.last())
                 generator.breakPage()
         }
 
-        override fun visitRule(rule: GherkinRule?) {
-            openParagrah("rule")
-            openTag("h1")
-            super.visitRule(rule)
-            closeParagraph()
-        }
+        override fun visitRule(rule: GherkinRule?)
+            = p("rule") { super.visitRule(rule) }
 
-        override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl) {
-            openParagrah("featureHeader")
-            super.visitFeatureHeader(header)
-            closeParagraph()
-        }
+        override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl)
+            = p("featureHeader") { super.visitFeatureHeader(header) }
 
-        override fun visitScenarioOutline(outline: GherkinScenarioOutline) {
-            openParagrah("scenarioOutline")
-            openTag("h2")
-            super.visitScenarioOutline(outline)
-            closeParagraph()
-        }
+        override fun visitScenarioOutline(outline: GherkinScenarioOutline)
+            = nobreak { p("scenario") { super.visitScenarioOutline(outline) } }
 
-        override fun visitScenario(scenario: GherkinScenario) {
-            generator.paragraphStarts()
-            openParagrah("scenario")
-            openTag("h2")
-            super.visitScenario(scenario)
-            closeParagraph()
-            generator.paragraphEnds()
-        }
+        override fun visitScenario(scenario: GherkinScenario)
+            = nobreak { p("scenario") { super.visitScenario(scenario) } }
 
-        override fun visitStep(step: GherkinStep) {
-            openParagrah("step")
-            stepParams = loadStepParams(step)
-            super.visitStep(step)
-            closeParagraph()
-        }
+        override fun visitStep(step: GherkinStep)
+            = p("step") {
+                stepParams = loadStepParams(step)
+                super.visitStep(step)
+                stepParams = null
+            }
 
-        override fun visitStepParameter(gherkinStepParameter: GherkinStepParameterImpl?) {
-            openClass("stepParameter")
-            super.visitStepParameter(gherkinStepParameter)
-            closeClass()
-        }
+        override fun visitStepParameter(gherkinStepParameter: GherkinStepParameterImpl?)
+            = span("stepParameter") { super.visitStepParameter(gherkinStepParameter) }
 
-        override fun visitExamplesBlock(block: GherkinExamplesBlockImpl) {
-            generator.paragraphStarts()
-            openParagrah("examples")
-            super.visitExamplesBlock(block)
-            closeParagraph()
-            generator.paragraphEnds()
-        }
+        override fun visitExamplesBlock(block: GherkinExamplesBlockImpl)
+            = nobreak { p("examples") { super.visitExamplesBlock(block) } }
 
-        override fun visitTable(table: GherkinTableImpl) {
-            generator.paragraphStarts()
-            openTag("table")
-            super.visitTable(table)
-            closeTag()
-            generator.paragraphEnds()
-        }
+        override fun visitTable(table: GherkinTableImpl)
+            = nobreak { tag("table") { super.visitTable(table) } }
 
-        override fun visitTableHeaderRow(row: GherkinTableHeaderRowImpl) {
-            openTag("tr")
-            super.visitTableHeaderRow(row)
-            closeTag()
-        }
+        override fun visitTableHeaderRow(row: GherkinTableHeaderRowImpl)
+            = tag("tr") { super.visitTableHeaderRow(row) }
 
-        override fun visitTableRow(row: GherkinTableRowImpl) {
-            openTag("tr")
-            super.visitTableRow(row)
-            closeTag()
-        }
+        override fun visitTableRow(row: GherkinTableRowImpl)
+            = tag("tr") { super.visitTableRow(row) }
 
-        override fun visitGherkinTableCell(cell: GherkinTableCell) {
-            openTag(if (context.isHeader()) "th" else "td")
-            openTag("span")
-            super.visitGherkinTableCell(cell)
-            closeTag()
-            closeTag()
-        }
+        override fun visitGherkinTableCell(cell: GherkinTableCell)
+            = tag(if (context.isHeader()) "th" else "td") {
+                tag("span") {
+                    super.visitGherkinTableCell(cell)
+                }
+            }
 
         override fun visitComment(comment: PsiComment) {
             //Do not export comments
         }
 
-        private fun openTag(tag: String): TzatizkiVisitor {
-            generator.append("<$tag>")
-            stackTags.push(tag)
-            return this
-        }
-
-        private fun openClass(clazz: String): TzatizkiVisitor {
-            generator.append("<span class='$clazz'>")
-            stackTags.push("span")
-            return this
-        }
-
-        private fun openParagrah(clazz: String): TzatizkiVisitor {
-            generator.append("<p class='$clazz'>")
-            stackTags.push("p")
-            return this
-        }
-
-        private fun closeTag(): TzatizkiVisitor {
-            generator.append("</${stackTags.pop()}>")
-            return this
-        }
-
-        private fun closeParagraph() = closeTag()
-
-        private fun closeClass() = closeTag()
-
         private fun append(string: String): TzatizkiVisitor {
             generator.append(string.escape())
             return this
+        }
+
+        private fun span(clazz: String, function: () -> Unit) {
+            generator.append("<span class='$clazz'>")
+            stackTags.push("span")
+            function()
+            close("span")
+        }
+
+        fun tag(tag: String, function: () -> Unit) {
+            generator.append("<$tag>")
+            stackTags.push(tag)
+            function()
+            close(tag)
+        }
+
+        fun p(clazz: String, function: () -> Unit) {
+            generator.append("<p class='$clazz'>")
+            stackTags.push("p")
+            function()
+            close("p")
+        }
+
+        private fun nobreak(function: () -> Unit) {
+            generator.paragraphStarts()
+            function()
+            generator.paragraphEnds()
+        }
+
+        private fun close(tag: String? = null): TzatizkiVisitor {
+            val pop = stackTags.pop()
+            if (tag != null && tag != pop)
+                throw Exception("HTML tag malformed!")
+            generator.append("</$pop>")
+            return this
+        }
+
+        fun closeAllTags() {
+            while (stackTags.isNotEmpty()) {
+                close()
+            }
         }
     }
 }
@@ -302,8 +287,12 @@ fun loadStepParams(step: GherkinStep): List<TextRange> {
     return emptyList()
 }
 
+private fun <E> MutableList<E>.isFeature() = peek() is GherkinFeature
+private fun <E> MutableList<E>.isRule() = peek() is GherkinRule
+private fun <E> MutableList<E>.isScenario() = peek() is GherkinScenario || peek() is GherkinScenarioOutline
+private fun <E> MutableList<E>.isStep() = peek() is GherkinStep
+
 private fun <E> MutableList<E>.isTable() = peek() is GherkinTable
 private fun <E> MutableList<E>.isHeader() = peek() is GherkinTableHeaderRowImpl
 private fun <E> MutableList<E>.isCell() = peek() is GherkinTableCell
 private fun <E> MutableList<E>.isRow() = peek() is GherkinTableRow
-private fun <E> MutableList<E>.isStep() = peek() is GherkinStep
