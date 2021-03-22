@@ -7,6 +7,7 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicatorProvider
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveVisitor
 import com.intellij.psi.PsiWhiteSpace
@@ -25,10 +26,14 @@ class TzExportAction : TzAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Manage Cucumber "Rule" sections
-        //TODO : Traduire les mots clef au moment d'editer
-        //TODO : Manage tril quote ?
-        //TODO : Manage comments
+        //FIXME : Format stuff available from file tree contextual menu
+        //FIXME : Add export to pdf to  file tree contextual menu
+        //FIXME : Bug when file ends with
+
+        //TODO : Manage triple quotes ?
+
+        //TODO Later : Set a parameter to decide whether or not to print the comments
+        //TODO Later : Traduire les mots clef au moment d'editer
 
         val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
@@ -67,12 +72,13 @@ class TzExportAction : TzAction(), DumbAware {
                 
                 .feature { margin-left: 5px; }
                 .featureHeader { margin-left: 5px; font-weight: bolder }
+                .rule { margin-left: 10px; }
                 .scenario, .scenarioOutline { margin-left: 15px; }
                 .step { margin-left: 20px; }
                 .stepParameter { color: chocolate; font-weight: bolder }
                 .examples { margin-left: 20px; }
-                
                 .stepKeyword { color: grey; }
+                .comment { color: grey}
                 
                 """.trimIndent()
 
@@ -164,6 +170,13 @@ class TzExportAction : TzAction(), DumbAware {
                 generator.breakPage()
         }
 
+        override fun visitRule(rule: GherkinRule?) {
+            openParagrah("rule")
+            openTag("h1")
+            super.visitRule(rule)
+            closeParagraph()
+        }
+
         override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl) {
             openParagrah("featureHeader")
             super.visitFeatureHeader(header)
@@ -233,6 +246,10 @@ class TzExportAction : TzAction(), DumbAware {
             super.visitGherkinTableCell(cell)
             closeTag()
             closeTag()
+        }
+
+        override fun visitComment(comment: PsiComment) {
+            //Do not export comments
         }
 
         private fun openTag(tag: String): TzatizkiVisitor {
