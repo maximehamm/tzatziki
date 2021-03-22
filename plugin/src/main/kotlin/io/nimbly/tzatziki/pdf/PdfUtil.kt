@@ -22,7 +22,10 @@ fun String.escape(): String {
     val out = StringBuilder(16.coerceAtLeast(this.length))
     for (element in this) {
         val c = element
-        if (c == '"' || c == '\'' || c == '<' || c == '>' || c == '&') {
+        if (c == '"') {
+            out.append("&quot;")
+        }
+        else if (c == '\'' || c == '<' || c == '>' || c == '&') {
             out.append("&#")
             out.append(c.toInt())
             out.append(';')

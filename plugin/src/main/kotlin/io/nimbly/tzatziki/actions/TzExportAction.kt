@@ -242,8 +242,8 @@ class TzExportAction : TzAction(), DumbAware {
         }
 
         private fun openClass(clazz: String): TzatizkiVisitor {
-            generator.append("<div class='$clazz'>")
-            stackTags.push("div")
+            generator.append("<span class='$clazz'>")
+            stackTags.push("span")
             return this
         }
 
