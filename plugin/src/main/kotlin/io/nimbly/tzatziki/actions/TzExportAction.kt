@@ -14,6 +14,7 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.testFramework.writeChild
+import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getModule
 import io.nimbly.tzatziki.util.peek
@@ -45,54 +46,12 @@ class TzExportAction : TzAction(), DumbAware {
         val module = file.getModule() ?: return
         val outputDirectory = CompilerPaths.getModuleOutputDirectory(module, true) ?: return
 
+        // Load config
+        val config = loadConfig(file)
+
         // Prepare pdf generator
-        val generator = PdfBuilder(
-            PdfStyle(
-                bottomCenter = file.name,
-                bodyFontSize = "25px"),
-            TableOfContents())
-
-        // Customize styles
-        generator.style.contentStyle = //language=CSS
-            """
-                * { font-size: 16px; margin: 0 0 0 0 }
-                p { margin: 0 }
-
-                table { margin-top: 10px; margin-left: 10px; margin-right: 10px; max-width: 100%; }
-                table, th, td {  
-                    font-size: 14px; 
-                    vertical-align: top; 
-                    border: 1px solid midnightblue;  
-                    border-collapse: collapse;  
-                }  
-                th, td { padding: 5px; white-space: break-spaces; }
-                th { color: chocolate }
-                
-                div { display: inline-block; }
-                
-                .feature { margin-left: 5px; }
-                .featureTitle { font-size: 24px; margin-bottom: 10px; }
-                .featureHeader { margin-left: 5px; font-weight: bolder }
-                
-                .rule { margin-left: 10px; }
-                .ruleTitle { font-size: 24px; margin-bottom: 10px; }
-                
-                .scenario { margin-left: 15px; }
-                .scenarioTitle { font-size: 20px; border-bottom: 10px;  }
-                
-                .step { margin-left: 20px; }
-                .stepParameter { color: chocolate; font-weight: bolder }
-                
-                .examples { margin-left: 20px; }
-                .stepKeyword { color: grey; }
-                
-                .docstringMargin { margin-left: 15px; border-left: thick solid chocolate; }
-                .docstring { margin-left: 10px; font-family: monospace; font-size: 12px; 
-                    letter-spacing: -1px; }
-                
-                .comment { color: grey}
-                
-                """.trimIndent()
+        val pdfStyle = config.buildStyles()
+        val generator = PdfBuilder(pdfStyle)
 
         // Build as Html
         val visitor = TzatizkiVisitor(generator)

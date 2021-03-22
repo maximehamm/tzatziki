@@ -5,14 +5,12 @@ import java.time.format.DateTimeFormatter
 
 private const val TAG = "@tablesOfContentTag#"
 
-class PdfBuilder(
+class PdfBuilder(private val style: PdfStyle) {
 
-    val style: PdfStyle,
-
-    private val tableOfContents: TableOfContents) {
     private var sb = StringBuilder()
     private var output = StringBuilder()
     private var isTableOfContentsInserted = false
+    private val tableOfContents: TableOfContents = TableOfContents()
 
     fun addTableOfContentsEntry(level: Int, label: String) {
         tableOfContents.addEntry(level, label)
@@ -93,15 +91,17 @@ class PdfBuilder(
 }
 
 open class PdfStyle(
-    var bodyFontSize: String = "16px",
-    var topFontSize: String = "16px",
-    var bottomFontSize: String = "12px",
-    var topLeft: String = "Company Name",
-    var topCenter: String = "",
-    var topRight: String = now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-    var bottomLeft: String = "Cucumber+",
-    var bottomCenter: String = "",
-    var bottomRight: String = "'Page ' counter(page) ' / ' counter(pages);",
+    var bodyFontSize: String,
+    var topFontSize: String,
+    var bottomFontSize: String,
+    var topLeft: String,
+    var topCenter: String,
+    var topRight: String,
+    var bottomLeft: String,
+    var bottomCenter: String,
+    var bottomRight: String,
+    var dateFormat: String,
+    var contentStyle: String,
     var first: PdfStyle? = null)
 {
 
@@ -241,29 +241,7 @@ open class PdfStyle(
             text-decoration: none;
         }""".trimIndent()
 
-    val defaultContentStyle = """
-        td, th {
-            border-bottom: 1px dashed gray;
-        }
-        
-        table {
-            /* With -fs-table-paginate on, the header and footer
-             * of a table will be repeated on each page that the table falls on.
-             */
-            -fs-table-paginate: paginate;
-        
-            /* Similar to the orphans property, this property allows the author
-             * to specify how much of the block must show before a page-break.
-             * If the constraint is violated, a page break is added before the element.
-             * Very useful on elements not made of lines, such as tables, etc.
-             * TRY: Uncomment this property and see how the table moves to a new page
-             * to satisfy the constraint.
-             */
-            /* -fs-page-break-min-height: 100px; */
-        }""".trimIndent()
-
     var pagePdfStyle = defaultPagePdfStyle
     var updatePagePdfStyle = defaultPagePdfStyle
     var standardPdfStyle = defaultStandardPdfStyle
-    var contentStyle = defaultContentStyle
 }

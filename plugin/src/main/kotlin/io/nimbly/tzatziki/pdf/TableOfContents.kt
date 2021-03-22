@@ -11,7 +11,9 @@ class TableOfContentEntry(val label: String, val id: String) {
     }
 }
 
-class TableOfContents(val idName: String = "t", val initialIndent: String = "", val indent: String = "    ") {
+class TableOfContents(val idName: String = "t",
+                      val initialIndent: String = "",
+                      val indent: String = "    ") {
     private var tableOfContents = mutableListOf<TableOfContentEntry>()
     private var output = StringBuilder()
     private var idIndex = 0
