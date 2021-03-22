@@ -21,7 +21,8 @@ class TzToggleTzatzikiAction : ToggleAction(), DumbAware {
 
     override fun update(event: AnActionEvent) {
         val isVisible = event.getData(CommonDataKeys.PSI_FILE)?.fileType == GherkinFileType.INSTANCE
-        event.presentation.isEnabledAndVisible = isVisible
+        val editor = event.getData(CommonDataKeys.EDITOR)
+        event.presentation.isEnabledAndVisible = isVisible && editor!=null
         super.update(event)
     }
 

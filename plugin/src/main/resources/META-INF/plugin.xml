@@ -144,15 +144,16 @@
 
         </group>
 
-        <group>
+        <group id="io.nimbly.tzatziki.export.group">
 
             <action class="io.nimbly.tzatziki.actions.TzExportAction"
                     id="io.nimbly.tzatziki.ExportToPdf"
-                    text="Export to Cucumber PDF" icon="ActionIcons.EXPORT">
+                    text="Export feature to PDF" icon="ActionIcons.EXPORT">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl G"/>
             </action>
 
             <add-to-group group-id="FileMenu" anchor="after" relative-to-action="PrintExportGroup"/>
+            <add-to-group group-id="io.nimbly.tzatziki.group" anchor="after" relative-to-action="io.nimbly.tzatziki.ShiftRight"/>
 
         </group>
     </actions>

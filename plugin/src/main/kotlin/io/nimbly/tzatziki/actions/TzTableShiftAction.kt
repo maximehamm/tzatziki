@@ -39,12 +39,17 @@ class TableShiftAction : TzAction() {
     override fun update(event: AnActionEvent) {
 
         super.update(event)
+
         if (event.presentation.isVisible) {
 
-            val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
-            val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
-
-            event.presentation.isEnabled = file.cellAt(offset) != null
+            val editor = event.getData(CommonDataKeys.EDITOR)
+            if (editor == null)
+                event.presentation.isVisible = false
+            else {
+                val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
+                val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
+                event.presentation.isEnabled = file.cellAt(offset) != null
+            }
         }
     }
 }

@@ -16,7 +16,10 @@ import com.intellij.refactoring.suggested.startOffset
 import com.intellij.testFramework.writeChild
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getModule
-import io.nimbly.tzatziki.util.*
+import io.nimbly.tzatziki.util.peek
+import io.nimbly.tzatziki.util.pop
+import io.nimbly.tzatziki.util.push
+import io.nimbly.tzatziki.util.shopUp
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
 import org.jetbrains.plugins.cucumber.psi.impl.*
@@ -27,14 +30,14 @@ class TzExportAction : TzAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //FIXME : Format stuff available from file tree contextual menu
-        //FIXME : Add export to pdf to  file tree contextual menu
-        //FIXME : Bug when file ends with
+        //TODO : Generate css file into resources root... and use it !
+        //TODO : Generate setting file into resources root... and use it for page header, footer, etc.
 
-        //TODO : Manage triple quotes ?
+        //TODO : Manage printing all feature files with summary
 
         //TODO Later : Set a parameter to decide whether or not to print the comments
         //TODO Later : Traduire les mots clef au moment d'editer
+        //TODO Later : Renuméroter les scénario comme le plugin bidule
 
         val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
@@ -55,8 +58,7 @@ class TzExportAction : TzAction(), DumbAware {
                 * { font-size: 16px; margin: 0 0 0 0 }
                 p { margin: 0 }
 
-                table { margin-top: 10px; margin-left: 10px; margin-right: 10px;
-                    max-width: 100%; }
+                table { margin-top: 10px; margin-left: 10px; margin-right: 10px; max-width: 100%; }
                 table, th, td {  
                     font-size: 14px; 
                     vertical-align: top; 
@@ -83,6 +85,11 @@ class TzExportAction : TzAction(), DumbAware {
                 
                 .examples { margin-left: 20px; }
                 .stepKeyword { color: grey; }
+                
+                .docstringMargin { margin-left: 15px; border-left: thick solid chocolate; }
+                .docstring { margin-left: 10px; font-family: monospace; font-size: 12px; 
+                    letter-spacing: -1px; }
+                
                 .comment { color: grey}
                 
                 """.trimIndent()
@@ -124,6 +131,7 @@ class TzExportAction : TzAction(), DumbAware {
                 if (elt !is LeafPsiElement) return
                 if (context.isRow() && elt.text == "|") return
                 if (elt.elementType == STEP_PARAMETER_BRACE) return
+                if (elt.elementType == PYSTRING) return
 
                 if (elt.elementType == FEATURE_KEYWORD || context.isFeature())
                     return span("featureTitle") { append(elt.text) }
@@ -153,7 +161,9 @@ class TzExportAction : TzAction(), DumbAware {
                     return
                 }
 
-                append(elt.text)
+                val text = if (elt.elementType == PYSTRING_TEXT) elt.text.trimIndent() else elt.text
+
+                append(text)
             }
 
             append()
@@ -218,6 +228,15 @@ class TzExportAction : TzAction(), DumbAware {
                 }
             }
 
+        override fun visitPystring(phstring: GherkinPystring?)
+            = nobreak {
+                div("docstringMargin") {
+                    p("docstring") {
+                        super.visitPystring(phstring)
+                    }
+                }
+            }
+
         override fun visitComment(comment: PsiComment) {
             //Do not export comments
         }
@@ -246,6 +265,13 @@ class TzExportAction : TzAction(), DumbAware {
             stackTags.push("p")
             function()
             close("p")
+        }
+
+        fun div(clazz: String, function: () -> Unit) {
+            generator.append("<div class='$clazz'>")
+            stackTags.push("div")
+            function()
+            close("div")
         }
 
         private fun nobreak(function: () -> Unit) {
