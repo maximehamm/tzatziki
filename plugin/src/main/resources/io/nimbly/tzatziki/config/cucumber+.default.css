@@ -1,0 +1,46 @@
+/*
+    -------------
+      Cucumber+
+    -------------
+
+    Do not modify this file.
+    It will be replaced with new release of Cucumber+
+
+    Read more at 'cucumber+.default.properties' file.
+*/
+* { font-size: 16px; margin: 0 0 0 0 }
+p { margin: 0 }
+
+table { margin-top: 10px; margin-left: 10px; margin-right: 10px; max-width: 100%; }
+table, th, td {
+    font-size: 14px;
+    vertical-align: top;
+    border: 1px solid midnightblue;
+    border-collapse: collapse;
+}
+th, td { padding: 5px; white-space: break-spaces; }
+th { color: chocolate }
+
+div { display: inline-block; }
+
+.feature { margin-left: 5px; }
+.featureTitle { font-size: 24px; margin-bottom: 10px; }
+.featureHeader { margin-left: 5px; font-weight: bolder }
+
+.rule { margin-left: 10px; }
+.ruleTitle { font-size: 24px; margin-bottom: 10px; }
+
+.scenario { margin-left: 15px; }
+.scenarioTitle { font-size: 20px; border-bottom: 10px;  }
+
+.step { margin-left: 20px; }
+.stepParameter { color: chocolate; font-weight: bolder }
+
+.examples { margin-left: 20px; }
+.stepKeyword { color: grey; }
+
+.docstringMargin { margin-left: 15px; border-left: thick solid chocolate; }
+.docstring { margin-left: 10px; font-family: monospace; font-size: 12px;
+    letter-spacing: -1px; }
+
+.comment { color: grey}

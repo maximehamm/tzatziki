@@ -3,142 +3,225 @@ package io.nimbly.tzatziki.config
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.util.now
-import io.nimbly.tzatziki.util.warn
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.swing.event.HyperlinkEvent
 
-const val CONFIG_FILE_NAME = "cucumber+.properties"
+const val CONFIG_FOLDER = ".cucumber+"
+const val PROPERTIES_FILENAME = "cucumber+.properties"
+const val PROPERTIES_DEFAULT_FILENAME = "cucumber+.default.properties"
+const val CSS_FILENAME = "cucumber+.css"
+const val CSS_DEFAULT_FILENAME = "cucumber+.default.css"
 
-fun loadConfig(file: GherkinFile): ConfigDTO{
+fun loadConfig(file: GherkinFile): ConfigDTO {
 
+    // Look for root config folder
     val project = file.project
-    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file.virtualFile)
-        ?: return DEFAULT_CONFIG
+    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file.virtualFile)!!
 
-    var noConfigYet = true
+    PsiDocumentManager.getInstance(project).commitAllDocuments();
+    FileDocumentManager.getInstance().saveAllDocuments();
+
+    var rootConfig = root.findChild(CONFIG_FOLDER)
+    if (rootConfig == null) {
+
+        rootConfig = root.createChildDirectory(file, CONFIG_FOLDER)
+        rootConfig.copyDefaultsToFolder(project)
+
+        getNotificationGroup().createNotification(
+            "Cucumber+", "<html>Configuration <a href='PROP'>files</a> were created</html>",
+            NotificationType.INFORMATION
+        ) { _: Notification?, _: HyperlinkEvent ->
+            PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
+        }.notify(project)
+    }
+
+    // Update default files
+    rootConfig.updateDefaultFiles(project)
+
+    // Select
+    val propertiesFiles = root.loadAllProperties(file)
+    val cssFile = root.loadCss(file)
+
+    // Return config
+    return createConfiguration(propertiesFiles, cssFile)
+}
+
+private fun VirtualFile.copyDefaultsToFolder(project: Project) {
+    WriteCommandAction.runWriteCommandAction(project) {
+        listOf(PROPERTIES_DEFAULT_FILENAME, CSS_DEFAULT_FILENAME).forEach {
+            if (findChild(it) == null)
+                addFrom(it)
+        }
+    }
+}
+
+private fun VirtualFile.addFrom(file: String) {
+    val bytes = getResource("/io/nimbly/tzatziki/config/$file")
+    createChildData(this, file).setBinaryContent(bytes)
+}
+
+private fun VirtualFile.setContentFrom(file: String) {
+    val bytes = getResource("/io/nimbly/tzatziki/config/$file")
+    setBinaryContent(bytes)
+}
+
+
+private fun getResource(path: String)
+    = {}.javaClass.getResourceAsStream(path).readAllBytes()
+
+
+private fun VirtualFile.updateDefaultFiles(project: Project) {
+    listOf(PROPERTIES_DEFAULT_FILENAME, CSS_DEFAULT_FILENAME).forEach { fileName ->
+
+        var currentFile = findChild(fileName)
+        if (currentFile == null) {
+
+            // Create file it not exist
+            PsiDocumentManager.getInstance(project).commitAllDocuments()
+            WriteCommandAction.runWriteCommandAction(project) {
+                currentFile = createChildData(this, fileName)
+                currentFile!!.setContentFrom(fileName)
+            }
+            PsiDocumentManager.getInstance(project).commitAllDocuments()
+
+            getNotificationGroup().createNotification(
+                "Cucumber+", "<html>Configuration <a href='PROP'>file</a> added</html>",
+                NotificationType.INFORMATION) { _: Notification?, _: HyperlinkEvent ->
+                PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+            }.notify(project)
+        } else {
+
+            // Load from resources
+            val hash = {}.javaClass.getResourceAsStream("/io/nimbly/tzatziki/config/$fileName").readAllBytes()!!.contentHashCode()
+            if (hash != currentFile!!.contentsToByteArray()!!.contentHashCode()) {
+
+                PsiDocumentManager.getInstance(project).commitAllDocuments()
+                WriteCommandAction.runWriteCommandAction(project) {
+                    currentFile!!.setContentFrom(fileName)
+                }
+                PsiDocumentManager.getInstance(project).commitAllDocuments()
+
+                getNotificationGroup().createNotification(
+                    "Cucumber+", "<html>Configuration <a href='PROP'>file</a> upated</html>",
+                    NotificationType.INFORMATION) { _: Notification?, _: HyperlinkEvent ->
+                    PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+                }.notify(project)
+            }
+        }
+    }
+}
+
+private fun VirtualFile.loadAllProperties(file: GherkinFile): List<Properties> {
+
+    val all = mutableListOf<Properties>()
     var vf = file.virtualFile
     while (vf != null) {
 
-        val found = vf.findChild(CONFIG_FILE_NAME)
-        if (found != null) {
-            noConfigYet = false
-            val load = load(found)
-            if (load != null)
-                return load
+        val folder = vf.findChild(CONFIG_FOLDER)
+
+        if (folder != null) {
+            val config = folder.findChild(PROPERTIES_FILENAME)
+            if (config != null) {
+                val p = Properties()
+                p.load(config.inputStream)
+                all.add(p)
+            }
+            if (vf == this) {
+                val defaultConfig = folder.findChild(PROPERTIES_DEFAULT_FILENAME)
+                if (defaultConfig != null) {
+                    val p = Properties()
+                    p.load(defaultConfig.inputStream)
+                    all.add(p)
+                }
+            }
         }
 
-        if (vf == root)
+        if (vf == this)
             break
-
         vf = vf.parent
     }
 
-    if (noConfigYet) {
+    return all
+}
 
-        WriteCommandAction.runWriteCommandAction(project) {
+private fun VirtualFile.loadCss(file: GherkinFile): String {
 
-            val config = root.createChildData(file, CONFIG_FILE_NAME)
-            DEFAULT_CONFIG.saveAsProperties(config)
+    var vf = file.virtualFile
+    while (vf != null) {
 
-            getNotificationGroup().createNotification(
-                "Cucumber+",
-                "<html>Configuration file was <a href='${config.path}'>generated</a></html>",
-                NotificationType.INFORMATION, { _: Notification?, event: HyperlinkEvent ->
-                    val path = event.description
-                    PsiManager.getInstance(project).findFile(config)!!.navigate(true)
-                },
-                "io.nimbly.notification"
-            ).notify(project)
+        val folder = vf.findChild(CONFIG_FOLDER)
+        if (folder != null) {
+            val css = folder.findChild(CSS_FILENAME)
+            if (css != null) {
+                return css.contentsToByteArray()!!.toString(Charsets.UTF_8)
+            }
+            if (vf == this) {
+                val defaultCss = folder.findChild(CSS_DEFAULT_FILENAME)
+                if (defaultCss != null) {
+                    return defaultCss.contentsToByteArray()!!.toString(Charsets.UTF_8)
+                }
+            }
         }
 
-        return DEFAULT_CONFIG
+        if (vf == this)
+            break
+        vf = vf.parent
     }
-    else {
-        warn("Using default configuration is corrupted.\n" +
-            "Check your '$CONFIG_FILE_NAME' file", project
-        )
-        return DEFAULT_CONFIG
-    }
+
+    return ""
 }
 
-private fun load(config: VirtualFile): ConfigDTO? {
-    try {
-        val p = Properties()
-        p.load(config.inputStream)
-        return ConfigDTO(p)
-    }
-    catch (e: Exception) {
-        return null
-    }
-}
 
-object DEFAULT_CONFIG : ConfigDTO()
+fun createConfiguration(propertiesFiles: List<Properties>, css: String): ConfigDTO {
+
+    fun get(property: String): String {
+        propertiesFiles.forEach {
+            val v = it.getProperty(property, null)
+            if (v != null)
+                return v
+        }
+        return ""
+    }
+
+    return ConfigDTO(
+        topLeft = get("topLeft"),
+        topCenter = get("topCenter"),
+        topRight = get("topRight"),
+        topFontSize = get("topFontSize"),
+        bottomLeft = get("bottomLeft"),
+        bottomCenter = get("bottomCenter"),
+        bottomRight = get("bottomRight"),
+        bottomFontSize = get("bottomFontSize"),
+        dateFormat = get("dateFormat"),
+        css = css)
+}
 
 open class ConfigDTO(
-    val topFontSize: String = "16px",
-    val bottomFontSize: String = "12px",
+    val topFontSize: String,
+    val bottomFontSize: String,
 
-    val topLeft: String = "Nimbly",
-    val topCenter: String = "",
-    val topRight: String = "now()",
-//    val topRight: String = "'now().format(DateTimeFormatter.ofPattern(\"dd-MM-yyyy\"))}",
+    val topLeft: String,
+    val topCenter: String,
+    val topRight: String,
 
-    val bottomLeft: String = "Cucumber+",
-    val bottomCenter: String = "",
-    val bottomRight: String = "'Page ' counter(page) ' / ' counter(pages);",
+    val bottomLeft: String,
+    val bottomCenter: String,
+    val bottomRight: String,
 
-    val dateFormat: String = "dd-MM-yyyy") {
+    val dateFormat: String,
 
-    constructor(config: Properties) :
-        this(
-            topFontSize = config.getProperty("topFontSize"),
-            bottomFontSize = config.getProperty("bottomFontSize"),
-            topLeft = config.getProperty("topLeft"),
-            topCenter = config.getProperty("topCenter"),
-            topRight = config.getProperty("topRight"),
-            bottomLeft = config.getProperty("bottomLeft"),
-            bottomCenter = config.getProperty("bottomCenter"),
-            bottomRight = config.getProperty("bottomRight"),
-            dateFormat = config.getProperty("dateFormat")
-        )
-
-    fun saveAsProperties(file: VirtualFile) {
-        val props = Properties()
-        props.setProperty("topFontSize", topFontSize)
-        props.setProperty("bottomFontSize", bottomFontSize)
-        props.setProperty("topLeft", topLeft)
-        props.setProperty("topCenter", topCenter)
-        props.setProperty("topRight", topRight)
-        props.setProperty("bottomLeft", bottomLeft)
-        props.setProperty("bottomCenter", bottomCenter)
-        props.setProperty("bottomRight", bottomRight)
-        props.setProperty("dateFormat", dateFormat)
-
-        val outputStream = file.getOutputStream(this)
-        props.store(outputStream,"""
-             -----------
-              Cucumber+ 
-             -----------
-            
-               If you need specific configuration for aspecific Cucumber feature, 
-               you can move this files closer from feature : 
-               Cucumber+ will look for its configuration file into your feature folder,
-               and if not found, it will go recursivly to parent's folder until it will 
-               find the expected configuration file. If classpath root folder is reached,
-               then Cucumber+ will stop searching and will create a default file.
-            
-             -----------
-            """.trimIndent())
-        outputStream.close()
-    }
+    val css: String) {
 
     fun buildStyles(): PdfStyle {
 
@@ -153,45 +236,7 @@ open class ConfigDTO(
             bottomCenter = tune(bottomCenter),
             bottomRight = tune(bottomRight),
             dateFormat = tune(dateFormat),
-            contentStyle = //language=CSS
-            """
-                * { font-size: 16px; margin: 0 0 0 0 }
-                p { margin: 0 }
-
-                table { margin-top: 10px; margin-left: 10px; margin-right: 10px; max-width: 100%; }
-                table, th, td {  
-                    font-size: 14px; 
-                    vertical-align: top; 
-                    border: 1px solid midnightblue;  
-                    border-collapse: collapse;  
-                }  
-                th, td { padding: 5px; white-space: break-spaces; }
-                th { color: chocolate }
-                
-                div { display: inline-block; }
-                
-                .feature { margin-left: 5px; }
-                .featureTitle { font-size: 24px; margin-bottom: 10px; }
-                .featureHeader { margin-left: 5px; font-weight: bolder }
-                
-                .rule { margin-left: 10px; }
-                .ruleTitle { font-size: 24px; margin-bottom: 10px; }
-                
-                .scenario { margin-left: 15px; }
-                .scenarioTitle { font-size: 20px; border-bottom: 10px;  }
-                
-                .step { margin-left: 20px; }
-                .stepParameter { color: chocolate; font-weight: bolder }
-                
-                .examples { margin-left: 20px; }
-                .stepKeyword { color: grey; }
-                
-                .docstringMargin { margin-left: 15px; border-left: thick solid chocolate; }
-                .docstring { margin-left: 10px; font-family: monospace; font-size: 12px; 
-                    letter-spacing: -1px; }
-                
-                .comment { color: grey}
-                """.trimIndent()
+            contentStyle = css
         )
     }
 

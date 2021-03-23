@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>io.nimbly.tzatziki</id>
-    <name>Cucumber ➕</name>
+    <name>Cucumber +</name>
     <vendor email="maxime.hamm@gmail.com"
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
