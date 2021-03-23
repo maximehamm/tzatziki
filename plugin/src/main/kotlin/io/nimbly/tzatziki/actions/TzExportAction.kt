@@ -107,7 +107,7 @@ class TzExportAction : TzAction(), DumbAware {
                 if (context.isStep() && stepParams?.isNotEmpty() == true) {
 
                     val shiftedSlices = stepParams!!
-                        .filter { it.startOffset > elt.startOffset }
+                        .filter { it.startOffset >= elt.startOffset }
                         .map { it.shiftLeft(elt.startOffset) }
 
                     elt.text.shopUp(shiftedSlices)
