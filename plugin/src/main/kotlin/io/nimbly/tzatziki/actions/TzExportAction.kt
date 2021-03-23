@@ -31,8 +31,7 @@ class TzExportAction : TzAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Generate css file into resources root... and use it !
-        //TODO : Generate setting file into resources root... and use it for page header, footer, etc.
+        //FIXME : Bug de police lors de la toute première édition !!
 
         //TODO : Manage printing all feature files with summary
 

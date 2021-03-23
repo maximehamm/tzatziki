@@ -149,7 +149,6 @@
             <action class="io.nimbly.tzatziki.actions.TzExportAction"
                     id="io.nimbly.tzatziki.ExportToPdf"
                     text="Export feature to PDF" icon="ActionIcons.EXPORT">
-                <keyboard-shortcut keymap="$default" first-keystroke="ctrl G"/>
             </action>
 
             <add-to-group group-id="FileMenu" anchor="after" relative-to-action="PrintExportGroup"/>

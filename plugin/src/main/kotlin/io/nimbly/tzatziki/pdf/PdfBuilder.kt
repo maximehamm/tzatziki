@@ -1,28 +1,25 @@
 package io.nimbly.tzatziki.pdf
 
-import io.nimbly.tzatziki.util.now
-import java.time.format.DateTimeFormatter
-
 private const val TAG = "@tablesOfContentTag#"
 
 class PdfBuilder(private val style: PdfStyle) {
 
     private var sb = StringBuilder()
-    private var output = StringBuilder()
+    private var out = StringBuilder()
     private var isTableOfContentsInserted = false
     private val tableOfContents: TableOfContents = TableOfContents()
 
     fun addTableOfContentsEntry(level: Int, label: String) {
         tableOfContents.addEntry(level, label)
-        output.append("\n").append("<div id=\"${tableOfContents.currentId}\"></div>")
+        out.append("\n").append("<div id=\"${tableOfContents.currentId}\"></div>")
     }
 
     fun breakPage() {
-        output.append("\n").append("<page-before></page-before>")
+        out.append("\n").append("<page-before></page-before>")
     }
 
     fun append(content: String) {
-        output.append("\n").append(content)
+        out.append("\n").append(content)
     }
 
     fun addParagraph(content: String) {
@@ -32,30 +29,30 @@ class PdfBuilder(private val style: PdfStyle) {
     }
 
     fun paragraphStarts() {
-        output.append("\n").append("<page-inside-avoid>")
+        out.append("\n").append("<page-inside-avoid>")
     }
 
     fun paragraphEnds() {
-        output.append("\n").append("</page-inside-avoid>")
+        out.append("\n").append("</page-inside-avoid>")
     }
 
     fun insertTableOfContents() {
         if (isTableOfContentsInserted)
             throw Exception("Table of Contents is already inserted")
-        output.append("\n")
-        output.append(TAG)
+        out.append("\n")
+        out.append(TAG)
         isTableOfContentsInserted = true
     }
 
     private fun insertTableOfContent() {
-        val pos = output.indexOf(TAG)
+        val pos = out.indexOf(TAG)
         if (pos > -1) {
-            val before = output.toString().substringBefore(TAG)
-            val after = output.toString().substringAfter(TAG)
-            output = StringBuilder()
-            output.append(before)
-            output.append(tableOfContents.generate())
-            output.append(after)
+            val before = out.toString().substringBefore(TAG)
+            val after = out.toString().substringAfter(TAG)
+            out = StringBuilder()
+            out.append(before)
+            out.append(tableOfContents.generate())
+            out.append(after)
         }
     }
 
@@ -83,7 +80,7 @@ class PdfBuilder(private val style: PdfStyle) {
         sb.append("\n</head>")
         sb.append("\n<body>\n")
         insertTableOfContent()
-        sb.append(output)
+        sb.append(out)
         sb.append("\n</body>")
         sb.append("\n</html>")
         return sb.toString()
@@ -102,10 +99,9 @@ open class PdfStyle(
     var bottomRight: String,
     var dateFormat: String,
     var contentStyle: String,
-    var first: PdfStyle? = null)
-{
+    var first: PdfStyle? = null) {
 
-    val defaultPagePdfStyle = """
+    private val defaultPagePdfStyle = """
         size: a4;
         margin: 50px;	
         
@@ -139,7 +135,7 @@ open class PdfStyle(
               content:$bottomRight 	
         }""".trimIndent()
 
-    val defaultStandardPdfStyle = """    
+    private val defaultStandardPdfStyle = """    
         /* The body margin is in addition to the page margin,
          * but the top body margin only applies to the first page and 
          * the bottom margin to the last page. */

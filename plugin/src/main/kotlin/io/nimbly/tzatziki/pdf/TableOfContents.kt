@@ -3,76 +3,60 @@ package io.nimbly.tzatziki.pdf
 import io.nimbly.tzatziki.util.pop
 import java.lang.Exception
 
-class TableOfContentEntry(val label: String, val id: String) {
-    val child = mutableListOf<TableOfContentEntry>()
-
-    override fun toString(): String {
-        return "$id - $label"
-    }
-}
-
-class TableOfContents(val idName: String = "t",
-                      val initialIndent: String = "",
-                      val indent: String = "    ") {
-    private var tableOfContents = mutableListOf<TableOfContentEntry>()
+class TableOfContents(
+    private val idName: String = "t",
+    private val initialIndent: String = "",
+    private val indent: String = "    ")
+{
+    private var table = mutableListOf<TableEntry>()
     private var output = StringBuilder()
     private var idIndex = 0
 
     val currentId:String
-        get(){
-            return idName + idIndex.toString()
-        }
+        get() = idName + idIndex.toString()
 
     init {
-        tableOfContents.add(TableOfContentEntry("Table of contents Root", ""))
+        table.add(TableEntry("Table of contents Root", ""))
     }
 
-    fun root(): TableOfContentEntry {
-        return tableOfContents[0]
-    }
+    private fun root() = table[0]
 
-    fun nextId():String{
+    private fun nextId():String{
         idIndex++
         return currentId
     }
 
     fun addEntry(level: Int, label: String) {
         when {
-            level > tableOfContents.size -> {
+            level > table.size ->
                 throw Exception("Missing table of contents level : " +
-                        "actual level <${tableOfContents.size - 1}>, new entry level <$level>")
-            }
-            level < 1 -> {
+                    "actual level <${table.size - 1}>, new entry level <$level>")
+            level < 1 ->
                 throw Exception("Min table of contents level is <1>, new entry level <$level>")
-            }
-            level <= tableOfContents.size -> {
-                for (i in level..tableOfContents.size - 1) tableOfContents.pop()
-            }
-
+            level <= table.size ->
+                for (i in level until table.size) table.pop()
         }
-        val entry = TableOfContentEntry(label, nextId())
-        tableOfContents[tableOfContents.size - 1].child.add(entry)
-        tableOfContents.add(entry)
+        val entry = TableEntry(label, nextId())
+        table.last().child.add(entry)
+        table.add(entry)
     }
 
-    fun ul(ulIndent: String): String {
-        return ulIndent + "<ul class=\"toc\" >\n"
-    }
+    private fun ul(ulIndent: String)
+        = "$ulIndent<ul class=\"toc\" >\n"
 
-    fun li(entry: TableOfContentEntry, liIndent: String): String {
-        return liIndent + "<li href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
-    }
+    private fun li(entry: TableEntry, liIndent: String)
+        = liIndent + "<li href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
 
-    private fun generate(entry: TableOfContentEntry, level: Int, entryIndent: String) {
-        if (level != 0) {
+    private fun generate(entry: TableEntry, level: Int, entryIndent: String) {
+        if (level != 0)
             output.append(li(entry, entryIndent))
-        }
+
         if (entry.child.size > 0) {
             output.append(ul(entryIndent))
-            for (children in entry.child) {
-                generate(children, level + 1, entryIndent + indent)
+            entry.child.forEach {
+                generate(it, level + 1, entryIndent + indent)
             }
-            output.append(entryIndent + "</ul>\n")
+            output.append("$entryIndent</ul>\n")
         }
     }
 
@@ -81,5 +65,11 @@ class TableOfContents(val idName: String = "t",
         generate(root(), 0, initialIndent)
         return output.toString()
     }
+}
 
+private class TableEntry(val label: String, val id: String) {
+    val child = mutableListOf<TableEntry>()
+    override fun toString(): String {
+        return "$id - $label"
+    }
 }

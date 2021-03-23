@@ -2,7 +2,9 @@ package io.nimbly.tzatziki.pdf
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder
 import com.openhtmltopdf.svgsupport.BatikSVGDrawer
+import java.io.IOException
 import java.io.OutputStream
+
 
 fun buildPdf(generator: PdfBuilder, outputStream: OutputStream) {
 
