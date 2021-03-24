@@ -9,28 +9,35 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import io.nimbly.tzatziki.pdf.PdfStyle
-import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.now
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import java.rmi.server.ExportException
 import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.swing.event.HyperlinkEvent
 
 const val CONFIG_FOLDER = ".cucumber+"
+
 const val PROPERTIES_FILENAME = "cucumber+.properties"
 const val PROPERTIES_DEFAULT_FILENAME = "cucumber+.default.properties"
+
 const val CSS_FILENAME = "cucumber+.css"
 const val CSS_DEFAULT_FILENAME = "cucumber+.default.css"
 
-fun loadConfig(file: VirtualFile, project: Project): ConfigDTO {
+const val EXPORT_PICTURE_DEFAULT_FILENAME = "cucumber+.export.picture.default.svg"
+const val EXPORT_PICTURE_FILENAME = "cucumber+.export.picture.svg"
+
+const val EXPORT_TEMPLATE_DEFAULT_FILENAME = "cucumber+.export.default.ftl"
+const val EXPORT_TEMPLATE_FILENAME = "cucumber+.export.ftl"
+
+val ALL_DEFAULTS = listOf(PROPERTIES_DEFAULT_FILENAME,
+    CSS_DEFAULT_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
+
+fun loadConfig(path: VirtualFile, project: Project): Config {
 
     // Look for root config folder
-    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file)
+    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(path)
         ?: throw TzatzikiException("Please select files from resources")
 
     PsiDocumentManager.getInstance(project).commitAllDocuments();
@@ -39,7 +46,7 @@ fun loadConfig(file: VirtualFile, project: Project): ConfigDTO {
     var rootConfig = root.findChild(CONFIG_FOLDER)
     if (rootConfig == null) {
 
-        rootConfig = root.createChildDirectory(file, CONFIG_FOLDER)
+        rootConfig = root.createChildDirectory(path, CONFIG_FOLDER)
         rootConfig.copyDefaultsToFolder(project)
 
         getNotificationGroup().createNotification(
@@ -54,14 +61,16 @@ fun loadConfig(file: VirtualFile, project: Project): ConfigDTO {
     rootConfig.updateDefaultFiles(project)
 
     // Select
-    val propertiesFiles = root.loadAllProperties(file)
-    val cssFile = root.loadCss(file)
+    val propertiesFiles = root.loadAllProperties(path)
+    val cssFile = root.loadCss(path)
+    val picture = root.loadPicture(path)
+    val frontpage = root.loadTemplate(path)
 
     // Return config
-    return createConfiguration(propertiesFiles, cssFile)
+    return createConfiguration(propertiesFiles, cssFile, picture, frontpage)
 }
 
-fun loadConfig(files: List<VirtualFile>, project: Project): ConfigDTO {
+fun loadConfig(files: List<VirtualFile>, project: Project): Config {
 
     if (files.size == 1)
         return loadConfig(files.first(), project)
@@ -107,10 +116,11 @@ fun loadConfig(files: List<VirtualFile>, project: Project): ConfigDTO {
 
 private fun VirtualFile.copyDefaultsToFolder(project: Project) {
     WriteCommandAction.runWriteCommandAction(project) {
-        listOf(PROPERTIES_DEFAULT_FILENAME, CSS_DEFAULT_FILENAME).forEach {
-            if (findChild(it) == null)
-                addFrom(it)
-        }
+        ALL_DEFAULTS
+            .forEach {
+                if (findChild(it) == null)
+                    addFrom(it)
+             }
     }
 }
 
@@ -130,7 +140,7 @@ private fun getResource(path: String)
 
 
 private fun VirtualFile.updateDefaultFiles(project: Project) {
-    listOf(PROPERTIES_DEFAULT_FILENAME, CSS_DEFAULT_FILENAME).forEach { fileName ->
+    ALL_DEFAULTS.forEach { fileName ->
 
         var currentFile = findChild(fileName)
         if (currentFile == null) {
@@ -203,19 +213,28 @@ private fun VirtualFile.loadAllProperties(file: VirtualFile): List<Properties> {
     return all
 }
 
-private fun VirtualFile.loadCss(file: VirtualFile): String {
+private fun VirtualFile.loadCss(path: VirtualFile)
+    = load(path, CSS_FILENAME, CSS_DEFAULT_FILENAME)
 
-    var vf: VirtualFile? = file
+private fun VirtualFile.loadPicture(path: VirtualFile)
+    = load(path, EXPORT_PICTURE_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME)
+
+private fun VirtualFile.loadTemplate(path: VirtualFile)
+    = load(path, EXPORT_TEMPLATE_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
+
+private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileName: String): String {
+
+    var vf: VirtualFile? = path
     while (vf != null) {
 
         val folder = vf.findChild(CONFIG_FOLDER)
         if (folder != null) {
-            val css = folder.findChild(CSS_FILENAME)
+            val css = folder.findChild(fileName)
             if (css != null) {
                 return css.contentsToByteArray()!!.toString(Charsets.UTF_8)
             }
             if (vf == this) {
-                val defaultCss = folder.findChild(CSS_DEFAULT_FILENAME)
+                val defaultCss = folder.findChild(defaultFileName)
                 if (defaultCss != null) {
                     return defaultCss.contentsToByteArray()!!.toString(Charsets.UTF_8)
                 }
@@ -231,7 +250,12 @@ private fun VirtualFile.loadCss(file: VirtualFile): String {
 }
 
 
-fun createConfiguration(propertiesFiles: List<Properties>, css: String): ConfigDTO {
+fun createConfiguration(
+    propertiesFiles: List<Properties>,
+    css: String,
+    picture: String,
+    frontpage : String
+): Config {
 
     fun get(property: String): String {
         propertiesFiles.forEach {
@@ -242,7 +266,7 @@ fun createConfiguration(propertiesFiles: List<Properties>, css: String): ConfigD
         return ""
     }
 
-    return ConfigDTO(
+    return Config(
         topLeft = get("topLeft"),
         topCenter = get("topCenter"),
         topRight = get("topRight"),
@@ -252,10 +276,12 @@ fun createConfiguration(propertiesFiles: List<Properties>, css: String): ConfigD
         bottomRight = get("bottomRight"),
         bottomFontSize = get("bottomFontSize"),
         dateFormat = get("dateFormat"),
-        css = css)
+        css = css,
+        picture = picture,
+        frontpage = frontpage)
 }
 
-open class ConfigDTO(
+open class Config(
     val topFontSize: String,
     val bottomFontSize: String,
 
@@ -269,7 +295,10 @@ open class ConfigDTO(
 
     val dateFormat: String,
 
-    val css: String) {
+    val css: String,
+
+    val picture: String,
+    val frontpage: String) {
 
     fun buildStyles(): PdfStyle {
 

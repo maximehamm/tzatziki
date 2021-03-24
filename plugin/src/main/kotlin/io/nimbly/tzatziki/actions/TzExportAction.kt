@@ -17,9 +17,7 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.testFramework.writeChild
 import io.nimbly.tzatziki.config.loadConfig
-import io.nimbly.tzatziki.pdf.PdfBuilder
-import io.nimbly.tzatziki.pdf.buildPdf
-import io.nimbly.tzatziki.pdf.escape
+import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.psi.getModule
 import io.nimbly.tzatziki.psi.loadStepParams
@@ -33,8 +31,8 @@ class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Manage printing all feature files with summary
         //TODO : Add a front page with template
+        //TODO : La première page ne doit pas avoir de footer / header
         //TODO : Cutomiser le titre du sommaire : "Table of contents"
 
         //TODO : Numéroter / renuméroter les features
@@ -77,8 +75,17 @@ class TzExportAction : AnAction(), DumbAware {
         val pdfStyle = config.buildStyles()
         val generator = PdfBuilder(pdfStyle)
 
-        // Table of content {
+        // Summary and front page
         if (files.size > 1) {
+
+            // Front page
+            initFreeMarker().apply {
+                registerTemplates("EXPORT" to config.frontpage)
+                generator.append("EXPORT", this, "config" to config, "logo" to config.picture)
+            }
+            generator.breakPage()
+
+            // Summary
             generator.append("<br/><h3>Table of contents :</h3><br/><br/>")
             generator.insertSummary()
         }
