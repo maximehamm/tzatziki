@@ -3,7 +3,7 @@ package io.nimbly.tzatziki.pdf
 import io.nimbly.tzatziki.util.pop
 import java.lang.Exception
 
-class TableOfContents(
+class Summary(
     private val idName: String = "t",
     private val initialIndent: String = "",
     private val indent: String = "    ")

@@ -6,12 +6,12 @@ class PdfBuilder(private val style: PdfStyle) {
 
     private var sb = StringBuilder()
     private var out = StringBuilder()
-    private var isTableOfContentsInserted = false
-    private val tableOfContents: TableOfContents = TableOfContents()
+    private var isSummaryInserted = false
+    private val summary = Summary()
 
-    fun addTableOfContentsEntry(level: Int, label: String) {
-        tableOfContents.addEntry(level, label)
-        out.append("\n").append("<div id=\"${tableOfContents.currentId}\"></div>")
+    fun addSummaryEntry(level: Int, label: String) {
+        summary.addEntry(level, label)
+        out.append("\n").append("<div id=\"${summary.currentId}\"></div>")
     }
 
     fun breakPage() {
@@ -36,22 +36,22 @@ class PdfBuilder(private val style: PdfStyle) {
         out.append("\n").append("</page-inside-avoid>")
     }
 
-    fun insertTableOfContents() {
-        if (isTableOfContentsInserted)
+    fun insertSummary() {
+        if (isSummaryInserted)
             throw Exception("Table of Contents is already inserted")
         out.append("\n")
         out.append(TAG)
-        isTableOfContentsInserted = true
+        isSummaryInserted = true
     }
 
-    private fun insertTableOfContent() {
+    private fun insertSummaryNow() {
         val pos = out.indexOf(TAG)
         if (pos > -1) {
             val before = out.toString().substringBefore(TAG)
             val after = out.toString().substringAfter(TAG)
             out = StringBuilder()
             out.append(before)
-            out.append(tableOfContents.generate())
+            out.append(summary.generate())
             out.append(after)
         }
     }
@@ -79,7 +79,7 @@ class PdfBuilder(private val style: PdfStyle) {
         sb.append("\n</style>")
         sb.append("\n</head>")
         sb.append("\n<body>\n")
-        insertTableOfContent()
+        insertSummaryNow()
         sb.append(out)
         sb.append("\n</body>")
         sb.append("\n</html>")

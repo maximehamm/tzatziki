@@ -40,3 +40,5 @@ val NOW: String
 
 val DATE_FORMAT: DateTimeFormatter
     get() = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+
+class TzatzikiException(message: String): Exception(message)

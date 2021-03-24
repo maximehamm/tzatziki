@@ -3,8 +3,11 @@ package io.nimbly.tzatziki.psi
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
@@ -13,6 +16,10 @@ import com.intellij.refactoring.suggested.startOffset
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+
+fun VirtualFile.getFile(project: Project): PsiFile? {
+    return PsiManager.getInstance(project).findFile(this)
+}
 
 fun PsiFile.getModule()
     = ModuleUtilCore.findModuleForPsiElement(this)

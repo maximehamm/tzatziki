@@ -10,7 +10,7 @@ class TzActionPromoter : ActionPromoter {
 
     override fun promote(actions: List<AnAction>, context: DataContext): List<AnAction>? {
 
-        val shiftAction = actions.find { it is TzExportAction }
+        val shiftAction = actions.find { it is TableShiftAction }
         if (shiftAction != null) {
 
             val file = context.getData(CommonDataKeys.PSI_FILE)

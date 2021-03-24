@@ -9,10 +9,14 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import io.nimbly.tzatziki.pdf.PdfStyle
+import io.nimbly.tzatziki.psi.getFile
+import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.now
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import java.rmi.server.ExportException
 import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.swing.event.HyperlinkEvent
@@ -23,11 +27,11 @@ const val PROPERTIES_DEFAULT_FILENAME = "cucumber+.default.properties"
 const val CSS_FILENAME = "cucumber+.css"
 const val CSS_DEFAULT_FILENAME = "cucumber+.default.css"
 
-fun loadConfig(file: GherkinFile): ConfigDTO {
+fun loadConfig(file: VirtualFile, project: Project): ConfigDTO {
 
     // Look for root config folder
-    val project = file.project
-    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file.virtualFile)!!
+    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file)
+        ?: throw TzatzikiException("Please select files from resources")
 
     PsiDocumentManager.getInstance(project).commitAllDocuments();
     FileDocumentManager.getInstance().saveAllDocuments();
@@ -55,6 +59,50 @@ fun loadConfig(file: GherkinFile): ConfigDTO {
 
     // Return config
     return createConfiguration(propertiesFiles, cssFile)
+}
+
+fun loadConfig(files: List<VirtualFile>, project: Project): ConfigDTO {
+
+    if (files.size == 1)
+        return loadConfig(files.first(), project)
+
+    fun VirtualFile.stack(): List<VirtualFile> {
+        val list = mutableListOf<VirtualFile>()
+        var vf = parent
+        while (vf != null) {
+            list.add(vf)
+            vf = vf.parent
+        }
+        return list.reversed()
+    }
+
+    fun List<*>.allEquals(): Boolean {
+        val v = first()
+        forEach {
+            if (it != v) return false
+        }
+        return true
+    }
+
+    val stacks: List<Iterator<VirtualFile>> = files.map { it.stack().iterator() }
+
+    var common: VirtualFile? = null
+    while (true) {
+
+        val nexts: List<VirtualFile> = stacks
+            .map { if (it.hasNext()) it.next() else null  }
+            .filterNotNull()
+
+        if (nexts.size != stacks.size) break
+        if (!nexts.allEquals()) break
+
+        common = nexts.first()
+    }
+
+    if (common == null)
+        throw TzatzikiException("Selected files does not belongs to same project ?")
+
+    return loadConfig(common, project)
 }
 
 private fun VirtualFile.copyDefaultsToFolder(project: Project) {
@@ -122,10 +170,10 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
     }
 }
 
-private fun VirtualFile.loadAllProperties(file: GherkinFile): List<Properties> {
+private fun VirtualFile.loadAllProperties(file: VirtualFile): List<Properties> {
 
     val all = mutableListOf<Properties>()
-    var vf = file.virtualFile
+    var vf: VirtualFile? = file
     while (vf != null) {
 
         val folder = vf.findChild(CONFIG_FOLDER)
@@ -155,9 +203,9 @@ private fun VirtualFile.loadAllProperties(file: GherkinFile): List<Properties> {
     return all
 }
 
-private fun VirtualFile.loadCss(file: GherkinFile): String {
+private fun VirtualFile.loadCss(file: VirtualFile): String {
 
-    var vf = file.virtualFile
+    var vf: VirtualFile? = file
     while (vf != null) {
 
         val folder = vf.findChild(CONFIG_FOLDER)

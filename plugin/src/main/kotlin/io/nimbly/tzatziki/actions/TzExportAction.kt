@@ -1,60 +1,96 @@
 package io.nimbly.tzatziki.actions
 
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.compiler.CompilerPaths
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicatorProvider
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.updateSettings.impl.UpdateChecker
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiComment
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiRecursiveVisitor
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import com.intellij.refactoring.suggested.startOffset
 import com.intellij.testFramework.writeChild
 import io.nimbly.tzatziki.config.loadConfig
-import io.nimbly.tzatziki.pdf.*
+import io.nimbly.tzatziki.pdf.PdfBuilder
+import io.nimbly.tzatziki.pdf.buildPdf
+import io.nimbly.tzatziki.pdf.escape
+import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.psi.getModule
-import io.nimbly.tzatziki.util.peek
-import io.nimbly.tzatziki.util.pop
-import io.nimbly.tzatziki.util.push
-import io.nimbly.tzatziki.util.shopUp
+import io.nimbly.tzatziki.psi.loadStepParams
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
 import org.jetbrains.plugins.cucumber.psi.impl.*
-import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.io.ByteArrayOutputStream
 
-class TzExportAction : TzAction(), DumbAware {
+class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //FIXME : Bug de police lors de la toute première édition !!
-
         //TODO : Manage printing all feature files with summary
+        //TODO : Add a front page with template
+        //TODO : Cutomiser le titre du sommaire : "Table of contents"
+
+        //TODO : Numéroter / renuméroter les features
+        //TODO : Imprimer les features dans l'ordre de la numérotation
+        //TODO : Choisir et ordonner les features à exporter en PDF ?
 
         //TODO Later : Set a parameter to decide whether or not to print the comments
         //TODO Later : Traduire les mots clef au moment d'editer
         //TODO Later : Renuméroter les scénario comme le plugin bidule
 
-        val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
-        if (file !is GherkinFile) return
-        val module = file.getModule() ?: return
+        val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY) ?: return
+        if (vfiles.isNullOrEmpty()) return
+
+        try {
+            exportFeatures(vfiles.toList(), project)
+        } catch (e: TzatzikiException) {
+            UpdateChecker.getNotificationGroup().createNotification(
+                "Cucumber+", e.message ?: "Cucumber+ error !",
+                NotificationType.INFORMATION).notify(project)
+
+        }
+    }
+
+    private fun exportFeatures(paths: List<VirtualFile>, project: Project) {
+
+        // Find all relative gherkin files
+        val files = loadGherkinFiles(paths, project)
+        if (files.isEmpty())
+            throw TzatzikiException("No Cucumber feature found !")
+
+        // Get project root
+        val module = files.first().getModule() ?: return
         val outputDirectory = CompilerPaths.getModuleOutputDirectory(module, true) ?: return
 
         // Load config
-        val config = loadConfig(file)
+        val config = loadConfig(paths, project)
 
         // Prepare pdf generator
         val pdfStyle = config.buildStyles()
         val generator = PdfBuilder(pdfStyle)
 
+        // Table of content {
+        if (files.size > 1) {
+            generator.append("<br/><h3>Table of contents :</h3><br/><br/>")
+            generator.insertSummary()
+        }
+
+        // Content
+        generator.breakPage()
+
         // Build as Html
         val visitor = TzatizkiVisitor(generator)
-        file.accept(visitor)
+        files.forEach {
+            it.accept(visitor)
+        }
         visitor.closeAllTags()
 
         // Generate Pdf
@@ -62,20 +98,75 @@ class TzExportAction : TzAction(), DumbAware {
         buildPdf(generator, output)
 
         // Create file and open it
-        val newFile = outputDirectory.writeChild("${file.name}.pdf", output.toByteArray())
+        val fileName = if (files.size == 1) files.first().name else "cucumber"
+        val newFile = outputDirectory.writeChild("${fileName}.pdf", output.toByteArray())
         OpenFileDescriptor(project, newFile).navigate(true)
     }
 
-    override fun update(event: AnActionEvent) {
-        super.update(event)
-        if (event.presentation.isVisible) {
-            event.presentation.isEnabled = true
+    private fun loadGherkinFiles(paths: List<VirtualFile>, project: Project): List<GherkinFile> {
+
+        fun VirtualFile.allGherkinFiles(all: MutableList<GherkinFile> = mutableListOf()): List<GherkinFile> {
+            children.forEach {
+                if (it.isDirectory) {
+                    it.allGherkinFiles(all)
+                }
+                else {
+                    val file = it.getFile(project)
+                    if (file is GherkinFile)
+                        all.add(file)
+                }
+            }
+            return all
         }
+
+        val list = mutableListOf<GherkinFile>()
+        paths.forEach {
+            if (it.isDirectory) {
+                list.addAll(it.allGherkinFiles())
+            }
+            else {
+                val f = it.getFile(project)
+                if (f is GherkinFile)
+                    list.add(f)
+            }
+        }
+        return list
     }
 
-    override fun isDumbAware() = true
+    override fun update(event: AnActionEvent) {
 
-    private class TzatizkiVisitor(val generator: PdfBuilder): GherkinElementVisitor(), PsiRecursiveVisitor {
+        val file = event.getData(CommonDataKeys.PSI_FILE)
+        val project = event.getData(CommonDataKeys.PROJECT)
+        val isGherkinFile = file?.fileType == GherkinFileType.INSTANCE
+
+        var isVisible = isGherkinFile || file == null
+
+        if (isVisible && project!=null) {
+
+            // Check selected files all bellong to same root
+            var root: VirtualFile? = null
+            event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)?.find {
+                val r = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(it)
+                if (r == null || r!=root) {
+                    isVisible = false
+                    true
+                }
+                else {
+                    root =r
+                    false
+                }
+            }
+        }
+
+        event.presentation.isEnabledAndVisible = isVisible
+        event.presentation.text = "Export feature${if (isGherkinFile) "" else "s"} to PDF"
+        super.update(event)
+    }
+
+    override fun isDumbAware()
+        = true
+
+    private class TzatizkiVisitor(val generator: PdfBuilder) : GherkinElementVisitor(), PsiRecursiveVisitor {
 
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()
@@ -139,61 +230,64 @@ class TzExportAction : TzAction(), DumbAware {
         }
 
         override fun visitFeature(feature: GherkinFeature) {
+
+            addSummaryEntry(1,  feature.featureName)
+
             p("feature") { super.visitFeature(feature) }
 
             if (feature != (feature.parent as GherkinFile).features.last())
                 generator.breakPage()
         }
 
-        override fun visitRule(rule: GherkinRule?)
-            = p("rule") { super.visitRule(rule) }
+        override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl) =
+            p("featureHeader") { super.visitFeatureHeader(header) }
 
-        override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl)
-            = p("featureHeader") { super.visitFeatureHeader(header) }
+        override fun visitRule(rule: GherkinRule) {
+            addSummaryEntry(2, rule.ruleName)
+            p("rule") { super.visitRule(rule) }
+        }
 
-        override fun visitScenarioOutline(outline: GherkinScenarioOutline)
-            = nobreak { p("scenario") { super.visitScenarioOutline(outline) } }
+        override fun visitScenarioOutline(scenario: GherkinScenarioOutline) {
+            addSummaryEntry(2, scenario.scenarioName)
+            nobreak { p("scenario") { super.visitScenarioOutline(scenario) } }
+        }
 
-        override fun visitScenario(scenario: GherkinScenario)
-            = nobreak { p("scenario") { super.visitScenario(scenario) } }
+        override fun visitScenario(scenario: GherkinScenario) {
+            addSummaryEntry(2, scenario.scenarioName)
+            nobreak { p("scenario") { super.visitScenario(scenario) } }
+        }
 
-        override fun visitStep(step: GherkinStep)
-            = p("step") {
-                stepParams = loadStepParams(step)
-                super.visitStep(step)
-                stepParams = null
+        override fun visitStep(step: GherkinStep) = p("step") {
+            stepParams = loadStepParams(step)
+            super.visitStep(step)
+            stepParams = null
+        }
+
+        override fun visitStepParameter(gherkinStepParameter: GherkinStepParameterImpl?) =
+            span("stepParameter") { super.visitStepParameter(gherkinStepParameter) }
+
+        override fun visitExamplesBlock(block: GherkinExamplesBlockImpl) =
+            nobreak { p("examples") { super.visitExamplesBlock(block) } }
+
+        override fun visitTable(table: GherkinTableImpl) = nobreak { tag("table") { super.visitTable(table) } }
+
+        override fun visitTableHeaderRow(row: GherkinTableHeaderRowImpl) = tag("tr") { super.visitTableHeaderRow(row) }
+
+        override fun visitTableRow(row: GherkinTableRowImpl) = tag("tr") { super.visitTableRow(row) }
+
+        override fun visitGherkinTableCell(cell: GherkinTableCell) = tag(if (context.isHeader()) "th" else "td") {
+            tag("span") {
+                super.visitGherkinTableCell(cell)
             }
+        }
 
-        override fun visitStepParameter(gherkinStepParameter: GherkinStepParameterImpl?)
-            = span("stepParameter") { super.visitStepParameter(gherkinStepParameter) }
-
-        override fun visitExamplesBlock(block: GherkinExamplesBlockImpl)
-            = nobreak { p("examples") { super.visitExamplesBlock(block) } }
-
-        override fun visitTable(table: GherkinTableImpl)
-            = nobreak { tag("table") { super.visitTable(table) } }
-
-        override fun visitTableHeaderRow(row: GherkinTableHeaderRowImpl)
-            = tag("tr") { super.visitTableHeaderRow(row) }
-
-        override fun visitTableRow(row: GherkinTableRowImpl)
-            = tag("tr") { super.visitTableRow(row) }
-
-        override fun visitGherkinTableCell(cell: GherkinTableCell)
-            = tag(if (context.isHeader()) "th" else "td") {
-                tag("span") {
-                    super.visitGherkinTableCell(cell)
+        override fun visitPystring(phstring: GherkinPystring?) = nobreak {
+            div("docstringMargin") {
+                p("docstring") {
+                    super.visitPystring(phstring)
                 }
             }
-
-        override fun visitPystring(phstring: GherkinPystring?)
-            = nobreak {
-                div("docstringMargin") {
-                    p("docstring") {
-                        super.visitPystring(phstring)
-                    }
-                }
-            }
+        }
 
         override fun visitComment(comment: PsiComment) {
             //Do not export comments
@@ -251,23 +345,12 @@ class TzExportAction : TzAction(), DumbAware {
                 close()
             }
         }
-    }
-}
 
-
-fun loadStepParams(step: GherkinStep): List<TextRange> {
-    val references = step.references
-    if (references.size != 1 || references[0] !is CucumberStepReference) {
-        return emptyList()
+        private fun addSummaryEntry(level: Int, title: String) {
+            if (title.isNotBlank())
+                generator.addSummaryEntry(level, title.escape())
+        }
     }
-    val reference = references[0] as CucumberStepReference
-    val definition = reference.resolveToDefinition()
-    if (definition != null) {
-        return GherkinPsiUtil.buildParameterRanges(step, definition, reference.rangeInElement.startOffset)
-            ?.map { it.shiftRight(step.startOffset) }
-            ?: emptyList()
-    }
-    return emptyList()
 }
 
 private fun <E> MutableList<E>.isFeature() = peek() is GherkinFeature
