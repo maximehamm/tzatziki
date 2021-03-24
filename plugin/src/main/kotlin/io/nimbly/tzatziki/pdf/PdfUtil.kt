@@ -10,6 +10,8 @@ import java.io.OutputStreamWriter
 
 class Path(val path : String)
 
+val PAGE_COUNTER = "'Page ' counter(page) ' / ' counter(pages);"
+
 fun buildPdf(generator: PdfBuilder, outputStream: OutputStream) {
 
     val generated = generator.generate()
@@ -67,13 +69,3 @@ fun mergeTemplate(templateName: String, data: Any, config: Configuration): Strin
     temp.process(data, out)
     return  aos.toString("UTF-8")
 }
-
-fun getLogo() {
-
-}
-
-class Picture(
-    val name: String,
-    val content: String,
-    val type: String
-)

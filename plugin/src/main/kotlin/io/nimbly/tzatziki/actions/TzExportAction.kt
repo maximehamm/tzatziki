@@ -31,8 +31,8 @@ class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Add a front page with template
-        //TODO : La première page ne doit pas avoir de footer / header
+        //TODO : Crediter PMB en contributeur !
+
         //TODO : Cutomiser le titre du sommaire : "Table of contents"
 
         //TODO : Numéroter / renuméroter les features
@@ -49,11 +49,10 @@ class TzExportAction : AnAction(), DumbAware {
 
         try {
             exportFeatures(vfiles.toList(), project)
-        } catch (e: TzatzikiException) {
+        } catch (e: Exception) {
             UpdateChecker.getNotificationGroup().createNotification(
                 "Cucumber+", e.message ?: "Cucumber+ error !",
-                NotificationType.INFORMATION).notify(project)
-
+                NotificationType.WARNING).notify(project)
         }
     }
 
@@ -79,9 +78,10 @@ class TzExportAction : AnAction(), DumbAware {
         if (files.size > 1) {
 
             // Front page
-            initFreeMarker().apply {
-                registerTemplates("EXPORT" to config.frontpage)
-                generator.append("EXPORT", this, "config" to config, "logo" to config.picture)
+            initFreeMarker(PictureWrapper).apply {
+                registerTemplates("EXPORT" to config.template)
+                generator.append("EXPORT", this,
+                    "frontpage" to config.frontpage, "logo" to config.picture)
             }
             generator.breakPage()
 

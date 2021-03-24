@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
 import io.nimbly.tzatziki.pdf.PdfStyle
+import io.nimbly.tzatziki.pdf.Picture
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.now
 import java.time.format.DateTimeFormatter
@@ -25,11 +26,11 @@ const val PROPERTIES_DEFAULT_FILENAME = "cucumber+.default.properties"
 const val CSS_FILENAME = "cucumber+.css"
 const val CSS_DEFAULT_FILENAME = "cucumber+.default.css"
 
-const val EXPORT_PICTURE_DEFAULT_FILENAME = "cucumber+.export.picture.default.svg"
-const val EXPORT_PICTURE_FILENAME = "cucumber+.export.picture.svg"
+const val EXPORT_PICTURE_FILENAME = "cucumber+.picture.svg"
+const val EXPORT_PICTURE_DEFAULT_FILENAME = "cucumber+.picture.default.svg"
 
-const val EXPORT_TEMPLATE_DEFAULT_FILENAME = "cucumber+.export.default.ftl"
-const val EXPORT_TEMPLATE_FILENAME = "cucumber+.export.ftl"
+const val EXPORT_TEMPLATE_FILENAME = "cucumber+.template.ftl"
+const val EXPORT_TEMPLATE_DEFAULT_FILENAME = "cucumber+.template.default.ftl"
 
 val ALL_DEFAULTS = listOf(PROPERTIES_DEFAULT_FILENAME,
     CSS_DEFAULT_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
@@ -254,7 +255,7 @@ fun createConfiguration(
     propertiesFiles: List<Properties>,
     css: String,
     picture: String,
-    frontpage : String
+    template : String
 ): Config {
 
     fun get(property: String): String {
@@ -265,6 +266,13 @@ fun createConfiguration(
         }
         return ""
     }
+
+    val frontpage =
+        propertiesFiles
+            .flatMap { it.stringPropertyNames() }
+            .filter { it.startsWith("frontpage.") }
+            .map { it.substring(10) to get(it) }
+            .toMap()
 
     return Config(
         topLeft = get("topLeft"),
@@ -277,7 +285,8 @@ fun createConfiguration(
         bottomFontSize = get("bottomFontSize"),
         dateFormat = get("dateFormat"),
         css = css,
-        picture = picture,
+        picture = Picture("xx", picture, "svg"),
+        template = template,
         frontpage = frontpage)
 }
 
@@ -297,11 +306,12 @@ open class Config(
 
     val css: String,
 
-    val picture: String,
-    val frontpage: String) {
+    val picture: Picture,
+    val template: String,
+
+    val frontpage: Map<String, String>) {
 
     fun buildStyles(): PdfStyle {
-
         return PdfStyle(
             bodyFontSize = "25px",
             topFontSize = tune(topFontSize),
@@ -313,7 +323,12 @@ open class Config(
             bottomCenter = tune(bottomCenter),
             bottomRight = tune(bottomRight),
             dateFormat = tune(dateFormat),
-            contentStyle = css
+            contentStyle = css,
+            first = PdfStyle(
+                topLeft = "", topCenter="", topRight = "",
+                bottomLeft = "", bottomCenter = "", bottomRight = "",
+                topFontSize =  tune(bottomFontSize), bottomFontSize = tune(bottomFontSize), bodyFontSize = "32px",
+                dateFormat = tune(dateFormat), contentStyle = css)
         )
     }
 

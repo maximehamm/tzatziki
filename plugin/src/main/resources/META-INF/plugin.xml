@@ -11,8 +11,9 @@
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_27379074-d74f-4f17-bdd3-8f6ed6f02eae"
                  alt="Tzatziki" width="419" height="233"></p>
           </li>
-          <li><u>Customize header and footer</u> from "cucumber.properties" file<br/></li>
-          <li><u>Customize font, colors, sizes, etc</u> from "cucumber.css" file<br/></li>
+          <li><u>Customize front page</u> from "cucumber+.template.ftl" file<br/></li>
+          <li><u>Customize header and footer</u> from "cucumber+.properties" file<br/></li>
+          <li><u>Customize font, colors, sizes, etc</u> from "cucumber+.css" file<br/></li>
        </ul>
 
        <br/><br/>
