@@ -34,6 +34,7 @@ class TzExportAction : AnAction(), DumbAware {
         //TODO : Crediter PMB en contributeur !
 
         //TODO : Cutomiser le titre du sommaire : "Table of contents"
+        //TODO : Parametrer ou faire des break : feature / rule /
 
         //TODO : Numéroter / renuméroter les features
         //TODO : Imprimer les features dans l'ordre de la numérotation
@@ -96,7 +97,10 @@ class TzExportAction : AnAction(), DumbAware {
         // Build as Html
         val visitor = TzatizkiVisitor(generator)
         files.forEach {
+
             it.accept(visitor)
+            if (it != files.last())
+                generator.breakPage()
         }
         visitor.closeAllTags()
 
@@ -137,7 +141,8 @@ class TzExportAction : AnAction(), DumbAware {
                     list.add(f)
             }
         }
-        return list
+
+        return list.sortedBy { it.name }
     }
 
     override fun update(event: AnActionEvent) {
@@ -178,6 +183,7 @@ class TzExportAction : AnAction(), DumbAware {
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()
         private var stepParams: List<TextRange>? = null
+        private var summaryLevel = 1
 
         override fun visitElement(elt: PsiElement) {
 
@@ -237,11 +243,9 @@ class TzExportAction : AnAction(), DumbAware {
         }
 
         override fun visitFeature(feature: GherkinFeature) {
-
-            addSummaryEntry(1,  feature.featureName)
-
-            p("feature") { super.visitFeature(feature) }
-
+            summary(feature.featureName) {
+                nobreak { p("feature") { super.visitFeature(feature) } }
+            }
             if (feature != (feature.parent as GherkinFile).features.last())
                 generator.breakPage()
         }
@@ -250,18 +254,27 @@ class TzExportAction : AnAction(), DumbAware {
             p("featureHeader") { super.visitFeatureHeader(header) }
 
         override fun visitRule(rule: GherkinRule) {
-            addSummaryEntry(2, rule.ruleName)
-            p("rule") { super.visitRule(rule) }
+            summary(rule.ruleName) {
+                nobreak {
+                    p("rule") { super.visitRule(rule) }
+                }
+            }
         }
 
         override fun visitScenarioOutline(scenario: GherkinScenarioOutline) {
-            addSummaryEntry(2, scenario.scenarioName)
-            nobreak { p("scenario") { super.visitScenarioOutline(scenario) } }
+            summary(scenario.scenarioName) {
+                nobreak {
+                    p("scenario") { super.visitScenarioOutline(scenario) }
+                }
+            }
         }
 
         override fun visitScenario(scenario: GherkinScenario) {
-            addSummaryEntry(2, scenario.scenarioName)
-            nobreak { p("scenario") { super.visitScenario(scenario) } }
+            summary(scenario.scenarioName) {
+                nobreak {
+                    p("scenario") { super.visitScenario(scenario) }
+                }
+            }
         }
 
         override fun visitStep(step: GherkinStep) = p("step") {
@@ -274,7 +287,9 @@ class TzExportAction : AnAction(), DumbAware {
             span("stepParameter") { super.visitStepParameter(gherkinStepParameter) }
 
         override fun visitExamplesBlock(block: GherkinExamplesBlockImpl) =
-            nobreak { p("examples") { super.visitExamplesBlock(block) } }
+            nobreak {
+                p("examples") { super.visitExamplesBlock(block) }
+            }
 
         override fun visitTable(table: GherkinTableImpl) = nobreak { tag("table") { super.visitTable(table) } }
 
@@ -290,9 +305,7 @@ class TzExportAction : AnAction(), DumbAware {
 
         override fun visitPystring(phstring: GherkinPystring?) = nobreak {
             div("docstringMargin") {
-                p("docstring") {
-                    super.visitPystring(phstring)
-                }
+                p("docstring") { super.visitPystring(phstring) }
             }
         }
 
@@ -353,9 +366,10 @@ class TzExportAction : AnAction(), DumbAware {
             }
         }
 
-        private fun addSummaryEntry(level: Int, title: String) {
-            if (title.isNotBlank())
-                generator.addSummaryEntry(level, title.escape())
+        private fun summary(title: String, function: () -> Unit) {
+            generator.addSummaryEntry(summaryLevel++, title.escape())
+            function()
+            summaryLevel--
         }
     }
 }

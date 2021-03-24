@@ -103,7 +103,7 @@ open class PdfStyle(
 
     private val defaultPagePdfStyle = """
         size: a4;
-        margin: 50px;	
+        margin: 80px;	
         
         @top-left{
               font-size:$topFontSize;

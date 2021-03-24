@@ -1,7 +1,7 @@
 <#-- TOP (Company+ logo) -->
 <table style="width:100%">
     <tr><td style="width:50%; border:0"></td>
-        <td style="height: 300px; border:0">
+        <td style="height: 250px; border:0">
             <#if logo??>
                 <h1 style="text-align:center;">
                     ${logo.content60}
