@@ -147,7 +147,7 @@ class TzExportAction : AnAction(), DumbAware {
             var root: VirtualFile? = null
             event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)?.find {
                 val r = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(it)
-                if (r == null || r!=root) {
+                if (r == null || root!=null && r!=root) {
                     isVisible = false
                     true
                 }
