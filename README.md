@@ -51,6 +51,8 @@ intellij {
 }
  ```
 
+####Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.
+
 Enjoy !
 
 

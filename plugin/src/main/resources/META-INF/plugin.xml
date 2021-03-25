@@ -20,9 +20,7 @@
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
 
-       <b>A better user expérience to edit Cucumber features.
-             Export to PDF with table of contents and many customizations.
-             Edit Cucumber tables without worrying about 'pipes'</b><br/>
+       <b>A better user expérience to edit and print Cucumber features</b><br/>
        <br/>
 
        <b>Print features to PDF</></b><br/>
@@ -30,7 +28,7 @@
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
                  alt="Tzatziki" width="419" height="233"></p>
           <li>Right click a file and select "<u>Export feature to PDF</u>"</li>
-          <li>Select mutiple files to print also a <u>summary</u> and a <u>front page<u></li>
+          <li>Select mutiple files to print also a <u>summary</u> and a <u>front page</u></li>
           <li>Customize <u>front page content, footer, header, fonts, colors, etc.</u></li>
           Read more at "cucumber+.default.properties" (generated at first print)</li>
        </ul>
@@ -107,7 +105,7 @@
        <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a><br/>
 
        <br/>
-        Many thanks to Pierre-Michel BRET for his contribution, the PDF generator allowing to realize<br/>
+        Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize<br/>
         a complete layout with page numbers, summary, paragraphs management, etc.<br/>
     ]]></description>
 

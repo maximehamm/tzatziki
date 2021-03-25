@@ -109,7 +109,6 @@ class TzExportAction : AnAction(), DumbAware {
         // Build as Html
         val visitor = TzatizkiVisitor(generator)
         files.forEach {
-
             it.accept(visitor)
             if (it != files.last())
                 generator.breakPage()
