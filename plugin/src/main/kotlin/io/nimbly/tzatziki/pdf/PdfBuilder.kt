@@ -22,7 +22,7 @@ class PdfBuilder(private val style: PdfStyle) {
     private var sb = StringBuilder()
     private var out = StringBuilder()
     private var isSummaryInserted = false
-    private val summary = PdfSummary()
+    private val summary = PdfSummary(style.summaryDepth)
 
     fun addSummaryEntry(level: Int, label: String) {
         summary.addEntry(level, label)
@@ -114,6 +114,7 @@ open class PdfStyle(
     var bottomRight: String,
     var dateFormat: String,
     var contentStyle: String,
+    val summaryDepth: ESummaryDepth,
     var first: PdfStyle? = null) {
 
     private val defaultPagePdfStyle = """

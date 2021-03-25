@@ -49,16 +49,12 @@ class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Customiser le titre du sommaire : "Table of contents"
-        //TODO : Parametrer ou faire des break : feature / rule /
-
         //TODO : Numéroter / renuméroter les features
         //TODO : Imprimer les features dans l'ordre de la numérotation
         //TODO : Choisir et ordonner les features à exporter en PDF ?
 
         //TODO Later : Set a parameter to decide whether or not to print the comments
         //TODO Later : Traduire les mots clef au moment d'editer
-        //TODO Later : Renuméroter les scénario comme le plugin bidule
 
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
         val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY) ?: return

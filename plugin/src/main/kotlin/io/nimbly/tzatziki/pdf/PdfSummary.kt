@@ -17,11 +17,10 @@ package io.nimbly.tzatziki.pdf
 
 import io.nimbly.tzatziki.util.pop
 
-class PdfSummary(
-    private val idName: String = "t",
-    private val initialIndent: String = "",
-    private val indent: String = "    ")
-{
+class PdfSummary(val depth: ESummaryDepth) {
+    private val idName: String = "t"
+    private val initialIndent: String = ""
+    private val indent: String = "    "
     private var table = mutableListOf<TableEntry>()
     private var output = StringBuilder()
     private var idIndex = 0
@@ -41,6 +40,8 @@ class PdfSummary(
     }
 
     fun addEntry(level: Int, label: String) {
+        if (level > depth.value)
+            return
         when {
             level > table.size ->
                 throw Exception("Missing table of contents level : " +
@@ -88,4 +89,10 @@ private class TableEntry(val label: String, val id: String) {
     override fun toString(): String {
         return "$id - $label"
     }
+}
+
+enum class ESummaryDepth(val value: Int) {
+    Feature(1),
+    Rule(2),
+    Scenario(3)
 }

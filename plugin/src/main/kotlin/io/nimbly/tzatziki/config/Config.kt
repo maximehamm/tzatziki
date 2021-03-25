@@ -25,6 +25,7 @@ import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGro
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
+import io.nimbly.tzatziki.pdf.ESummaryDepth
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.pdf.Picture
 import io.nimbly.tzatziki.util.TzatzikiException
@@ -300,13 +301,14 @@ fun createConfiguration(
         bottomFontSize = get("export.bottomFontSize"),
         dateFormat = get("export.dateFormat"),
         summaryTitle = get("export.summary.title"),
+        summaryDepth = ESummaryDepth.valueOf(get("export.summary.depth")),
         css = css,
         picture = Picture("Tzatziki", picture, "svg"),
         template = template,
         frontpage = frontpage)
 }
 
-open class Config(
+class Config(
     val topFontSize: String,
     val bottomFontSize: String,
 
@@ -325,6 +327,7 @@ open class Config(
     val picture: Picture,
     val template: String,
     val summaryTitle: String,
+    val summaryDepth: ESummaryDepth,
 
     val frontpage: Map<String, String>) {
 
@@ -341,10 +344,12 @@ open class Config(
             bottomRight = tune(bottomRight),
             dateFormat = tune(dateFormat),
             contentStyle = css,
+            summaryDepth = summaryDepth,
             first = PdfStyle(
                 topLeft = "", topCenter="", topRight = "",
                 bottomLeft = "", bottomCenter = "", bottomRight = "",
                 topFontSize =  tune(bottomFontSize), bottomFontSize = tune(bottomFontSize), bodyFontSize = "32px",
+                summaryDepth = summaryDepth,
                 dateFormat = tune(dateFormat), contentStyle = css)
         )
     }
@@ -352,4 +357,3 @@ open class Config(
     private fun tune(field: String) =
         field.replace("now()", now().format(DateTimeFormatter.ofPattern(dateFormat)))
 }
-
