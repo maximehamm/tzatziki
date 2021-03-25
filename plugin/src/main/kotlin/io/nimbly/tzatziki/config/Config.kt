@@ -305,7 +305,8 @@ fun createConfiguration(
         css = css,
         picture = Picture("Tzatziki", picture, "svg"),
         template = template,
-        frontpage = frontpage)
+        frontpage = frontpage,
+        language = get("export.language"))
 }
 
 class Config(
@@ -329,7 +330,8 @@ class Config(
     val summaryTitle: String,
     val summaryDepth: ESummaryDepth,
 
-    val frontpage: Map<String, String>) {
+    val frontpage: Map<String, String>,
+    val language: String) {
 
     fun buildStyles(): PdfStyle {
         return PdfStyle(

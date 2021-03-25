@@ -42,6 +42,7 @@ import io.nimbly.tzatziki.psi.loadStepParams
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
+import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 import org.jetbrains.plugins.cucumber.psi.impl.*
 import java.io.ByteArrayOutputStream
 
@@ -62,7 +63,12 @@ class TzExportAction : AnAction(), DumbAware {
 
         try {
             exportFeatures(vfiles.toList(), project)
+        } catch (e: TzatzikiException) {
+            UpdateChecker.getNotificationGroup().createNotification(
+                "Cucumber+", e.message ?: "Cucumber+ error !",
+                NotificationType.WARNING).notify(project)
         } catch (e: Exception) {
+            e.printStackTrace()
             UpdateChecker.getNotificationGroup().createNotification(
                 "Cucumber+", e.message ?: "Cucumber+ error !",
                 NotificationType.WARNING).notify(project)
@@ -107,7 +113,7 @@ class TzExportAction : AnAction(), DumbAware {
         generator.breakPage()
 
         // Build as Html
-        val visitor = TzatizkiVisitor(generator)
+        val visitor = TzatizkiVisitor(generator, config.language)
         files.forEach {
             it.accept(visitor)
             if (it != files.last())
@@ -190,7 +196,7 @@ class TzExportAction : AnAction(), DumbAware {
     override fun isDumbAware()
         = true
 
-    private class TzatizkiVisitor(val generator: PdfBuilder) : GherkinElementVisitor(), PsiRecursiveVisitor {
+    private class TzatizkiVisitor(val generator: PdfBuilder, val dialect: String) : GherkinElementVisitor(), PsiRecursiveVisitor {
 
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()
@@ -208,16 +214,16 @@ class TzExportAction : AnAction(), DumbAware {
                 if (elt.elementType == PYSTRING) return
 
                 if (elt.elementType == FEATURE_KEYWORD || context.isFeature())
-                    return span("featureTitle") { append(elt.text) }
+                    return span("featureTitle") { append(elt.translate()) }
 
                 if (elt.elementType == RULE_KEYWORD || context.isRule())
-                    return span("ruleTitle") { append(elt.text) }
+                    return span("ruleTitle") { append(elt.translate()) }
 
                 if (elt.elementType == SCENARIO_KEYWORD || elt.elementType == SCENARIO_OUTLINE_KEYWORD || context.isScenario())
-                    return span("scenarioTitle") { append(elt.text) }
+                    return span("scenarioTitle") { append(elt.translate()) }
 
                 if (elt.elementType == STEP_KEYWORD)
-                    return span("stepKeyword") { append(elt.text) }
+                    return span("stepKeyword") { append(elt.translate()) }
 
                 if (context.isStep() && stepParams?.isNotEmpty() == true) {
 
@@ -383,7 +389,24 @@ class TzExportAction : AnAction(), DumbAware {
             function()
             summaryLevel--
         }
+
+        fun LeafPsiElement.translate()
+            = text // translate(this, text, dialect)
     }
+}
+
+private fun translate(element: LeafPsiElement, text: String, dialect: String): String {
+
+    val keyword = JsonGherkinKeywordProvider
+        .getKeywordProvider(true)
+        .getKeywordsTable(dialect)
+        .getKeywords(element.elementType as GherkinElementType)
+        ?.filter { it != "*" }
+        ?.map { it.length to it }
+        ?.minBy { it.first }
+        ?.second
+
+    return keyword ?: text
 }
 
 private fun <E> MutableList<E>.isFeature() = peek() is GherkinFeature
