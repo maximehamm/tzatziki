@@ -1,3 +1,18 @@
+<!--
+  ~ CUCUMBER +
+  ~ Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+  ~
+  ~ This document is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This work is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  -->
+
 <idea-plugin>
     <id>io.nimbly.tzatziki</id>
     <name>Cucumber +</name>
@@ -7,13 +22,12 @@
 
        <b>Print feature to PDF</></b><br/>
        <ul>
-          <li>Right click and select "<u>Export feature to PDF</u>" :
-              <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_27379074-d74f-4f17-bdd3-8f6ed6f02eae"
+          <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
                  alt="Tzatziki" width="419" height="233"></p>
-          </li>
-          <li><u>Customize front page</u> from "cucumber+.template.ftl" file<br/></li>
-          <li><u>Customize header and footer</u> from "cucumber+.properties" file<br/></li>
-          <li><u>Customize font, colors, sizes, etc</u> from "cucumber+.css" file<br/></li>
+          <li>Right click a file and select "<u>Export feature to PDF</u>"</li>
+          <li>Select mutiple files to print also a <u>summary</u> and a <u>front page<u></li>
+          <li>Customize <u>front page content, footer, header, fonts, colors, etc.</u></li>
+          Read more at "cucumber+.default.properties" (generated at first print)</li>
        </ul>
 
        <br/><br/>
@@ -34,7 +48,7 @@
           <br/>
           <li>Smart copy or cut table cells and <u>paste to Excel</u> :<br/>
               - Swith automatically to column mode when focusing a Cucumber table.<br/>
-              - Triple-click a header cell to select an entire he entire column, or anywhere else for a row.<br/>
+              - Triple-click a header cell to select an entire he entire column, <br/>or anywhere else for a row.<br/>
               - Copy to clipboard to transfert to Excel for example !
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_98501815-1487-4047-82cb-11dc751b503e"
                   alt="Tzatziki" width="419" height="233"></p>
@@ -43,7 +57,7 @@
           <br/>
           <li>Smart <u>copy from Excel</u> or anywhere and paste to table :<br/>
               - Copy from Excel<br/>
-              - Or copy from any source copying text separated by tabs and carriage returns<br>
+              - Or from any source capable to copy to text separated by tabs and carriage returns<br>
               - Paste clipboard to add or replace to Cucumber table content !
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_6f6705b8-9b2a-4a18-a686-8310645370ee"
                   alt="Tzatziki" width="419" height="233"></p>
@@ -84,11 +98,12 @@
        Any suggestion ? Let me know !<br/>
        <br/>
 
-       <i>@author Maxime HAMM</i>
-       <br/>
-       <br/>
-       <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a>
+       <i>@author Maxime HAMM</i><br/>
+       <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a><br/>
 
+       <br/>
+        Many thanks to Pierre-Michel BRET for his contribution, the PDF generator allowing to realize<br/>
+        a complete layout with page numbers, summary, paragraphs management, etc.<br/>
     ]]></description>
 
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
