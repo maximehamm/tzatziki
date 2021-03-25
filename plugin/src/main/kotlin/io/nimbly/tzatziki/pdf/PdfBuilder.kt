@@ -22,7 +22,7 @@ class PdfBuilder(private val style: PdfStyle) {
     private var sb = StringBuilder()
     private var out = StringBuilder()
     private var isSummaryInserted = false
-    private val summary = Summary()
+    private val summary = PdfSummary()
 
     fun addSummaryEntry(level: Int, label: String) {
         summary.addEntry(level, label)

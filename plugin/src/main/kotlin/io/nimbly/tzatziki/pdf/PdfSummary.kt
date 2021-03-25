@@ -17,7 +17,7 @@ package io.nimbly.tzatziki.pdf
 
 import io.nimbly.tzatziki.util.pop
 
-class Summary(
+class PdfSummary(
     private val idName: String = "t",
     private val initialIndent: String = "",
     private val indent: String = "    ")
@@ -71,6 +71,8 @@ class Summary(
                 generate(it, level + 1, entryIndent + indent)
             }
             output.append("$entryIndent</ul>\n")
+            if (level == 1)
+                output.append("<br/>")
         }
     }
 
