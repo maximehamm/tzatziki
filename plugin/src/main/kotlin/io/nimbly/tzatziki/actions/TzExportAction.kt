@@ -49,9 +49,7 @@ class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Crediter PMB en contributeur !
-
-        //TODO : Cutomiser le titre du sommaire : "Table of contents"
+        //TODO : Customiser le titre du sommaire : "Table of contents"
         //TODO : Parametrer ou faire des break : feature / rule /
 
         //TODO : Numéroter / renuméroter les features
@@ -105,7 +103,7 @@ class TzExportAction : AnAction(), DumbAware {
             generator.breakPage()
 
             // Summary
-            generator.append("<br/><h3>Table of contents :</h3><br/><br/>")
+            generator.append(config.summaryTitle)
             generator.insertSummary()
         }
 

@@ -285,22 +285,23 @@ fun createConfiguration(
     val frontpage =
         propertiesFiles
             .flatMap { it.stringPropertyNames() }
-            .filter { it.startsWith("frontpage.") }
-            .map { it.substring(10) to get(it) }
+            .filter { it.startsWith("export.frontpage.") }
+            .map { it.substring(17) to get(it) }
             .toMap()
 
     return Config(
-        topLeft = get("topLeft"),
-        topCenter = get("topCenter"),
-        topRight = get("topRight"),
-        topFontSize = get("topFontSize"),
-        bottomLeft = get("bottomLeft"),
-        bottomCenter = get("bottomCenter"),
-        bottomRight = get("bottomRight"),
-        bottomFontSize = get("bottomFontSize"),
-        dateFormat = get("dateFormat"),
+        topLeft = get("export.topLeft"),
+        topCenter = get("export.topCenter"),
+        topRight = get("export.topRight"),
+        topFontSize = get("export.topFontSize"),
+        bottomLeft = get("export.bottomLeft"),
+        bottomCenter = get("export.bottomCenter"),
+        bottomRight = get("export.bottomRight"),
+        bottomFontSize = get("export.bottomFontSize"),
+        dateFormat = get("export.dateFormat"),
+        summaryTitle = get("export.summary.title"),
         css = css,
-        picture = Picture("xx", picture, "svg"),
+        picture = Picture("Tzatziki", picture, "svg"),
         template = template,
         frontpage = frontpage)
 }
@@ -323,6 +324,7 @@ open class Config(
 
     val picture: Picture,
     val template: String,
+    val summaryTitle: String,
 
     val frontpage: Map<String, String>) {
 
