@@ -38,19 +38,6 @@ _Token is known by Maxime HAMM :)_
 - Update change note in `./plugin/build.gradle`
 - Publish to marketplace using task `publishPlugin` from module `.plugin`
 
-## Contributing to _Any to Json_
-
-In order to let the plugin be compatible with any language,
-do not add any dependency to Intellij IDEA plugin
-in modules `plugin` and `common`. i.e do not change
-this in `build.gradle` files :
-```
-intellij {
-    version 'xxxx'
-    intellij.type = 'xx' 
-}
- ```
-
 ####Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.
 
 Enjoy !
