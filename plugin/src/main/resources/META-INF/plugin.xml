@@ -20,7 +20,12 @@
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
 
-       <b>Print feature to PDF</></b><br/>
+       <b>A better user expérience to edit Cucumber features.
+             Export to PDF with table of contents and many customizations.
+             Edit Cucumber tables without worrying about 'pipes'</b><br/>
+       <br/>
+
+       <b>Print features to PDF</></b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
                  alt="Tzatziki" width="419" height="233"></p>
