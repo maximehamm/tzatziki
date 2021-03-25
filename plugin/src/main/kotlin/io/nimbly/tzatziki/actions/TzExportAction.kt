@@ -161,15 +161,16 @@ class TzExportAction : AnAction(), DumbAware {
 
         val file = event.getData(CommonDataKeys.PSI_FILE)
         val project = event.getData(CommonDataKeys.PROJECT)
+        val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
         val isGherkinFile = file?.fileType == GherkinFileType.INSTANCE
 
-        var isVisible = isGherkinFile || file == null
+        var isVisible = vfiles!=null && (isGherkinFile || file == null)
 
         if (isVisible && project!=null) {
 
             // Check selected files all bellong to same root
             var root: VirtualFile? = null
-            event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)?.find {
+            vfiles?.find {
                 val r = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(it)
                 if (r == null || root!=null && r!=root) {
                     isVisible = false
