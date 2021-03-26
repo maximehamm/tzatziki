@@ -38,7 +38,7 @@ _Token is known by Maxime HAMM :)_
 - Update change note in `./plugin/build.gradle`
 - Publish to marketplace using task `publishPlugin` from module `.plugin`
 
-####Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.
+*Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.*
 
 Enjoy !
 
