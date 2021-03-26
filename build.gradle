@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '2.1.2'
+    version '2.2.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>2.2</b> More customization for PDF summary</li>
          <li><b>2.1</b> Adding a front page and a summary to the PDF</li>
          <li><b>2.0</b> Exporting feature to PDF</li>
          <li><b>1.5</b> Moving rows and lines uo/down and left/right</li>
