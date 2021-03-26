@@ -116,7 +116,7 @@ open class PdfStyle(
     var contentStyle: String,
     var summaryLeader: ELeader,
     var summaryFontSize: String,
-//    var summaryListStyles: List<String>,
+    var summaryListStyles: List<String>,
     val summaryDepth: ESummaryDepth,
     var first: PdfStyle? = null) {
 
@@ -176,19 +176,26 @@ open class PdfStyle(
           page-break-before: always;	
         }
        
-        .toc li::after {
-          /* The target-counter function is useful for creating a 
-           * table-of-contents or directing the user to a specific page.
-           * It takes as its first argument the hash link (in the form #id)
-           * to the element and returns the page that element is located on.
-           * We can use the attr function to pick up the href from the html. */
-          content: leader($summaryLeader) target-counter(attr(href), page); list-style-type: circle;
-        }
-   
-        .toc li {
-           font-size:$summaryFontSize;
-           list-style-type: circle; /* none... see https://www.w3schools.com/cssref/pr_list-style-type.asp */
-        }
+       .summary { font-size: $summaryFontSize; }
+       
+       .toc a { font-size: $summaryFontSize;  }
+       
+       .toc li::after {
+         /* The target-counter function is useful for creating a 
+          * table-of-contents or directing the user to a specific page.
+          * It takes as its first argument the hash link (in the form #id)
+          * to the element and returns the page that element is located on.
+          * We can use the attr function to pick up the href from the html. */
+         content: leader($summaryLeader) target-counter(attr(href), page);
+         font-size: $summaryFontSize; 
+       }
+       .toc li {
+          font-size:$summaryFontSize; 
+          margin-left: 10px;
+       }
+       .li1 { list-style-type: ${summaryListStyles[0]}; }
+       .li2 { list-style-type: ${summaryListStyles[1]}; }
+       .li3 { list-style-type: ${summaryListStyles[2]}; }
             
         page-inside-avoid {
           display:block;

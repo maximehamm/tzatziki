@@ -305,6 +305,7 @@ fun createConfiguration(
         summaryDepth = ESummaryDepth.valueOf(get("export.summary.depth")),
         summaryLeader = ELeader.valueOf(get("export.summary.leader")),
         summaryFontSize = get("export.summary.fontSize"),
+        summaryListStyles = get("export.summary.listStyles").split(",").map { it.trim() },
         css = css,
         picture = Picture("Tzatziki", picture, "svg"),
         template = template,
@@ -333,6 +334,7 @@ class Config(
     val summaryTitle: String,
     val summaryDepth: ESummaryDepth,
     val summaryLeader: ELeader,
+    val summaryListStyles: List<String>,
     val summaryFontSize: String,
 
     val frontpage: Map<String, String>,
@@ -352,12 +354,13 @@ class Config(
             contentStyle = css,
             summaryDepth = summaryDepth,
             summaryLeader = summaryLeader,
+            summaryListStyles = summaryListStyles,
             summaryFontSize = summaryFontSize,
             first = PdfStyle(
                 topLeft = "", topCenter="", topRight = "",
                 bottomLeft = "", bottomCenter = "", bottomRight = "",
                 topFontSize =  tune(bottomFontSize), bottomFontSize = tune(bottomFontSize), bodyFontSize = "32px",
-                summaryDepth = summaryDepth, summaryLeader= summaryLeader, summaryFontSize= summaryFontSize,
+                summaryDepth = summaryDepth, summaryLeader= summaryLeader, summaryFontSize= summaryFontSize, summaryListStyles= summaryListStyles,
                 contentStyle = css)
         )
     }

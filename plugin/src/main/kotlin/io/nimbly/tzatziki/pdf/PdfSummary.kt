@@ -56,15 +56,15 @@ class PdfSummary(private val depth: ESummaryDepth) {
     private fun ul(ulIndent: String)
         = "$ulIndent<ul class=\"toc\" >\n"
 
-    private fun li(entry: TableEntry, indent: String)
-        = indent + "<li href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
+    private fun li(entry: TableEntry, indent: String, level: Int)
+        = indent + "<li class=\"li$level\" href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
 
     fun generate(): String {
 
         val out = StringBuilder()
         fun generate(entry: TableEntry, level: Int, entryIndent: String) {
             if (level != 0)
-                out.append(li(entry, entryIndent))
+                out.append(li(entry, entryIndent, level))
 
             if (entry.child.size > 0) {
                 out.append(ul(entryIndent))
