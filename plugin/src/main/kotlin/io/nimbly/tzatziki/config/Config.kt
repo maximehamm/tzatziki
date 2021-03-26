@@ -25,6 +25,7 @@ import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGro
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
+import io.nimbly.tzatziki.pdf.ELeader
 import io.nimbly.tzatziki.pdf.ESummaryDepth
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.pdf.Picture
@@ -302,6 +303,8 @@ fun createConfiguration(
         dateFormat = get("export.dateFormat"),
         summaryTitle = get("export.summary.title"),
         summaryDepth = ESummaryDepth.valueOf(get("export.summary.depth")),
+        summaryLeader = ELeader.valueOf(get("export.summary.leader")),
+        summaryFontSize = get("export.summary.fontSize"),
         css = css,
         picture = Picture("Tzatziki", picture, "svg"),
         template = template,
@@ -329,6 +332,8 @@ class Config(
     val template: String,
     val summaryTitle: String,
     val summaryDepth: ESummaryDepth,
+    val summaryLeader: ELeader,
+    val summaryFontSize: String,
 
     val frontpage: Map<String, String>,
     val language: String) {
@@ -344,15 +349,16 @@ class Config(
             bottomLeft = tune(bottomLeft),
             bottomCenter = tune(bottomCenter),
             bottomRight = tune(bottomRight),
-            dateFormat = tune(dateFormat),
             contentStyle = css,
             summaryDepth = summaryDepth,
+            summaryLeader = summaryLeader,
+            summaryFontSize = summaryFontSize,
             first = PdfStyle(
                 topLeft = "", topCenter="", topRight = "",
                 bottomLeft = "", bottomCenter = "", bottomRight = "",
                 topFontSize =  tune(bottomFontSize), bottomFontSize = tune(bottomFontSize), bodyFontSize = "32px",
-                summaryDepth = summaryDepth,
-                dateFormat = tune(dateFormat), contentStyle = css)
+                summaryDepth = summaryDepth, summaryLeader= summaryLeader, summaryFontSize= summaryFontSize,
+                contentStyle = css)
         )
     }
 

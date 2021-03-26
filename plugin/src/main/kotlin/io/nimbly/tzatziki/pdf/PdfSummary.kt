@@ -17,16 +17,13 @@ package io.nimbly.tzatziki.pdf
 
 import io.nimbly.tzatziki.util.pop
 
-class PdfSummary(val depth: ESummaryDepth) {
-    private val idName: String = "t"
-    private val initialIndent: String = ""
-    private val indent: String = "    "
-    private var table = mutableListOf<TableEntry>()
-    private var output = StringBuilder()
-    private var idIndex = 0
+class PdfSummary(private val depth: ESummaryDepth) {
 
-    val currentId:String
-        get() = idName + idIndex.toString()
+    private var table = mutableListOf<TableEntry>()
+    private var index = 0
+
+    val currentId: String
+        get() = "t$index"
 
     init {
         table.add(TableEntry("Table of contents Root", ""))
@@ -35,7 +32,7 @@ class PdfSummary(val depth: ESummaryDepth) {
     private fun root() = table[0]
 
     private fun nextId():String{
-        idIndex++
+        index++
         return currentId
     }
 
@@ -59,28 +56,29 @@ class PdfSummary(val depth: ESummaryDepth) {
     private fun ul(ulIndent: String)
         = "$ulIndent<ul class=\"toc\" >\n"
 
-    private fun li(entry: TableEntry, liIndent: String)
-        = liIndent + "<li href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
-
-    private fun generate(entry: TableEntry, level: Int, entryIndent: String) {
-        if (level != 0)
-            output.append(li(entry, entryIndent))
-
-        if (entry.child.size > 0) {
-            output.append(ul(entryIndent))
-            entry.child.forEach {
-                generate(it, level + 1, entryIndent + indent)
-            }
-            output.append("$entryIndent</ul>\n")
-            if (level == 1)
-                output.append("<br/>")
-        }
-    }
+    private fun li(entry: TableEntry, indent: String)
+        = indent + "<li href=\"#${entry.id}\"><a href=\"#${entry.id}\">${entry.label}</a></li>\n"
 
     fun generate(): String {
-        output = java.lang.StringBuilder()
-        generate(root(), 0, initialIndent)
-        return output.toString()
+
+        val out = StringBuilder()
+        fun generate(entry: TableEntry, level: Int, entryIndent: String) {
+            if (level != 0)
+                out.append(li(entry, entryIndent))
+
+            if (entry.child.size > 0) {
+                out.append(ul(entryIndent))
+                entry.child.forEach {
+                    generate(it, level + 1, "$entryIndent    ")
+                }
+                out.append("$entryIndent</ul>\n")
+                if (level == 1)
+                    out.append("<br/>")
+            }
+        }
+
+        generate(root(), 0, "")
+        return out.toString()
     }
 }
 
@@ -96,3 +94,5 @@ enum class ESummaryDepth(val value: Int) {
     Rule(2),
     Scenario(3)
 }
+
+enum class ELeader { Dotted, Solid, Space}

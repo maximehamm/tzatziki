@@ -19,22 +19,21 @@ private const val TAG = "@tablesOfContentTag#"
 
 class PdfBuilder(private val style: PdfStyle) {
 
-    private var sb = StringBuilder()
     private var out = StringBuilder()
     private var isSummaryInserted = false
     private val summary = PdfSummary(style.summaryDepth)
 
     fun addSummaryEntry(level: Int, label: String) {
         summary.addEntry(level, label)
-        out.append("\n").append("<div id=\"${summary.currentId}\"></div>")
+        out.append('\n').append("<div id=\"${summary.currentId}\"></div>")
     }
 
     fun breakPage() {
-        out.append("\n").append("<page-before></page-before>")
+        out.append('\n').append("<page-before></page-before>")
     }
 
     fun append(content: String) {
-        out.append("\n").append(content)
+        out.append('\n').append(content)
     }
 
     fun addParagraph(content: String) {
@@ -44,17 +43,17 @@ class PdfBuilder(private val style: PdfStyle) {
     }
 
     fun paragraphStarts() {
-        out.append("\n").append("<page-inside-avoid>")
+        out.append('\n').append("<page-inside-avoid>")
     }
 
     fun paragraphEnds() {
-        out.append("\n").append("</page-inside-avoid>")
+        out.append('\n').append("</page-inside-avoid>")
     }
 
     fun insertSummary() {
         if (isSummaryInserted)
             throw Exception("Table of Contents is already inserted")
-        out.append("\n")
+        out.append('\n')
         out.append(TAG)
         isSummaryInserted = true
     }
@@ -72,6 +71,8 @@ class PdfBuilder(private val style: PdfStyle) {
     }
 
     fun generate(): String {
+        val sb = StringBuilder()
+
         sb.append("\n<html>")
         sb.append("\n<head>")
         sb.append("\n<style>")
@@ -112,8 +113,10 @@ open class PdfStyle(
     var bottomLeft: String,
     var bottomCenter: String,
     var bottomRight: String,
-    var dateFormat: String,
     var contentStyle: String,
+    var summaryLeader: ELeader,
+    var summaryFontSize: String,
+//    var summaryListStyles: List<String>,
     val summaryDepth: ESummaryDepth,
     var first: PdfStyle? = null) {
 
@@ -172,16 +175,21 @@ open class PdfStyle(
           /* Create a page break before this element. */
           page-break-before: always;	
         }
-        
+       
         .toc li::after {
           /* The target-counter function is useful for creating a 
            * table-of-contents or directing the user to a specific page.
            * It takes as its first argument the hash link (in the form #id)
            * to the element and returns the page that element is located on.
            * We can use the attr function to pick up the href from the html. */
-          content: leader(dotted) target-counter(attr(href), page);
+          content: leader($summaryLeader) target-counter(attr(href), page); list-style-type: circle;
         }
-        
+   
+        .toc li {
+           font-size:$summaryFontSize;
+           list-style-type: circle; /* none... see https://www.w3schools.com/cssref/pr_list-style-type.asp */
+        }
+            
         page-inside-avoid {
           display:block;
           page-break-inside: avoid;

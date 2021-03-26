@@ -50,12 +50,8 @@ class TzExportAction : AnAction(), DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        //TODO : Numéroter / renuméroter les features
-        //TODO : Imprimer les features dans l'ordre de la numérotation
-        //TODO : Choisir et ordonner les features à exporter en PDF ?
-
-        //TODO Later : Set a parameter to decide whether or not to print the comments
-        //TODO Later : Traduire les mots clef au moment d'editer
+        //TODO : Customiser bullet cf.https://www.w3schools.com/cssref/pr_list-style-type.asp
+        //TODO Insiter à voter pour le plugin !
 
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
         val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY) ?: return
