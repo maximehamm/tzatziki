@@ -52,9 +52,9 @@ fun Editor.findTableAt(offset: Int): GherkinTable? {
 
     val adjustedOffset =
         when (offset) {
-            getLineStartOffset() -> offset+2
-            getLineStartOffset()+1 -> offset+1
-            getLineEndOffset() -> offset-1
+            getLineStartOffsetFromOffset() -> offset+2
+            getLineStartOffsetFromOffset()+1 -> offset+1
+            getLineEndOffsetFromOffset() -> offset-1
             else -> offset
         }
 
@@ -230,7 +230,7 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
 
     val file = getFile() ?: return null
     val element = file.findElementAt(
-        if (getLineEndOffset() == offset) offset-1 else offset)
+        if (getLineEndOffsetFromOffset() == offset) offset-1 else offset)
 
     var row = PsiTreeUtil.getContextOfType(element, GherkinTableRow::class.java)
     if (row == null && element?.nextSibling is GherkinTableRow)
@@ -241,12 +241,16 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
     return row
 }
 
-fun Editor.getLineEndOffset(offset: Int = caretModel.offset): Int {
+fun Editor.getLineEndOffsetFromOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineEndOffset(offset, document)
 }
 
-fun Editor.getLineStartOffset(offset: Int = caretModel.offset): Int {
+fun Editor.getLineStartOffsetFromOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineStartOffset(offset, document)
+}
+
+fun Editor.getLineNumber(offset: Int = caretModel.offset): Int {
+    return document.getLineNumber(offset)
 }
 
 val HIGHLIGHTERS_RANGE = mutableListOf<TextRange>()

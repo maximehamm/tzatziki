@@ -138,7 +138,7 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
     val table = findTableAt(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
 
-    val insert = offset == getLineEndOffset(offset)
+    val insert = offset == getLineEndOffsetFromOffset(offset)
     if (insert && row.isLastRow)
         return false
 

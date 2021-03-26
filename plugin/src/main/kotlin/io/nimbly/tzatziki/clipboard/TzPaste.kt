@@ -59,6 +59,12 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
             return false
     }
 
+    val tableLastLine = table.lastRow.getDocumentLine()
+    if (tableLastLine!=null
+            && editor.getLineNumber(offset) > tableLastLine
+            && !text.contains('\t'))
+        return false
+
     return editor.pasteToTable(table, offset, text)
 }
 

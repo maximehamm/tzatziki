@@ -70,8 +70,9 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
         getNotificationGroup().createNotification(
             "Cucumber+", "<html>Configuration <a href='PROP'>files</a> were created</html>",
             NotificationType.INFORMATION
-        ) { _: Notification?, _: HyperlinkEvent ->
+        ) { notification: Notification, _: HyperlinkEvent ->
             PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
+            notification.expire();
         }.notify(project)
     }
 
@@ -173,8 +174,9 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
 
             getNotificationGroup().createNotification(
                 "Cucumber+", "<html>Configuration <a href='PROP'>file</a> added</html>",
-                NotificationType.INFORMATION) { _: Notification?, _: HyperlinkEvent ->
+                NotificationType.INFORMATION) { notification: Notification, _: HyperlinkEvent ->
                 PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+                notification.expire();
             }.notify(project)
         } else {
 
@@ -190,8 +192,9 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
 
                 getNotificationGroup().createNotification(
                     "Cucumber+", "<html>Configuration <a href='PROP'>file</a> upated</html>",
-                    NotificationType.INFORMATION) { _: Notification?, _: HyperlinkEvent ->
+                    NotificationType.INFORMATION) { notification: Notification, _: HyperlinkEvent ->
                     PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+                    notification.expire();
                 }.notify(project)
             }
         }

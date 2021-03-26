@@ -392,5 +392,50 @@ class CopyPasteTests  : AbstractTestCase() {
                 Then Finished !""")
         checkHighlighted("Examples: One\n      ", "| 79  | No    |")
     }
+
+    fun testCutPasteAfterTable() {
+
+        // language=feature
+        val content = """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                  
+                  
+            """
+        configure(content)
+
+        select("Feature: Tzatziki y Cucumber\n", "| D2      |\n")
+        copy()
+
+        setCursor("| 79  | No    | D2      |\n")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF | Ready | Details |
+                  | 78  | Yes   |         |
+                  | 79  | No    | D2      |
+                  
+                  
+            """)
+    }
 }
 
