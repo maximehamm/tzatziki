@@ -65,6 +65,8 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
             && !text.contains('\t'))
         return false
 
+    copyPasteUsed(file)
+
     return editor.pasteToTable(table, offset, text)
 }
 

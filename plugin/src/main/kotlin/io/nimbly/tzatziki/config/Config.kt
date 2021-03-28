@@ -15,25 +15,25 @@
 
 package io.nimbly.tzatziki.config
 
-import com.intellij.notification.Notification
-import com.intellij.notification.NotificationType
+import com.intellij.lang.properties.psi.PropertiesFile
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import io.nimbly.tzatziki.pdf.ELeader
 import io.nimbly.tzatziki.pdf.ESummaryDepth
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.pdf.Picture
+import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.util.TzatzikiException
+import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.util.now
 import java.time.format.DateTimeFormatter
 import java.util.*
-import javax.swing.event.HyperlinkEvent
 
 const val CONFIG_FOLDER = ".cucumber+"
 
@@ -49,7 +49,8 @@ const val EXPORT_PICTURE_DEFAULT_FILENAME = "cucumber+.picture.default.svg"
 const val EXPORT_TEMPLATE_FILENAME = "cucumber+.template.ftl"
 const val EXPORT_TEMPLATE_DEFAULT_FILENAME = "cucumber+.template.default.ftl"
 
-val ALL_DEFAULTS = listOf(PROPERTIES_DEFAULT_FILENAME,
+val ALL_DEFAULTS = listOf(
+    PROPERTIES_DEFAULT_FILENAME, PROPERTIES_FILENAME,
     CSS_DEFAULT_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
 
 fun loadConfig(path: VirtualFile, project: Project): Config {
@@ -67,13 +68,9 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
         rootConfig = root.createChildDirectory(path, CONFIG_FOLDER)
         rootConfig.copyDefaultsToFolder(project)
 
-        getNotificationGroup().createNotification(
-            "Cucumber+", "<html>Configuration <a href='PROP'>files</a> were created</html>",
-            NotificationType.INFORMATION
-        ) { notification: Notification, _: HyperlinkEvent ->
+        project.notification("Configuration <a href='PROP'>files</a> were created") {
             PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
-            notification.expire();
-        }.notify(project)
+        }
     }
 
     // Update default files
@@ -133,6 +130,38 @@ fun loadConfig(files: List<VirtualFile>, project: Project): Config {
     return loadConfig(common, project)
 }
 
+fun setRootCustomProperty(origin: PsiElement, key: String, value: String): Boolean {
+
+    val propertiesFile = findRootCustomPropertiesFile(origin)
+        ?: return false
+
+    WriteCommandAction.runWriteCommandAction(origin.project) {
+        val property = propertiesFile.findPropertiesByKey(key).firstOrNull()
+        if (property != null) {
+            property.setValue(value)
+        }
+        else {
+            propertiesFile.addProperty(key, value)
+        }
+    }
+
+    return true
+}
+
+fun getRootCustomProperty(origin: PsiElement, key: String): String?
+    = findRootCustomPropertiesFile(origin)
+        ?.findPropertyByKey(key)
+        ?.value
+
+private fun findRootCustomPropertiesFile(origin: PsiElement): PropertiesFile? =
+    ProjectFileIndex.SERVICE
+        .getInstance(origin.project)
+        .getSourceRootForFile(origin.containingFile.virtualFile)
+        ?.findChild(CONFIG_FOLDER)
+        ?.findChild(PROPERTIES_FILENAME)
+        ?.getFile(origin.project)
+        ?.let { if (it is PropertiesFile) it else null}
+
 private fun VirtualFile.copyDefaultsToFolder(project: Project) {
     WriteCommandAction.runWriteCommandAction(project) {
         ALL_DEFAULTS
@@ -172,15 +201,13 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
             }
             PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-            getNotificationGroup().createNotification(
-                "Cucumber+", "<html>Configuration <a href='PROP'>file</a> added</html>",
-                NotificationType.INFORMATION) { notification: Notification, _: HyperlinkEvent ->
+            project.notification("Configuration <a href='PROP'>file</a> added") {
                 PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-                notification.expire();
-            }.notify(project)
-        } else {
+            }
 
-            // Load from resources
+        } else if (fileName != PROPERTIES_FILENAME) {
+
+            // Override with new default
             val hash = {}.javaClass.getResourceAsStream("/io/nimbly/tzatziki/config/$fileName").readAllBytes()!!.contentHashCode()
             if (hash != currentFile!!.contentsToByteArray()!!.contentHashCode()) {
 
@@ -190,12 +217,9 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
                 }
                 PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-                getNotificationGroup().createNotification(
-                    "Cucumber+", "<html>Configuration <a href='PROP'>file</a> upated</html>",
-                    NotificationType.INFORMATION) { notification: Notification, _: HyperlinkEvent ->
+                project.notification("Configuration <a href='PROP'>file</a> upated") {
                     PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-                    notification.expire();
-                }.notify(project)
+                }
             }
         }
     }
@@ -285,6 +309,15 @@ fun createConfiguration(
                 return v
         }
         return ""
+    }
+
+    fun getBoolean(property: String): Boolean {
+        propertiesFiles.forEach {
+            val v = it.getProperty(property, null)
+            if (v != null)
+                return "True".toUpperCase() == v.trim()
+        }
+        return false
     }
 
     val frontpage =

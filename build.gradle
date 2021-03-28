@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '2.2.1'
+    version '2.3.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>2.3</b> Ask for review plugin or report bugs and suggestions</li>
          <li><b>2.2</b> More customization for PDF summary</li>
          <li><b>2.1</b> Adding a front page and a summary to the PDF</li>
          <li><b>2.0</b> Exporting feature to PDF</li>
@@ -81,6 +82,7 @@ ext { //2020.2.4    // 2020.1.3 = KO
                            'org.intellij.intelliLang',
                            'Gherkin:202.6397.21',
                            'cucumber-java:202.6397.59',
+                           'com.intellij.properties:202.7319.8',
                            'PsiViewer:202-SNAPSHOT.2']
 }
 

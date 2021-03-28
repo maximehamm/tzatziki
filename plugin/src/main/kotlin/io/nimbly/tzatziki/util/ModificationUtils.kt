@@ -127,6 +127,8 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
 
         // Format table
         newTable.format()
+
+        formattingTableUsed(newRow)
     }
 
     return true
@@ -160,6 +162,8 @@ fun Editor.addTableRow(offset: Int = caretModel.offset): Boolean {
         )
 
         caretModel.moveToOffset(caretModel.offset + 1)
+
+        formattingTableUsed(newRow)
     }
 
     return true

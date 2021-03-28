@@ -124,9 +124,9 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
-
     <depends>com.intellij.modules.xml</depends>
     <depends>org.intellij.intelliLang</depends>
+    <depends>com.intellij.properties</depends>
 
     <depends>gherkin</depends>
 

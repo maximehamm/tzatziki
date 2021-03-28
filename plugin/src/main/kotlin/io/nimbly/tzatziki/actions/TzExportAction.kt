@@ -22,10 +22,10 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.compiler.CompilerPaths
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicatorProvider
-import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.updateSettings.impl.UpdateChecker
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiComment
@@ -46,12 +46,9 @@ import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 import org.jetbrains.plugins.cucumber.psi.impl.*
 import java.io.ByteArrayOutputStream
 
-class TzExportAction : AnAction(), DumbAware {
+class TzExportAction : AnAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
-
-        //TODO : Customiser bullet cf.https://www.w3schools.com/cssref/pr_list-style-type.asp
-        //TODO Insiter à voter pour le plugin !
 
         val project = event.getData(CommonDataKeys.PROJECT) ?: return
         val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY) ?: return
@@ -59,15 +56,14 @@ class TzExportAction : AnAction(), DumbAware {
 
         try {
             exportFeatures(vfiles.toList(), project)
+            vfiles.first().getFile(project)?.let { pdfUsed(it) }
+        } catch (e: IndexNotReadyException) {
+            DumbService.getInstance(project).showDumbModeNotification("Please wait until index is ready")
         } catch (e: TzatzikiException) {
-            UpdateChecker.getNotificationGroup().createNotification(
-                "Cucumber+", e.message ?: "Cucumber+ error !",
-                NotificationType.WARNING).notify(project)
+            project.notification(e.message ?: "Cucumber+ error !", NotificationType.WARNING)
         } catch (e: Exception) {
             e.printStackTrace()
-            UpdateChecker.getNotificationGroup().createNotification(
-                "Cucumber+", e.message ?: "Cucumber+ error !",
-                NotificationType.WARNING).notify(project)
+            project.notification(e.message ?: "Cucumber+ error !", NotificationType.WARNING)
         }
     }
 
