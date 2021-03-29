@@ -56,7 +56,6 @@ class TzExportAction : AnAction() {
 
         try {
             exportFeatures(vfiles.toList(), project)
-            vfiles.first().getFile(project)?.let { pdfUsed(it) }
         } catch (e: IndexNotReadyException) {
             DumbService.getInstance(project).showDumbModeNotification("Please wait until index is ready")
         } catch (e: TzatzikiException) {
@@ -248,6 +247,17 @@ class TzExportAction : AnAction() {
         override fun visitWhiteSpace(space: PsiWhiteSpace) {
             if (!context.isTable()) {
                 append(space.text)
+            }
+            if (space.parent is GherkinFeature
+                && space.nextSibling is GherkinStepsHolder
+                && space.text.count {it == '\n'} < 2) {
+                append("\n")
+            }
+            else if (space.parent is GherkinStepsHolder
+                && space.nextSibling is GherkinStep
+                && space.prevSibling !is GherkinStep
+                && space.text.count {it == '\n'} < 2) {
+                append("\n")
             }
             super.visitElement(space)
         }
