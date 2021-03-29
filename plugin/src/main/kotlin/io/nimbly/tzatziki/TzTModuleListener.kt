@@ -47,6 +47,8 @@ class TzTModuleListener : ProjectManagerListener {
             initTypedHandler()
             initMouseListener(project)
             handlerInitialized = true
+
+            askToVote(project)
         }
     }
 

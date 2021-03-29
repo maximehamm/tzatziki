@@ -16,75 +16,40 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.psi.PsiElement
-import io.nimbly.tzatziki.config.getRootCustomProperty
-import io.nimbly.tzatziki.config.setRootCustomProperty
-import java.util.*
+import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.util.PropertiesComponent
+import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.project.Project
 
-private const val MIN_DELAY = 1000*60*10 // 10 minutes
-private const val REVIEW = "plugin.ask.review"
+const val TZATZIKI_PLUGIN = "io.nimbly.tzatziki"
 
-private var firstUse: Date? = null
+fun askToVote(project: Project) {
 
-private var isPdfUsed: Boolean = false
-private var isFormattingTableUsed: Boolean = false
-private var isCopyPasteUsed: Boolean = false
+    val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
+    val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
-private var isAlreadyNotified: Boolean = false
+    if (version == null) {
 
-fun pdfUsed(origin: PsiElement) {
-    isPdfUsed = true
-    askToVote(origin)
-}
-
-fun formattingTableUsed(origin: PsiElement) {
-    isFormattingTableUsed = true
-    askToVote(origin)
-}
-
-fun copyPasteUsed(origin: PsiElement) {
-    isCopyPasteUsed = true
-    askToVote(origin)
-}
-
-fun askToVote(origin: PsiElement) {
-    if (firstUse == null)
-        firstUse = Date()
-
-    //println("""
-    //    ASK TO VOTE !
-    //     isAlreadyNotified = $isAlreadyNotified
-    //     isPdfUsed = $isPdfUsed
-    //     isFormattingTableUsed = $isFormattingTableUsed
-    //     isCopyPasteUsed = $isCopyPasteUsed""".trimIndent())
-
-    if (isAlreadyNotified || !isPdfUsed || !isFormattingTableUsed || !isCopyPasteUsed)
-        return
-
-    if (Date().time - firstUse!!.time < MIN_DELAY)
-        return
-
-    isAlreadyNotified = true
-
-    if ("False".equals(getRootCustomProperty(origin, REVIEW), true))
-        return
-
-    origin.project.notification(
-        """Thank you for using Cucumber+ !<br/>
-                <table width='100%' cellspacing='0' cellpadding='0'><tr>
-                   <td><a href='REVIEW'>Review</a></td>
-                   <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
-                   <td><a href='DISMISS'>Dismiss</a></td>
-                </tr></table>""") {
-        when (it) {
-            "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
-            "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
-            "DISMISS" -> dismiss(origin)
-        }
+        // First time used : do just save the revision number
+        PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
     }
-}
+    else if (version != currentVersion) {
 
-fun dismiss(origin: PsiElement) {
-    setRootCustomProperty(origin, REVIEW, "false")
+        // Plugin was updated... 'looks like your ready to vote !
+        project.notification(
+            """Thank you for using Cucumber+ !<br/>
+                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
+                       <td><a href='REVIEW'>Review</a></td>
+                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
+                       <td><a href='DISMISS'>Dismiss</a></td>
+                    </tr></table>""") {
+            when (it) {
+                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
+                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
+            }
+        }
+
+        PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
+    }
 }
 

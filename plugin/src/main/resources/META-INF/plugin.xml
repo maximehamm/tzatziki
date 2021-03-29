@@ -111,10 +111,6 @@
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
 
-    <!-- Formatin ideas :
-
-       http://www.picklesdoc.com/#download
-    -->
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>

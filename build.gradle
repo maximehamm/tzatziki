@@ -43,14 +43,12 @@ ext {
          <li><b>0.1</b> Cucumber table formatting as you go</li>
        </ul>
       """
+    /**
+     * Supports of markdown
+     * - https://github.com/commonmark/commonmark-java
+     * - https://github.com/vsch/flexmark-java
+     */
 }
-
-/* TODOLIST
-
-    - Reselect row/column after using "delete" button
-    - Paste a NEW table where allowed
-
- */
 
 //ext { // 2020.3
 //    plugin_idea_version = 'IC-201.8538.31'

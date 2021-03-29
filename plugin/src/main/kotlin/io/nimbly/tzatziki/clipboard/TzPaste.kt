@@ -62,19 +62,18 @@ fun Editor.smartPaste(dataContext: DataContext): Boolean {
     val tableLastLine = table.lastRow.getDocumentLine()
     if (tableLastLine!=null
             && editor.getLineNumber(offset) > tableLastLine
-            && !text.contains('\t'))
+            && !text.contains('\t')) {
         return false
-
-    copyPasteUsed(file)
+    }
 
     return editor.pasteToTable(table, offset, text)
 }
 
-private fun Editor.pasteNewTable(text: String, offset: Int) : Boolean {
+private fun Editor.pasteNewTable(text: String, offset: Int): Boolean {
     return false
 }
 
-private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) : Boolean {
+private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String): Boolean {
 
     // Load added cells
     val addedCells = loadCells(text)
@@ -88,8 +87,8 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         val where = where(table)
         x = when {
             table.textLength == 1 -> 0 // Empty table, just a pipe
-            where <0 -> -1
-            where >0 -> table.allRows.first().psiCells.size
+            where < 0 -> -1
+            where > 0 -> table.allRows.first().psiCells.size
             else -> return false
         }
     }
@@ -120,8 +119,9 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
         val newTable = table.replace(tempTable) as GherkinTable
 
         // Move caret
-        val targetCell = newTable.row(y).cell(if (x<0) 0 else x)
-        val smartCell = SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(targetCell, getFile()!!)
+        val targetCell = newTable.row(y).cell(if (x < 0) 0 else x)
+        val smartCell =
+            SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(targetCell, getFile()!!)
 
         // Format table
         newTable.format()
@@ -133,8 +133,8 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String) 
 
             val startHighlight = it.previousPipe.startOffset
             val endHighlight = newTable
-                .row(y + addedCells.size -1)
-                .cell((if (x<0) 0 else x) + addedCells[0].size -1)
+                .row(y + addedCells.size - 1)
+                .cell((if (x < 0) 0 else x) + addedCells[0].size - 1)
                 .nextPipe.endOffset
             highlight(startHighlight, endHighlight)
         }
@@ -154,11 +154,16 @@ fun buildTableText(merged: Array<Array<String?>>): String {
     return s.toString()
 }
 
-private fun merge(actual: List<List<String>>, added: List<List<String>>, targetX: Int, targetY: Int): Array<Array<String?>> {
+private fun merge(
+    actual: List<List<String>>,
+    added: List<List<String>>,
+    targetX: Int,
+    targetY: Int
+): Array<Array<String?>> {
 
     val width = if (targetX == -1) added[0].size + actual[0].size
-                else max(targetX+added[0].size, actual[0].size)
-    val height = max(targetY+added.size, actual.size)
+    else max(targetX + added[0].size, actual[0].size)
+    val height = max(targetY + added.size, actual.size)
 
     val target: Array<Array<String?>> = Array(height) { Array(width) { null } }
     fun feed(cells: List<List<String?>>, targetX: Int, targetY: Int) {
@@ -189,12 +194,12 @@ fun loadCells(table: GherkinTable): List<List<String>> {
     return lines
 }
 
-private fun loadCells(text: String):  List<List<String>> {
+private fun loadCells(text: String): List<List<String>> {
     val lines = mutableListOf<List<String>>()
     text.split("\n").forEach { line ->
-       lines.add(
-           line.split("\t")
-               .map { it.trim() })
+        lines.add(
+            line.split("\t")
+                .map { it.trim() })
     }
     return lines
 }
