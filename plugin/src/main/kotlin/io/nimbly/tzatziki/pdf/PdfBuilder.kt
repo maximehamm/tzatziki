@@ -71,32 +71,38 @@ class PdfBuilder(private val style: PdfStyle) {
     }
 
     fun generate(): String {
+
         val sb = StringBuilder()
-
-        sb.append("\n<html>")
-        sb.append("\n<head>")
-        sb.append("\n<style>")
-
-        style.apply {
-            first?.apply {
-                sb.append("\n@page:first {")
-                sb.append('\n' + pagePdfStyle(orientation))
-                sb.append("}")
-            }
-            sb.append("\n@page {")
-            sb.append('\n' + pagePdfStyle(orientation))
-            sb.append("}")
-            sb.append(standardPdfStyle())
-            sb.append(contentStyle)
+        fun tag(tag: String, function: () -> Unit) {
+            sb.append("\n<$tag>")
+            function()
+            sb.append("\n</$tag>")
         }
 
-        sb.append("\n</style>")
-        sb.append("\n</head>")
-        sb.append("\n<body>\n")
-        insertSummaryNow()
-        sb.append(out)
-        sb.append("\n</body>")
-        sb.append("\n</html>")
+        tag("html") {
+            tag("head") {
+                tag("style") {
+                    style.apply {
+                        first?.apply {
+                            sb.append("\n@page:first {")
+                            sb.append('\n' + pagePdfStyle(orientation))
+                            sb.append("}")
+                        }
+                        sb.append("\n@page {")
+                        sb.append('\n' + pagePdfStyle(orientation))
+                        sb.append("}")
+                        sb.append(standardPdfStyle())
+                        sb.append(contentStyle)
+                    }
+                }
+            }
+            tag("body") {
+                sb.append("\n")
+                insertSummaryNow()
+                sb.append(out)
+            }
+        }
+
         return sb.toString()
     }
 }
