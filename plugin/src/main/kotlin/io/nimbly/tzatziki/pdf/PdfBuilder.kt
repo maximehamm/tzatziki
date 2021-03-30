@@ -80,15 +80,13 @@ class PdfBuilder(private val style: PdfStyle) {
         style.apply {
             first?.apply {
                 sb.append("\n@page:first {")
-                sb.append('\n' + pagePdfStyle)
-                sb.append('\n' + updatePagePdfStyle)
+                sb.append('\n' + pagePdfStyle(orientation))
                 sb.append("}")
             }
             sb.append("\n@page {")
-            sb.append('\n' + pagePdfStyle)
-            sb.append('\n' + updatePagePdfStyle)
+            sb.append('\n' + pagePdfStyle(orientation))
             sb.append("}")
-            sb.append(standardPdfStyle)
+            sb.append(standardPdfStyle())
             sb.append(contentStyle)
         }
 
@@ -120,8 +118,11 @@ open class PdfStyle(
     val summaryDepth: ESummaryDepth,
     var first: PdfStyle? = null) {
 
-    private val defaultPagePdfStyle = """
-        size: a4;
+    var orientation: String = ""
+
+    // A4, letter
+    private fun defaultPagePdfStyle(orientation: String) = """
+        size: a4 $orientation; 
         margin: 80px;	
         
         @top-left{
@@ -154,7 +155,8 @@ open class PdfStyle(
               content:$bottomRight 	
         }""".trimIndent()
 
-    private val defaultStandardPdfStyle = """    
+    private fun defaultStandardPdfStyle() = """    
+        
         /* The body margin is in addition to the page margin,
          * but the top body margin only applies to the first page and 
          * the bottom margin to the last page. */
@@ -268,7 +270,9 @@ open class PdfStyle(
             text-decoration: none;
         }""".trimIndent()
 
-    var pagePdfStyle = defaultPagePdfStyle
-    var updatePagePdfStyle = defaultPagePdfStyle
-    var standardPdfStyle = defaultStandardPdfStyle
+    fun pagePdfStyle(orientation: String)
+        = defaultPagePdfStyle(orientation)
+
+    fun standardPdfStyle()
+        = defaultStandardPdfStyle()
 }

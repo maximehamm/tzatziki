@@ -13,7 +13,15 @@
 </table>
 
 <#-- CENTER -->
-<table style="width:100%; height:630px">
+<#function gap>
+    <#if orientation == 'portrait'>
+        <#return '630px'>
+    <#else>
+        <#return '300px'>
+    </#if>
+</#function>
+
+<table style="width:100%; height:${gap()}">
     <tr><td style="border:0">
             <h1 style="text-align:center; font-size:40px; margin-bottom: 50px">
                 ${frontpage.title}
@@ -32,11 +40,13 @@
 </table>
 
 <#-- BOTTOM (Cucumber+ logo) -->
-<table style="width: 100%">
-    <tr><td style="width:50%; border:0"></td>
-        <td style="border:0">
-            ${logo.content40}
-        </td>
-        <td style="width:50%; border:0"></td>
-    </tr>
-</table>
+<#if orientation == 'portrait'>
+    <table style="width: 100%">
+        <tr><td style="width:50%; border:0"></td>
+            <td style="border:0">
+                ${logo.content40}
+            </td>
+            <td style="width:50%; border:0"></td>
+        </tr>
+    </table>
+</#if>

@@ -26,6 +26,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.ui.Messages.*
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiComment
@@ -34,6 +35,7 @@ import com.intellij.psi.PsiRecursiveVisitor
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.testFramework.writeChild
+import icons.ActionIcons.CUCUMBER_PLUS
 import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getFile
@@ -79,9 +81,22 @@ class TzExportAction : AnAction() {
 
         // Load config
         val config = loadConfig(paths, project)
+        val pdfStyle = config.buildStyles()
+
+        // Ask to use landscape or not
+        val selected = showYesNoCancelDialog(project,
+            if (files.size == 1) "Exporting one feature to PDF" else "Exporting ${files.size} features to PDF",
+            "Cucumber+",
+            "&Cancel", "&Portrait", "&Lanscape", CUCUMBER_PLUS)
+        val orientation = when (selected) {
+            NO -> "portrait"
+            CANCEL -> "landscape"
+            else -> return
+        }
+        pdfStyle.orientation = orientation
+        pdfStyle.first?.orientation = orientation
 
         // Prepare pdf generator
-        val pdfStyle = config.buildStyles()
         val generator = PdfBuilder(pdfStyle)
 
         // Summary and front page
@@ -91,7 +106,9 @@ class TzExportAction : AnAction() {
             initFreeMarker(PictureWrapper).apply {
                 registerTemplates("EXPORT" to config.template)
                 generator.append("EXPORT", this,
-                    "frontpage" to config.frontpage, "logo" to config.picture)
+                    "frontpage" to config.frontpage,
+                    "logo" to config.picture,
+                    "orientation" to orientation)
             }
             generator.breakPage()
 

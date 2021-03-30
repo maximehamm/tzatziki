@@ -9,7 +9,7 @@
  *
  * This work is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTI?"CULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
 plugins {
@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '2.3.0'
+    version '2.4.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>2.4</b> Export PDF landscape or portrait</li>
          <li><b>2.3</b> Ask for review plugin or report bugs and suggestions</li>
          <li><b>2.2</b> More customization for PDF summary</li>
          <li><b>2.1</b> Adding a front page and a summary to the PDF</li>

@@ -30,4 +30,6 @@ object ActionIcons {
     @JvmField val DELETE_COLUMN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/culumn-delete-16x16.png", javaClass)
 
     @JvmField val EXPORT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/export-16x16.png", javaClass)
+
+    @JvmField val CUCUMBER_PLUS = IconLoader.getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
 }
