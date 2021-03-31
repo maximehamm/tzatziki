@@ -16,6 +16,7 @@
 package icons
 
 import com.intellij.openapi.util.IconLoader
+import com.intellij.ui.IconManager
 
 object ActionIcons {
 
@@ -31,5 +32,7 @@ object ActionIcons {
 
     @JvmField val EXPORT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/export-16x16.png", javaClass)
 
-    @JvmField val CUCUMBER_PLUS = IconLoader.getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
+    @JvmField val CUCUMBER_PLUS = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
+    @JvmField val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)
+
 }

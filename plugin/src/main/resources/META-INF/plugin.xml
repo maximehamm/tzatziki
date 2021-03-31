@@ -111,12 +111,24 @@
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
 
-
     <extensions defaultExtensionNs="com.intellij">
+
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
+
         <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
+
         <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
+
+        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
+
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
+
+        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
+        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
+
     </extensions>
+
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
@@ -162,6 +174,11 @@
                     id="io.nimbly.tzatziki.ShiftRight"
                     text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
+            </action>
+
+            <action class="io.nimbly.tzatziki.actions.TzCaptureTestResultsAction"
+                    id="io.nimbly.tzatziki.CaptureTestResults"
+                    text="Toggle Cucumber smart editing">
             </action>
 
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>

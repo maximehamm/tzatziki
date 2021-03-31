@@ -65,3 +65,19 @@ fun String.shopUp(inputSlices: List<TextRange>): List<Slice> {
 }
 
 class Slice(val text: String, val isInterRange: Boolean)
+
+fun countBlankAtRight(s: CharSequence): Int {
+    var count = 0
+    for (i in s.length - 1 downTo 0) {
+        if (s[i] == ' ') count++ else break
+    }
+    return count
+}
+
+fun countBlankAtLeft(s: CharSequence): Int {
+    var count = 0
+    for (element in s) {
+        if (element == ' ') count++ else break
+    }
+    return count
+}

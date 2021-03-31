@@ -19,6 +19,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -28,6 +29,7 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
@@ -114,3 +116,17 @@ val PsiElement.nextPipe: PsiElement
 
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
+
+fun GherkinPsiElement.bestRange(): TextRange {
+
+    var i = text.indexOf(" ")
+    if (i<0)
+        return textRange
+
+    val t = text.substring(i)
+    val j = t.indexOfFirst { it != ' ' }
+    if (j>0)
+        i += j
+
+    return TextRange(textRange.startOffset + i, textRange.endOffset)
+}
