@@ -3,15 +3,19 @@
 
   <option name="CCP_TEST_OK">
     <value>
-      <option name="BACKGROUND" value="008100"/>
+      <option name="BACKGROUND" value="054505"/>
     </value>
   </option>
 
   <option name="CCP_TEST_KO">
     <value>
-      <option name="BACKGROUND" value="CC0B05"/>
-      <option name="EFFECT_COLOR" value="FFFFFA" />
-      <option name="EFFECT_TYPE" value="3" />
+      <option name="BACKGROUND" value="7C0606"/>
+    </value>
+  </option>
+
+  <option name="CCP_TEST_IGNORED">
+    <value>
+      <option name="BACKGROUND" value="514848"/>
     </value>
   </option>
 

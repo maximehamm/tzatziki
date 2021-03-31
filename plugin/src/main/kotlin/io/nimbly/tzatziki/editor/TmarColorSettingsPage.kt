@@ -20,6 +20,7 @@ import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
 import icons.ActionIcons.CUCUMBER_PLUS_16
+import io.nimbly.tzatziki.testdiscovery.TEST_IGNORED
 import io.nimbly.tzatziki.testdiscovery.TEST_KO
 import io.nimbly.tzatziki.testdiscovery.TEST_OK
 import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
@@ -34,20 +35,34 @@ class TzColorSettingsPage : ColorSettingsPage {
         return GherkinSyntaxHighlighter(JsonGherkinKeywordProvider.getKeywordProvider())
     }
 
-    override fun getDemoText() =
-        """Feature Cucumber+
-             Scenario: Creating an empty order
+    override fun getDemoText() ="""
+        Feature Cucumber+
+            Scenario: Creating an empty order
                Given Romeo who wants to buy a drink
                When <OK>an order is declared for Juliette</OK>
-               Then <KO>there is 0 cocktails in the order</KO>""".trimIndent()
+               Then <KO>there is 0 cocktails in the order</KO>
+               But <IG>but there is nothing left</IG>
+            
+            Scenario Outline: Sending a message with an order
+               When an order is declared for <to>
+               Then a message saying <message> is added
+               And the ticket must say <expected>
+               Examples:
+                 | to       | message     | expected                            |
+                 | <OK>Juliette</OK> | <KO>Wanna chat?</KO> | <IG>From Romeo to Juliette: Wanna chat?</IG> |
+                 | <OK>Juliette</OK> | <KO>Wanna chat?</KO> | <IG>From Romeo to Jerry: Hei!</IG>           |
+                 | <OK>Jerry</OK>    | <OK>Hei!</OK>        | <KO>From Romeo to Jerry: Hei!</KO>           |
+               """.trimIndent()
 
     override fun getAttributeDescriptors()
-        = listOf(AttributesDescriptor("Test is OK", TEST_OK),
-                AttributesDescriptor("Test is KO", TEST_KO)).toTypedArray()
+        = listOf(AttributesDescriptor("Test passed", TEST_OK),
+                AttributesDescriptor("Test deffect", TEST_KO),
+                AttributesDescriptor("Test ignored", TEST_IGNORED)).toTypedArray()
 
     override fun getAdditionalHighlightingTagToDescriptorMap()
         = mapOf("OK" to TEST_OK,
-                "KO" to TEST_KO)
+                "KO" to TEST_KO,
+                "IG" to TEST_IGNORED)
 
     override fun getColorDescriptors(): Array<ColorDescriptor>
         = ColorDescriptor.EMPTY_ARRAY

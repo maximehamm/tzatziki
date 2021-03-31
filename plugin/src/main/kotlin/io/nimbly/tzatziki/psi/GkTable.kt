@@ -189,3 +189,8 @@ fun GherkinTable.findCellsInRange(range: TextRange, withHeader: Boolean): Pair<D
 
     return dimension to found
 }
+
+fun GherkinTable.findColumnByName(name: String)
+    = headerRow
+        ?.psiCells
+        ?.indexOfFirst { it.text.trim() == name }

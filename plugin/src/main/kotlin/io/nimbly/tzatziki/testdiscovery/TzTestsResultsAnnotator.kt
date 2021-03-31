@@ -35,15 +35,24 @@ class TzTestsResultsAnnotator : Annotator {
             .filter { it.test.isDefect || it.test.isPassed }
             .forEach { step: TzTestStep ->
 
-            holder.newAnnotation(HighlightSeverity.INFORMATION, "Test error")
-                .range(step.element.bestRange())
-                .tooltip(step.test.tooltip())
-                .textAttributes(
-                    if (step.test.isDefect)
-                        TEST_KO
-                    else
-                        TEST_OK)
-                .create()
+                val textKey = when {
+                    step.test.isIgnored -> TEST_IGNORED
+                    step.test.isDefect -> TEST_KO
+                    else -> TEST_OK
+                }
+
+                val tooltip = when {
+                    step.test.isIgnored -> "The test could not be executed"
+                    step.test.isDefect -> step.test.tooltip()
+                    else -> "The test was successful"
+                }
+
+                holder.newAnnotation(HighlightSeverity.INFORMATION,
+                    "Cucumner+")
+                    .range(element.bestRange())
+                    .tooltip(tooltip)
+                    .textAttributes(textKey)
+                    .create()
 
                 try {
                     TzTestRegistry.steps?.remove(step)
@@ -63,4 +72,5 @@ private fun SMTestProxy.tooltip(): String {
 
 val TEST_KO = TextAttributesKey.createTextAttributesKey("CCP_TEST_KO", DefaultLanguageHighlighterColors.STRING)
 val TEST_OK = TextAttributesKey.createTextAttributesKey("CCP_TEST_OK", DefaultLanguageHighlighterColors.STRING)
+val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED", DefaultLanguageHighlighterColors.STRING)
 

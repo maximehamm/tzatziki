@@ -15,4 +15,10 @@
     </value>
   </option>
 
+  <option name="CCP_TEST_IGNORED">
+    <value>
+      <option name="BACKGROUND" value="E4E4E4"/>
+    </value>
+  </option>
+
 </list>

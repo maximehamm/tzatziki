@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.psi
 
+import com.intellij.openapi.util.TextRange
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import java.awt.Point
@@ -32,3 +33,6 @@ val GherkinTableCell.coordinate: Point
         val x = row.psiCells.indexOf(this)
         return Point(x, y)
     }
+
+val GherkinTableCell.fullRange: TextRange
+    get() = TextRange(previousPipe.textOffset+2, nextPipe.textOffset-2)

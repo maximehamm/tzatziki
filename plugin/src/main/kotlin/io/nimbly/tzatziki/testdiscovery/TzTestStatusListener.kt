@@ -20,7 +20,12 @@ import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import io.nimbly.tzatziki.psi.cell
+import io.nimbly.tzatziki.psi.findColumnByName
+import io.nimbly.tzatziki.psi.table
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 class TzTestStatusListener : TestStatusListener() {
 
@@ -37,16 +42,45 @@ class TzTestStatusListener : TestStatusListener() {
             .filter { it.children.isEmpty() }
             .filterIsInstance<SMTestProxy>()
             .filter { it.locationUrl != null }
-            .forEach { step ->
-                val location = step.getLocation(project, GlobalSearchScope.allScope(project))
-                if (location != null) {
-                    val element = location.psiElement.parent
-                    if (element is GherkinPsiElement) {
-                        steps.add(TzTestStep(step, element))
-                    }
-                }
+            .forEach { test ->
+                val testSteps = findTestSteps(test, project)
+                steps.addAll(testSteps)
             }
 
         TzTestRegistry.steps = steps
+    }
+
+    private fun findTestSteps(test: SMTestProxy, project: Project): List<TzTestStep> {
+
+        // Simple step
+        if (!test.parent.name.startsWith("Example #")) {
+
+            val location = test.getLocation(project, GlobalSearchScope.allScope(project))
+            val element = location?.psiElement?.parent
+            if (element is GherkinPsiElement)
+                return listOf(TzTestStep(test, element))
+            else
+                return emptyList()
+        }
+
+        // Step from example
+        val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
+        val row = rowLocation?.psiElement?.parent
+        if (row !is GherkinTableRow)
+            return emptyList()
+
+        val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
+        if (step !is GherkinStep)
+            return emptyList()
+
+        val steps = mutableListOf<TzTestStep>()
+        step.paramsSubstitutions
+            .mapNotNull { row.table.findColumnByName(it) }
+            .map { row.cell(it) }
+            .forEach { cell ->
+                steps.add(TzTestStep(test, cell))
+            }
+
+        return steps
     }
 }

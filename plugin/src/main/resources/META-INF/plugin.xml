@@ -176,11 +176,6 @@
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
             </action>
 
-            <action class="io.nimbly.tzatziki.actions.TzCaptureTestResultsAction"
-                    id="io.nimbly.tzatziki.CaptureTestResults"
-                    text="Toggle Cucumber smart editing">
-            </action>
-
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
 

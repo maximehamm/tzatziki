@@ -29,7 +29,6 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
@@ -117,7 +116,13 @@ val PsiElement.nextPipe: PsiElement
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
 
-fun GherkinPsiElement.bestRange(): TextRange {
+fun PsiElement.bestRange(): TextRange {
+
+    if (this is GherkinTableRow)
+        return textRange
+
+    if (this is GherkinTableCell)
+        return textRange
 
     var i = text.indexOf(" ")
     if (i<0)
