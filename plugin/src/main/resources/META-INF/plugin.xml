@@ -119,13 +119,11 @@
 
         <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
 
-        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
-
-        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
-
-        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
-        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
-        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
+<!--        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>-->
+<!--        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>-->
+<!--        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>-->
+<!--        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>-->
+<!--        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>-->
 
     </extensions>
 
@@ -154,23 +152,23 @@
                     text="Toggle Cucumber smart editing">
             </action>
 
-            <action class="io.nimbly.tzatziki.actions.TableShiftAction"
+            <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
                     id="io.nimbly.tzatziki.ShiftUp"
                     text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
             </action>
-            <action class="io.nimbly.tzatziki.actions.TableShiftAction"
+            <action class="io.nimbly.tzatziki.actions.TableShiftDownAction"
                     id="io.nimbly.tzatziki.ShiftDown"
                     text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN"   >
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
             </action>
 
-            <action class="io.nimbly.tzatziki.actions.TableShiftAction"
+            <action class="io.nimbly.tzatziki.actions.TableShiftLeftAction"
                     id="io.nimbly.tzatziki.ShiftLeft"
                     text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
             </action>
-            <action class="io.nimbly.tzatziki.actions.TableShiftAction"
+            <action class="io.nimbly.tzatziki.actions.TableShiftRightAction"
                     id="io.nimbly.tzatziki.ShiftRight"
                     text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
                 <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>

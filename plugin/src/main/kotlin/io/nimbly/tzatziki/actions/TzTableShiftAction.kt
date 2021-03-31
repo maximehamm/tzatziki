@@ -33,7 +33,12 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
-class TableShiftAction : TzAction() {
+class TableShiftLeftAction : TableShiftAction(LEFT)
+class TableShiftRightAction : TableShiftAction(RIGHT)
+class TableShiftUpAction : TableShiftAction(UP)
+class TableShiftDownAction : TableShiftAction(DOWN)
+
+open class TableShiftAction(private val direction: Direction) : TzAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
 
@@ -42,14 +47,10 @@ class TableShiftAction : TzAction() {
         val editor =  CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
 
         val cell = file.cellAt(offset) ?: return
-        val direction = getDirection(event)
 
         val table = cell.row.table
         editor.shift(table, cell, direction)
     }
-
-    private fun getDirection(event: AnActionEvent)
-        = Direction.valueOf(event.presentation.text.substringAfterLast(" ").toUpperCase())
 
     override fun update(event: AnActionEvent) {
 
@@ -140,7 +141,7 @@ private fun Editor.shift(table: GherkinTable, cell: GherkinTableCell, direction:
 
 }
 
-private enum class Direction { UP, DOWN, LEFT, RIGHT;
+enum class Direction { UP, DOWN, LEFT, RIGHT;
     fun toInt() = if (this == UP || this == LEFT) -1 else +1
 }
 

@@ -18,16 +18,16 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '3.0.0'
+    version '2.4.1'
 }
 
 ext {
+     //    <li><b>3.0</b> Run test then add colors according to tests results</li>
     changeNotes = """
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul>
-         <li><b>3.0</b> Run test then add colors according to tests results</li>
          <li><b>2.4</b> Export PDF landscape or portrait</li>
          <li><b>2.3</b> Ask for review plugin or report bugs and suggestions</li>
          <li><b>2.2</b> More customization for PDF summary</li>
