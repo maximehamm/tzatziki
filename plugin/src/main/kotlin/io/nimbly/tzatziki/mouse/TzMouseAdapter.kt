@@ -21,7 +21,7 @@ import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import io.nimbly.tzatziki.SMART_EDIT
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.JavaUtil
 import io.nimbly.tzatziki.util.findTableAt
@@ -34,7 +34,7 @@ import java.awt.event.MouseEvent
 
 fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: Int): Boolean {
 
-    if (!SMART_EDIT)
+    if (!TOGGLE_CUCUMBER_PL)
         return false
 
     val cell = table.cellAt(offset) ?: return false
@@ -159,5 +159,5 @@ object TzSelectionModeManager {
 }
 
 private val EditorMouseEvent.gherkin: Boolean
-    get() = SMART_EDIT
+    get() = TOGGLE_CUCUMBER_PL
         && GherkinFileType.INSTANCE == this.editor.getFile()?.fileType

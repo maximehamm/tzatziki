@@ -22,6 +22,7 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.editor.TEST_IGNORED
 import io.nimbly.tzatziki.editor.TEST_KO
 import io.nimbly.tzatziki.editor.TEST_OK
@@ -38,6 +39,9 @@ import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableRowImpl
 class TzTestsResultsAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+
+        if (!TOGGLE_CUCUMBER_PL)
+            return
 
         //println("\n#### Element = ${element.javaClass.simpleName} === ${element.text}")
         if (element is GherkinStep) {

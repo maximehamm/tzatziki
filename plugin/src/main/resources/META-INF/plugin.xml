@@ -149,7 +149,7 @@
 
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"
                     id="io.nimbly.tzatziki.ToggleTzatziki"
-                    text="Toggle Cucumber smart editing">
+                    text="Toggle Cucumber+">
             </action>
 
             <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"

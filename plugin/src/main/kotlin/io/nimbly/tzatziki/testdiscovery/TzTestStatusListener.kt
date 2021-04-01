@@ -20,6 +20,7 @@ import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
 import io.nimbly.tzatziki.psi.table
@@ -31,6 +32,9 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 class TzTestStatusListener : TestStatusListener() {
 
     override fun testSuiteFinished(root: AbstractTestProxy?, project: Project?) {
+
+        if (!TOGGLE_CUCUMBER_PL)
+            return
 
         if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
             return

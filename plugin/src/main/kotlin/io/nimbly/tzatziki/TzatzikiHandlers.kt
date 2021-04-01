@@ -56,5 +56,5 @@ class TzTypedHandler : TypedHandlerDelegate() {
     }
 
     private val PsiFile.gherkin: Boolean
-        get() = SMART_EDIT && fileType == GherkinFileType.INSTANCE
+        get() = TOGGLE_CUCUMBER_PL && fileType == GherkinFileType.INSTANCE
 }
