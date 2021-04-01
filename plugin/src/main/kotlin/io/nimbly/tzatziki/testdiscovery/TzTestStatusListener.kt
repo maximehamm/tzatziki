@@ -23,6 +23,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
 import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.util.isExample
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
@@ -58,7 +59,7 @@ class TzTestStatusListener : TestStatusListener() {
             steps[element] = test
 
         // Step from example
-        if (test.parent.isExample()) {
+        if (test.parent.isExample) {
 
             val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
             val row = rowLocation?.psiElement?.parent
@@ -79,9 +80,6 @@ class TzTestStatusListener : TestStatusListener() {
 
         return steps
     }
-
-    private fun SMTestProxy.isExample()
-        = EXAMPLE_REGEX.find(name) != null
 
     override fun testSuiteFinished(root: AbstractTestProxy?) {
     }
