@@ -35,28 +35,29 @@ class TzTestStatusListener : TestStatusListener() {
         if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
             return
 
-        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
+        val results = TzTestResult()
+
         root.allTests
             .filter { it.children.isEmpty() }
             .filterIsInstance<SMTestProxy>()
             .filter { it.locationUrl != null }
             .forEach { test ->
-                val testSteps = findTestSteps(test, project)
-                steps.putAll(testSteps)
+                val r = findTestSteps(test, project)
+                results.putAll(r)
             }
 
-        TzTestRegistry.tests = steps
+        TzTestRegistry.refresh(results)
     }
 
-    private fun findTestSteps(test: SMTestProxy, project: Project): Map<GherkinPsiElement, SMTestProxy> {
+    private fun findTestSteps(test: SMTestProxy, project: Project): TzTestResult {
 
-        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
+        val results = TzTestResult()
 
         // Simple step
         val location = test.getLocation(project, GlobalSearchScope.allScope(project))
         val element = location?.psiElement?.parent
         if (element is GherkinPsiElement)
-            steps[element] = test
+            results[element] = test
 
         // Step from example
         if (test.parent.isExample) {
@@ -64,21 +65,21 @@ class TzTestStatusListener : TestStatusListener() {
             val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
             val row = rowLocation?.psiElement?.parent
             if (row !is GherkinTableRow)
-                return steps
+                return results
 
             val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
             if (step !is GherkinStep)
-                return steps
+                return results
 
             step.paramsSubstitutions
                 .mapNotNull { row.table.findColumnByName(it) }
                 .map { row.cell(it) }
                 .forEach { cell ->
-                    steps[cell] = test
+                    results[cell] = test
                 }
         }
 
-        return steps
+        return results
     }
 
     override fun testSuiteFinished(root: AbstractTestProxy?) {

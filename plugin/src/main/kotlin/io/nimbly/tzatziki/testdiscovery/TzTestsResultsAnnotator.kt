@@ -44,16 +44,16 @@ class TzTestsResultsAnnotator : Annotator {
     }
 
     private fun annotateStep(step: GherkinStep, holder: AnnotationHolder) {
-        val tests = TzTestRegistry.tests ?: return
-        val test = tests[step] ?: return
+        val results = TzTestRegistry.getResults() ?: return
+        val test = results[step] ?: return
         doAnnotate(test, step, holder)
     }
 
     private fun annotateRow(row: GherkinTableRow, holder: AnnotationHolder) {
-        val tests = TzTestRegistry.tests ?: return
+        val results = TzTestRegistry.getResults() ?: return
         row.children
             .filterIsInstance<GherkinTableCell>()
-            .map { it to tests[it] }
+            .map { it to results[it] }
             .toMap()
             .filterValuesNotNull()
             .forEach { (cell, test) ->
@@ -74,7 +74,7 @@ class TzTestsResultsAnnotator : Annotator {
             .textAttributes(textKey)
             .create()
         try {
-            TzTestRegistry.tests?.remove(element)
+            TzTestRegistry.getResults()?.remove(element)
         } catch (e: Exception) {
             //In case if concurrent access for example
         }

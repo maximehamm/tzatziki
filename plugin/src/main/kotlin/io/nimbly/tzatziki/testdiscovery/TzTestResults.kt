@@ -19,7 +19,36 @@ import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 
 object TzTestRegistry {
-    var tests: MutableMap<GherkinPsiElement, SMTestProxy>? = null
+
+    private var results: TzTestResult? = null
+
+    fun refresh(results: TzTestResult) {
+        this.results = results
+    }
+
+    fun getResults()
+        = results
+}
+
+class TzTestResult {
+
+    internal val tests: MutableMap<GherkinPsiElement, SMTestProxy> = mutableMapOf()
+
+    fun putAll(results: TzTestResult) {
+        tests.putAll(results.tests)
+    }
+
+    operator fun set(element: GherkinPsiElement, value: SMTestProxy) {
+        tests[element] = value
+    }
+
+    operator fun get(element: GherkinPsiElement): SMTestProxy? {
+        return tests[element]
+    }
+
+    fun remove(element: GherkinPsiElement) {
+        tests.remove(element)
+    }
 }
 
 val EXAMPLE_REGEX = " #[0-9]+$".toRegex()
