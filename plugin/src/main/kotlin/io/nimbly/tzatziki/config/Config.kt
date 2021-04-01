@@ -65,9 +65,7 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
     var rootConfig = root.findChild(CONFIG_FOLDER)
     if (rootConfig == null) {
 
-        rootConfig = root.createChildDirectory(path, CONFIG_FOLDER)
-        rootConfig.copyDefaultsToFolder(project)
-
+        rootConfig = root.copyDefaultsToFolder(path, project)
         project.notification("Configuration <a href='PROP'>files</a> were created") {
             PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
         }
@@ -162,13 +160,15 @@ private fun findRootCustomPropertiesFile(origin: PsiElement): PropertiesFile? =
         ?.getFile(origin.project)
         ?.let { if (it is PropertiesFile) it else null}
 
-private fun VirtualFile.copyDefaultsToFolder(project: Project) {
-    WriteCommandAction.runWriteCommandAction(project) {
+private fun VirtualFile.copyDefaultsToFolder(path: VirtualFile, project: Project): VirtualFile {
+    return WriteCommandAction.runWriteCommandAction<VirtualFile>(project) {
+        val dir = createChildDirectory(path, CONFIG_FOLDER)
         ALL_DEFAULTS
             .forEach {
-                if (findChild(it) == null)
-                    addFrom(it)
-             }
+                if (dir.findChild(it) == null)
+                    dir.addFrom(it)
+            }
+        return@runWriteCommandAction dir
     }
 }
 
