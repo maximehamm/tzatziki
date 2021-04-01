@@ -49,37 +49,39 @@ class TzTestStatusListener : TestStatusListener() {
 
     private fun findTestSteps(test: SMTestProxy, project: Project): Map<GherkinPsiElement, SMTestProxy> {
 
-        // Simple step
-        if (EXAMPLE_REGEX.find(test.parent.name) == null) {
+        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
 
-            val location = test.getLocation(project, GlobalSearchScope.allScope(project))
-            val element = location?.psiElement?.parent
-            if (element is GherkinPsiElement)
-                return mapOf(element to test)
-            else
-                return emptyMap()
-        }
+        // Simple step
+        val location = test.getLocation(project, GlobalSearchScope.allScope(project))
+        val element = location?.psiElement?.parent
+        if (element is GherkinPsiElement)
+            steps[element] = test
 
         // Step from example
-        val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
-        val row = rowLocation?.psiElement?.parent
-        if (row !is GherkinTableRow)
-            return emptyMap()
+        if (test.parent.isExample()) {
 
-        val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
-        if (step !is GherkinStep)
-            return emptyMap()
+            val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
+            val row = rowLocation?.psiElement?.parent
+            if (row !is GherkinTableRow)
+                return steps
 
-        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
-        step.paramsSubstitutions
-            .mapNotNull { row.table.findColumnByName(it) }
-            .map { row.cell(it) }
-            .forEach { cell ->
-                steps[cell] = test
-            }
+            val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
+            if (step !is GherkinStep)
+                return steps
+
+            step.paramsSubstitutions
+                .mapNotNull { row.table.findColumnByName(it) }
+                .map { row.cell(it) }
+                .forEach { cell ->
+                    steps[cell] = test
+                }
+        }
 
         return steps
     }
+
+    private fun SMTestProxy.isExample()
+        = EXAMPLE_REGEX.find(name) != null
 
     override fun testSuiteFinished(root: AbstractTestProxy?) {
     }
