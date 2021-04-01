@@ -19,8 +19,12 @@ import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import io.nimbly.tzatziki.editor.TEST_IGNORED
+import io.nimbly.tzatziki.editor.TEST_KO
+import io.nimbly.tzatziki.editor.TEST_OK
 import io.nimbly.tzatziki.pdf.escape
 import io.nimbly.tzatziki.psi.fullRange
 import io.nimbly.tzatziki.util.filterValuesNotNull
@@ -45,8 +49,7 @@ class TzTestsResultsAnnotator : Annotator {
 
     private fun annotateStep(step: GherkinStep, holder: AnnotationHolder) {
         val results = TzTestRegistry.getResults() ?: return
-        val test = results[step] ?: return
-        doAnnotate(test, step, holder)
+        doAnnotate(results[step], step, holder)
     }
 
     private fun annotateRow(row: GherkinTableRow, holder: AnnotationHolder) {
@@ -56,23 +59,56 @@ class TzTestsResultsAnnotator : Annotator {
             .map { it to results[it] }
             .toMap()
             .filterValuesNotNull()
-            .forEach { (cell, test) ->
-                doAnnotate(test, cell, holder)
+            .forEach { (cell, tests) ->
+                doAnnotate(tests, cell, holder)
             }
     }
 
-    private fun doAnnotate(test: SMTestProxy, element: GherkinPsiElement, holder: AnnotationHolder) {
-        val textKey = test.textAttribut
-        val tooltip = when {
-            test.isIgnored -> "The test could not be executed"
-            test.isDefect -> test.tooltip()
-            else -> "The test was successful"
+    private fun doAnnotate(tests: List<SMTestProxy>, element: GherkinPsiElement, holder: AnnotationHolder) {
+
+        if (tests.isEmpty()) return
+        val what = if (element is GherkinTableCell) "step" else "example"
+        val textKey: TextAttributesKey
+        val tooltip: String
+        if (tests.size == 1) {
+
+            // Simple step or a cell
+            val test = tests.first()
+            textKey = test.textAttribut
+            tooltip = when {
+                test.isIgnored -> "The $what <u>could not be executed</u>"
+                test.isDefect -> test.tooltip()
+                else -> "The $what was <u>successful</u>"
+            }
         }
+        else {
+
+            // Step having examples
+            val ignored = tests.count { it.isIgnored }
+            val ko = tests.count { it.isDefect && !it.isIgnored }
+            val ok = tests.size - ignored - ko
+            textKey = when {
+                ignored == 0 && ko == 0 -> TEST_OK
+                ko > 0 -> TEST_KO
+                else -> TEST_IGNORED
+            }
+            tooltip =
+                if (textKey == TEST_OK)
+                    "The ${what}${if (tests.size>1) "s" else ""} were all ${tests.size} <u>successful</u>"
+                else
+                    "$ko ${what}${if (ko>1) "s" else ""} with <u>failure</u>,<br/>" +
+                    "$ignored ${what}${if (ignored>1) "s" else ""} <u>not executed</u>,<br/>" +
+                    "$ok ${what}${if (ok>1) "s" else ""} <u>successful</u>"
+        }
+
+        // Add annotation
         holder.newAnnotation(HighlightSeverity.INFORMATION, "Cucumber+")
             .range(element.bestRange())
             .tooltip(tooltip)
             .textAttributes(textKey)
             .create()
+
+        // Clear registry
         try {
             TzTestRegistry.getResults()?.remove(element)
         } catch (e: Exception) {

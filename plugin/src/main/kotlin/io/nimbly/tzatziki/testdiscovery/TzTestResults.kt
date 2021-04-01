@@ -32,18 +32,27 @@ object TzTestRegistry {
 
 class TzTestResult {
 
-    internal val tests: MutableMap<GherkinPsiElement, SMTestProxy> = mutableMapOf()
+    internal val tests = mutableMapOf<GherkinPsiElement, MutableList<SMTestProxy>>()
 
     fun putAll(results: TzTestResult) {
-        tests.putAll(results.tests)
+        results.tests.forEach { (elt, tests) ->
+            tests.forEach { t ->
+                this[elt] = t
+            }
+        }
     }
 
     operator fun set(element: GherkinPsiElement, value: SMTestProxy) {
-        tests[element] = value
+        var l = tests[element]
+        if (l == null) {
+            l = mutableListOf()
+            tests[element] = l
+        }
+        l.add(value)
     }
 
-    operator fun get(element: GherkinPsiElement): SMTestProxy? {
-        return tests[element]
+    operator fun get(element: GherkinPsiElement): List<SMTestProxy> {
+        return tests[element] ?: emptyList()
     }
 
     fun remove(element: GherkinPsiElement) {
