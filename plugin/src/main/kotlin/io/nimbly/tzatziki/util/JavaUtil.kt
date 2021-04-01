@@ -55,4 +55,8 @@ val NOW: String
 val DATE_FORMAT: DateTimeFormatter
     get() = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
+@Suppress("UNCHECKED_CAST")
+fun <K, V> Map<K, V?>.filterValuesNotNull()
+    = filterValues { it != null } as Map<K, V>
+
 class TzatzikiException(message: String): Exception(message)

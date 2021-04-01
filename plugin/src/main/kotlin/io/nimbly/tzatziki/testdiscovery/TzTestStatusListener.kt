@@ -20,67 +20,72 @@ import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
 import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.util.isExample
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 class TzTestStatusListener : TestStatusListener() {
 
-    override fun testSuiteFinished(root: AbstractTestProxy?) {
-    }
-
     override fun testSuiteFinished(root: AbstractTestProxy?, project: Project?) {
+
+        if (!TOGGLE_CUCUMBER_PL)
+            return
 
         if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
             return
 
-        val steps = mutableListOf<TzTestStep>()
+        val results = TzTestResult()
+
         root.allTests
             .filter { it.children.isEmpty() }
             .filterIsInstance<SMTestProxy>()
             .filter { it.locationUrl != null }
             .forEach { test ->
-                val testSteps = findTestSteps(test, project)
-                steps.addAll(testSteps)
+                val r = findTestSteps(test, project)
+                results.putAll(r)
             }
 
-        TzTestRegistry.steps = steps
+        TzTestRegistry.refresh(results)
     }
 
-    private fun findTestSteps(test: SMTestProxy, project: Project): List<TzTestStep> {
+    private fun findTestSteps(test: SMTestProxy, project: Project): TzTestResult {
+
+        val results = TzTestResult()
 
         // Simple step
-        if (!test.parent.name.startsWith("Example #")) {
-
-            val location = test.getLocation(project, GlobalSearchScope.allScope(project))
-            val element = location?.psiElement?.parent
-            if (element is GherkinPsiElement)
-                return listOf(TzTestStep(test, element))
-            else
-                return emptyList()
-        }
+        val location = test.getLocation(project, GlobalSearchScope.allScope(project))
+        val element = location?.psiElement?.parent
+        if (element is GherkinPsiElement)
+            results[element] = test
 
         // Step from example
-        val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
-        val row = rowLocation?.psiElement?.parent
-        if (row !is GherkinTableRow)
-            return emptyList()
+        if (test.parent.isExample) {
 
-        val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
-        if (step !is GherkinStep)
-            return emptyList()
+            val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
+            val row = rowLocation?.psiElement?.parent
+            if (row !is GherkinTableRow)
+                return results
 
-        val steps = mutableListOf<TzTestStep>()
-        step.paramsSubstitutions
-            .mapNotNull { row.table.findColumnByName(it) }
-            .map { row.cell(it) }
-            .forEach { cell ->
-                steps.add(TzTestStep(test, cell))
-            }
+            val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
+            if (step !is GherkinStep)
+                return results
 
-        return steps
+            step.paramsSubstitutions
+                .mapNotNull { row.table.findColumnByName(it) }
+                .map { row.cell(it) }
+                .forEach { cell ->
+                    results[cell] = test
+                }
+        }
+
+        return results
+    }
+
+    override fun testSuiteFinished(root: AbstractTestProxy?) {
     }
 }

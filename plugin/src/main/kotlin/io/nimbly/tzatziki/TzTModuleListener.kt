@@ -36,7 +36,7 @@ import io.nimbly.tzatziki.psi.format
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
-var SMART_EDIT : Boolean = true
+var TOGGLE_CUCUMBER_PL : Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
@@ -161,7 +161,7 @@ class TzTModuleListener : ProjectManagerListener {
 
 private val DataContext.gherkin: Boolean
     get() =
-        SMART_EDIT && GherkinFileType.INSTANCE == CommonDataKeys.PSI_FILE.getData(this)?.fileType
+        TOGGLE_CUCUMBER_PL && GherkinFileType.INSTANCE == CommonDataKeys.PSI_FILE.getData(this)?.fileType
 
 
 private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandler) {

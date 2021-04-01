@@ -15,16 +15,19 @@
 
 package io.nimbly.tzatziki.editor
 
+import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
+import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
 import icons.ActionIcons.CUCUMBER_PLUS_16
-import io.nimbly.tzatziki.testdiscovery.TEST_IGNORED
-import io.nimbly.tzatziki.testdiscovery.TEST_KO
-import io.nimbly.tzatziki.testdiscovery.TEST_OK
 import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
 import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
+
+val TEST_KO = TextAttributesKey.createTextAttributesKey("CCP_TEST_KO", DefaultLanguageHighlighterColors.STRING)
+val TEST_OK = TextAttributesKey.createTextAttributesKey("CCP_TEST_OK", DefaultLanguageHighlighterColors.STRING)
+val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED", DefaultLanguageHighlighterColors.STRING)
 
 class TzColorSettingsPage : ColorSettingsPage {
 

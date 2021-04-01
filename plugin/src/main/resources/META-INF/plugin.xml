@@ -23,6 +23,15 @@
        <b>A better user expérience to edit and print Cucumber features</b><br/>
        <br/>
 
+       <b>Tests results anotator</></b><br/>
+       <ul>
+          <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_b1cc840f-57a1-4119-8473-4e715f1c9a9f"
+                 alt="Tzatziki" width="419" height="233"></p>
+          <li>Easily locate failed steps</li>
+          <li>Customize colors and font style from Settings > Color Scheme > Cucumber+</li>
+       </ul>
+
+       <br/><br/>
        <b>Print features to PDF</></b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
@@ -119,11 +128,11 @@
 
         <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
 
-<!--        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>-->
-<!--        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>-->
-<!--        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>-->
-<!--        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>-->
-<!--        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>-->
+        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
+        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
+        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
 
     </extensions>
 
@@ -149,7 +158,7 @@
 
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"
                     id="io.nimbly.tzatziki.ToggleTzatziki"
-                    text="Toggle Cucumber smart editing">
+                    text="Toggle Cucumber+">
             </action>
 
             <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
