@@ -22,5 +22,4 @@ object TzTestRegistry {
     var tests: MutableMap<GherkinPsiElement, SMTestProxy>? = null
 }
 
-//class TzTest(val test: SMTestProxy,
-//             val element: GherkinPsiElement)
+val EXAMPLE_REGEX = " #[0-9]+$".toRegex()

@@ -29,9 +29,6 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 class TzTestStatusListener : TestStatusListener() {
 
-    override fun testSuiteFinished(root: AbstractTestProxy?) {
-    }
-
     override fun testSuiteFinished(root: AbstractTestProxy?, project: Project?) {
 
         if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
@@ -53,7 +50,7 @@ class TzTestStatusListener : TestStatusListener() {
     private fun findTestSteps(test: SMTestProxy, project: Project): Map<GherkinPsiElement, SMTestProxy> {
 
         // Simple step
-        if (!test.parent.name.startsWith("Example #")) {
+        if (EXAMPLE_REGEX.find(test.parent.name) == null) {
 
             val location = test.getLocation(project, GlobalSearchScope.allScope(project))
             val element = location?.psiElement?.parent
@@ -82,5 +79,8 @@ class TzTestStatusListener : TestStatusListener() {
             }
 
         return steps
+    }
+
+    override fun testSuiteFinished(root: AbstractTestProxy?) {
     }
 }
