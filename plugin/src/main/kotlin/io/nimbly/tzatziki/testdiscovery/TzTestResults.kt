@@ -19,8 +19,8 @@ import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 
 object TzTestRegistry {
-    var steps: MutableList<TzTestStep>? = null
+    var tests: MutableMap<GherkinPsiElement, SMTestProxy>? = null
 }
 
-class TzTestStep(val test: SMTestProxy,
-                 val element: GherkinPsiElement)
+//class TzTest(val test: SMTestProxy,
+//             val element: GherkinPsiElement)

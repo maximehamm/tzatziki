@@ -35,4 +35,4 @@ val GherkinTableCell.coordinate: Point
     }
 
 val GherkinTableCell.fullRange: TextRange
-    get() = TextRange(previousPipe.textOffset+2, nextPipe.textOffset-2)
+    get() = TextRange(previousPipe.textOffset+1, nextPipe.textOffset)

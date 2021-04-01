@@ -19,7 +19,6 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -115,23 +114,3 @@ val PsiElement.nextPipe: PsiElement
 
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
-
-fun PsiElement.bestRange(): TextRange {
-
-    if (this is GherkinTableRow)
-        return textRange
-
-    if (this is GherkinTableCell)
-        return textRange
-
-    var i = text.indexOf(" ")
-    if (i<0)
-        return textRange
-
-    val t = text.substring(i)
-    val j = t.indexOfFirst { it != ' ' }
-    if (j>0)
-        i += j
-
-    return TextRange(textRange.startOffset + i, textRange.endOffset)
-}

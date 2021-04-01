@@ -119,11 +119,11 @@
 
         <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
 
-<!--        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>-->
-<!--        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>-->
-<!--        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>-->
-<!--        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>-->
-<!--        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>-->
+        <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
+        <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
+        <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
 
     </extensions>
 

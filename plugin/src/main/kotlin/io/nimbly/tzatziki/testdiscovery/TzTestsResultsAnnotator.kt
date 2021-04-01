@@ -21,46 +21,96 @@ import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import io.nimbly.tzatziki.pdf.escape
-import io.nimbly.tzatziki.psi.bestRange
+import io.nimbly.tzatziki.psi.fullRange
+import io.nimbly.tzatziki.util.filterValuesNotNull
+import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableRowImpl
 
 class TzTestsResultsAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
 
-        val steps = TzTestRegistry.steps ?: return
-        steps
-            .filter { it.element == element }
-            .filter { it.test.isDefect || it.test.isPassed }
-            .forEach { step: TzTestStep ->
+        //println("\n#### Element = ${element.javaClass.simpleName} === ${element.text}")
+        if (element is GherkinStep) {
+            annotateStep(element, holder)
+        } else if (element is GherkinTableRowImpl) {
+            annotateRow(element, holder)
+        }
+    }
 
-                val textKey = when {
-                    step.test.isIgnored -> TEST_IGNORED
-                    step.test.isDefect -> TEST_KO
-                    else -> TEST_OK
-                }
+    private fun annotateStep(step: GherkinStep, holder: AnnotationHolder) {
 
-                val tooltip = when {
-                    step.test.isIgnored -> "The test could not be executed"
-                    step.test.isDefect -> step.test.tooltip()
-                    else -> "The test was successful"
-                }
+        val tests = TzTestRegistry.tests ?: return
+        val test = tests[step] ?: return
 
-                holder.newAnnotation(HighlightSeverity.INFORMATION,
-                    "Cucumner+")
-                    .range(element.bestRange())
-                    .tooltip(tooltip)
-                    .textAttributes(textKey)
-                    .create()
+        doAnnotate(test, step, holder)
+    }
 
-                try {
-                    TzTestRegistry.steps?.remove(step)
-                } catch (e: Exception) {
-                    //In case if concurrent access
-                }
+    private fun annotateRow(row: GherkinTableRow, holder: AnnotationHolder) {
+
+        val tests = TzTestRegistry.tests ?: return
+        row.children
+            .filterIsInstance<GherkinTableCell>()
+            .map { it to tests[it] }
+            .toMap()
+            .filterValuesNotNull()
+            .forEach { (cell, test) ->
+                doAnnotate(test, cell, holder)
             }
     }
+
+    private fun doAnnotate(test: SMTestProxy, element: GherkinPsiElement, holder: AnnotationHolder) {
+
+        val textKey = when {
+            test.isIgnored -> TEST_IGNORED
+            test.isDefect -> TEST_KO
+            else -> TEST_OK
+        }
+        val tooltip = when {
+            test.isIgnored -> "The test could not be executed"
+            test.isDefect -> test.tooltip()
+            else -> "The test was successful"
+        }
+        holder.newAnnotation(
+            HighlightSeverity.INFORMATION,
+            "Cucumber+"
+        )
+            .range(element.bestRange())
+            .tooltip(tooltip)
+            .textAttributes(textKey)
+            .create()
+        try {
+            TzTestRegistry.tests?.remove(element)
+        } catch (e: Exception) {
+            //In case if concurrent access
+        }
+    }
+}
+
+private fun PsiElement.bestRange(): TextRange {
+
+    if (this is GherkinTableRow)
+        return textRange
+
+    if (this is GherkinTableCell)
+        return fullRange
+
+    var i = text.indexOf(" ")
+    if (i<0)
+        return textRange
+
+    val t = text.substring(i)
+    val j = t.indexOfFirst { it != ' ' }
+    if (j>0)
+        i += j
+
+    return TextRange(textRange.startOffset + i, textRange.endOffset)
 }
 
 private fun SMTestProxy.tooltip(): String {

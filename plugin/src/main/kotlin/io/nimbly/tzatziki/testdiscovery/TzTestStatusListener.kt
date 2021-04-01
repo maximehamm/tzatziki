@@ -37,20 +37,20 @@ class TzTestStatusListener : TestStatusListener() {
         if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
             return
 
-        val steps = mutableListOf<TzTestStep>()
+        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
         root.allTests
             .filter { it.children.isEmpty() }
             .filterIsInstance<SMTestProxy>()
             .filter { it.locationUrl != null }
             .forEach { test ->
                 val testSteps = findTestSteps(test, project)
-                steps.addAll(testSteps)
+                steps.putAll(testSteps)
             }
 
-        TzTestRegistry.steps = steps
+        TzTestRegistry.tests = steps
     }
 
-    private fun findTestSteps(test: SMTestProxy, project: Project): List<TzTestStep> {
+    private fun findTestSteps(test: SMTestProxy, project: Project): Map<GherkinPsiElement, SMTestProxy> {
 
         // Simple step
         if (!test.parent.name.startsWith("Example #")) {
@@ -58,27 +58,27 @@ class TzTestStatusListener : TestStatusListener() {
             val location = test.getLocation(project, GlobalSearchScope.allScope(project))
             val element = location?.psiElement?.parent
             if (element is GherkinPsiElement)
-                return listOf(TzTestStep(test, element))
+                return mapOf(element to test)
             else
-                return emptyList()
+                return emptyMap()
         }
 
         // Step from example
         val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
         val row = rowLocation?.psiElement?.parent
         if (row !is GherkinTableRow)
-            return emptyList()
+            return emptyMap()
 
         val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
         if (step !is GherkinStep)
-            return emptyList()
+            return emptyMap()
 
-        val steps = mutableListOf<TzTestStep>()
+        val steps = mutableMapOf<GherkinPsiElement, SMTestProxy>()
         step.paramsSubstitutions
             .mapNotNull { row.table.findColumnByName(it) }
             .map { row.cell(it) }
             .forEach { cell ->
-                steps.add(TzTestStep(test, cell))
+                steps[cell] = test
             }
 
         return steps
