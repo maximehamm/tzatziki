@@ -147,8 +147,13 @@ private fun PsiElement.bestRange(): TextRange {
 }
 
 private fun SMTestProxy.tooltip(): String {
+    val stacktrace = stacktrace
     var t = stacktrace ?: return "Cucumber test failure"
     t = t.substringBefore("\n")
     t = t.replaceFirst("^(\\w*\\.)*\\w*: ".toRegex(), "")
-    return "<html>${t.escape()}</html>"
+    t = t.escape()
+    return """
+        <html>$t<br/>
+            <br/>${stacktrace.escape()}
+        </html>""".trimIndent()
 }
