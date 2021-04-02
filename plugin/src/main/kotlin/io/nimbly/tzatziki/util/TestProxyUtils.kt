@@ -17,10 +17,13 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.project.Project
+import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.tzatziki.editor.TEST_IGNORED
 import io.nimbly.tzatziki.editor.TEST_KO
 import io.nimbly.tzatziki.editor.TEST_OK
-import io.nimbly.tzatziki.testdiscovery.EXAMPLE_REGEX
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 val SMTestProxy.textAttribut: TextAttributesKey
     get() {
@@ -34,5 +37,8 @@ val SMTestProxy.textAttribut: TextAttributesKey
 val SMTestProxy.index get()
     = parent.children.indexOf(this)
 
-val SMTestProxy.isExample get()
-    = EXAMPLE_REGEX.find(name) != null
+fun SMTestProxy.isExample(project: Project): Boolean {
+    val p1 = getLocation(project, GlobalSearchScope.allScope(project))?.psiElement ?: return false
+    return (p1 is LeafPsiElement
+            && p1.parent is GherkinTableRow)
+}

@@ -64,7 +64,7 @@ class TzTestStatusListener : TestStatusListener() {
             results[element] = test
 
         // Step from example
-        if (test.parent.isExample) {
+        if (test.parent.isExample(project)) {
 
             val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
             val row = rowLocation?.psiElement?.parent
