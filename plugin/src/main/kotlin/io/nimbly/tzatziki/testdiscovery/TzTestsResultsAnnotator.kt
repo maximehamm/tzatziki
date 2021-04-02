@@ -119,7 +119,7 @@ class TzTestsResultsAnnotator : Annotator {
             .range(element.bestRange())
             .tooltip(tooltip)
             .textAttributes(textKey)
-        if (stacktrace !=null)
+        if (!stacktrace.isNullOrEmpty())
             a.newFix(PrintStackTraceFix(element, stacktrace)).registerFix()
         a.create()
 
@@ -158,7 +158,10 @@ private fun PsiElement.bestRange(): TextRange {
 }
 
 private fun SMTestProxy.tooltip(): String {
-    var t = this.stacktrace ?: return "Cucumber test failure"
+    var t = this.stacktrace
+    if (t.isNullOrBlank())
+        return "Cucumber test failure"
+
     t = t.substringBefore("\n")
     t = t.replaceFirst("^(\\w*\\.)*\\w*: ".toRegex(), "")
     t = t.escape()
@@ -175,7 +178,7 @@ private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) :
         startElement: PsiElement,
         endElement: PsiElement) {
 
-        AnalyzeStacktraceUtil.addConsole(project, null, "<Stacktrace>", stacktrace)
+        AnalyzeStacktraceUtil.addConsole(project, null, TZATZIKI_NAME, stacktrace)
     }
 
     override fun getFamilyName() = TZATZIKI_NAME
