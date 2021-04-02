@@ -36,7 +36,7 @@ class TzTestStatusListener : TestStatusListener() {
         if (!TOGGLE_CUCUMBER_PL)
             return
 
-        if (project==null || root==null || root.children.isEmpty() || root.children.first().name != "Cucumber")
+        if (project==null || root==null || root.children.isEmpty())
             return
 
         val results = TzTestResult()
