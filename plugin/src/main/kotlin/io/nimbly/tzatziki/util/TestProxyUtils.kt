@@ -18,6 +18,7 @@ package io.nimbly.tzatziki.util
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.tzatziki.editor.TEST_IGNORED
@@ -38,7 +39,24 @@ val SMTestProxy.index get()
     = parent.children.indexOf(this)
 
 fun SMTestProxy.isExample(project: Project): Boolean {
-    val p1 = getLocation(project, GlobalSearchScope.allScope(project))?.psiElement ?: return false
+    val p1 = findElement(project)
     return (p1 is LeafPsiElement
             && p1.parent is GherkinTableRow)
+}
+
+fun SMTestProxy.findElement(project: Project): PsiElement? {
+    var location = getLocation(project, GlobalSearchScope.allScope(project))
+    if (location == null) {
+
+        // Workaround for path location issue
+        // Example: file://file:///Users/Maxime/Development/projects-temp/temp3/src/test/resources/features//Users/Maxime/Development/projects-temp/temp3/src/test/resources/features/add.feature:12
+        val url = locationUrl
+        if (url?.startsWith("file://file://") == true) {
+            val fake = SMTestProxy(name, isSuite, "file://" + url.substring(14), metainfo, isPreservePresentableName)
+            fake.locator = locator
+            location = fake.getLocation(project, GlobalSearchScope.allScope(project))
+        }
+    }
+
+    return location?.psiElement
 }

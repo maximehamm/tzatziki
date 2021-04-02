@@ -19,11 +19,11 @@ import com.intellij.execution.testframework.AbstractTestProxy
 import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.project.Project
-import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
 import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.util.findElement
 import io.nimbly.tzatziki.util.isExample
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -58,20 +58,18 @@ class TzTestStatusListener : TestStatusListener() {
         val results = TzTestResult()
 
         // Simple step
-        val location = test.getLocation(project, GlobalSearchScope.allScope(project))
-        val element = location?.psiElement?.parent
+        val element = test.findElement(project)?.parent
         if (element is GherkinPsiElement)
             results[element] = test
 
         // Step from example
         if (test.parent.isExample(project)) {
 
-            val rowLocation = test.parent.getLocation(project, GlobalSearchScope.allScope(project))
-            val row = rowLocation?.psiElement?.parent
+            val row = test.parent.findElement(project)?.parent
             if (row !is GherkinTableRow)
                 return results
 
-            val step = test.getLocation(project, GlobalSearchScope.allScope(project))?.psiElement?.parent
+            val step = test.findElement(project)?.parent
             if (step !is GherkinStep)
                 return results
 
