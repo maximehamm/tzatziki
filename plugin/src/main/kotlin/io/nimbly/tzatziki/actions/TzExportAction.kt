@@ -61,10 +61,10 @@ class TzExportAction : AnAction() {
         } catch (e: IndexNotReadyException) {
             DumbService.getInstance(project).showDumbModeNotification("Please wait until index is ready")
         } catch (e: TzatzikiException) {
-            project.notification(e.message ?: "Cucumber+ error !", NotificationType.WARNING)
+            project.notification(e.message ?: "$TZATZIKI_NAME error !", NotificationType.WARNING)
         } catch (e: Exception) {
             e.printStackTrace()
-            project.notification(e.message ?: "Cucumber+ error !", NotificationType.WARNING)
+            project.notification(e.message ?: "$TZATZIKI_NAME error !", NotificationType.WARNING)
         }
     }
 
@@ -86,7 +86,7 @@ class TzExportAction : AnAction() {
         // Ask to use landscape or not
         val selected = showYesNoCancelDialog(project,
             if (files.size == 1) "Exporting one feature to PDF" else "Exporting ${files.size} features to PDF",
-            "Cucumber+",
+            TZATZIKI_NAME,
             "&Cancel", "&Portrait", "&Lanscape", CUCUMBER_PLUS)
         val orientation = when (selected) {
             NO -> "portrait"

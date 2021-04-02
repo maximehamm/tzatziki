@@ -15,19 +15,25 @@
 
 package io.nimbly.tzatziki.testdiscovery
 
+import com.intellij.codeInspection.LocalQuickFixAndIntentionActionOnPsiElement
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.unscramble.AnalyzeStacktraceUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.editor.TEST_IGNORED
 import io.nimbly.tzatziki.editor.TEST_KO
 import io.nimbly.tzatziki.editor.TEST_OK
 import io.nimbly.tzatziki.pdf.escape
 import io.nimbly.tzatziki.psi.fullRange
+import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import io.nimbly.tzatziki.util.filterValuesNotNull
 import io.nimbly.tzatziki.util.textAttribut
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
@@ -74,6 +80,7 @@ class TzTestsResultsAnnotator : Annotator {
         val what = if (element is GherkinTableCell) "step" else "example"
         val textKey: TextAttributesKey
         val tooltip: String
+        val stacktrace: String?
         if (tests.size == 1) {
 
             // Simple step or a cell
@@ -84,6 +91,7 @@ class TzTestsResultsAnnotator : Annotator {
                 test.isDefect -> test.tooltip()
                 else -> "The $what was <u>successful</u>"
             }
+            stacktrace = test.stacktrace
         }
         else {
 
@@ -103,14 +111,17 @@ class TzTestsResultsAnnotator : Annotator {
                     "$ko ${what}${if (ko>1) "s" else ""} with <u>failure</u>,<br/>" +
                     "$ignored ${what}${if (ignored>1) "s" else ""} <u>not executed</u>,<br/>" +
                     "$ok ${what}${if (ok>1) "s" else ""} <u>successful</u>"
+            stacktrace = tests.firstOrNull() { it.stacktrace!=null }?.stacktrace
         }
 
         // Add annotation
-        holder.newAnnotation(HighlightSeverity.INFORMATION, "Cucumber+")
+        val a = holder.newAnnotation(HighlightSeverity.INFORMATION, TZATZIKI_NAME)
             .range(element.bestRange())
             .tooltip(tooltip)
             .textAttributes(textKey)
-            .create()
+        if (stacktrace !=null)
+            a.newFix(PrintStackTraceFix(element, stacktrace)).registerFix()
+        a.create()
 
         // Clear registry
         try {
@@ -147,13 +158,26 @@ private fun PsiElement.bestRange(): TextRange {
 }
 
 private fun SMTestProxy.tooltip(): String {
-    val stacktrace = stacktrace
-    var t = stacktrace ?: return "Cucumber test failure"
+    var t = this.stacktrace ?: return "Cucumber test failure"
     t = t.substringBefore("\n")
     t = t.replaceFirst("^(\\w*\\.)*\\w*: ".toRegex(), "")
     t = t.escape()
-    return """
-        <html>$t<br/>
-            <br/>${stacktrace.escape()}
-        </html>""".trimIndent()
+
+    return "<html>$t</html>"
+}
+
+private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {
+
+    override operator fun invoke(
+        project: Project,
+        file: PsiFile,
+        editor: Editor?,
+        startElement: PsiElement,
+        endElement: PsiElement) {
+
+        AnalyzeStacktraceUtil.addConsole(project, null, "<Stacktrace>", stacktrace)
+    }
+
+    override fun getFamilyName() = TZATZIKI_NAME
+    override fun getText() = "Print stacktrace"
 }

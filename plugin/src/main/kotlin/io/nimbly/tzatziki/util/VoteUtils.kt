@@ -37,7 +37,7 @@ fun askToVote(project: Project) {
 
         // Plugin was updated... 'looks like your ready to vote !
         project.notification(
-            """Thank you for using Cucumber+ !<br/>
+            """Thank you for using $TZATZIKI_NAME !<br/>
                     <table width='100%' cellspacing='0' cellpadding='0'><tr>
                        <td><a href='REVIEW'>Review</a></td>
                        <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>

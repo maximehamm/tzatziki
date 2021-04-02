@@ -27,7 +27,7 @@ fun Project.notification(
     function: ((event: String) -> Any?)? = null) {
 
     getNotificationGroup().createNotification(
-        "Cucumber+", "<html>$text</html>", notificationType) {
+        TZATZIKI_NAME, "<html>$text</html>", notificationType) {
             notification: Notification, event: HyperlinkEvent ->
         if (function!=null)
             function(event.description)

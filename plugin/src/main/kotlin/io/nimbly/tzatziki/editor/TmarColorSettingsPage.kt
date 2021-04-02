@@ -22,6 +22,7 @@ import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
 import icons.ActionIcons.CUCUMBER_PLUS_16
+import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
 import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 
@@ -32,14 +33,14 @@ val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED",
 class TzColorSettingsPage : ColorSettingsPage {
 
     override fun getDisplayName()
-        = "Cucumber+"
+        = TZATZIKI_NAME
 
     override fun getHighlighter(): SyntaxHighlighter {
         return GherkinSyntaxHighlighter(JsonGherkinKeywordProvider.getKeywordProvider())
     }
 
     override fun getDemoText() ="""
-        Feature Cucumber+
+        Feature $TZATZIKI_NAME
             Scenario: Creating an empty order
                Given Romeo who wants to buy a drink
                When <OK>an order is declared for Juliette</OK>
