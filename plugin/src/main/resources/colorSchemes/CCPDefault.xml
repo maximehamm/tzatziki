@@ -21,4 +21,16 @@
     </value>
   </option>
 
+  <option name="CCP_MD_BOLD">
+    <value>
+      <option name="FONT_TYPE" value="1"/>
+    </value>
+  </option>
+
+  <option name="CCP_MD_ITALIC">
+    <value>
+      <option name="FONT_TYPE" value="2"/>
+    </value>
+  </option>
+
 </list>

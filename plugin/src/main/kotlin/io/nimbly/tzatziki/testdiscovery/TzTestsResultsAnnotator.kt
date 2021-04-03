@@ -124,11 +124,11 @@ class TzTestsResultsAnnotator : Annotator {
         a.create()
 
         // Clear registry
-        try {
-            TzTestRegistry.getResults()?.remove(element)
-        } catch (e: Exception) {
-            //In case if concurrent access for example
-        }
+//        try {
+//            TzTestRegistry.getResults()?.remove(element)
+//        } catch (e: Exception) {
+//            //In case if concurrent access for example
+//        }
     }
 }
 

@@ -43,7 +43,7 @@ div { display: inline-block; }
 
 .feature { margin-left: 5px; }
 .featureTitle { font-size: 24px; margin-bottom: 10px; }
-.featureHeader { margin-left: 5px; font-weight: bolder }
+.featureHeader { margin-left: 5px; }
 
 .rule { margin-left: 10px; }
 .ruleTitle { font-size: 24px; margin-bottom: 10px; }

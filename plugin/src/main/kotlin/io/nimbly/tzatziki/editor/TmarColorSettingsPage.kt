@@ -30,6 +30,10 @@ val TEST_KO = TextAttributesKey.createTextAttributesKey("CCP_TEST_KO", DefaultLa
 val TEST_OK = TextAttributesKey.createTextAttributesKey("CCP_TEST_OK", DefaultLanguageHighlighterColors.STRING)
 val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED", DefaultLanguageHighlighterColors.STRING)
 
+// Markdown
+val BOLD = TextAttributesKey.createTextAttributesKey("CCP_MD_BOLD", DefaultLanguageHighlighterColors.STRING)
+val ITALIC = TextAttributesKey.createTextAttributesKey("CCP_MD_ITALIC", DefaultLanguageHighlighterColors.STRING)
+
 class TzColorSettingsPage : ColorSettingsPage {
 
     override fun getDisplayName()

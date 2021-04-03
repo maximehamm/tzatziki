@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.actions
 
+import com.github.rjeschke.txtmark.Processor
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -29,14 +30,12 @@ import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.ui.Messages.*
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiComment
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiRecursiveVisitor
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.testFramework.writeChild
 import icons.ActionIcons.CUCUMBER_PLUS
 import io.nimbly.tzatziki.config.loadConfig
+import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.psi.getModule
@@ -288,7 +287,10 @@ class TzExportAction : AnAction() {
         }
 
         override fun visitFeatureHeader(header: GherkinFeatureHeaderImpl) =
-            p("featureHeader") { super.visitFeatureHeader(header) }
+            p("featureHeader") {
+                appendMarkdown(header.text, header.containingFile)
+                super.visitElement(header)
+            }
 
         override fun visitRule(rule: GherkinRule) {
             summary(rule.ruleName) {
@@ -352,6 +354,23 @@ class TzExportAction : AnAction() {
 
         private fun append(string: String): TzatizkiVisitor {
             generator.append(string.escape())
+            return this
+        }
+
+        private fun appendMarkdown(string: String, file: PsiFile): TzatizkiVisitor {
+            try {
+
+                // Markdown to html
+                val html1 = Processor.process(string)
+
+                // Replace reference to file by absolute path to it
+                val html2 = html1.adaptPicturesPath(file)
+
+                // Add html
+                generator.append(html2)
+            } catch (e: Exception) {
+                append(string)
+            }
             return this
         }
 
