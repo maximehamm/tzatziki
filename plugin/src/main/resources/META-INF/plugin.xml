@@ -26,7 +26,7 @@
            [ ] Lien vers l'images
            [ ] Completion pour selection d'image
            [ ] Annotation erreur si l'images n'existe pas
-
+           [ ] Export le PDF en couleur !
         -->
 
        <b>A better user expérience to edit and print Cucumber features</b><br/>

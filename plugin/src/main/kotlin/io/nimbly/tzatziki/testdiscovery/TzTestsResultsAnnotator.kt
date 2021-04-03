@@ -49,7 +49,6 @@ class TzTestsResultsAnnotator : Annotator {
         if (!TOGGLE_CUCUMBER_PL)
             return
 
-        //println("\n#### Element = ${element.javaClass.simpleName} === ${element.text}")
         if (element is GherkinStep) {
             annotateStep(element, holder)
         } else if (element is GherkinTableRowImpl) {
