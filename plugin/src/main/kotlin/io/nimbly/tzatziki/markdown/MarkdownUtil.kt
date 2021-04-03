@@ -16,28 +16,43 @@
 package io.nimbly.tzatziki.markdown
 
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 
 fun String.adaptPicturesPath(file: PsiFile): String {
-
-    val references = Regex("<img +src *= *['\"]([a-z0-9-_:./]+)['\"]", RegexOption.IGNORE_CASE)
-        .findAll(this)
-        .toList()
-        .map { it.groupValues.last() }
-        .filter { !it.startsWith("http", true) }
-
-    if (references.isEmpty())
-        return this
 
     val root = ProjectFileIndex.SERVICE.getInstance(file.project).getSourceRootForFile(file.virtualFile)
         ?: return this
 
     var s = this
-    references.forEach { ref ->
-        val f = root.findFileByRelativePath(ref)
-        if (f != null && f.exists()) {
-            s = s.replace(ref, "file://${f.path}")
-        }
-    }
+    Regex("<img +src *= *['\"]([a-z0-9-_:./]+)['\"]", RegexOption.IGNORE_CASE)
+        .findAll(this)
+        .toList()
+        .reversed()
+        .forEach {
+            val group = it.groups.last()!!
+            val r = TextRange(group.range.first, group.range.last+1)
+            val path = r.substring(s)
+            val f = root.findFileByRelativePath(path)
+            if (f != null && f.exists()) {
+                s = r.replace(s, "file://${f.path}")
+            }
+         }
     return s
+}
+
+fun String.getRelativePath(file: PsiFile): String? {
+
+    if (this.startsWith("http", true))
+        return this
+
+    val root = ProjectFileIndex.SERVICE.getInstance(file.project).getSourceRootForFile(file.virtualFile)
+        ?: return null
+
+    val f = root.findFileByRelativePath(this)
+    if (f != null && f.exists()) {
+        return f.path
+    }
+
+    return null
 }

@@ -360,8 +360,11 @@ class TzExportAction : AnAction() {
         private fun appendMarkdown(string: String, file: PsiFile): TzatizkiVisitor {
             try {
 
+                // Add CR
+                val str = string.replace("\n", "<br/>")
+
                 // Markdown to html
-                val html1 = Processor.process(string)
+                val html1 = Processor.process(str)
 
                 // Replace reference to file by absolute path to it
                 val html2 = html1.adaptPicturesPath(file)

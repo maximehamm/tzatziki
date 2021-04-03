@@ -23,9 +23,10 @@
         <!-- TODO
            [x] Export PDF markdown + image
            [x] Coloration gras / italic dans le header
-           [ ] Lien vers l'images
-           [ ] Completion pour selection d'image
-           [ ] Annotation erreur si l'images n'existe pas
+           [x] Annotation erreur si l'images n'existe pas
+           [x] Lien http
+           [/] Completion pour selection d'image -> Pas possible !
+           [ ] Lien vers l'images (format HTML et markdown)
            [ ] Export le PDF en couleur !
         -->
 
@@ -145,6 +146,26 @@
         <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
 
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzMarkdownAnnotator" order="LAST"/>
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
+
+        <!--  <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>-->
+
+
+<!--        <psi.referenceContributor language="Gherkin"-->
+<!--                                  implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/>-->
+
+<!--        <psi.symbolReferenceProvider hostLanguage="Gherkin"-->
+<!--                                     hostElementClass="com.intellij.psi.PsiElement"-->
+<!--                                     referenceClass="com.intellij.openapi.paths.UrlReference"-->
+<!--                                     targetClass="com.intellij.openapi.paths.UrlSymbol"-->
+<!--                                     implementationClass="io.nimbly.tzatziki.markdown.TzUrlContributor2"/>-->
+
+<!--        <psi.implicitReferenceProvider implementation="io.nimbly.tzatziki.markdown.TzUrlContributor3"/>-->
+
+
+<!--        <applicationService serviceInterface="com.intellij.execution.filters.HyperlinkInfoFactory"-->
+<!--                            serviceImplementation="com.intellij.execution.filters.impl.HyperlinkInfoFactoryImpl"/>-->
+
 
     </extensions>
 
