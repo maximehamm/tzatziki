@@ -27,7 +27,6 @@ import io.nimbly.tzatziki.psi.getDirectory
 import io.nimbly.tzatziki.psi.safeText
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.findFiles
-import io.nimbly.tzatziki.util.getTextLineBefore
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
 class TzPictureCompletion: CompletionContributor() {
@@ -53,36 +52,34 @@ class TzPictureCompletion: CompletionContributor() {
         fun Regex.find(): String? {
             findAll(element.safeText)
                 .toList()
-                .forEach { result ->
-                    val r = result.groups.last()!!.range
-                    if (r.contains(parameters.offset - element.textOffset) || r.isEmpty() && parameters.offset - element.textOffset == r.start)
-                        return result.value
+                .mapNotNull { it.groups.last() }
+                .forEach {
+                    val r = it.range
+                    if (r.contains(parameters.offset - element.textOffset) || r.isEmpty() && parameters.offset - element.textOffset == r.first)
+                        return  element.safeText.substring(r.first, parameters.offset - element.textOffset)  //it.value
                 }
             return null
         }
 
-        val IMG_HTML = Regex("<img +src *= *['\"]([a-z0-9-_:./]*)['\"]", RegexOption.IGNORE_CASE)
-        val IMG_MAKD = Regex("!\\[(.*?)]\\((.*?)\\)")
-
-        val imageMd = IMG_MAKD.find()
-        val imageHTml = IMG_HTML.find()
+        val imageMd = Regex("!\\[(.*?)]\\((.*?)\\)").find()
+        val imageHTml = Regex("<img +src *= *['\"]([a-z0-9-_:./]*)['\"]", RegexOption.IGNORE_CASE).find()
 
         if (imageMd == null && imageHTml == null)
             return
 
-        val prefix = guessPrefix(parameters) ?: ""
-        val before = parameters.editor.document.getTextLineBefore(parameters.offset).substringAfterLast("!").trimStart()
+        val filePrefix  = imageMd ?: imageHTml!!
 
+        val prefix = guessPrefix(parameters) ?: ""
         val imgDescription =
-            if (imageMd !=null) {
+            if (imageMd != null) {
                 prefix.substringBefore('(') + '('
-            }
-            else {
-                prefix.subSequence(0, prefix.lastIndexOfAny(charArrayOf('\'', '"'))+1)
+            } else {
+                prefix.subSequence(0, prefix.lastIndexOfAny(charArrayOf('\'', '"')) + 1)
             }
 
         root.findFiles("gif", "png", "svg", scope = GlobalSearchScope.projectScope(project))
-            .filter { !it.path.contains("/.cucumber+/")}
+            .filter { !it.path.contains("/.cucumber+/") }
+            .filter { it.path.substring(root.path.length + 1).startsWith(filePrefix) }
             .forEach {
 
                 val id = it.path.substring(root.path.length + 1)
@@ -95,10 +92,11 @@ class TzPictureCompletion: CompletionContributor() {
 
                         // Delete to end of image description
                         val imageEndOffset =
-                            if (imageMd !=null)
+                            if (imageMd != null)
                                 parameters.editor.document.text.indexOf(')', context.tailOffset)
                             else
-                                parameters.editor.document.text.substring(context.tailOffset).indexOfFirst { it == '\'' || it == '"' } + context.tailOffset
+                                parameters.editor.document.text.substring(context.tailOffset)
+                                    .indexOfFirst { it == '\'' || it == '"' } + context.tailOffset
 
                         editor.document.deleteString(context.tailOffset, imageEndOffset)
 
@@ -106,7 +104,7 @@ class TzPictureCompletion: CompletionContributor() {
                         editor.document.replaceString(context.startOffset, parameters.offset, imgDescription)
                     }
                 resultSet.addElement(lookup)
-        }
+            }
 
 
         //val text = position.safeText
