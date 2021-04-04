@@ -48,10 +48,12 @@ class TzUrlAnnotator : Annotator {
         listOf(REGX_IMG_HTML, REGX_URL_MAKD).forEach { reg ->
             reg.findAll(text)
                 .toList()
-                .forEach { result ->
-                    val r = result.groups.last()!!.range
+                .mapNotNull { it.groups.last() }
+                .filter { !it.range.isEmpty()}
+                .forEach { group ->
+                    val r = group.range
                     val textRange = TextRange(r.first, r.last + 1).shiftRight(element.textOffset)
-                    val fullPath = result.groupValues.last().getRelativePath(element.containingFile)
+                    val fullPath = group.value.getRelativePath(element.containingFile)
                     if (fullPath != null) {
                         holder.newAnnotation(HighlightSeverity.INFORMATION, fullPath)
                             .range(textRange).textAttributes(HYPERLINK_ATTRIBUTES).create()

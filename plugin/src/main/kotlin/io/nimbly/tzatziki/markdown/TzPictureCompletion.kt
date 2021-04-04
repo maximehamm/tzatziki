@@ -55,14 +55,17 @@ class TzPictureCompletion: CompletionContributor() {
                 .toList()
                 .forEach { result ->
                     val r = result.groups.last()!!.range
-                    if (r.contains(parameters.offset - element.textOffset))
+                    if (r.contains(parameters.offset - element.textOffset) || r.isEmpty() && parameters.offset - element.textOffset == r.start)
                         return result.value
                 }
             return null
         }
 
-        val imageMd = REGX_IMG_MAKD.find()
-        val imageHTml = REGX_IMG_HTML.find()
+        val IMG_HTML = Regex("<img +src *= *['\"]([a-z0-9-_:./]*)['\"]", RegexOption.IGNORE_CASE)
+        val IMG_MAKD = Regex("!\\[(.*?)]\\((.*?)\\)")
+
+        val imageMd = IMG_MAKD.find()
+        val imageHTml = IMG_HTML.find()
 
         if (imageMd == null && imageHTml == null)
             return
@@ -73,7 +76,6 @@ class TzPictureCompletion: CompletionContributor() {
         val imgDescription =
             if (imageMd !=null) {
                 prefix.substringBefore('(') + '('
-                //(Regex(" *\\[.*] *\\(").find(before)?.value ?: "[](").substringAfter('[')
             }
             else {
                 prefix.subSequence(0, prefix.lastIndexOfAny(charArrayOf('\'', '"'))+1)
