@@ -48,7 +48,7 @@ import java.awt.event.InputEvent
 import java.util.function.Consumer
 
 fun Editor.findTableAt(offset: Int): GherkinTable? {
-    val file = getFile() ?: return null
+    val file = file ?: return null
 
     val adjustedOffset =
         when (offset) {
@@ -69,12 +69,13 @@ fun Editor.findTableAt(offset: Int): GherkinTable? {
 }
 
 fun Editor.cellAt(offset: Int): GherkinTableCell?
-    = getFile()?.cellAt(offset)
+    = file?.cellAt(offset)
 
-fun Editor.getFile(): PsiFile? {
-    val project = project ?: return null
-    return PsiDocumentManager.getInstance(project).getPsiFile(document)
-}
+val Editor.file: PsiFile?
+    get() {
+        val project = project ?: return null
+        return PsiDocumentManager.getInstance(project).getPsiFile(document)
+    }
 
 fun Editor.navigateInTableWithEnter(offset: Int = caretModel.offset): Boolean {
 
@@ -95,7 +96,7 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
 
     val table = findTableAt(offset) ?: return false
     val row = getTableRowAt(offset) ?: return false
-    val file = getFile() ?: return false
+    val file = file ?: return false
     val element = file.findElementAt(offset) ?: return false
 
     fun goRight() : Boolean {
@@ -206,7 +207,7 @@ fun Editor.navigateInTableWithTab(way: Boolean, editor: Editor, offset: Int = ed
 }
 
 fun Editor.getTableColumnIndexAt(offset: Int): Int? {
-    val file = getFile() ?: return null
+    val file = file ?: return null
     var element = file.findElementAt(offset) ?: return null
     if (element.parent is GherkinTableCell)
         element = element.parent
@@ -228,7 +229,7 @@ fun Editor.getTableColumnIndexAt(offset: Int): Int? {
 
 fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
 
-    val file = getFile() ?: return null
+    val file = file ?: return null
     val element = file.findElementAt(
         if (getLineEndOffsetFromOffset() == offset) offset-1 else offset)
 

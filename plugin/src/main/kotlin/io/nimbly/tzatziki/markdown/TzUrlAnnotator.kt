@@ -26,7 +26,6 @@ import org.jetbrains.plugins.cucumber.psi.impl.GherkinFeatureHeaderImpl
 
 val REGX_IMG_HTML = Regex("<img +src *= *['\"]([a-z0-9-_:./]+)['\"]", RegexOption.IGNORE_CASE)
 val REGX_IMG_MAKD = Regex("!\\[(.*?)]\\((.*?)\\)")
-
 val REGX_URL_MAKD = Regex("\\[(.*?)]\\((.*?)\\)")
 
 /**
@@ -46,7 +45,7 @@ class TzUrlAnnotator : Annotator {
             return
 
         val text = element.text
-        listOf(REGX_IMG_HTML, REGX_IMG_MAKD, REGX_URL_MAKD).forEach { reg ->
+        listOf(REGX_IMG_HTML, REGX_URL_MAKD).forEach { reg ->
             reg.findAll(text)
                 .toList()
                 .forEach { result ->

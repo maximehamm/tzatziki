@@ -24,8 +24,8 @@ import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.JavaUtil
+import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.findTableAt
-import io.nimbly.tzatziki.util.getFile
 import io.nimbly.tzatziki.util.setColumnMode
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
@@ -133,7 +133,7 @@ object TzSelectionModeManager {
     fun switchEditorSelectionModeIfNeeded(editor: Editor, offset: Int) {
 
         if (isSelectionSwitchBlocked) return
-        val f = editor.getFile() ?: return
+        val f = editor.file ?: return
         if (f !is GherkinFile) return
 
         val needColumnMode = f.isColumnSeletionModeZone(offset)
@@ -160,4 +160,4 @@ object TzSelectionModeManager {
 
 private val EditorMouseEvent.gherkin: Boolean
     get() = TOGGLE_CUCUMBER_PL
-        && GherkinFileType.INSTANCE == this.editor.getFile()?.fileType
+        && GherkinFileType.INSTANCE == this.editor.file?.fileType

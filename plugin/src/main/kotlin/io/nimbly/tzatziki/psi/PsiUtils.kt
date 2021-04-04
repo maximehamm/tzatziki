@@ -15,28 +15,30 @@
 
 package io.nimbly.tzatziki.psi
 
+import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import org.jetbrains.plugins.cucumber.completion.CucumberCompletionContributor.INTELLIJ_IDEA_RULEZZZ
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
-fun VirtualFile.getFile(project: Project): PsiFile? {
-    return PsiManager.getInstance(project).findFile(this)
-}
+fun VirtualFile.getFile(project: Project): PsiFile?
+    = PsiManager.getInstance(project).findFile(this)
 
-fun PsiFile.getModule()
+fun VirtualFile.getDirectory(project: Project): PsiDirectory?
+    = PsiManager.getInstance(project).findDirectory(this)
+
+fun PsiFile.getModule(): Module?
     = ModuleUtilCore.findModuleForPsiElement(this)
 
 fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
@@ -114,3 +116,7 @@ val PsiElement.nextPipe: PsiElement
 
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
+
+val PsiElement.safeText
+    get() = text.replace(INTELLIJ_IDEA_RULEZZZ.toRegex(), "")
+        .replace(DUMMY_IDENTIFIER_TRIMMED.toRegex(), "")

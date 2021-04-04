@@ -295,7 +295,7 @@ private fun Editor.cleanSelection(table: GherkinTable, cleanHeader: Boolean, sta
     }
 
     // Replace table
-    val tableSmart = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(table, getFile()!!)
+    val tableSmart = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(table, file!!)
     ApplicationManager.getApplication().runWriteAction {
 
         // replace table

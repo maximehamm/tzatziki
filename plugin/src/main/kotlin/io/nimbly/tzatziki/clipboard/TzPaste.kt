@@ -121,7 +121,7 @@ private fun Editor.pasteToTable(table: GherkinTable, offset: Int, text: String):
         // Move caret
         val targetCell = newTable.row(y).cell(if (x < 0) 0 else x)
         val smartCell =
-            SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(targetCell, getFile()!!)
+            SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(targetCell, file!!)
 
         // Format table
         newTable.format()

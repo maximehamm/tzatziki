@@ -25,7 +25,7 @@ import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.actions.Direction.*
 import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.FEATURE_HEAD
-import io.nimbly.tzatziki.util.getFile
+import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.highlight
 import io.nimbly.tzatziki.util.move
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
@@ -105,7 +105,7 @@ private fun Editor.shift(table: GherkinTable, cell: GherkinTableCell, direction:
             .createTempPsiFile(table.project, FEATURE_HEAD + s)
             .children[0].children[0].children[0].children[0]
         val newTable = table.replace(tempTable) as GherkinTable
-        val smarTable = SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(newTable, getFile()!!)
+        val smarTable = SmartPointerManager.getInstance(newTable.project).createSmartPsiElementPointer(newTable, file!!)
 
         // Format table
         newTable.format()

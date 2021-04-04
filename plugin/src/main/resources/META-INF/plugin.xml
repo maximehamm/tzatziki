@@ -25,9 +25,9 @@
            [x] Coloration gras / italic dans le header
            [x] Annotation erreur si l'images n'existe pas
            [x] Lien http
-           [/] Completion pour selection d'image -> Pas possible !
            [ ] Lien vers l'images (format HTML et markdown)
            [ ] Export le PDF en couleur !
+           [/] Completion pour selection d'image -> Pas possible !
         -->
 
        <b>A better user expérience to edit and print Cucumber features</b><br/>
@@ -147,8 +147,7 @@
 
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzMarkdownAnnotator" order="LAST"/>
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
-
-        <!--  <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>-->
+      <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
 
 
 <!--        <psi.referenceContributor language="Gherkin"-->
