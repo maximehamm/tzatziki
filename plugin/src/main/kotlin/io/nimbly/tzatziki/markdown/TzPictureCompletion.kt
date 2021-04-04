@@ -24,6 +24,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons.ImagesFileType
 import io.nimbly.tzatziki.psi.getDirectory
+import io.nimbly.tzatziki.psi.safeText
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.findFiles
 import io.nimbly.tzatziki.util.getTextLineBefore
@@ -49,17 +50,34 @@ class TzPictureCompletion: CompletionContributor() {
             return
 
         // Check inside an image description
-        if (null == REGX_IMG_MAKD.findAll(element.text)
+        fun Regex.find(): String? {
+            findAll(element.safeText)
                 .toList()
-                .find { result ->
+                .forEach { result ->
                     val r = result.groups.last()!!.range
-                    r.contains(parameters.offset - element.textOffset)
+                    if (r.contains(parameters.offset - element.textOffset))
+                        return result.value
                 }
-        ) return
+            return null
+        }
+
+        val imageMd = REGX_IMG_MAKD.find()
+        val imageHTml = REGX_IMG_HTML.find()
+
+        if (imageMd == null && imageHTml == null)
+            return
 
         val prefix = guessPrefix(parameters) ?: ""
         val before = parameters.editor.document.getTextLineBefore(parameters.offset).substringAfterLast("!").trimStart()
-        val imgDescription = (Regex(" *\\[.*] *\\(").find(before)?.value ?: "[](").substringAfter('[')
+
+        val imgDescription =
+            if (imageMd !=null) {
+                prefix.substringBefore('(') + '('
+                //(Regex(" *\\[.*] *\\(").find(before)?.value ?: "[](").substringAfter('[')
+            }
+            else {
+                prefix.subSequence(0, prefix.lastIndexOfAny(charArrayOf('\'', '"'))+1)
+            }
 
         root.findFiles("gif", "png", "svg", scope = GlobalSearchScope.projectScope(project))
             .filter { !it.path.contains("/.cucumber+/")}
@@ -73,8 +91,13 @@ class TzPictureCompletion: CompletionContributor() {
                     .withInsertHandler { context, item ->
                         val editor = context.editor
 
-                        // Delete to end of image descriotion
-                        val imageEndOffset = parameters.editor.document.text.indexOf(')', context.tailOffset)
+                        // Delete to end of image description
+                        val imageEndOffset =
+                            if (imageMd !=null)
+                                parameters.editor.document.text.indexOf(')', context.tailOffset)
+                            else
+                                parameters.editor.document.text.substring(context.tailOffset).indexOfFirst { it == '\'' || it == '"' } + context.tailOffset
+
                         editor.document.deleteString(context.tailOffset, imageEndOffset)
 
                         // replace before insertion

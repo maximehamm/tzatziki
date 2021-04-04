@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.psi
 
+import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER
 import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -27,7 +28,6 @@ import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import org.jetbrains.plugins.cucumber.completion.CucumberCompletionContributor.INTELLIJ_IDEA_RULEZZZ
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
@@ -118,5 +118,5 @@ fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
 
 val PsiElement.safeText
-    get() = text.replace(INTELLIJ_IDEA_RULEZZZ.toRegex(), "")
-        .replace(DUMMY_IDENTIFIER_TRIMMED.toRegex(), "")
+    get() = text.replace(DUMMY_IDENTIFIER, "", true)
+                .replace(DUMMY_IDENTIFIER_TRIMMED, "", true)
