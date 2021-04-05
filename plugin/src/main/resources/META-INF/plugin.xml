@@ -25,9 +25,8 @@
            [x] Coloration gras / italic dans le header
            [x] Annotation erreur si l'images n'existe pas
            [x] Lien http
-           [ ] Lien vers l'images (format HTML et markdown)
-           [ ] Export le PDF en couleur !
-           [/] Completion pour selection d'image -> Pas possible !
+           [x] Completion pour selection d'image -> Pas possible !
+           [/] Lien vers l'images (format HTML et markdown)
         -->
 
        <b>A better user expérience to edit and print Cucumber features</b><br/>
@@ -36,7 +35,7 @@
        <b>Tests results annotator</></b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_b1cc840f-57a1-4119-8473-4e715f1c9a9f"
-                 alt="Tzatziki" width="419" height="233"></p>
+                 alt="Cucumber+" width="419" height="233"></p>
           <li>Easily locate failed steps</li>
           <li>Print related Stacktrace using quickifix</li>
           <li>Customize colors and font style from Settings > Color Scheme > Cucumber+</li>
@@ -46,7 +45,7 @@
        <b>Print features to PDF</></b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
-                 alt="Tzatziki" width="419" height="233"></p>
+                 alt="Cucumber+" width="419" height="233"></p>
           <li>Right click a file and select "<u>Export feature to PDF</u>"</li>
           <li>Select mutiple files to print also a <u>summary</u> and a <u>front page</u></li>
           <li>Customize <u>front page content, footer, header, fonts, colors, etc.</u></li>
@@ -58,14 +57,14 @@
        <ul>
           <li>Cucumber table <u>formatting as you go</u> :
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_56576887-38ae-4f53-8ac7-4baf79153863"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
           <li>Add <u>new row</u> by pressing 'Enter' from last row or from end of row.<br/></li>
           <li>Add a <u>new column</u> by pressing 'Pipe' from anywere
               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_14a9e777-c607-4e0a-bb80-f12e0d8db029"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
@@ -74,7 +73,7 @@
               - Triple-click a header cell to select an entire he entire column, <br/>or anywhere else for a row.<br/>
               - Copy to clipboard to transfert to Excel for example !
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_98501815-1487-4047-82cb-11dc751b503e"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
@@ -83,7 +82,7 @@
               - Or from any source capable to copy to text separated by tabs and carriage returns<br>
               - Paste clipboard to add or replace to Cucumber table content !
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_6f6705b8-9b2a-4a18-a686-8310645370ee"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
@@ -92,7 +91,7 @@
               - Press Shift+Ctrl and ▼▲ to move row up or down (or Shift+⌘ on MacOs)<br>
               - Press Shift+Ctrl and ◀︎▶ to move column left or right (or Shift+⌘ on MacOs)<br>
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_e5736c06-6104-47b7-944e-7e999a4a4dd9"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
@@ -103,20 +102,25 @@
               - Press 'Del' to clear cells content<br/>
               - Press 'Del' again to delete the row or column<br/>
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_7a36072e-0286-4075-9b40-189ab0615d70"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
 
           <br/>
           <li>Navigate <u>from cell to cell</u> by pressing 'Tab', 'Shift tab' or 'Enter'
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_9ceaf385-b474-453e-81fa-e2b4ec58cac7"
-                  alt="Tzatziki" width="419" height="233"></p>
+                  alt="Cucumber+" width="419" height="233"></p>
           </li>
-
-          <br/>
-          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
-
        </ul>
 
+       <br/><br/>
+       <b>Other features :</></b><br/>
+       <ul>
+          <li>Markdown supports into feature header, including pictures references and urls</li>
+          <li>Export markdown to PDF :
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
+                  alt="Cucumber+" width="419" height="233"></p>
+          </li>
+          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
        <br/>
        Any suggestion ? Let me know !<br/>
        <br/>
@@ -139,32 +143,18 @@
 
         <actionPromoter implementation="io.nimbly.tzatziki.actions.TzActionPromoter"/>
 
+        // Tests and colors
         <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
         <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
         <colorSettingsPage implementation="io.nimbly.tzatziki.editor.TzColorSettingsPage"/>
 
+        // Markdown and pictures
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzMarkdownAnnotator" order="LAST"/>
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
-      <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
-
-
-<!--        <psi.referenceContributor language="Gherkin"-->
-<!--                                  implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/>-->
-
-<!--        <psi.symbolReferenceProvider hostLanguage="Gherkin"-->
-<!--                                     hostElementClass="com.intellij.psi.PsiElement"-->
-<!--                                     referenceClass="com.intellij.openapi.paths.UrlReference"-->
-<!--                                     targetClass="com.intellij.openapi.paths.UrlSymbol"-->
-<!--                                     implementationClass="io.nimbly.tzatziki.markdown.TzUrlContributor2"/>-->
-
-<!--        <psi.implicitReferenceProvider implementation="io.nimbly.tzatziki.markdown.TzUrlContributor3"/>-->
-
-
-<!--        <applicationService serviceInterface="com.intellij.execution.filters.HyperlinkInfoFactory"-->
-<!--                            serviceImplementation="com.intellij.execution.filters.impl.HyperlinkInfoFactoryImpl"/>-->
-
+        <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
+        <!--  <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/> -->
 
     </extensions>
 
