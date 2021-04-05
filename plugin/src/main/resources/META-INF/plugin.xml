@@ -21,12 +21,10 @@
     <description><![CDATA[
 
         <!-- TODO
-           [x] Export PDF markdown + image
-           [x] Coloration gras / italic dans le header
-           [x] Annotation erreur si l'images n'existe pas
-           [x] Lien http
-           [x] Completion pour selection d'image -> Pas possible !
-           [/] Lien vers l'images (format HTML et markdown)
+           [ ] Export to PDF with run results colors
+           [ ] Keep previous running results
+           [ ] Clean tests results action
+           [ ] Export PDF add CSS instead of replacing it
         -->
 
        <b>A better user expérience to edit and print Cucumber features</b><br/>
