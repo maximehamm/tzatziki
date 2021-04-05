@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '4.1.0'
+    version '4.2.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>4.2</b> Tests results anntation is persistent until a scenario is modified </li>
          <li><b>4.1</b> Convert markdown to html while exporting to PDF </li>
          <li><b>4.0</b> Markdown support into header. Including pictures completion and annotation. Pdf ex</li>
          <li><b>3.0</b> Run test then add colors according to tests results</li>

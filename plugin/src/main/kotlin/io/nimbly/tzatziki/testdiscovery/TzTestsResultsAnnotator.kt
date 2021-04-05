@@ -57,12 +57,12 @@ class TzTestsResultsAnnotator : Annotator {
     }
 
     private fun annotateStep(step: GherkinStep, holder: AnnotationHolder) {
-        val results = TzTestRegistry.getResults() ?: return
+        val results = TzTestRegistry.results
         doAnnotate(results[step], step, holder)
     }
 
     private fun annotateRow(row: GherkinTableRow, holder: AnnotationHolder) {
-        val results = TzTestRegistry.getResults() ?: return
+        val results = TzTestRegistry.results
         row.children
             .filterIsInstance<GherkinTableCell>()
             .map { it to results[it] }
@@ -73,7 +73,7 @@ class TzTestsResultsAnnotator : Annotator {
             }
     }
 
-    private fun doAnnotate(tests: List<SMTestProxy>, element: GherkinPsiElement, holder: AnnotationHolder) {
+    private fun doAnnotate(tests: Set<SMTestProxy>, element: GherkinPsiElement, holder: AnnotationHolder) {
 
         if (tests.isEmpty()) return
         val what = if (element is GherkinTableCell) "step" else "example"
