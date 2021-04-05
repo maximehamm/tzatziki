@@ -23,6 +23,7 @@ import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import io.nimbly.tzatziki.psi.format
+import io.nimbly.tzatziki.testdiscovery.TzTestRegistry
 import io.nimbly.tzatziki.util.addNewColum
 import io.nimbly.tzatziki.util.findTableAt
 import io.nimbly.tzatziki.util.getTextLine
@@ -34,6 +35,10 @@ class TzTypedHandler : TypedHandlerDelegate() {
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
         if (file.gherkin && editor.document.getTextLine(editor.caretModel.offset).contains("|"))
             editor.findTableAt(editor.caretModel.offset)?.format()
+
+        if (file.gherkin)
+            TzTestRegistry.cleanTestsResults(file, editor)
+
         return CONTINUE
     }
 

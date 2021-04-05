@@ -16,6 +16,8 @@
 package io.nimbly.tzatziki.testdiscovery
 
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
+import com.intellij.openapi.editor.Editor
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -41,6 +43,21 @@ object TzTestRegistry {
         temp.putAll(results)
 
         this.activeResults = temp
+    }
+
+    fun cleanTestsResults(file: PsiFile, editor: Editor) {
+
+        if (activeResults.tests.isEmpty())
+            return
+
+        val element = file.findElementAt(editor.caretModel.offset) ?: return
+        val scenario = PsiTreeUtil.getContextOfType(element, GherkinStepsHolder::class.java) ?: return
+
+        // Retain all related to not-involved scenarios
+        activeResults.tests = activeResults.tests
+            .filter { scenario != it.value.scenario }
+            .toMutableMap()
+
     }
 
     val results get() = activeResults
@@ -70,20 +87,6 @@ class TzTestResult {
     operator fun get(element: GherkinPsiElement): Set<SMTestProxy> {
         return tests[element]?.tests ?: emptySet()
     }
-
-//    fun clean() {
-//
-//        // Find all Scenarion having at least one non-valid
-//        val scenariosToClean: Set<GherkinStepsHolder>
-//            = tests.filterKeys { !it.isValid }
-//                   .mapNotNull { it.value.scenario }
-//                   .toSet()
-//
-//        // Remove all items related to those scenarios
-//        tests = tests
-//            .filter { !scenariosToClean.contains(it.value.scenario) }
-//            .toMutableMap()
-//    }
 
     fun clone(): TzTestResult {
         val tests = this.tests
