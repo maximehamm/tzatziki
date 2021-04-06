@@ -21,6 +21,8 @@
     <description><![CDATA[
 
         <!-- TODO
+           [ ] Completion des valeurs dans les cellules
+           [ ] Action to clean test results and annotations
            [ ] Export to PDF with run results colors
            [ ] Export PDF add CSS instead of replacing it
         -->
