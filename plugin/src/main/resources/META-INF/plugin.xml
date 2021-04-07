@@ -21,6 +21,9 @@
     <description><![CDATA[
 
         <!-- TODO
+           [ ] Bug PDF output if file already exists
+           [ ] Bug copy paste between scenarios
+
            [ ] Completion des valeurs dans les cellules
            [ ] Action to clean test results and annotations
            [ ] Export to PDF with run results colors

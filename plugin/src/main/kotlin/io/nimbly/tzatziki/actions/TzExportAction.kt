@@ -266,20 +266,21 @@ class TzExportAction : AnAction() {
             }
             if (space.parent is GherkinFeature
                 && space.nextSibling is GherkinStepsHolder
-                && space.text.count {it == '\n'} < 2) {
+                && space.text.count { it == '\n' } < 2
+            ) {
                 append("\n")
-            }
-            else if (space.parent is GherkinStepsHolder
+            } else if (space.parent is GherkinStepsHolder
                 && space.nextSibling is GherkinStep
                 && space.prevSibling !is GherkinStep
-                && space.text.count {it == '\n'} < 2) {
+                && space.text.count { it == '\n' } < 2
+            ) {
                 append("\n")
             }
             super.visitElement(space)
         }
 
         override fun visitFeature(feature: GherkinFeature) {
-            summary(feature.featureName) {
+            summary(feature) {
                 nobreak { p("feature") { super.visitFeature(feature) } }
             }
             if (feature != (feature.parent as GherkinFile).features.last())
@@ -293,7 +294,7 @@ class TzExportAction : AnAction() {
             }
 
         override fun visitRule(rule: GherkinRule) {
-            summary(rule.ruleName) {
+            summary(rule) {
                 nobreak {
                     p("rule") { super.visitRule(rule) }
                 }
@@ -301,7 +302,7 @@ class TzExportAction : AnAction() {
         }
 
         override fun visitScenarioOutline(scenario: GherkinScenarioOutline) {
-            summary(scenario.scenarioName) {
+            summary(scenario) {
                 nobreak {
                     p("scenario") { super.visitScenarioOutline(scenario) }
                 }
@@ -309,7 +310,7 @@ class TzExportAction : AnAction() {
         }
 
         override fun visitScenario(scenario: GherkinScenario) {
-            summary(scenario.scenarioName) {
+            summary(scenario) {
                 nobreak {
                     p("scenario") { super.visitScenario(scenario) }
                 }
@@ -425,15 +426,31 @@ class TzExportAction : AnAction() {
             }
         }
 
-        private fun summary(title: String, function: () -> Unit) {
+        private fun summary(element: GherkinPsiElement, function: () -> Unit) {
+            val title = element.name()
             generator.addSummaryEntry(summaryLevel++, title.escape())
             function()
             summaryLevel--
         }
 
-        fun LeafPsiElement.translate()
-            = text // translate(this, text, dialect)
+
+        fun LeafPsiElement.translate() = text // translate(this, text, dialect)
     }
+}
+
+private fun GherkinPsiElement.name(neverBlank: Boolean = true): String {
+
+    val name = when {
+        this is GherkinStepsHolder -> this.scenarioName
+        this is GherkinRule -> this.ruleName
+        this is GherkinFeature -> this.featureName
+        else -> this.firstChild.text
+    }
+
+    return if (neverBlank)
+        if (name.isNotBlank()) name else this.firstChild.text
+    else
+        name
 }
 
 private fun translate(element: LeafPsiElement, text: String, dialect: String): String {
