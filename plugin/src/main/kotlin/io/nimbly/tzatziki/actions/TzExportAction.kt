@@ -133,8 +133,9 @@ class TzExportAction : AnAction() {
         buildPdf(generator, output)
 
         // Create file and open it
-        val fileName = if (files.size == 1) files.first().name else "cucumber"
-        val newFile = outputDirectory.writeChild("${fileName}.pdf", output.toByteArray())
+        val name = if (files.size == 1) files.first().name else "cucumber"
+        val fileName = outputDirectory.chooseFileName(name, "pdf")
+        val newFile = outputDirectory.writeChild(fileName, output.toByteArray())
         OpenFileDescriptor(project, newFile).navigate(true)
     }
 

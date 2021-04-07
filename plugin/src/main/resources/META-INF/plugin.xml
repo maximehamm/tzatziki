@@ -21,7 +21,6 @@
     <description><![CDATA[
 
         <!-- TODO
-           [ ] Bug PDF output if file already exists
            [ ] Bug copy paste between scenarios
 
            [ ] Completion des valeurs dans les cellules

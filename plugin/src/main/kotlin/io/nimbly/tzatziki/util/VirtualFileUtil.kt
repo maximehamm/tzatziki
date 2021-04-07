@@ -32,3 +32,27 @@ fun VirtualFile.findFiles(vararg types: String, scope: GlobalSearchScope): List<
     }
     return files.filter { it.path.startsWith(this.path) }
 }
+
+
+fun VirtualFile.chooseFileName(name: String, ext: String): String {
+
+    fun ok(n: String): Boolean {
+        val child = findChild("$n.$ext")
+        if (child == null || !child.exists() || child.isWritable) {
+            return true
+        }
+        return false
+    }
+
+    if (ok(name))
+        return "$name.$ext";
+
+
+    for (i in 0..10) {
+        val n = name + i
+        if (ok(n))
+            return "$n.$ext"
+    }
+
+    return "$name.$ext"
+}
