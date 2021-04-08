@@ -22,7 +22,6 @@ import com.intellij.patterns.CharPattern
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.patterns.StandardPatterns
 import com.intellij.psi.PsiDirectory
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons.ImagesFileType
 import io.nimbly.tzatziki.psi.getDirectory
@@ -79,7 +78,7 @@ class TzPictureCompletion: CompletionContributor() {
                 prefix.subSequence(0, prefix.lastIndexOfAny(charArrayOf('\'', '"')) + 1)
             }
 
-        root.findFiles("gif", "png", "svg", scope = GlobalSearchScope.projectScope(project))
+        root.findFiles("gif", "png", "svg", project = project)
             .filter { !it.path.contains("/.cucumber+/") }
             .filter { it.path.substring(root.path.length + 1).startsWith(filePrefix) }
             .forEach {

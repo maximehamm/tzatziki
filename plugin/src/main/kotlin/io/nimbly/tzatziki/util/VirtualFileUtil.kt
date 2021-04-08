@@ -15,20 +15,17 @@
 
 package io.nimbly.tzatziki.util
 
-import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.search.FileTypeIndex
+import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.util.indexing.FileBasedIndex
 
-fun VirtualFile.findFiles(vararg types: String, scope: GlobalSearchScope): List<VirtualFile> {
+fun VirtualFile.findFiles(vararg types: String, project: Project): List<VirtualFile> {
+
     val files = mutableSetOf<VirtualFile>()
     types.forEach {
         files.addAll(
-            FileBasedIndex.getInstance().getContainingFiles(
-            FileTypeIndex.NAME,
-            FileTypeManager.getInstance().getFileTypeByExtension(it),
-            scope))
+            FilenameIndex.getAllFilesByExt(project, it, GlobalSearchScope.projectScope(project)))
     }
     return files.filter { it.path.startsWith(this.path) }
 }
