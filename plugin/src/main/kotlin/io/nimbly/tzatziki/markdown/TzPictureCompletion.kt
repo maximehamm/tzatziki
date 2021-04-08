@@ -18,7 +18,9 @@ package io.nimbly.tzatziki.markdown
 import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.patterns.CharPattern
 import com.intellij.patterns.PlatformPatterns
+import com.intellij.patterns.StandardPatterns
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.ProcessingContext
@@ -121,10 +123,16 @@ class TzPictureCompletion: CompletionContributor() {
     }
 }
 
-@Suppress("UnstableApiUsage")
 fun guessPrefix(parameters: CompletionParameters): String? {
-    val position = parameters.position
+    val insertedElement = parameters.position
     val offset = parameters.offset
-    val range = position.textRange
-    return CompletionData.findPrefixStatic(position, offset)
+
+    var substr = insertedElement.text.substring(0, offset - insertedElement.textRange.startOffset)
+    if (substr.isEmpty() || Character.isWhitespace(substr[substr.length - 1])) return ""
+
+    substr = substr.trim { it <= ' ' }
+
+    var i = 0
+    while (substr.length > i && StandardPatterns.not(CharPattern.javaIdentifierPartCharacter()).accepts(substr[i])) i++
+    return substr.substring(i).trim { it <= ' ' }
 }
