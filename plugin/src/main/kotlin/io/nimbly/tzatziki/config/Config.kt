@@ -32,8 +32,11 @@ import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.util.now
+import java.io.InputStreamReader
+import java.nio.charset.Charset
 import java.time.format.DateTimeFormatter
 import java.util.*
+
 
 const val CONFIG_FOLDER = ".cucumber+"
 
@@ -237,14 +240,14 @@ private fun VirtualFile.loadAllProperties(file: VirtualFile): List<Properties> {
             val config = folder.findChild(PROPERTIES_FILENAME)
             if (config != null) {
                 val p = Properties()
-                p.load(config.inputStream)
+                p.load(InputStreamReader(config.inputStream, Charset.forName("UTF-8")))
                 all.add(p)
             }
             if (vf == this) {
                 val defaultConfig = folder.findChild(PROPERTIES_DEFAULT_FILENAME)
                 if (defaultConfig != null) {
                     val p = Properties()
-                    p.load(defaultConfig.inputStream)
+                    p.load(InputStreamReader(defaultConfig.inputStream, Charset.forName("UTF-8")))
                     all.add(p)
                 }
             }
@@ -258,8 +261,16 @@ private fun VirtualFile.loadAllProperties(file: VirtualFile): List<Properties> {
     return all
 }
 
-private fun VirtualFile.loadCss(path: VirtualFile)
-    = load(path, CSS_FILENAME, CSS_DEFAULT_FILENAME)
+private fun VirtualFile.loadCss(path: VirtualFile): String {
+
+    val defaultCss = load(path, CSS_DEFAULT_FILENAME)
+    val css = load(path, CSS_FILENAME)
+
+    return if (css.isBlank())
+        defaultCss
+    else
+        defaultCss + "\n" + css
+}
 
 private fun VirtualFile.loadPicture(path: VirtualFile)
     = load(path, EXPORT_PICTURE_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME)
@@ -267,7 +278,7 @@ private fun VirtualFile.loadPicture(path: VirtualFile)
 private fun VirtualFile.loadTemplate(path: VirtualFile)
     = load(path, EXPORT_TEMPLATE_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
 
-private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileName: String): String {
+private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileName: String? = null): String {
 
     var vf: VirtualFile? = path
     while (vf != null) {
@@ -278,7 +289,7 @@ private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileNam
             if (css != null) {
                 return css.contentsToByteArray()!!.toString(Charsets.UTF_8)
             }
-            if (vf == this) {
+            if (vf == this && defaultFileName!=null) {
                 val defaultCss = folder.findChild(defaultFileName)
                 if (defaultCss != null) {
                     return defaultCss.contentsToByteArray()!!.toString(Charsets.UTF_8)
