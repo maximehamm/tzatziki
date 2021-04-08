@@ -32,7 +32,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import com.intellij.testFramework.writeChild
 import icons.ActionIcons.CUCUMBER_PLUS
 import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
@@ -135,7 +134,10 @@ class TzExportAction : AnAction() {
         // Create file and open it
         val name = if (files.size == 1) files.first().name else "cucumber"
         val fileName = outputDirectory.chooseFileName(name, "pdf")
-        val newFile = outputDirectory.writeChild(fileName, output.toByteArray())
+
+        val newFile = outputDirectory.createChildData(this, fileName)
+        newFile.setBinaryContent(output.toByteArray())
+
         OpenFileDescriptor(project, newFile).navigate(true)
     }
 
