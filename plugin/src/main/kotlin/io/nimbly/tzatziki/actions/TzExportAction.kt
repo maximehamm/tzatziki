@@ -20,7 +20,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.compiler.CompilerPaths
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicatorProvider
 import com.intellij.openapi.project.DumbService
@@ -29,6 +29,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.ui.Messages.*
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
@@ -37,7 +39,6 @@ import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.psi.getFile
-import io.nimbly.tzatziki.psi.getModule
 import io.nimbly.tzatziki.psi.loadStepParams
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
@@ -74,8 +75,9 @@ class TzExportAction : AnAction() {
             throw TzatzikiException("No Cucumber feature found !")
 
         // Get project root
-        val module = files.first().getModule() ?: return
-        val outputDirectory = CompilerPaths.getModuleOutputDirectory(module, true) ?: return
+        val tempDir = FileUtilRt.createTempDirectory("cucumber+", null, true)
+        val outputDirectory = LocalFileSystem.getInstance().findFileByIoFile(tempDir)
+            ?: throw TzatzikiException("Unable to create temporary file")
 
         // Load config
         val config = loadConfig(paths, project)
@@ -135,10 +137,13 @@ class TzExportAction : AnAction() {
         val name = if (files.size == 1) files.first().name else "cucumber"
         val fileName = outputDirectory.chooseFileName(name, "pdf")
 
-        val newFile = outputDirectory.createChildData(this, fileName)
-        newFile.setBinaryContent(output.toByteArray())
+        ApplicationManager.getApplication().runWriteAction {
 
-        OpenFileDescriptor(project, newFile).navigate(true)
+            val newFile = outputDirectory.createChildData(this, fileName)
+            newFile.setBinaryContent(output.toByteArray())
+
+            OpenFileDescriptor(project, newFile).navigate(true)
+        }
     }
 
     private fun loadGherkinFiles(paths: List<VirtualFile>, project: Project): List<GherkinFile> {
