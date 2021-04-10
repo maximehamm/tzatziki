@@ -25,6 +25,7 @@ import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
+import com.intellij.psi.PsiDocumentManager
 import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
 import io.nimbly.tzatziki.clipboard.smartCopy
 import io.nimbly.tzatziki.clipboard.smartCut
@@ -131,6 +132,7 @@ class TzTModuleListener : ProjectManagerListener {
     private class PasteHandler : AbstractWriteActionHandler(ACTION_EDITOR_PASTE) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
 
+            val offset = editor.caretModel.offset
             if (dataContext.gherkin && editor.smartPaste(dataContext))
                 return
 
@@ -139,6 +141,17 @@ class TzTModuleListener : ProjectManagerListener {
                 super.doExecute(editor, null, dataContext)
             } finally {
                 releaseSelectionSwitch()
+            }
+
+            if (dataContext.gherkin && editor.caretModel.caretCount>1) {
+
+                PsiDocumentManager.getInstance(editor.project!!).commitDocument(editor.document)
+
+                val table = editor.findTableAt(offset)
+                if (table != null) {
+                    editor.caretModel.removeSecondaryCarets()
+                    table.format()
+                }
             }
         }
     }

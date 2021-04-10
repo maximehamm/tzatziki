@@ -88,5 +88,44 @@ class FormatTests  : AbstractTestCase() {
         checkCursorAt("| YesXABC")
     }
 
+    fun testMultiCursorFormat() {
+
+        // language=feature
+        configure(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   |         |
+                  | 78.2Z | No    |         |
+                  | 88.4B | Maybe |         |
+                """
+        )
+
+        // Select
+        selectAsColumn("| 78.10 | Yes   | ", "| 88.4B | Maybe | ")
+
+        // insert char and check
+        insert("X")
+
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   | X       |
+                  | 78.2Z | No    | X       |
+                  | 88.4B | Maybe | X       |
+                """
+        )
+    }
+
 }
 

@@ -35,11 +35,18 @@ import kotlin.math.max
 
 fun Editor.smartPaste(dataContext: DataContext): Boolean {
 
-    val offset = CommonDataKeys.CARET.getData(dataContext)?.offset ?: return true
     val editor = CommonDataKeys.EDITOR.getData(dataContext) ?: return true
     val file = CommonDataKeys.PSI_FILE.getData(dataContext) ?: return true
     val text = CopyPasteManager.getInstance().getContents<String>(DataFlavor.stringFlavor) ?: return false
     if (text.indexOf('\t') <0 && text.indexOf('\n') <0) return false
+    if (editor.caretModel.caretCount >1) {
+        // Keep only top left caret
+        val firstCaret = editor.caretModel.allCarets.minByOrNull { it.selectionStart }
+        editor.caretModel.allCarets
+            .filter { it != firstCaret }
+            .forEach { editor.caretModel.removeCaret(it) }
+    }
+    val offset = CommonDataKeys.CARET.getData(dataContext)?.offset ?: return true
 
     var table = findTableAt(offset)
     if (table == null) {

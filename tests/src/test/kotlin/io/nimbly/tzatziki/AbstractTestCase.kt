@@ -187,8 +187,9 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     }
 
     open fun moveCarretTo(completionOffset: Int) {
-        myFixture.editor.caretModel.moveToOffset(completionOffset)
         myFixture.editor.selectionModel.removeSelection(true)
+        myFixture.editor.caretModel.removeSecondaryCarets()
+        myFixture.editor.caretModel.moveToOffset(completionOffset)
     }
 
     protected open fun findFileInTempDir(filePath: String): VirtualFile? {

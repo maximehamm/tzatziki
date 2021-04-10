@@ -437,5 +437,94 @@ class CopyPasteTests  : AbstractTestCase() {
                   
             """)
     }
+
+    fun testCopyPasteMultiCursors() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   |         |
+                  | 78.2Z | No    |         |
+                  | 88.4B | Maybe |         |
+                Then Finished !""")
+
+        selectAsColumn(" 78.10 | ", "| Maybe")
+        copy()
+
+        // Select
+        selectAsColumn("| 78.10 | Yes   | ", "| 88.4B | Maybe | ")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   | Yes     |
+                  | 78.2Z | No    | No      |
+                  | 88.4B | Maybe | Maybe   |
+                Then Finished !""")
+    }
+
+    fun testCopyPasteMultiCursors2() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   |         |
+                  | 78.2Z | No    |         |
+                  | 88.4B | Maybe |         |
+                Then Finished !""")
+
+        selectAsColumn(" 78.", ".4B")
+        copy()
+
+        // Select
+        selectAsColumn("| 78.10 | Yes   | ", "| 88.4B | Maybe | ")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   | 10      |
+                  | 78.2Z | No    | 2Z      |
+                  | 88.4B | Maybe | 4B      |
+                Then Finished !""")
+
+        // Select
+        selectAsColumn("| 10 ", "| 4B ")
+        paste()
+
+        // language=feature
+        checkContent("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples: One
+                  | NAF   | Ready | Details |
+                  | 78.10 | Yes   | 10 10   |
+                  | 78.2Z | No    | 2Z 2Z   |
+                  | 88.4B | Maybe | 4B 4B   |
+                Then Finished !""")
+    }
 }
 
