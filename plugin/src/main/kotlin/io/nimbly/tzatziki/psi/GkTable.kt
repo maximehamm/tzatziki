@@ -20,7 +20,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import io.nimbly.tzatziki.util.*
+import io.nimbly.tzatziki.util.getColumnAt
+import io.nimbly.tzatziki.util.getLineEnd
+import io.nimbly.tzatziki.util.getLineStart
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
@@ -50,13 +52,23 @@ val GherkinTable.columnCount: Int
 val GherkinTable.rowCount: Int
     get() = allRows.size
 
-fun GherkinTable.format() {
-    val range = textRange
-    WriteCommandAction.runWriteCommandAction(project) {
+fun GherkinTable.format(startWriteAction: Boolean = true) {
+
+    fun format() {
+        val range = textRange
         CodeStyleManager.getInstance(project).reformatText(
             containingFile,
             range.startOffset, range.endOffset
         )
+    }
+
+    if (startWriteAction) {
+        WriteCommandAction.runWriteCommandAction(project) {
+            format()
+        }
+    }
+    else {
+        format()
     }
 }
 

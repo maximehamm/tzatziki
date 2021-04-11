@@ -33,7 +33,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 class TzPictureCompletion: CompletionContributor() {
 
     fun complete(parameters: CompletionParameters, context: ProcessingContext, resultSet: CompletionResultSet) {
-
+ 
         // Check context
         val element = parameters.position
         if (element.node.elementType !== GherkinTokenTypes.TEXT) return

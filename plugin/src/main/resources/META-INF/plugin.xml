@@ -21,8 +21,6 @@
     <description><![CDATA[
 
         <!-- TODO
-           [ ] Bug copy paste between scenarios
-
            [ ] Completion des valeurs dans les cellules
            [ ] Action to clean test results and annotations
            [ ] Export to PDF with run results colors
@@ -155,6 +153,10 @@
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
         <!--  <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/> -->
+
+        // Cell completion
+        <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>
+
 
     </extensions>
 
