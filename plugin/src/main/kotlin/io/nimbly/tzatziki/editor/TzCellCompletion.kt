@@ -24,15 +24,54 @@ import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.findTableAt
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
 class TzCellCompletion: CompletionContributor() {
 
     fun complete(parameters: CompletionParameters, context: ProcessingContext, resultSet: CompletionResultSet) {
 
-        // Check context
         val cell = parameters.position.parent
         if (cell !is GherkinTableCell)
             return
+
+        if (cell.parent is GherkinTableHeaderRowImpl) {
+            completeHeader(cell, resultSet)
+        }
+        else {
+            completeData(cell, resultSet)
+        }
+    }
+
+    private fun completeHeader(cell: GherkinTableCell, resultSet: CompletionResultSet) {
+
+        // Find all tables
+        val file = cell.containingFile
+        if (file !is GherkinFile)
+            return
+        val tables = file.findAllTables()
+
+        // Find all values
+        val values: Set<String> = tables
+            .mapNotNull { it.headerRow }
+            .flatMap { it.psiCells }
+            .filter { it != cell }
+            .map { it.text.trim() }
+            .filter { it.isNotBlank() }
+            .toSet()
+
+        // Add all values to completion
+        values.forEach { value ->
+            val lookup = LookupElementBuilder.create(value)
+                .withPresentableText(value)
+                .withIcon(ActionIcons.CUCUMBER_PLUS_16)
+                .withInsertHandler { context, _ ->
+                    context.editor.findTableAt(context.startOffset)?.format(false)
+                }
+            resultSet.addElement(lookup)
+        }
+    }
+
+    private fun completeData(cell: GherkinTableCell, resultSet: CompletionResultSet) {
 
         // Find column name
         val columnName = cell.row.table.headerRow?.psiCells?.get(cell.columnNumber)?.text?.trim()
@@ -65,7 +104,7 @@ class TzCellCompletion: CompletionContributor() {
 
         // Group by number of use
         val groupBy: Map<String, Int>
-            = values.groupBy { it }.map { it.key to it.value.size }.toMap()
+                = values.groupBy { it }.map { it.key to it.value.size }.toMap()
 
         // Add all values to completion
         groupBy.forEach { (value, count) ->
@@ -75,9 +114,7 @@ class TzCellCompletion: CompletionContributor() {
                 .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                 .withInsertHandler { context, _ ->
                     context.editor.findTableAt(context.startOffset)?.format(false)
-                 }
-
-            PrioritizedLookupElement.withPriority(lookup, 1000.0)
+                }
             resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 100.0*count))
         }
     }
