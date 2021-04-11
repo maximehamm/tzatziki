@@ -17,6 +17,7 @@ package io.nimbly.tzatziki.editor
 
 import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.openapi.editor.EditorModificationUtil
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
@@ -42,6 +43,9 @@ class TzCellCompletion: CompletionContributor() {
         }
     }
 
+    /**
+     * Complete Header
+     */
     private fun completeHeader(cell: GherkinTableCell, resultSet: CompletionResultSet) {
 
         // Find all tables
@@ -59,18 +63,37 @@ class TzCellCompletion: CompletionContributor() {
             .filter { it.isNotBlank() }
             .toSet()
 
+        // Create a new cell to chain completion
+        var suffix = ""
+        var cursorOffset = 0
+        if (cell.row.table.dataRows.isEmpty() && cell.row.psiCells.indexOf(cell) == cell.row.psiCells.count()-1) {
+            suffix = " | "
+            cursorOffset = 0
+            if (cell.nextSibling == null  ) {
+                suffix += " |"
+                cursorOffset = -2
+            }
+        }
+
         // Add all values to completion
         values.forEach { value ->
             val lookup = LookupElementBuilder.create(value)
                 .withPresentableText(value)
                 .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                 .withInsertHandler { context, _ ->
-                    context.editor.findTableAt(context.startOffset)?.format(false)
+                    if (cursorOffset != 0 && context.completionChar == '\t') {
+                        EditorModificationUtil.insertStringAtCaret(context.editor, suffix, false, false)
+                        context.editor.caretModel.moveToOffset(context.tailOffset + cursorOffset)
+                    }
+                    context.editor.findTableAt(context.startOffset)?.format(true)
                 }
             resultSet.addElement(lookup)
         }
     }
 
+    /**
+     * Complete Data
+     */
     private fun completeData(cell: GherkinTableCell, resultSet: CompletionResultSet) {
 
         // Find column name
@@ -118,6 +141,7 @@ class TzCellCompletion: CompletionContributor() {
             resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 100.0*count))
         }
     }
+
 
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(),

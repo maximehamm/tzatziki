@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.format
+package io.nimbly.tzatziki.navigation
 
 import io.nimbly.tzatziki.AbstractTestCase
 
@@ -64,6 +64,40 @@ class TabTests  : AbstractTestCase() {
                   | 79  | No    | D2      |
                 Then FInished !"""
         )
+    }
+
+    fun testTabHeader() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |
+                Then FInished !""")
+
+        //
+        setCursor("| NAF")
+
+        // go forward
+        navigate(TAB, "Ready")
+        navigate(TAB, "Details")
+        navigate(TAB, "")
+
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF | Ready | Details |  |
+                Then FInished !""")
+
+        checkCursorAt("| Details | ")
     }
 
 }

@@ -60,13 +60,30 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
 
     if (c != '|') return false
     if (fileType != GherkinFileType.INSTANCE) return false
-    val offset = this.caretModel.offset
-    val table = this.findTableAt(offset) ?: return false
+    var offset = this.caretModel.offset
+
+    var singleLine = false
+    var table = this.findTableAt(offset)
+    if (table == null) {
+        table = this.findTableAt(offset-2)
+        if (table != null && table.allRows.size == 1 && !table.allRows.first().text.trim().endsWith("|")) {
+            offset -= 2
+            singleLine = true
+        }
+        else {
+            return false
+        }
+    }
     var currentCol = table.columnNumberAt(offset)
     val currentRow = table.rowNumberAt(offset) ?: return false
 
     // Where I am ? In table ? At its left ? At its right ?
     var where = this.where(table)
+
+    // First row specific
+    if (table.allRows.size == 1 && !table.allRows.first().text.trim().endsWith("|")) {
+        where = if (singleLine) 0 else 1
+    }
 
     // adjust left of right of current column
     if (where == 0 && currentCol != null) {
@@ -119,7 +136,7 @@ fun Editor.addNewColum(c: Char, project: Project, fileType: FileType): Boolean {
             when {
                 where < 0 -> 0
                 where > 0 -> newRow.psiCells.size - 1
-                else -> currentCol!! + 1
+                else -> if (currentCol == null) 0 else currentCol + 1
             }
 
         // Move caret

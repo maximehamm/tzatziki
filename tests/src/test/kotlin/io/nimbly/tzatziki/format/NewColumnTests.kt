@@ -101,6 +101,92 @@ class NewColumnTests  : AbstractTestCase() {
         checkCursorAt("| NAF   | ")
     }
 
+    fun testNewColumnFromHeader2A() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF
+            """)
+
+        // insert pipe
+        pressKey('|', "| NAF")
+
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF |  |
+            """
+        )
+        checkCursorAt("| NAF | ")
+    }
+
+    fun testNewColumnFromHeader2B() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF 
+            """)
+
+        // insert pipe
+        pressKey('|', "| NAF ")
+
+        // language=feature
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF |  | 
+            """
+        )
+        checkCursorAt("| NAF | ")
+    }
+
+    fun testBackTabSideEffectFix() {
+
+        // language=feature
+        configure("""
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF |  |
+            """)
+
+        setCursor("| NAF |  ")
+        navigate(BACK)
+
+        checkContent(
+            """
+            Feature: Tzatziki y Cucumber
+              Scenario Outline: Auto formating
+                When I enter any character into <NAF> or <Ready> or <Details>
+                Then The Cucumber table is formatted !
+                Examples:
+                  | NAF |  |
+            """
+        )
+        checkCursorAt("| ")
+    }
+
     fun testNewColumnFromAnyLine() {
 
         // language=feature

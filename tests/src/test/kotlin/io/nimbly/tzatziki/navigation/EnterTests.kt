@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.format
+package io.nimbly.tzatziki.navigation
 
 import io.nimbly.tzatziki.AbstractTestCase
 

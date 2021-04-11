@@ -95,3 +95,20 @@ fun GherkinTableRow.createRowAfter(): GherkinTableRow {
 
     return newRow as GherkinTableRow
 }
+
+fun GherkinTableCell.createCellAfter(): GherkinTableCell {
+
+    val gfile = "Feature: x\n" +
+        "Scenario Outline: xx\n" +
+        "Examples: xxx\n" +
+        row.text +
+        "  |"
+
+    val tempTable = CucumberElementFactory.createTempPsiFile(project, gfile)
+        .children[0].children[0].children[0].children[0]
+
+    val tempRow = tempTable.children[0]
+    val replace = row.replace(tempRow) as GherkinTableRow
+
+    return replace.lastCell!!
+}
