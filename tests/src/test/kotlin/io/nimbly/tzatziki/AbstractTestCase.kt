@@ -159,7 +159,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             })
     }
 
-    private fun moveTo(lookFor: String?) {
+    protected fun moveTo(lookFor: String?) {
         if (lookFor != null) {
             val lf = lookFor.replace("`".toRegex(), "\"")
             val indexOf: Int = getIndexOf(configuredFile!!.text, lf)
