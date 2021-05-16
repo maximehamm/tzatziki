@@ -126,6 +126,7 @@
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
+          <li>Deprecated step displaying</li>
           <li>Toggle Cucumber table smart editing (from Edit menu)</li>
        <br/>
        Any suggestion ? Let me know !<br/>
@@ -161,6 +162,9 @@
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
         <!--  <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/> -->
+
+        // Deprecated
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzDeprecatedStepAnnotator" order="LAST"/>
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>

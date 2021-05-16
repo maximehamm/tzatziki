@@ -31,4 +31,11 @@
     </value>
   </option>
 
+  <option name="CCP_DEPRECATED">
+    <value>
+      <option name="EFFECT_COLOR" value="ffffff" />
+      <option name="EFFECT_TYPE" value="3" />
+    </value>
+  </option>
+
 </list>

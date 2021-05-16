@@ -34,6 +34,9 @@ val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED",
 val BOLD = TextAttributesKey.createTextAttributesKey("CCP_MD_BOLD", DefaultLanguageHighlighterColors.STRING)
 val ITALIC = TextAttributesKey.createTextAttributesKey("CCP_MD_ITALIC", DefaultLanguageHighlighterColors.STRING)
 
+// Deprecation
+val DEPRECATED = TextAttributesKey.createTextAttributesKey("CCP_DEPRECATED", DefaultLanguageHighlighterColors.STRING)
+
 class TzColorSettingsPage : ColorSettingsPage {
 
     override fun getDisplayName()
@@ -55,6 +58,7 @@ class TzColorSettingsPage : ColorSettingsPage {
                When an order is declared for <to>
                Then a message saying <message> is added
                And the ticket must say <expected>
+               And <DEP>this step is deprecated</DEP>
                Examples:
                  | to       | message     | expected                            |
                  | <OK>Juliette</OK> | <KO>Wanna chat?</KO> | <IG>From Romeo to Juliette: Wanna chat?</IG> |
@@ -65,12 +69,14 @@ class TzColorSettingsPage : ColorSettingsPage {
     override fun getAttributeDescriptors()
         = listOf(AttributesDescriptor("Test passed", TEST_OK),
                 AttributesDescriptor("Test deffect", TEST_KO),
-                AttributesDescriptor("Test ignored", TEST_IGNORED)).toTypedArray()
+                AttributesDescriptor("Test ignored", TEST_IGNORED),
+                AttributesDescriptor("Step is deprecated", DEPRECATED)).toTypedArray()
 
     override fun getAdditionalHighlightingTagToDescriptorMap()
         = mapOf("OK" to TEST_OK,
                 "KO" to TEST_KO,
-                "IG" to TEST_IGNORED)
+                "IG" to TEST_IGNORED,
+                "DEP" to DEPRECATED)
 
     override fun getColorDescriptors(): Array<ColorDescriptor>
         = ColorDescriptor.EMPTY_ARRAY
