@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.1.1'
+    version '5.1.2'
 }
 
 ext {
@@ -114,6 +114,7 @@ dependencies {
     implementation project(':plugin')
     implementation project(':common')
     implementation project(':extensions:java')
+    implementation project(':extensions:kotlin')
     testImplementation project(':tests')
 }
 

@@ -17,6 +17,7 @@ dependencies {
     implementation('com.github.rjeschke:txtmark:0.13')
 
     runtimeOnly project(':extensions:java')
+    runtimeOnly project(':extensions:kotlin')
 }
 
 configurations {
