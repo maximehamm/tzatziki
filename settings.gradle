@@ -2,7 +2,9 @@ rootProject.name = 'tzatziki'
 
 include 'plugin'
 include 'common'
+
 include 'extensions'
+include 'extensions:java'
 
 include 'tests'
 

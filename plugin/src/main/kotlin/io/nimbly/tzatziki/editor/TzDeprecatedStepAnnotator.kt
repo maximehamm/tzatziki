@@ -20,7 +20,7 @@ import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
+import io.nimbly.tzatziki.MAIN
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -44,7 +44,13 @@ class TzDeprecatedStepAnnotator : Annotator {
             ?: return
 
         val element = definition.element
-        if (element is PsiMethod && element.isDeprecated) {
+            ?: return
+
+        val deprecated = MAIN().extensionList.find {
+            it.isDeprecated(element)
+        }
+
+        if (deprecated !=null) {
 
             val range = TextRange(step.textRange.startOffset + step.text.indexOfFirst { it == ' ' } +1, step.textRange.endOffset)
             holder.newAnnotation(HighlightSeverity.INFORMATION, TZATZIKI_NAME)

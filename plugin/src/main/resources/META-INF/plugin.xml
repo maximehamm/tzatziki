@@ -172,14 +172,22 @@
 
     </extensions>
 
-
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.xml</depends>
     <depends>org.intellij.intelliLang</depends>
     <depends>com.intellij.properties</depends>
-
     <depends>gherkin</depends>
+
+    <!-- Optional dependencies
+    https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_dependencies.html#optional-plugin-dependencies -->
+    <depends optional="true" config-file="plugin-withJava.xml">com.intellij.java</depends>
+
+    <!-- Extension point
+        https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->
+    <extensionPoints>
+        <extensionPoint name="io.nimbly.tzatziki.main" interface="io.nimbly.tzatziki.TzatzikiExtensionPoint"/>
+    </extensionPoints>
 
     <applicationListeners>
         <listener class="io.nimbly.tzatziki.TzTModuleListener"

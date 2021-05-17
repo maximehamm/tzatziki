@@ -15,5 +15,13 @@
 
 package io.nimbly.tzatziki
 
-class Temp {
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMethod
+
+class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
+
+    override fun isDeprecated(element: PsiElement): Boolean {
+        return element is PsiMethod && element.isDeprecated
+    }
+
 }

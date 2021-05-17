@@ -16,6 +16,7 @@ dependencies {
     implementation("org.freemarker:freemarker:2.3.23")
     implementation('com.github.rjeschke:txtmark:0.13')
 
+    runtimeOnly project(':extensions:java')
 }
 
 configurations {
