@@ -121,13 +121,13 @@
        <br/><br/>
        <b>Other features :</></b><br/>
        <ul>
+          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
+          <li>Deprecated step displaying (Java, Kotlin)</li>
           <li>Markdown supports into feature header, including pictures references and urls</li>
           <li>Export markdown to PDF :
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
-          <li>Deprecated step displaying</li>
-          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
        <br/>
        Any suggestion ? Let me know !<br/>
        <br/>
