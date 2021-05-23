@@ -172,9 +172,13 @@
 
         // Step references
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>
-        <localInspection language="Gherkin" shortName="CucumberPlusUndefinedStep" bundle="messages.CucumberBundle"
-                         key="cucumber.inspection.undefined.step.name" groupKey="cucumber.inspection.group.name" enabledByDefault="true" level="WARNING"
-                         implementationClass="io.nimbly.tzatziki.inspections.TzCucumberStepInspection"/>
+
+        //TODO Remove after Gherkin plugin will fix issue IDEA-269898
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.annotators.TzGherkinAnnotator"/>
+        //TODO Remove after Gherkin plugin will fix issue IDEA-269898
+        <localInspection language="Gherkin" implementationClass="io.nimbly.tzatziki.inspections.TzCucumberStepInspection"
+                         shortName="CucumberPlusUndefinedStep" bundle="messages.CucumberBundle"
+                         key="cucumber.inspection.undefined.step.name" groupKey="cucumber.inspection.group.name" enabledByDefault="true" level="WARNING"/>
 
     </extensions>
 
