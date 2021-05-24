@@ -26,7 +26,9 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import org.jetbrains.plugins.cucumber.CucumberJvmExtensionPoint
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
+import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.util.*
 import java.util.stream.Collectors
@@ -89,6 +91,16 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
         return false
     }
 
+    fun resolveToDefinition(): AbstractStepDefinition? {
+        val definitions = this.resolveToDefinitions()
+        return if (definitions.isEmpty()) null
+            else definitions.iterator().next()
+    }
+
+    private fun resolveToDefinitions(): Collection<AbstractStepDefinition?> {
+        return CucumberStepHelper.findStepDefinitions(
+            myStep.containingFile, (myStep as GherkinStepImpl))
+    }
     private fun multiResolveInner(): Array<ResolveResult> {
 
         val module = ModuleUtilCore.findModuleForPsiElement(myStep)

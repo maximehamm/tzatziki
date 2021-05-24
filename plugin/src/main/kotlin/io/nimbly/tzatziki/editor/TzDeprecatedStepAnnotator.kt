@@ -22,9 +22,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import io.nimbly.tzatziki.MAIN
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.psi.getCucumberStepDefinition
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
-import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
 class TzDeprecatedStepAnnotator : Annotator {
 
@@ -35,12 +35,7 @@ class TzDeprecatedStepAnnotator : Annotator {
 
         if (step !is GherkinStep) return
 
-        val references = step.references
-        if (references.size != 1 || references[0] !is CucumberStepReference)
-            return
-
-        val reference = references[0] as CucumberStepReference
-        val definition = reference.resolveToDefinition()
+        val definition = getCucumberStepDefinition(step)
             ?: return
 
         val element = definition.element

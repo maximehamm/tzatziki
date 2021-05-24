@@ -16,9 +16,12 @@
 package io.nimbly.tzatziki.psi
 
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
 import com.intellij.refactoring.suggested.startOffset
+import io.nimbly.tzatziki.references.TzCucumberStepReference
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
 fun loadStepParams(step: GherkinStep): List<TextRange> {
@@ -34,4 +37,18 @@ fun loadStepParams(step: GherkinStep): List<TextRange> {
             ?: emptyList()
     }
     return emptyList()
+}
+
+fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
+    element.references.forEach { ref ->
+        val def = when (ref) {
+                is CucumberStepReference -> ref.resolveToDefinition()
+                is TzCucumberStepReference -> ref.resolveToDefinition()
+                else -> null
+            }
+
+        if (def!=null)
+            return def
+    }
+    return null
 }

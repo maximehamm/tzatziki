@@ -165,7 +165,7 @@
         <!--  <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/> -->
 
         // Deprecated
-        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzDeprecatedStepAnnotator" order="LAST"/>
+        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzDeprecatedStepAnnotator"/>
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>
