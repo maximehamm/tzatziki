@@ -18,6 +18,7 @@ dependencies {
 
     runtimeOnly project(':extensions:java')
     runtimeOnly project(':extensions:kotlin')
+    runtimeOnly project(':extensions:javascript')
 }
 
 configurations {

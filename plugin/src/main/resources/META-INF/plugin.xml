@@ -195,6 +195,7 @@
     https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_dependencies.html#optional-plugin-dependencies -->
     <depends optional="true" config-file="plugin-withJava.xml">com.intellij.java</depends>
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
+    <depends optional="true" config-file="plugin-withJavascript.xml">JavaScript</depends>
 
     <!-- Extension point
         https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->

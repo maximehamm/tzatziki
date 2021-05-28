@@ -1,0 +1,9 @@
+<idea-plugin>
+
+    <extensions defaultExtensionNs="io.nimbly.tzatziki">
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavascriptTzatzikiExtensionPoint">
+        </io.nimbly.tzatziki.main>
+    </extensions>
+
+
+</idea-plugin>

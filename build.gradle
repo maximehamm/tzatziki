@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.3.0'
+    version '5.4.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>5.3</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
          <li><b>5.3</b> Deprecated step inspection (instead of annotator... to let it be deactivated if you want)</li>
          <li><b>5.2</b> Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
          <li><b>5.1</b> Deprecated step annotator (Java, Kotlin)</li>
@@ -70,12 +71,14 @@ ext {
 //}
 
 ext { // 2021.1
-    plugin_idea_version = 'IC-211.6693.111'
+    plugin_idea_version = 'IU-211.7142.45'
     plugin_idea_plugins = ['java',
                            'Kotlin',
+                           'JavaScriptLanguage',
                            'org.intellij.intelliLang',
                            'Gherkin:211.6693.111',
                            'cucumber-java:211.6693.111',
+                           'cucumber-javascript:211.6693.65',
                            'com.intellij.properties:211.6693.44',
                            'PsiViewer:211.6305.21-EAP-SNAPSHOT']
 }
