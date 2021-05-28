@@ -1,6 +1,7 @@
 plugins {
     id 'org.jetbrains.intellij'
     id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+//    id 'scala'
 }
 
 group 'io.nimbly.tzatziki'
@@ -17,8 +18,9 @@ dependencies {
     implementation('com.github.rjeschke:txtmark:0.13')
 
     runtimeOnly project(':extensions:java')
-    runtimeOnly project(':extensions:kotlin')
     runtimeOnly project(':extensions:javascript')
+    runtimeOnly project(':extensions:kotlin')
+    runtimeOnly project(':extensions:scala')
 }
 
 configurations {

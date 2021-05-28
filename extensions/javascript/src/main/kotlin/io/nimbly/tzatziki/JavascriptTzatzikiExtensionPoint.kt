@@ -17,12 +17,17 @@ package io.nimbly.tzatziki
 
 import com.intellij.lang.javascript.psi.*
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.parentOfType
 
 class JavascriptTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     override fun isDeprecated(element: PsiElement): Boolean {
         if (element !is JSLiteralExpression)
             return false
+
+        val mainFunction = element.parentOfType<JSFunctionExpression>()
+        if (mainFunction !=null && mainFunction.isDeprecated)
+            return true
 
         val args = element.parent
         if (args !is JSArgumentList)

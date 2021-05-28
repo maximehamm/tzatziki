@@ -14,6 +14,7 @@
  */
 plugins {
     id 'org.jetbrains.intellij' version '0.7.2'
+//    id 'scala'
 }
 
 allprojects {
@@ -70,15 +71,25 @@ ext {
 //                           'PsiViewer:203-SNAPSHOT']
 //}
 
+ext.versions = [
+        scala: '2021.1.17'
+]
+
 ext { // 2021.1
     plugin_idea_version = 'IU-211.7142.45'
-    plugin_idea_plugins = ['java',
+    plugin_idea_plugins = ['Gherkin:211.6693.111',
                            'Kotlin',
-                           'JavaScriptLanguage',
                            'org.intellij.intelliLang',
-                           'Gherkin:211.6693.111',
+
+                           'java',
                            'cucumber-java:211.6693.111',
+
+                           'JavaScriptLanguage',
                            'cucumber-javascript:211.6693.65',
+
+                           "org.intellij.scala:${versions.scala}",
+                           'com.github.danielwegener.cucumber-scala:2021.1',
+
                            'com.intellij.properties:211.6693.44',
                            'PsiViewer:211.6305.21-EAP-SNAPSHOT']
 }
@@ -115,11 +126,12 @@ allprojects {
 //  Example : https://github.com/adelf/idea-php-dotenv-plugin/blob/master/build.gradle
 //  Other examples : https://www.programcreek.com/java-api-examples/?api=com.intellij.lang.javascript.psi.JSReferenceExpression
 dependencies {
-
     implementation project(':plugin')
     implementation project(':common')
     implementation project(':extensions:java')
+    implementation project(':extensions:javascript')
     implementation project(':extensions:kotlin')
+    implementation project(':extensions:scala')
     testImplementation project(':tests')
 }
 

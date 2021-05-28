@@ -1,3 +1,4 @@
 include 'java'
-include 'kotlin'
 include 'javascript'
+include 'kotlin'
+include 'scala'
