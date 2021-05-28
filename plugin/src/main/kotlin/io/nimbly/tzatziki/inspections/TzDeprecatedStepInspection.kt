@@ -22,7 +22,6 @@ import com.intellij.psi.PsiElementVisitor
 import io.nimbly.tzatziki.MAIN
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.getCucumberStepDefinition
-import okhttp3.internal.indexOfFirstNonAsciiWhitespace
 import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -52,10 +51,11 @@ class TzDeprecatedStepInspection : GherkinInspection() {
 
                 if (deprecated !=null) {
 
-                    val start = step.text.indexOfFirst { it == ' ' } +1
+                    var start = step.text.indexOfFirst { it == ' ' } +1
+                    start += step.text.substring(start).indexOfFirst { it != ' ' }
                     val eol = step.text.indexOfFirst { it == '\n' }
                     val range = TextRange(
-                        step.text.indexOfFirstNonAsciiWhitespace(start),
+                        start,
                         if (eol>0) eol else step.textLength)
 
                     holder.registerProblem(
