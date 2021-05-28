@@ -122,7 +122,7 @@
        <b>Other features :</></b><br/>
        <ul>
           <li>Toggle Cucumber table smart editing (from Edit menu)</li>
-          <li>Deprecated steps striked out by inspection (Java, Kotlin, Javascript)</li>
+          <li>Deprecated steps striked out inspection (Java, Kotlin, Javascript)</li>
           <li>Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
           <li>Markdown supports into feature header, including pictures references and urls</li>
           <li>Export markdown to PDF :
