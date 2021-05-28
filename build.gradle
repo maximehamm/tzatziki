@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.2.1'
+    version '5.3.0'
 }
 
 ext {
@@ -27,8 +27,9 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>5.3</b> Deprecated step inspection (instead of annotator... to let it be deactivated if you want)</li>
          <li><b>5.2</b> Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
-         <li><b>5.1</b> Deprecated step displaying (Java, Kotlin)</li>
+         <li><b>5.1</b> Deprecated step annotator (Java, Kotlin)</li>
          <li><b>5.0</b> Completion for table header or cells, and markdown images </li>
          <li><b>4.2</b> Tests results anntation is persistent until a scenario is modified </li>
          <li><b>4.1</b> Convert markdown to html while exporting to PDF </li>

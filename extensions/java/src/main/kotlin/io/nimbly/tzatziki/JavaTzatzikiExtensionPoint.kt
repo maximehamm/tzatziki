@@ -21,7 +21,8 @@ import com.intellij.psi.PsiMethod
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     override fun isDeprecated(element: PsiElement): Boolean {
-        return element is PsiMethod && element.isDeprecated
+        return element is PsiMethod
+                && (element.isDeprecated || element.containingClass?.isDeprecated == true)
     }
 
 }
