@@ -27,7 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
-         <li><b>5.3</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
+         <li><b>5.4</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
          <li><b>5.3</b> Deprecated step inspection (instead of annotator... to let it be deactivated if you want)</li>
          <li><b>5.2</b> Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
          <li><b>5.1</b> Deprecated step annotator (Java, Kotlin)</li>
