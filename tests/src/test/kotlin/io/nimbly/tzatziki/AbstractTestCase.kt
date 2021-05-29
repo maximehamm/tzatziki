@@ -28,6 +28,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
+import com.intellij.testFramework.fixtures.kotlin.KotlinTester
 import io.nimbly.tzatziki.inspections.TzDeprecatedStepInspection
 import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
@@ -43,8 +44,8 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
     enum class EXT { java, kt }
 
-    private val LIB_JAVA = "/lib/rt-small.jar"
     private val LIB_JAVA_CUCUMBER = "/lib/cucumber-java-6.8.1.jar"
+    private val LIB_JAVA = "/lib/rt-small.jar"
     private val LIB_KOTLIN = "/lib/kotlin-stdlib-1.4.30.jar"
 
     var configuredFile: PsiFile? = null
@@ -60,6 +61,12 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     protected fun setupForJava() {
         PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA)
         PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA_CUCUMBER)
+    }
+
+    protected fun setupForKotlin() {
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_KOTLIN)
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA_CUCUMBER)
+        KotlinTester.assumeCanUseKotlin()
     }
 
     fun addClass(extension: EXT, text: String) {
@@ -93,6 +100,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         if (!t.contains("import java.lang.Boolean")) {
             t = t.substringBefore("\n") + "\n" + """
+            import java.lang.Deprecated;
             import java.lang.Boolean;
             import java.lang.String;
             import java.lang.Character;
@@ -116,11 +124,11 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 //                        t.substringAfter("interface ")
 //        }
 
-//        val regex = """(class|interface) *([\w]+)""".toRegex()
-//        val className = regex.find(text.trimIndent())!!.groupValues.last()
-//        configuredFile = myFixture.configureByText("$className.${extension.name}", t)
+        val regex = """(class|interface) *([\w]+)""".toRegex()
+        val className = regex.find(text.trimIndent())!!.groupValues.last()
+        configuredFile = myFixture.configureByText("$className.${extension.name}", t)
 
-        configuredFile = myFixture.addClass(t).containingFile
+//        configuredFile = myFixture.addClass(t).containingFile
     }
 
 

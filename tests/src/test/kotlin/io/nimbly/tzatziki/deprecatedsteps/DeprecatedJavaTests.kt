@@ -19,7 +19,7 @@ import io.nimbly.tzatziki.AbstractJavaTestCase
 
 class DeprecatedJavaTests : AbstractJavaTestCase() {
 
-    fun testDeprecatedMethod() {
+    fun testDeprecatedMethodJavaDoc() {
 
         // language=Java
         configure("""
@@ -31,6 +31,35 @@ class DeprecatedJavaTests : AbstractJavaTestCase() {
                 /**
                  * @deprecated  As of release 1.x
                  */
+                @io.cucumber.java.en.Then("This is easy as pie")
+                public void thisIsEasyAsPie() {
+                }
+            }""")
+
+        // language=feature
+        feature("""
+            Feature: Some feature
+              Scenario: A scenario
+                Given This is given
+                Then This is easy as pie
+            """)
+
+        // Check markers
+        val markers = createJavaMarkers()
+        markerExists(markers, "Deprecated step", 1)
+        markersCount(markers, 1)
+    }
+
+    fun testDeprecatedMethodAnnotation() {
+
+        // language=Java
+        configure("""
+            package io.nimbly;
+            public class Easy {
+                @io.cucumber.java.en.Given("This is given")
+                public void thisIsGiven() {
+                }
+                @Deprecated
                 @io.cucumber.java.en.Then("This is easy as pie")
                 public void thisIsEasyAsPie() {
                 }
