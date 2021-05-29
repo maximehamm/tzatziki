@@ -26,9 +26,12 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
+import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
+import io.nimbly.tzatziki.inspections.TzDeprecatedStepInspection
 import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
+import junit.framework.TestCase
 import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Ignore
@@ -37,6 +40,12 @@ import java.io.File
 
 @Ignore
 abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
+
+    enum class EXT { java, kt }
+
+    private val LIB_JAVA = "/lib/rt-small.jar"
+    private val LIB_JAVA_CUCUMBER = "/lib/cucumber-java-6.8.1.jar"
+    private val LIB_KOTLIN = "/lib/kotlin-stdlib-1.4.30.jar"
 
     var configuredFile: PsiFile? = null
 
@@ -48,7 +57,25 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
     val BACKSPACE_FAKE_CHAR = '\uffff'
     val DELETE_FAKE_CHAR = '\ufffe'
 
-    protected open fun configure(text: String) {
+    protected fun setupForJava() {
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA)
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA_CUCUMBER)
+    }
+
+    fun addClass(extension: EXT, text: String) {
+        if (extension == EXT.java) {
+            // Java
+            myFixture.addClass(text)
+        }
+        else if (extension == EXT.kt) {
+            // Kotlin
+            val regex = """(class|interface) *([\w]+)""".toRegex()
+            val className = regex.find(text.trimIndent())!!.groupValues.last()
+            myFixture.configureByText("$className.kt", text)
+        }
+    }
+
+    protected open fun feature(text: String) {
         val t = text.smartTrim()
         val regex = """(Feature:) *([\w]+)""".toRegex()
         val featureName = regex.find(text.smartTrim())!!.groupValues.last()
@@ -57,6 +84,45 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         configuredFile = myFixture.configureByText("$featureName.feature", t)
         assertEquals(GherkinFileType.INSTANCE, configuredFile!!.fileType)
     }
+
+    protected open fun configure(extension: EXT, text: String) {
+
+        var t = text.trimIndent().trim()
+
+        TestCase.assertTrue(t.startsWith("package"))
+
+        if (!t.contains("import java.lang.Boolean")) {
+            t = t.substringBefore("\n") + "\n" + """
+            import java.lang.Boolean;
+            import java.lang.String;
+            import java.lang.Character;
+            import java.lang.CharSequence;
+            import java.lang.Number;
+            import java.lang.Double;
+            import java.lang.Long;
+            import java.lang.Integer;
+            import java.lang.Number;
+            import java.lang.Float;
+            import java.lang.Character;
+            """.trimIndent() + t.substringAfter(";")
+        }
+
+//        if (!t.contains("<caret>")) {
+//            if (t.contains("class "))
+//                t = t.substringBefore("class ") + "class <caret>" +
+//                        t.substringAfter("class ")
+//            else
+//                t = t.substringBefore("interface ") + "interface <caret>" +
+//                        t.substringAfter("interface ")
+//        }
+
+//        val regex = """(class|interface) *([\w]+)""".toRegex()
+//        val className = regex.find(text.trimIndent())!!.groupValues.last()
+//        configuredFile = myFixture.configureByText("$className.${extension.name}", t)
+
+        configuredFile = myFixture.addClass(t).containingFile
+    }
+
 
     protected open fun checkContent(expected: String) {
         var t = expected.smartTrim()
@@ -363,6 +429,111 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         return "src/test/resources"
     }
 
+    fun enableInspections() {
+        myFixture.enableInspections(TzDeprecatedStepInspection::class.java)
+    }
+
+    fun createJavaMarkers(): List<IMarker> {
+        enableInspections()
+        myFixture.openFileInEditor(configuredFile!!.virtualFile)
+        return reloadMarkers()
+    }
+
+    protected open fun reloadMarkers(): List<IMarker> {
+
+        // TRICKY : commit previous write operations
+        // (Otherwise when launching all tests suite, strange error occurs...)
+        val project = module.project
+        PsiDocumentManager.getInstance(project).doPostponedOperationsAndUnblockDocument(myFixture.editor.document)
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+
+        // Gets hightlightings
+        val highlightInfos = myFixture.doHighlighting()
+        myFixture.availableIntentions
+
+        // Convert to IMarkers
+        val markers = mutableListOf<IMarker>()
+        for (hi in highlightInfos) {
+            val d = hi.description ?: continue
+            //if (d.startsWith("Cannot resolve method 'iterator()'")) continue
+            markers.add(Marker(hi))
+        }
+        return markers
+    }
+
+    protected open fun markerExists(markers: List<IMarker>, name: String): List<IMarker> {
+        return markerExists(markers, name, 1)
+    }
+
+    protected open fun markerExists(markers: List<IMarker>, name: String, count: Int): List<IMarker> {
+        var c = 0
+        val found = mutableListOf<IMarker>()
+        markers.forEach { m ->
+            if (name == m.message) {
+                c++
+                found.add(m)
+            }
+        }
+        if (c != count) {
+            val sb = StringBuffer()
+            markers.forEach { m -> sb.append("\n" + m.message) }
+            if (c == 0) {
+                fail("Expected to find IMarker :\n-->$name\n but not found...\nAll IMarkers: $sb")
+            } else {
+                fail(
+                    "Expected to find " + count + " instances of marker '" + name + "' but "
+                            + (if (c == 0) "not found." else "found $c")
+                            + "\n  All IMarkers: " + sb
+                )
+            }
+        }
+        return found
+    }
+
+    protected open fun markerNotExists(markers: List<IMarker>, name: String) {
+        val found = markers
+            .asSequence()
+            .filterNotNull()
+            .filter { name == it.message }
+            .toList()
+        if (found.isEmpty()) return
+        val sb = StringBuffer()
+        markers
+            .filterNotNull()
+            .forEach { sb.append("\n" + it.message) }
+        fail("Expected no marker IMarker :\n-->$name\n but found...\nAll IMarkers: $sb")
+    }
+
+    protected open fun markersEmpty(markers: List<IMarker>, vararg excludedProblems: String) {
+        markersCount(markers, 0, *excludedProblems)
+    }
+
+    /**
+     * markersCount
+     *
+     * @author Maxime HAMM
+     */
+    protected open fun markersCount(markers: List<IMarker>, expectedCount: Int, vararg excludedProblems: String) {
+        if (markers.isEmpty() && expectedCount > 0) {
+            fail("Expected $expectedCount IMarker, but none !")
+            return
+        }
+        val excluded = setOf(*excludedProblems)
+        var count = 0
+        val sb = StringBuffer()
+        markers.forEach { m: IMarker ->
+            val ex = excluded.contains(m.problemGroup)
+            if (m.problemGroup != null && ex) return@forEach
+            sb.append('\n')
+            if (ex) sb.append('(')
+            sb.append(m.message)
+            if (ex) sb.append(')')
+            count++
+        }
+        if (count != expectedCount) {
+            fail("Expected $expectedCount IMarker, but : $sb")
+        }
+    }
 }
 
 fun getIndexOf(contents: String, lookFor: String): Int {

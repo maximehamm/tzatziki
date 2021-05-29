@@ -22,7 +22,7 @@ class EnterTests  : AbstractTestCase() {
     fun testEnter1() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -60,7 +60,7 @@ class EnterTests  : AbstractTestCase() {
     fun testEnter2() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -96,7 +96,7 @@ class EnterTests  : AbstractTestCase() {
     fun testEnterEOF() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -128,7 +128,7 @@ class EnterTests  : AbstractTestCase() {
     fun testEnterLEFT() {
 
         // language=feature
-        configure(
+        feature(
             """
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating

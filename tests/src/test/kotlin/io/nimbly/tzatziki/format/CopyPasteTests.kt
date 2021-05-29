@@ -22,7 +22,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopy() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -46,7 +46,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPaste() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -108,7 +108,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteAfterLastColumn() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -141,7 +141,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteAfterLastLine() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -179,7 +179,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteBeforeFirstColumn() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -227,7 +227,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | C     | 144  |
                 Then Finished !"""
 
-        configure(content)
+        feature(content)
         selectAsColumn("|", "| No    ")
         cut()
         // language=feature
@@ -287,7 +287,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   | A     | 22   |
                   | C     | 144  |
                 Then Finished !"""
-        configure(content)
+        feature(content)
 
 
         select("formatted !\n", "| D2      |\n")
@@ -315,7 +315,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteTinyTable() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -355,7 +355,7 @@ class CopyPasteTests  : AbstractTestCase() {
 
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -408,7 +408,7 @@ class CopyPasteTests  : AbstractTestCase() {
                   
                   
             """
-        configure(content)
+        feature(content)
 
         select("Feature: Tzatziki y Cucumber\n", "| D2      |\n")
         copy()
@@ -441,7 +441,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteMultiCursors() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -477,7 +477,7 @@ class CopyPasteTests  : AbstractTestCase() {
     fun testCopyPasteMultiCursors2() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>

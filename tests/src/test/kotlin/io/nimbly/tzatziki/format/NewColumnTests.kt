@@ -22,7 +22,7 @@ class NewColumnTests  : AbstractTestCase() {
     fun testNewColumnFromHeader() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -104,7 +104,7 @@ class NewColumnTests  : AbstractTestCase() {
     fun testNewColumnFromHeader2A() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -133,7 +133,7 @@ class NewColumnTests  : AbstractTestCase() {
     fun testNewColumnFromHeader2B() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -162,7 +162,7 @@ class NewColumnTests  : AbstractTestCase() {
     fun testBackTabSideEffectFix() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -190,7 +190,7 @@ class NewColumnTests  : AbstractTestCase() {
     fun testNewColumnFromAnyLine() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>

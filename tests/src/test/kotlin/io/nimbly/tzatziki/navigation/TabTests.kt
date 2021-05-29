@@ -22,7 +22,7 @@ class TabTests  : AbstractTestCase() {
     fun testTab() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -69,7 +69,7 @@ class TabTests  : AbstractTestCase() {
     fun testTabHeader() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>

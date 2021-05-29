@@ -33,69 +33,69 @@ class DeleteTests : AbstractTestCase() {
                   | 79  | No    | D2      |
                 Then FInished !"""
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
         pressKey('x')
         checkContent(content)
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n    ", "| No    | D2")
         pressKey('x')
         checkContent(content)
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n   ", " | 79")
         pressKey('x')
         checkContent(content)
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n  ", "| Ready |")
         pressKey('x')
         checkContent(content)
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n ", "| 79  |")
         pressKey('x')
         checkContent(content)
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n", "| 79  |")
         pressKey('x')
         checkContent(content)
 
 
 
-        configure(content)
+        feature(content)
         setCursor(" Details |")
         backspace()
         checkContent(content)
 
-        configure(content)
+        feature(content)
         setCursor("| No    |")
         backspace()
         checkContent(content)
 
-        configure(content)
+        feature(content)
         setCursor("| No    ")
         delete()
         checkContent(content)
 
 
         // End of table
-        configure(content)
+        feature(content)
         setCursor("| D2      |")
         backspace()
         checkContent(content)
 
         // Left of table
-        configure(content)
+        feature(content)
         setCursor("| Details |\n  ")
         backspace()
         delete()
         checkContent(content)
 
         // Left of first row table
-        configure(content)
+        feature(content)
         setCursor("Examples:\n ")
         backspace()
         delete()
@@ -116,7 +116,7 @@ class DeleteTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !"""
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n     ", "| Yes   |         |")
         delete()
         // language=feature
@@ -132,7 +132,7 @@ class DeleteTests : AbstractTestCase() {
                     Then FInished !""")
 
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n    ", "| No    | D2")
         delete()
         // language=feature
@@ -148,7 +148,7 @@ class DeleteTests : AbstractTestCase() {
                 Then FInished !""")
 
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n   ", " | 79")
         backspace()
         // language=feature
@@ -164,7 +164,7 @@ class DeleteTests : AbstractTestCase() {
                 Then FInished !""")
 
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n  ", "| Ready |")
         backspace()
         // language=feature
@@ -181,7 +181,7 @@ class DeleteTests : AbstractTestCase() {
 
 
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n ", "| 79  |")
         delete()
         // language=feature
@@ -198,7 +198,7 @@ class DeleteTests : AbstractTestCase() {
 
 
 
-        configure(content)
+        feature(content)
         selectAsColumn("Examples:\n", "| 79  |")
         delete()
         // language=feature
@@ -216,7 +216,7 @@ class DeleteTests : AbstractTestCase() {
 
 
 
-        configure(content)
+        feature(content)
         setCursor("| NAF ")
         backspace()
         // language=feature
@@ -247,7 +247,7 @@ class DeleteTests : AbstractTestCase() {
                       | 79  | No    | D2      | Yes! | 17   | Berlin |
                     Then FInished !"""
 
-        configure(content)
+        feature(content)
         selectAsColumn("| NAF |", "| D2      |")
         delete()
         // language=feature
@@ -281,7 +281,7 @@ class DeleteTests : AbstractTestCase() {
     fun testDeletionInCellOk() {
 
         // language=feature
-        configure(
+        feature(
             """
                 Feature: Tzatziki y Cucumber
                   Scenario Outline: Auto formating
@@ -354,7 +354,7 @@ class DeleteTests : AbstractTestCase() {
     fun testDeletionInCellOutsideTableIsOk() {
 
         // language=feature
-        configure(
+        feature(
             """
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
@@ -424,7 +424,7 @@ class DeleteTests : AbstractTestCase() {
     fun testDeletionInCellOutsideTableIsOk2() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character
@@ -474,7 +474,7 @@ class DeleteTests : AbstractTestCase() {
 
                 Then close to end !   
                 Then End end !"""
-        configure(content)
+        feature(content)
 
         select("| stop  |", "| stop  |\n\n")
         backspace(2)
@@ -511,7 +511,7 @@ class DeleteTests : AbstractTestCase() {
                 Then End end !""")
 
         //
-        configure(content)
+        feature(content)
         select("| stop  |", "Then close to end !")
         backspace()
         checkContent("""
@@ -546,7 +546,7 @@ class DeleteTests : AbstractTestCase() {
                   | 10%  | OUI | 1%      | OUI    | 10%   |
                   | 39%  | OUI | 3%      | OUI    | 39%   |"""
 
-        configure(content)
+        feature(content)
         selectAsColumn("| 3%      | OUI    | 14",
             "| 3%      | OUI    | 39%")
         delete()
@@ -582,7 +582,7 @@ class DeleteTests : AbstractTestCase() {
                   | 39%  | OUI | 39%     | cc   | 39%   |
                   | 20%  | OUI | 11%     | dd   | 10%   |
                   | 99%  | OUI | 89%     | ee   | 69%   |"""
-        configure(content)
+        feature(content)
 
         selectAsColumn("| Percent |", "| ee   |")
         delete()
@@ -747,7 +747,7 @@ class DeleteTests : AbstractTestCase() {
                   | 20%  | OUI | 11%     |  | 10%   |
                   | 39%  | OUI | 39%     |  | 39%   |
                   | 20%  | OUI | 11%     |  | 10%   |"""
-        configure(content)
+        feature(content)
         selectAsColumn("| 10%     |  | 10%   |\n      ", "| 20%  | OUI | 11%     |  | 10%   |")
         delete()
         // language=feature
@@ -892,7 +892,7 @@ class DeleteTests : AbstractTestCase() {
                 Examples:
                   |
             """
-        configure(content)
+        feature(content)
 
         setCursor("|")
         backspace()

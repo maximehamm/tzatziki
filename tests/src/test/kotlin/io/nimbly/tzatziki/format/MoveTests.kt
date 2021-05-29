@@ -33,7 +33,7 @@ class MoveTests : AbstractTestCase() {
                     Then FInished !"""
 
         // language=feature
-        configure(content)
+        feature(content)
         setCursor("| NA")
 
         moveRight()
@@ -139,7 +139,7 @@ class MoveTests : AbstractTestCase() {
                     Then FInished !"""
 
         // language=feature
-        configure(content)
+        feature(content)
         setCursor("| NA")
 
         moveDown()

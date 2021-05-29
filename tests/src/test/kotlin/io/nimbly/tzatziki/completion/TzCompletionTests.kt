@@ -22,7 +22,7 @@ class TzCompletionTests : AbstractCompletionTests() {
     fun testCompletionHeader() {
 
         // language=feature
-        configure(
+        feature(
             """
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
@@ -104,7 +104,7 @@ class TzCompletionTests : AbstractCompletionTests() {
     fun testCompletionCell() {
 
         // language=feature
-        configure(
+        feature(
             """
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating

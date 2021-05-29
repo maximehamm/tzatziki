@@ -29,7 +29,6 @@ import org.jetbrains.plugins.cucumber.CucumberJvmExtensionPoint
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
-import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.util.*
 import java.util.stream.Collectors
 
@@ -150,24 +149,5 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
 
     companion object {
         private val RESOLVER = MyResolver()
-    }
-}
-
-@Deprecated("To remove")
-class TzCucumberStepReferenceOld(myStep: PsiElement, myRange: TextRange) : CucumberStepReference(myStep, myRange) {
-
-    override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
-
-        val resolved = super.multiResolve(incompleteCode)
-
-        if (resolved.isEmpty()) {
-            val lastValid = element.getCopyableUserData(LAST_VALID)
-            if (lastValid !=null)
-                return lastValid
-        }
-
-        element.putCopyableUserData(LAST_VALID, resolved)
-        val x = element.getCopyableUserData(LAST_VALID)
-        return resolved
     }
 }

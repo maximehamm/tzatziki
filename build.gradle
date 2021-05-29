@@ -82,6 +82,7 @@ ext { // 2021.1
                            'org.intellij.intelliLang',
 
                            'java',
+                           'JUnit',
                            'cucumber-java:211.6693.111',
 
                            'JavaScriptLanguage',

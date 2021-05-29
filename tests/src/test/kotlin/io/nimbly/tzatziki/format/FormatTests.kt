@@ -22,7 +22,7 @@ class FormatTests  : AbstractTestCase() {
     fun testFormat() {
 
         // language=feature
-        configure("""
+        feature("""
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
                 When I enter any character into <NAF> or <Ready> or <Details>
@@ -91,7 +91,7 @@ class FormatTests  : AbstractTestCase() {
     fun testMultiCursorFormat() {
 
         // language=feature
-        configure(
+        feature(
             """
             Feature: Tzatziki y Cucumber
               Scenario Outline: Auto formating
