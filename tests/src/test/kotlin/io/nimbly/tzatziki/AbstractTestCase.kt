@@ -42,7 +42,7 @@ import java.io.File
 @Ignore
 abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
-    enum class EXT { java, kt }
+    enum class EXT { java, kt, js }
 
     private val LIB_JAVA_CUCUMBER = "/lib/cucumber-java-6.8.1.jar"
     private val LIB_JAVA = "/lib/rt-small.jar"
@@ -67,6 +67,11 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_KOTLIN)
         PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA_CUCUMBER)
         KotlinTester.assumeCanUseKotlin()
+    }
+
+    protected fun setupForJavascript() {
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA)
+        PsiTestUtil.addLibrary(myFixture.module, getTestDataPath() + '/' + LIB_JAVA_CUCUMBER)
     }
 
     fun addClass(extension: EXT, text: String) {
@@ -96,39 +101,33 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
         var t = text.trimIndent().trim()
 
-        TestCase.assertTrue(t.startsWith("package"))
-
-        if (!t.contains("import java.lang.Boolean")) {
-            t = t.substringBefore("\n") + "\n" + """
-            import java.lang.Deprecated;
-            import java.lang.Boolean;
-            import java.lang.String;
-            import java.lang.Character;
-            import java.lang.CharSequence;
-            import java.lang.Number;
-            import java.lang.Double;
-            import java.lang.Long;
-            import java.lang.Integer;
-            import java.lang.Number;
-            import java.lang.Float;
-            import java.lang.Character;
-            """.trimIndent() + t.substringAfter(";")
+        if (extension == EXT.js) {
+            val className = t.substringBefore("(")
+            configuredFile = myFixture.configureByText("$className.${extension.name}", t)
         }
+        else {
+            TestCase.assertTrue(t.startsWith("package"))
+            if (!t.contains("import java.lang.Boolean")) {
+                t = t.substringBefore("\n") + "\n" + """
+                    import java.lang.Deprecated;
+                    import java.lang.Boolean;
+                    import java.lang.String;
+                    import java.lang.Character;
+                    import java.lang.CharSequence;
+                    import java.lang.Number;
+                    import java.lang.Double;
+                    import java.lang.Long;
+                    import java.lang.Integer;
+                    import java.lang.Number;
+                    import java.lang.Float;
+                    import java.lang.Character;
+                    """.trimIndent() + t.substringAfter(";")
+            }
 
-//        if (!t.contains("<caret>")) {
-//            if (t.contains("class "))
-//                t = t.substringBefore("class ") + "class <caret>" +
-//                        t.substringAfter("class ")
-//            else
-//                t = t.substringBefore("interface ") + "interface <caret>" +
-//                        t.substringAfter("interface ")
-//        }
-
-        val regex = """(class|interface) *([\w]+)""".toRegex()
-        val className = regex.find(text.trimIndent())!!.groupValues.last()
-        configuredFile = myFixture.configureByText("$className.${extension.name}", t)
-
-//        configuredFile = myFixture.addClass(t).containingFile
+            val regex = """(class|interface) *([\w]+)""".toRegex()
+            val className = regex.find(text.trimIndent())!!.groupValues.last()
+            configuredFile = myFixture.configureByText("$className.${extension.name}", t)
+        }
     }
 
 
