@@ -14,7 +14,6 @@
  */
 plugins {
     id 'org.jetbrains.intellij' version '0.7.2'
-//    id 'scala'
 }
 
 allprojects {
