@@ -24,6 +24,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.unscramble.AnalyzeStacktraceUtil
@@ -118,16 +119,10 @@ class TzTestsResultsAnnotator : Annotator {
             .range(element.bestRange())
             .tooltip(tooltip)
             .textAttributes(textKey)
+            .withFix(ClearAnnotationsFix(element))
         if (!stacktrace.isNullOrEmpty())
             a.newFix(PrintStackTraceFix(element, stacktrace)).registerFix()
         a.create()
-
-        // Clear registry
-//        try {
-//            TzTestRegistry.getResults()?.remove(element)
-//        } catch (e: Exception) {
-//            //In case if concurrent access for example
-//        }
     }
 }
 
@@ -182,4 +177,21 @@ private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) :
 
     override fun getFamilyName() = TZATZIKI_NAME
     override fun getText() = "Print stacktrace"
+}
+
+private class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {
+
+    override operator fun invoke(
+        project: Project,
+        file: PsiFile,
+        editor: Editor?,
+        startElement: PsiElement,
+        endElement: PsiElement) {
+
+        TzTestRegistry.cleanAllTestsResults(file)
+        PsiDocumentManager.getInstance(project).reparseFiles(listOf(file.virtualFile), true)
+    }
+
+    override fun getFamilyName() = TZATZIKI_NAME
+    override fun getText() = "Clear results"
 }

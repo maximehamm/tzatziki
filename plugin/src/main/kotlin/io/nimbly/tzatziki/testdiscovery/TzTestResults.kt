@@ -60,6 +60,18 @@ object TzTestRegistry {
 
     }
 
+    fun cleanAllTestsResults(file: PsiFile) {
+
+        if (activeResults.tests.isEmpty())
+            return
+
+        // Retain all related to not-involved scenarios
+        activeResults.tests = activeResults.tests
+            .filter { file != it.value.scenario?.containingFile }
+            .toMutableMap()
+
+    }
+
     val results get() = activeResults
 }
 
