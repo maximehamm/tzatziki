@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.4.0'
+    version '5.5.0'
 }
 
 ext {
@@ -27,12 +27,13 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>5.5</b> Clear tests results annotations using quick fix</li>
          <li><b>5.4</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
          <li><b>5.3</b> Deprecated step inspection (instead of annotator... to let it be deactivated if you want)</li>
          <li><b>5.2</b> Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
          <li><b>5.1</b> Deprecated step annotator (Java, Kotlin)</li>
          <li><b>5.0</b> Completion for table header or cells, and markdown images </li>
-         <li><b>4.2</b> Tests results anntation is persistent until a scenario is modified </li>
+         <li><b>4.2</b> Tests results annotation is persistent until a scenario is modified </li>
          <li><b>4.1</b> Convert markdown to html while exporting to PDF </li>
          <li><b>4.0</b> Markdown support into header. Including pictures completion and annotation. Pdf ex</li>
          <li><b>3.0</b> Run test then add colors according to tests results</li>
@@ -85,7 +86,8 @@ ext { // 2021.1
                            'cucumber-java:211.6693.111',
 
                            'JavaScriptLanguage',
-                           'cucumber-javascript:211.6693.65',
+                           //'cucumber-javascript:211.6693.65',
+                           //'JavaScriptDebugger',
 
                            "org.intellij.scala:${versions.scala}",
                            'com.github.danielwegener.cucumber-scala:2021.1',
