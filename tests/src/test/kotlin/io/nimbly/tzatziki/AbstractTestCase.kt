@@ -15,9 +15,12 @@
 
 package io.nimbly.tzatziki
 
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.IdeActions.*
+import com.intellij.openapi.actionSystem.ex.ActionManagerEx
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.ide.CopyPasteManager
@@ -33,11 +36,13 @@ import io.nimbly.tzatziki.inspections.TzDeprecatedStepInspection
 import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
 import junit.framework.TestCase
-import org.apache.log4j.Logger
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
+import org.junit.Assert
 import org.junit.Ignore
 import java.awt.datatransfer.DataFlavor
+import java.awt.event.InputEvent
 import java.io.File
+import java.util.logging.Logger
 
 @Ignore
 abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
@@ -151,7 +156,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         val project = myFixture.project
         PsiDocumentManager.getInstance(project).commitDocument(document)
         val text = file.text
-        Logger.getLogger(javaClass).info("\n*****************\n$text")
+        Logger.getLogger(javaClass.simpleName).info("\n*****************\n$text")
         val diff = indexOfDifference(text, exp)
         if (diff >= 0) {
             var s = ""
@@ -546,4 +551,24 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 fun getIndexOf(contents: String, lookFor: String): Int {
     val i = contents.indexOf(lookFor)
     return if (i < 0) i else i + lookFor.length
+}
+
+fun Editor.executeAction(actionId: String) {
+    val actionManager = ActionManagerEx.getInstanceEx()
+    val action = actionManager.getAction(actionId)
+    Assert.assertNotNull(action)
+    val event = AnActionEvent.createFromAnAction(
+        action,
+        null as InputEvent?,
+        "",
+        createEditorContext()
+    )
+    action.beforeActionPerformedUpdate(event)
+    if (!event.presentation.isEnabled) {
+        Assert.assertFalse("Action $actionId is disabled", false)
+    } else {
+        //actionManager.fireBeforeActionPerformed(action, event.dataContext, event)
+        action.actionPerformed(event)
+        //actionManager.fireAfterActionPerformed(action, event.dataContext, event)
+    }
 }

@@ -63,20 +63,8 @@ ext {
      */
 }
 
-//ext { // 2020.3
-//    plugin_idea_version = 'IC-201.8538.31'
-//    plugin_idea_plugins = ['java',
-//                           'Kotlin',
-//                           'org.intellij.intelliLang',
-//                           'Gherkin:203.5981.155',
-//                           'PsiViewer:203-SNAPSHOT']
-//}
-
-ext.versions = [
-        scala: '2021.1.17'
-]
-
 ext { // 2021.1
+    versions = [ scala: '2021.1.17']
     plugin_idea_version = 'IU-211.7142.45'
     plugin_idea_plugins = ['Gherkin:211.6693.111',
                            'Kotlin',
@@ -97,8 +85,30 @@ ext { // 2021.1
                            'PsiViewer:211.6305.21-EAP-SNAPSHOT']
 }
 
-// https://plugins.jetbrains.com/plugin/9164-gherkin
-// https://plugins.jetbrains.com/plugin/227-psiviewer
+//ext { // LATEST-EAP
+//    versions = [ scala: '2021.2.8']
+//    plugin_idea_version = 'IU-LATEST-EAP-SNAPSHOT' //'212.3116.43'
+//    plugin_idea_plugins = ['Gherkin:212.3116.29',                  // https://plugins.jetbrains.com/plugin/9164-gherkin/versions
+//                           'Kotlin',
+//                           'org.intellij.intelliLang',
+//
+//                           'java',
+//                           'JUnit',
+//                           'cucumber-java:212.3116.29',            //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+//
+//                           'JavaScriptLanguage',
+//                           //'cucumber-javascript:211.6693.65',
+//                           //'JavaScriptDebugger',
+//
+//                           "org.intellij.scala:${versions.scala}", //https://plugins.jetbrains.com/plugin/1347-scala/versions
+//                           //'com.github.danielwegener.cucumber-scala:2021.1', //https://plugins.jetbrains.com/plugin/7460-cucumber-for-scala/versions
+//
+//                           'com.intellij.properties:212.3116.4',   //https://plugins.jetbrains.com/plugin/11594-properties/versions
+//                           'PsiViewer:212-SNAPSHOT']   //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
+//}
+
+
+
 // https://plugins.jetbrains.com/docs/intellij/gradle-build-system.html
 // https://github.com/JetBrains/gradle-intellij-plugin/
 
