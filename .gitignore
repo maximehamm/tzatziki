@@ -3,3 +3,4 @@
 /.idea
 /gradle/
 /sample/rich-example/.gradle/
+/sample/rich-example/gradle/wrapper/
