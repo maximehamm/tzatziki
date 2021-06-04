@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.5.1'
+    version '5.6.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>5.6</b> IntelliJ IDEA 2021.2 compatibility</li>
          <li><b>5.5</b> Clear tests results annotations using quick fix</li>
          <li><b>5.4</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
          <li><b>5.3</b> Deprecated step inspection (instead of annotator... to let it be deactivated if you want)</li>

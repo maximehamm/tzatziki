@@ -12,7 +12,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
 package io.nimbly.tzatziki.annotators
 
 import com.intellij.lang.annotation.AnnotationHolder
@@ -29,7 +28,6 @@ import com.intellij.psi.util.PsiUtilCore
 import org.jetbrains.plugins.cucumber.CucumberBundle
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinScenarioOutlineImpl
-import org.jetbrains.plugins.cucumber.psi.refactoring.rename.CucumberStepRenameProcessor
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.util.regex.Pattern
 
@@ -66,7 +64,7 @@ class TzGherkinAnnotatorVisitor(private val myHolder: AnnotationHolder) : Gherki
     }
 
     override fun visitStep(step: GherkinStep) {
-        val reference = CucumberStepRenameProcessor.getCucumberStepReference(step) ?: return
+        val reference = getCucumberStepReference(step) ?: return
         val definition = reference.resolveToDefinition()
         if (definition != null) {
             val parameterRanges = GherkinPsiUtil.buildParameterRanges(
@@ -202,4 +200,16 @@ class TzGherkinAnnotatorVisitor(private val myHolder: AnnotationHolder) : Gherki
             return if (realSubstitutions.isEmpty()) null else realSubstitutions
         }
     }
+}
+
+fun getCucumberStepReference(element: PsiElement): CucumberStepReference? {
+    val var1 = element.references
+    val var2 = var1.size
+    for (var3 in 0 until var2) {
+        val ref = var1[var3]
+        if (ref is CucumberStepReference) {
+            return ref
+        }
+    }
+    return null
 }
