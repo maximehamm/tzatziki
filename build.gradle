@@ -67,6 +67,7 @@ ext {
 ext { // 2021.1
     versions = [gherkin: '211.6693.111',
                 cucumberJava: '211.6693.111',
+                cucumberJavascript: '211.6693.65',
                 scala: '2021.1.17']
     plugin_idea_version = 'IU-211.7142.45'
     plugin_idea_plugins = ["Gherkin:${versions.gherkin}",
@@ -78,7 +79,7 @@ ext { // 2021.1
                            "cucumber-java:${versions.cucumberJava}",
 
                            'JavaScriptLanguage',
-                           //'cucumber-javascript:211.6693.65',
+                           "cucumber-javascript:${versions.cucumberJavascript}",
                            //'JavaScriptDebugger',
 
                            "org.intellij.scala:${versions.scala}",
