@@ -5,6 +5,7 @@ include 'common'
 
 include 'extensions'
 include 'extensions:java'
+include 'extensions:java-cucumber'
 include 'extensions:javascript'
 include 'extensions:kotlin'
 include 'extensions:scala'

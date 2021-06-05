@@ -1,4 +1,5 @@
 include 'java'
+include 'java-cucumber'
 include 'javascript'
 include 'kotlin'
 include 'scala'

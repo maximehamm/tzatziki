@@ -21,24 +21,28 @@
     <description><![CDATA[
 
         <!-- TODO
-           [ ] Action to clean test results and annotations
-           [ ] Export to PDF with run results colors
-           [ ] Export PDF add CSS instead of replacing it
+           - Export to PDF with run results colors
         -->
 
-       <b>A better user expérience to run, edit, print Cucumber features</b><br/>
+       <b>A better user expérience to run, edit, and print Cucumber features</b><br/>
        <br/>
 
-       <b>Tests results annotator</></b><br/>
+       <b><u>NEW!</u></b> Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
+       <b><u>NEW!</u></b> Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ striked out the step<br/>
+       <br/>
+       <br/>
+
+       <b>Tests inspection and runner</b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_b1cc840f-57a1-4119-8473-4e715f1c9a9f"
                  alt="Cucumber+" width="419" height="233"></p>
           <li>Easily locate failed steps</li>
+          <li>Run a single line of a Scenario outline (Java, Kotlin)<li/>
           <li>Print related Stacktrace using quickifix</li>
           <li>Customize colors and font style from Settings > Color Scheme > Cucumber+</li>
        </ul>
 
-       <br/><br/>
+       <br/>
        <b>Print features to PDF</></b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_3f9818c3-f3a5-4d48-ba43-f61262ac6704"
@@ -49,7 +53,7 @@
           Read more at "cucumber+.default.properties" (generated at first print)</li>
        </ul>
 
-       <br/><br/>
+       <br/>
        <b>Easy handling of Cucumber tables</></b><br/>
        <ul>
           <li>Cucumber table <u>formatting as you go</u> :
@@ -118,7 +122,7 @@
           </li>
        </ul>
 
-       <br/><br/>
+       <br/>
        <b>Other features :</></b><br/>
        <ul>
           <li>Toggle Cucumber table smart editing (from Edit menu)</li>
@@ -182,6 +186,9 @@
                          shortName="CucumberPlusUndefinedStep" bundle="messages.CucumberBundle"
                          key="cucumber.inspection.undefined.step.name" groupKey="cucumber.inspection.group.name" enabledByDefault="true" level="WARNING"/>
 
+        <runLineMarkerContributor id="cucumberPlusLineMarkerContributor" language="Gherkin"
+                                  implementationClass="io.nimbly.tzatziki.run.TzRunLineMarkerContributor"/>
+
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
@@ -194,6 +201,7 @@
     <!-- Optional dependencies
     https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_dependencies.html#optional-plugin-dependencies -->
     <depends optional="true" config-file="plugin-withJava.xml">com.intellij.java</depends>
+    <depends optional="true" config-file="plugin-withJavaCucumber.xml">cucumber-java</depends>
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withJavascript.xml">JavaScript</depends>
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>

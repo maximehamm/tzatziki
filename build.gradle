@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '5.6.0'
+    version '6.0.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>6.0</b> Run Cucumber test for a single line of a Scenario outline (Java, Kotlin) </li>
          <li><b>5.6</b> IntelliJ IDEA 2021.2 compatibility</li>
          <li><b>5.5</b> Clear tests results annotations using quick fix</li>
          <li><b>5.4</b> Deprecated step inspection for Javascript (and Java, Kotlin)</li>
@@ -64,15 +65,17 @@ ext {
 }
 
 ext { // 2021.1
-    versions = [ scala: '2021.1.17']
+    versions = [gherkin: '211.6693.111',
+                cucumberJava: '211.6693.111',
+                scala: '2021.1.17']
     plugin_idea_version = 'IU-211.7142.45'
-    plugin_idea_plugins = ['Gherkin:211.6693.111',
+    plugin_idea_plugins = ["Gherkin:${versions.gherkin}",
                            'Kotlin',
                            'org.intellij.intelliLang',
 
                            'java',
                            'JUnit',
-                           'cucumber-java:211.6693.111',
+                           "cucumber-java:${versions.cucumberJava}",
 
                            'JavaScriptLanguage',
                            //'cucumber-javascript:211.6693.65',
@@ -142,6 +145,7 @@ dependencies {
     implementation project(':plugin')
     implementation project(':common')
     implementation project(':extensions:java')
+    implementation project(':extensions:java-cucumber')
     implementation project(':extensions:javascript')
     implementation project(':extensions:kotlin')
     implementation project(':extensions:scala')

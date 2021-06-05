@@ -18,6 +18,7 @@ dependencies {
     implementation('com.github.rjeschke:txtmark:0.13')
 
     runtimeOnly project(':extensions:java')
+    runtimeOnly project(':extensions:java-cucumber')
     runtimeOnly project(':extensions:javascript')
     runtimeOnly project(':extensions:kotlin')
     runtimeOnly project(':extensions:scala')
