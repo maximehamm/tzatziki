@@ -28,7 +28,7 @@
        <br/>
 
        <b><u>NEW!</u></b> Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
-       <b><u>NEW!</u></b> Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ striked out the step<br/>
+       <b><u>NEW!</u></b> Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ cross out the step<br/>
        <br/>
        <br/>
 
