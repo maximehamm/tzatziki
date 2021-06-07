@@ -4,3 +4,6 @@
 /gradle/
 /sample/rich-example/.gradle/
 /sample/rich-example/gradle/wrapper/
+/sample/scala-cucumber/out/
+/sample/scala-cucumber/.gradle/
+/sample/scala-cucumber/gradle/wrapper/
