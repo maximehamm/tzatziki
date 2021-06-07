@@ -41,13 +41,8 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         val cell = element.parent as? GherkinTableCell
             ?: return false
 
-        val scenario = cell.parentOfType<GherkinStepsHolder>()
+        cell.parentOfType<GherkinStepsHolder>()
             ?: return false
-
-        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
-            ?: return false
-        if (definition !is AbstractJavaStepDefinition)
-            return false
 
         val line = getLineNumber(element)
         val example = cell.row.rowNumber
@@ -60,29 +55,31 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         return true
     }
 
-    override fun createConfigurationFromContext(context: ConfigurationContext): ConfigurationFromContext? {
-        return super.createConfigurationFromContext(context)
-    }
     override fun isConfigurationFromContext(
         configuration: CucumberJavaRunConfiguration,
-        context: ConfigurationContext
-    ): Boolean {
+        context: ConfigurationContext): Boolean {
 
         val element = context.psiLocation ?:
             return false
-
         val cell = element.parent as? GherkinTableCell
             ?: return false
-
         val example = cell.row.rowNumber
         return configuration.name.endsWith(" - Example #$example")
     }
 
-    override fun isPreferredConfiguration(self: ConfigurationFromContext?, other: ConfigurationFromContext?): Boolean {
-        return super.isPreferredConfiguration(self, other)
+    override fun isPreferredConfiguration(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
+        return shouldReplace(self, other)
     }
 
     override fun shouldReplace(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
+        val cell = self.sourceElement.parent as? GherkinTableCell
+            ?: return false
+        val scenario = cell.parentOfType<GherkinStepsHolder>()
+            ?: return false
+        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
+            ?: return false
+        if (definition !is AbstractJavaStepDefinition)
+            return false
         return true
     }
 

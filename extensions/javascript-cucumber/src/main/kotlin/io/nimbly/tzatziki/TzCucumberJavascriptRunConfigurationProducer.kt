@@ -28,8 +28,10 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
+import org.jetbrains.plugins.cucumber.javascript.JavaScriptStepDefinition
 import org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfiguration
 import org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfigurationType
 import org.jetbrains.plugins.cucumber.psi.*
@@ -109,11 +111,19 @@ class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProduce
         return configuration.name.endsWith(" - Example #$example")
     }
 
-    override fun isPreferredConfiguration(self: ConfigurationFromContext?, other: ConfigurationFromContext?): Boolean {
-        return true
+    override fun isPreferredConfiguration(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
+        return shouldReplace(self, other)
     }
 
     override fun shouldReplace(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
+        val cell = self.sourceElement.parent as? GherkinTableCell
+            ?: return false
+        val scenario = cell.parentOfType<GherkinStepsHolder>()
+            ?: return false
+        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
+            ?: return false
+        if (definition !is JavaScriptStepDefinition)
+            return false
         return true
     }
 
