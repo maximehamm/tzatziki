@@ -47,6 +47,6 @@ class JavascriptTzatzikiExtensionPoint : TzatzikiExtensionPoint {
     }
 
     override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
-        return true
+        return false
     }
 }

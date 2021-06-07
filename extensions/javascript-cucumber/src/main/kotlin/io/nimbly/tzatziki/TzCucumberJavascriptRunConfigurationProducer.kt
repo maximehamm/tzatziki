@@ -18,8 +18,14 @@ package io.nimbly.tzatziki
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.ConfigurationFromContext
 import com.intellij.execution.actions.LazyRunConfigurationProducer
+import com.intellij.execution.configurations.ConfigurationFactory
+import com.intellij.execution.configurations.ConfigurationTypeBase
+import com.intellij.execution.configurations.ConfigurationTypeUtil.findConfigurationType
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.lang.javascript.psi.util.JSProjectUtil
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.NotNullLazyValue
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.text.StringUtil
@@ -29,21 +35,21 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
+import icons.ActionIcons.CUCUMBER_PLUS_SVG
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
 import org.jetbrains.plugins.cucumber.javascript.JavaScriptStepDefinition
 import org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfiguration
-import org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfigurationType
 import org.jetbrains.plugins.cucumber.psi.*
 
 //@See org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfigurationProducer
-class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProducer<CucumberJavaScriptRunConfiguration>() {
+class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProducer<TzJSRunConfiguration>() {
 
     override fun getConfigurationFactory()
-        = CucumberJavaScriptRunConfigurationType.getInstance().configurationFactories[0]
+        = TzJSRunConfigurationType.getInstance().configurationFactories[0]
 
     override fun setupConfigurationFromContext(
-        configuration: CucumberJavaScriptRunConfiguration,
+        configuration: TzJSRunConfiguration,
         context: ConfigurationContext,
         sourceElement: Ref<PsiElement>): Boolean {
 
@@ -97,7 +103,7 @@ class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProduce
     }
 
     override fun isConfigurationFromContext(
-        configuration: CucumberJavaScriptRunConfiguration,
+        configuration: TzJSRunConfiguration,
         context: ConfigurationContext
     ): Boolean {
 
@@ -165,5 +171,34 @@ class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProduce
         val document = PsiDocumentManager.getInstance(element.containingFile.project).getDocument(element.containingFile)
             ?: return null
         return document.getLineNumber(element.textOffset) + 1
+    }
+}
+
+class TzJSRunConfigurationType : DumbAware,
+    ConfigurationTypeBase("cucumber+.js", "Cucumber+ JS",  "Cucumber+ Javascript Run Configuration", NotNullLazyValue.createValue { CUCUMBER_PLUS_SVG }) {
+
+    override fun getHelpTopic() = "reference.dialogs.rundebug.cucumber.js"
+
+        class CucumberJavaScriptConfigurationFactory(type: TzJSRunConfigurationType) : ConfigurationFactory(type) {
+            override fun createTemplateConfiguration(project: Project): RunConfiguration {
+                return TzJSRunConfiguration(project, this, "Cucumber+.js")
+            }
+            override fun getId() = "Cucumber+.js"
+        }
+
+        companion object {
+            fun getInstance() = findConfigurationType(TzJSRunConfigurationType::class.java)
+        }
+
+        init {
+            addFactory(CucumberJavaScriptConfigurationFactory(this))
+        }
+    }
+
+class TzJSRunConfiguration(project: Project, factory: ConfigurationFactory, name: String) :
+    CucumberJavaScriptRunConfiguration(project, factory, name) {
+
+    override fun getFilePath(): String {
+        return super.getFilePath().replace(Regex(":\\d+\$"), "")
     }
 }
