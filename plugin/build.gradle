@@ -20,6 +20,7 @@ dependencies {
     runtimeOnly project(':extensions:java')
     runtimeOnly project(':extensions:java-cucumber')
     runtimeOnly project(':extensions:javascript')
+    runtimeOnly project(':extensions:javascript-cucumber')
     runtimeOnly project(':extensions:kotlin')
     runtimeOnly project(':extensions:scala')
 }

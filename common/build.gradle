@@ -12,7 +12,7 @@ jar {
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = rootProject.ext.plugin_idea_version
-    plugins = rootProject.ext.plugin_idea_plugins
+    plugins = ["Gherkin:${versions.gherkin}"]
 }
 
 sourceCompatibility = JavaVersion.VERSION_11

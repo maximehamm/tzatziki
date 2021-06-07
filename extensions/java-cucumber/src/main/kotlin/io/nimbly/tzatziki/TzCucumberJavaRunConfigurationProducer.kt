@@ -16,13 +16,17 @@
 package io.nimbly.tzatziki
 
 import com.intellij.execution.actions.ConfigurationContext
+import com.intellij.execution.actions.ConfigurationFromContext
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
+import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 
 class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
@@ -37,6 +41,14 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         val cell = element.parent as? GherkinTableCell
             ?: return false
 
+        val scenario = cell.parentOfType<GherkinStepsHolder>()
+            ?: return false
+
+        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
+            ?: return false
+        if (definition !is AbstractJavaStepDefinition)
+            return false
+
         val line = getLineNumber(element)
         val example = cell.row.rowNumber
 
@@ -48,6 +60,9 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         return true
     }
 
+    override fun createConfigurationFromContext(context: ConfigurationContext): ConfigurationFromContext? {
+        return super.createConfigurationFromContext(context)
+    }
     override fun isConfigurationFromContext(
         configuration: CucumberJavaRunConfiguration,
         context: ConfigurationContext
@@ -61,6 +76,14 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         val example = cell.row.rowNumber
         return configuration.name.endsWith(" - Example #$example")
+    }
+
+    override fun isPreferredConfiguration(self: ConfigurationFromContext?, other: ConfigurationFromContext?): Boolean {
+        return super.isPreferredConfiguration(self, other)
+    }
+
+    override fun shouldReplace(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
+        return true
     }
 
     private fun getLineNumber(element: PsiElement): Int? {

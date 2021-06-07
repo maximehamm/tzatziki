@@ -18,16 +18,22 @@ Feature: Cocktail Ordering
       | The Lion, the Witch and the Wardrobe | C.S. Lewis  |
       | In the Garden of Beasts              | Erik Larson |
 
-  Scenario Outline: Sending a message with an order
-    When  an order is declared for <to>
-    And  a message saying "<message>" is added
+  Scenario Outline: KOTLIN Sending a message with an order
+    When kotlin for <Who>
     Then the ticket must say "<expected>"
 
     Examples:
-      | to       | message       | expected                            |
-      | Juliette | Wanna chat?   | From Romeo to Juliette: Wanna chat? |
-      | Juliette | Wanna lunch ? | From Romeo to Jerry: Hei!           |
-      | Jerry    | Hei!          | Nothing                                   |
+      | Who      | expected                            |
+      | Juliette | From Romeo to Juliette: Wanna chat? |
+      | Juliette | From Romeo to Jerry: Hei!           |
+      | Jerry    | Nothing                             |
 
+  Scenario Outline: JAVA Sending a message with an order
+    When java for <Who>
+    Examples:
+      | Who      |
+      | Juliette |
+      | Juliette |
+      | Jerry    |
 
 

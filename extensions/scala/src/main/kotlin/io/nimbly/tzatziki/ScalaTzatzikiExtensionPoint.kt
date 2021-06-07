@@ -18,6 +18,7 @@ package io.nimbly.tzatziki
 import com.intellij.psi.PsiDocCommentOwner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaRecursiveElementVisitor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScMethodCall
 import org.jetbrains.plugins.scala.lang.psi.api.statements.ScFunction
@@ -58,5 +59,9 @@ class ScalaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             }
             super.visitElement(element)
         }
+    }
+
+    override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
+        return false
     }
 }

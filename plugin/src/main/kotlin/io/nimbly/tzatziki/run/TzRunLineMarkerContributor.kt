@@ -19,6 +19,9 @@ import com.intellij.execution.TestStateStorage
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
+import com.intellij.psi.util.parentOfType
+import io.nimbly.tzatziki.TZATZIKI
+import io.nimbly.tzatziki.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.columnNumber
 import io.nimbly.tzatziki.psi.isHeader
 import io.nimbly.tzatziki.psi.row
@@ -26,6 +29,7 @@ import io.nimbly.tzatziki.psi.table
 import org.jetbrains.plugins.cucumber.CucumberUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 
 //@see https://github.com/JetBrains/intellij-plugins/tree/master/cucumber/src/org/jetbrains/plugins/cucumber/run
@@ -49,6 +53,16 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
 
         if (cell.columnNumber > 0)
             return null
+
+        val scenario = cell.parentOfType<GherkinStepsHolder>()
+            ?: return null
+
+        val definitions = findCucumberStepDefinitions(scenario)
+        if (definitions.isEmpty())
+            return null
+
+        TZATZIKI().extensionList.find { it.canRunStep(definitions) }
+            ?: return null
 
         val state = getTestStateStorage(element)
         return getInfo(state)

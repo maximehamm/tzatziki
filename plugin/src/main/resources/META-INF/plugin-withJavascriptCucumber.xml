@@ -1,0 +1,7 @@
+<idea-plugin>
+
+    <extensions defaultExtensionNs="com.intellij">
+<!--        <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavascriptRunConfigurationProducer" order="first"/>-->
+    </extensions>
+
+</idea-plugin>

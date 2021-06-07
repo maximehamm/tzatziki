@@ -204,6 +204,7 @@
     <depends optional="true" config-file="plugin-withJavaCucumber.xml">cucumber-java</depends>
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withJavascript.xml">JavaScript</depends>
+    <depends optional="true" config-file="plugin-withJavascriptCucumber.xml">cucumber-javascript</depends>
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
 
     <!-- Extension point

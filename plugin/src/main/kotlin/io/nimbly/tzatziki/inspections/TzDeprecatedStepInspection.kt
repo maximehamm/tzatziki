@@ -19,8 +19,8 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElementVisitor
-import io.nimbly.tzatziki.MAIN
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.psi.getCucumberStepDefinition
 import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
@@ -45,7 +45,7 @@ class TzDeprecatedStepInspection : GherkinInspection() {
                 val element = definition.element
                     ?: return
 
-                val deprecated = MAIN().extensionList.find {
+                val deprecated = TZATZIKI().extensionList.find {
                     it.isDeprecated(element)
                 }
 

@@ -17,6 +17,8 @@ package io.nimbly.tzatziki
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
+import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
@@ -25,4 +27,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 && (element.isDeprecated || element.containingClass?.isDeprecated == true)
     }
 
+    override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
+        return null != stepDefinitions.firstOrNull { it is AbstractJavaStepDefinition }
+    }
 }

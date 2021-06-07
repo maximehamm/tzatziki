@@ -25,6 +25,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
+import io.nimbly.tzatziki.findCucumberStepReference
 import org.jetbrains.plugins.cucumber.CucumberBundle
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinScenarioOutlineImpl
@@ -64,7 +65,7 @@ class TzGherkinAnnotatorVisitor(private val myHolder: AnnotationHolder) : Gherki
     }
 
     override fun visitStep(step: GherkinStep) {
-        val reference = getCucumberStepReference(step) ?: return
+        val reference = step.findCucumberStepReference() ?: return
         val definition = reference.resolveToDefinition()
         if (definition != null) {
             val parameterRanges = GherkinPsiUtil.buildParameterRanges(
@@ -202,14 +203,3 @@ class TzGherkinAnnotatorVisitor(private val myHolder: AnnotationHolder) : Gherki
     }
 }
 
-fun getCucumberStepReference(element: PsiElement): CucumberStepReference? {
-    val var1 = element.references
-    val var2 = var1.size
-    for (var3 in 0 until var2) {
-        val ref = var1[var3]
-        if (ref is CucumberStepReference) {
-            return ref
-        }
-    }
-    return null
-}

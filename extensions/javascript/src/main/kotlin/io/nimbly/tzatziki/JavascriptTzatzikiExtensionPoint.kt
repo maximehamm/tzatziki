@@ -18,6 +18,7 @@ package io.nimbly.tzatziki
 import com.intellij.lang.javascript.psi.*
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 class JavascriptTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
@@ -42,6 +43,10 @@ class JavascriptTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         if (ref is JSFunction)
             return ref.isDeprecated
 
+        return false
+    }
+
+    override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
         return false
     }
 }

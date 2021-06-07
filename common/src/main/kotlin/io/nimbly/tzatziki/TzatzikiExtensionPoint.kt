@@ -17,14 +17,16 @@ package io.nimbly.tzatziki
 
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.psi.PsiElement
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 private const val nameSpace = "io.nimbly.tzatziki"
 
 interface TzatzikiExtensionPoint {
     fun isDeprecated(element: PsiElement): Boolean
+    fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean
 }
 
-object MAIN {
+object TZATZIKI {
     operator fun invoke(): ExtensionPointName<TzatzikiExtensionPoint> =
         ExtensionPointName.create("$nameSpace.io.nimbly.tzatziki.main")
 }

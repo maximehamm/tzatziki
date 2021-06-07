@@ -82,8 +82,8 @@ ext { // 2021.1
                            "cucumber-javascript:${versions.cucumberJavascript}",
                            //'JavaScriptDebugger',
 
-                           "org.intellij.scala:${versions.scala}",
-                           'com.github.danielwegener.cucumber-scala:2021.1',
+                           //"org.intellij.scala:${versions.scala}",
+                           //'com.github.danielwegener.cucumber-scala:2021.1',
 
                            'com.intellij.properties:211.6693.44',
                            'PsiViewer:211.6305.21-EAP-SNAPSHOT']
@@ -148,6 +148,7 @@ dependencies {
     implementation project(':extensions:java')
     implementation project(':extensions:java-cucumber')
     implementation project(':extensions:javascript')
+    implementation project(':extensions:javascript-cucumber')
     implementation project(':extensions:kotlin')
     implementation project(':extensions:scala')
     testImplementation project(':tests')

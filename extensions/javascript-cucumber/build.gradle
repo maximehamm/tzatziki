@@ -6,7 +6,7 @@ plugins {
 group 'io.nimbly.tzatziki'
 
 jar {
-    archiveBaseName = 'tzatziki-javascript'
+    archiveBaseName = 'tzatziki-javascript-cucumber'
 }
 
 dependencies {
@@ -20,8 +20,9 @@ compileTestKotlin { kotlinOptions.jvmTarget = "11" }
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     version = rootProject.ext.plugin_idea_version
-    plugins = ['JavaScriptLanguage',
-               "Gherkin:${versions.gherkin}"]
+    plugins = ["Gherkin:${versions.gherkin}",
+               "JavaScriptLanguage",
+               "cucumber-javascript:${versions.cucumberJavascript}"]
 }
 
 tasks.buildSearchableOptions {

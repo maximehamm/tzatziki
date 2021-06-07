@@ -16,17 +16,18 @@
 package io.nimbly.tzatziki
 
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
+import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
-class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
-
-    override fun isDeprecated(element: PsiElement): Boolean {
-        return element is PsiMethod && element.isDeprecated
-    }
-
-    override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
-        return false
-    }
-
+fun findCucumberStepDefinitions(scenario: GherkinStepsHolder): List<AbstractStepDefinition> {
+   return scenario.steps.flatMap { step ->
+       step.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
+   }
 }
+
+fun PsiElement.findCucumberStepReference(): CucumberStepReference?
+    = findCucumberStepReferences().firstOrNull()
+
+fun PsiElement.findCucumberStepReferences(): List<CucumberStepReference>
+    = references.filterIsInstance<CucumberStepReference>()
