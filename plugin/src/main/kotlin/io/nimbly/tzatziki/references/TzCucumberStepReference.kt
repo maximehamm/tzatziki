@@ -34,6 +34,7 @@ import java.util.stream.Collectors
 
 val LAST_VALID = Key<Array<ResolveResult>>("LAST_VALID")
 
+// Cf. https://github.com/JetBrains/intellij-plugins/blob/master/cucumber/src/org/jetbrains/plugins/cucumber/steps/reference/CucumberStepReference.java
 class TzCucumberStepReference(private val myStep: PsiElement, private val myRange: TextRange) : PsiPolyVariantReference {
 
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
@@ -112,11 +113,11 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
         if (stepVariants.isEmpty())
             return ResolveResult.EMPTY_ARRAY
 
-        val feature = myStep.containingFile
-        val stepDefinitions = CachedValuesManager.getCachedValue(feature) {
+        val featureFile = myStep.containingFile
+        val stepDefinitions = CachedValuesManager.getCachedValue(featureFile) {
             val allStepDefinition: MutableList<AbstractStepDefinition> = ArrayList()
             for (e in frameworks) {
-                allStepDefinition.addAll(e.loadStepsFor(feature, module))
+                allStepDefinition.addAll(e.loadStepsFor(featureFile, module))
             }
             CachedValueProvider.Result.create<List<AbstractStepDefinition>>(
                 allStepDefinition,

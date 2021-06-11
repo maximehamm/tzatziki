@@ -63,6 +63,12 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
             return false
         val cell = element.parent as? GherkinTableCell
             ?: return false
+
+        val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
+        val line = getLineNumber(element)
+        if (line != configLine)
+            return false
+
         val example = cell.row.rowNumber
         return configuration.name.endsWith(" - Example #$example")
     }

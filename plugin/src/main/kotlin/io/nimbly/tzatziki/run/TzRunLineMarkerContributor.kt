@@ -74,6 +74,6 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
     }
 
     private fun getInfo(state: TestStateStorage.Record?): Info {
-        return withExecutorActions(getTestStateIcon(state, true))
+        return withExecutorActions(getTestStateIcon(state, false))
     }
 }
