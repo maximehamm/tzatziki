@@ -131,7 +131,7 @@ fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection
 
     val processor: CommonProcessors.CollectProcessor<PsiReference> =
         object : CommonProcessors.CollectProcessor<PsiReference>() {
-            override fun accept(reference: PsiReference?): Boolean {
+            override fun accept(reference: PsiReference): Boolean {
                 return true
             }
         }
