@@ -7,3 +7,5 @@
 /sample/scala-cucumber/out/
 /sample/scala-cucumber/.gradle/
 /sample/scala-cucumber/gradle/wrapper/
+/sample/rich-example/out/test/classes/META-INF/rich-example.kotlin_module
+/sample/rich-example/out/

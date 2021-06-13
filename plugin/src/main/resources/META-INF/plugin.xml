@@ -180,14 +180,19 @@
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>
 
         //TODO Remove after Gherkin plugin will fix issue IDEA-269898
-        <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.annotators.TzGherkinAnnotator"/>
+        <annotator language="Gherkin"
+                   implementationClass="io.nimbly.tzatziki.annotators.TzGherkinAnnotator"/>
         //TODO Remove after Gherkin plugin will fix issue IDEA-269898
-        <localInspection language="Gherkin" implementationClass="io.nimbly.tzatziki.inspections.TzCucumberStepInspection"
+        <localInspection language="Gherkin"
+                         implementationClass="io.nimbly.tzatziki.inspections.TzCucumberStepInspection"
                          shortName="CucumberPlusUndefinedStep" bundle="messages.CucumberBundle"
                          key="cucumber.inspection.undefined.step.name" groupKey="cucumber.inspection.group.name" enabledByDefault="true" level="WARNING"/>
 
         <runLineMarkerContributor id="cucumberPlusLineMarkerContributor" language="Gherkin"
                                   implementationClass="io.nimbly.tzatziki.run.TzRunLineMarkerContributor"/>
+
+        // Breakpoints
+        <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>
 
     </extensions>
 

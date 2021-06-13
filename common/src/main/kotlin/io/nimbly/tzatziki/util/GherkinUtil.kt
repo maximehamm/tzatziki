@@ -15,7 +15,7 @@
 
 package io.nimbly.tzatziki
 
-import com.intellij.psi.PsiElement
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
@@ -26,8 +26,8 @@ fun findCucumberStepDefinitions(scenario: GherkinStepsHolder): List<AbstractStep
    }
 }
 
-fun PsiElement.findCucumberStepReference(): CucumberStepReference?
+fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
     = findCucumberStepReferences().firstOrNull()
 
-fun PsiElement.findCucumberStepReferences(): List<CucumberStepReference>
+fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
     = references.filterIsInstance<CucumberStepReference>()

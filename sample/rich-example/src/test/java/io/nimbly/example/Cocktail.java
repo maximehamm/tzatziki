@@ -13,7 +13,8 @@ public class Cocktail {
 
     @When("an order is declared for Juliette")
     public void anOrderIsDeclaredForJuliette() {
-        
+        int x =0;
+        x++;
     }
 
     @Given("I have the following books in the store")

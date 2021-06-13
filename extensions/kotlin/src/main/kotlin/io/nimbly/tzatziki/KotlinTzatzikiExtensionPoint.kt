@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
@@ -29,4 +30,9 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         return false
     }
 
+    override fun findBreakpoint(source: PsiElement, stepDefinitions: List<AbstractStepDefinition>): TzBreakpoint? {
+        return null
+    }
+
+    override fun initBreakpointListener(project: Project) = Unit
 }

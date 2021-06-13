@@ -25,9 +25,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.psi.search.SearchScope
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.util.CommonProcessors
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
@@ -120,3 +123,19 @@ fun PsiElement.getDocumentLine()
 val PsiElement.safeText
     get() = text.replace(DUMMY_IDENTIFIER, "", true)
                 .replace(DUMMY_IDENTIFIER_TRIMMED, "", true)
+
+fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection<PsiReference> {
+
+    val search = ReferencesSearch.search(
+        this, referencesSearchScope, false)
+
+    val processor: CommonProcessors.CollectProcessor<PsiReference> =
+        object : CommonProcessors.CollectProcessor<PsiReference>() {
+            override fun accept(reference: PsiReference?): Boolean {
+                return true
+            }
+        }
+
+    search.forEach(processor)
+    return processor.results
+}

@@ -79,7 +79,7 @@ ext { // 2021.1
                            "cucumber-java:${versions.cucumberJava}",
 
                            'JavaScriptLanguage',
-                           "cucumber-javascript:${versions.cucumberJavascript}",
+                           //"cucumber-javascript:${versions.cucumberJavascript}",
                            //'JavaScriptDebugger',
 
                            //"org.intellij.scala:${versions.scala}",

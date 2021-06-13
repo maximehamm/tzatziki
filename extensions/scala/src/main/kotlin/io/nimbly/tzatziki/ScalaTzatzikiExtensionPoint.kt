@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocCommentOwner
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
@@ -64,4 +65,10 @@ class ScalaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
     override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
         return false
     }
+
+    override fun findBreakpoint(source: PsiElement, stepDefinitions: List<AbstractStepDefinition>): TzBreakpoint? {
+        return null
+    }
+
+    override fun initBreakpointListener(project: Project) = Unit
 }
