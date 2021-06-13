@@ -53,6 +53,9 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             .mapNotNull { it.element }
             .filterIsInstance<PsiMethod>()
 
+        if (methods.isEmpty())
+            return null
+
         val breakpoints = DebuggerManagerEx.getInstanceEx(methods.first().project)
             .breakpointManager
             .breakpoints
