@@ -34,6 +34,7 @@ import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
+import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
@@ -96,7 +97,8 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             val element = file.findElementAt(sourcePosition.offset) ?: return
             val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
 
-            val references = method.collectReferences(GlobalSearchScope.projectScope(project))
+            val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
+            val references = method.collectReferences(scope)
             references
                 .asSequence()
                 .filterIsInstance<CucumberStepReference>()
