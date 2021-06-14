@@ -27,8 +27,10 @@
        <b>A better user expérience to run, edit, and print Cucumber features</b><br/>
        <br/>
 
-       <b><u>NEW!</u></b> Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
-       <b><u>NEW!</u></b> Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ cross out the step<br/>
+       <b><u>NEW!</u></b><br/>
+         ✓ <b>7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
+         ✓ <b>6.0</b> - Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
+         ✓ <b>5.0</b> - Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ cross out the step<br/>
        <br/>
        <br/>
 
@@ -210,6 +212,7 @@
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withJavascript.xml">JavaScript</depends>
     <depends optional="true" config-file="plugin-withJavascriptCucumber.xml">cucumber-javascript</depends>
+    <!--suppress PluginXmlValidity -->
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
 
     <!-- Extension point
