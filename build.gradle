@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '7.0.0'
+    version '7.0.1'
 }
 
 ext {
@@ -87,7 +87,7 @@ ext { // 2021.1
                            //'com.github.danielwegener.cucumber-scala:2021.1',
 
                            'com.intellij.properties:211.6693.44',
-                           'PsiViewer:211.6305.21-EAP-SNAPSHOT']
+                           'PsiViewer:211-SNAPSHOT']
 }
 
 //ext { // LATEST-EAP

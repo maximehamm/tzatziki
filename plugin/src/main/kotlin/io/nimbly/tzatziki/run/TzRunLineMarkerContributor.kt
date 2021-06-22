@@ -18,19 +18,15 @@ package io.nimbly.tzatziki.run
 import com.intellij.execution.TestStateStorage
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
+import com.intellij.psi.util.elementType
 import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.findCucumberStepDefinitions
-import io.nimbly.tzatziki.psi.columnNumber
-import io.nimbly.tzatziki.psi.isHeader
-import io.nimbly.tzatziki.psi.row
-import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.CucumberUtil
-import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
-import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.*
 
 //@see https://github.com/JetBrains/intellij-plugins/tree/master/cucumber/src/org/jetbrains/plugins/cucumber/run
 class TzRunLineMarkerContributor : RunLineMarkerContributor() {
@@ -42,8 +38,10 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
         if (element.containingFile !is GherkinFile)
             return null
 
-        val cell = element.parent as? GherkinTableCell
-            ?: return null
+        var cell = element.parent as? GherkinTableCell
+        if (cell == null && element is PsiWhiteSpace && element.nextSibling is GherkinTableCell)
+            cell = element.nextSibling as GherkinTableCell
+        else return null
 
         if (cell.row.isHeader)
             return null
@@ -51,7 +49,7 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
         if (cell.row.table.parent !is GherkinExamplesBlock)
             return null
 
-        if (cell.columnNumber > 0)
+        if (cell != cell.row.firstCell)
             return null
 
         val scenario = cell.parentOfType<GherkinStepsHolder>()
