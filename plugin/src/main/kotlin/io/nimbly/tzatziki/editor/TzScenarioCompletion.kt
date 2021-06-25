@@ -27,13 +27,11 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
 import icons.CucumberIcons
-import io.nimbly.tzatziki.psi.description
-import io.nimbly.tzatziki.psi.getFile
-import io.nimbly.tzatziki.psi.getGherkinScope
-import io.nimbly.tzatziki.psi.safeText
+import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 class TzScenarioCompletion: CompletionContributor() {
 
@@ -49,7 +47,9 @@ class TzScenarioCompletion: CompletionContributor() {
 
         data class Item(
             val description: String,
-            val filename: String
+            val filename: String,
+            val definition: AbstractStepDefinition?,
+            val deprecated: Boolean
         )
 
         val allSteps = mutableSetOf<Item>()
@@ -59,11 +59,20 @@ class TzScenarioCompletion: CompletionContributor() {
             .filterIsInstance<GherkinFile>()
             .forEach { file ->
                 val steps = CachedValuesManager.getCachedValue(file) {
+
                     val steps = file.features
                         .flatMap { feature -> feature.scenarios.toList() }
                         .flatMap { scenario -> scenario.steps.toList() }
-                        .map { Item(it.description, it.containingFile.name) }
+                        .map {
+                            val definition = it.findDefinitions().firstOrNull()
+                            Item(
+                                description = it.description,
+                                filename = it.containingFile.name,
+                                definition = definition,
+                                deprecated = definition?.isDeprecated() ?: false
+                        ) }
                         .filter { it.description.isNotEmpty() }
+
                     CachedValueProvider.Result.create(
                         steps,
                         PsiModificationTracker.MODIFICATION_COUNT, file
@@ -86,24 +95,40 @@ class TzScenarioCompletion: CompletionContributor() {
                 if (items.size > 1)
                     typeText += """ (+${items.size-1})"""
 
+                val deprecated = items.firstOrNull { it.deprecated }?.deprecated ?: false
+                val priority = if (deprecated) 50.0 else 100.0
+
                 val lookup = LookupElementBuilder.create(stepDescription)
                     .withTypeText(typeText)
                     .withIcon(ActionIcons.CUCUMBER_PLUS_16)
-                resultSet.addElement(lookup)
+                    .withStrikeoutness(deprecated)
+
+                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
         }
 
         val allStepDescriptions = allSteps.map { it.description }
         resultSet.runRemainingContributors(parameters) {
             var lookup = it.lookupElement
             if (! allStepDescriptions.contains(lookup.lookupString)) {
+
+                var priority = 100.0
                 if (lookup is LookupElementBuilder) {
+
                     lookup = lookup.withIcon(CucumberIcons.Cucumber)
                     val obj = lookup.`object`
                     if (obj is PsiElement) {
-                        lookup = lookup.withTypeText(obj.containingFile.name)
+
+                        val deprecated = allSteps
+                            .firstOrNull() { it.definition?.element == lookup.psiElement }
+                            ?.deprecated ?: false
+                        if (deprecated) priority = 50.0
+
+                        lookup = lookup
+                            .withTypeText(obj.containingFile.name)
+                            .withStrikeoutness(deprecated)
                     }
                 }
-                resultSet.addElement(lookup)
+                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
             }
         }
     }

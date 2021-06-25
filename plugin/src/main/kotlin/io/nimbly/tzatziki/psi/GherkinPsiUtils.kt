@@ -20,6 +20,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.suggested.startOffset
+import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.references.TzCucumberStepReference
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiUtil
@@ -76,3 +77,14 @@ val GherkinStep.description
 fun Module.getGherkinScope()
     = GlobalSearchScope.getScopeRestrictedByFileTypes(
         GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE)
+
+fun AbstractStepDefinition.isDeprecated(): Boolean {
+    val element = element
+        ?: return false
+
+    TZATZIKI().extensionList.forEach {
+        if (it.isDeprecated(element))
+            return true
+    }
+    return false;
+}
