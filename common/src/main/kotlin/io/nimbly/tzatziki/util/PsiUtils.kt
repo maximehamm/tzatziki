@@ -121,8 +121,12 @@ fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
 
 val PsiElement.safeText
-    get() = text.replace(DUMMY_IDENTIFIER, "", true)
-                .replace(DUMMY_IDENTIFIER_TRIMMED, "", true)
+    get() = text.safeText
+
+val String.safeText
+    get() = this.replace(DUMMY_IDENTIFIER, "", true)
+        .replace(DUMMY_IDENTIFIER_TRIMMED, "", true)
+
 
 fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection<PsiReference> {
 

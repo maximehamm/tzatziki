@@ -28,6 +28,7 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
+         ✓ <b>8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implentation. Details bellow.<br/>
          ✓ <b>7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
          ✓ <b>6.0</b> - Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
          ✓ <b>5.0</b> - Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ cross out the step<br/>
@@ -135,6 +136,13 @@
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
+          <li>Step completion suggests all steps already used in current module, not only steps having an implementation :<br/>
+              - The icon tells you if the completion comes from a feature implementation or a feature gherkin file<br/>
+              - The right side gives you the name of the file where the proposal step comes from (i.e a Java class, Ruby, Kotlin, etc) or a feature file name.<br/>
+              - You will also know in how many files the step is used, for exemple : toto.feature (+2)
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_db068ed9-6907-4f0a-8529-341678c2e248"
+                  alt="Cucumber+" width="419" height="233"></p>
+          </li>
        <br/>
        Any suggestion ? Let me know !<br/>
        <br/>
@@ -177,6 +185,9 @@
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>
+
+        // Step completion
+        <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzScenarioCompletion" order="first"/>
 
         // Step references
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>

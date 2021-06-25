@@ -15,10 +15,13 @@
 
 package io.nimbly.tzatziki.psi
 
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.references.TzCucumberStepReference
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
@@ -52,3 +55,24 @@ fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
     }
     return null
 }
+
+val GherkinStep.descriptionRange: TextRange
+    get() {
+        val indexOfFirst = this.text.indexOfFirst { it == ' ' }
+        if (indexOfFirst <0)
+            return TextRange.EMPTY_RANGE
+        var start = indexOfFirst + 1
+        start += this.text.substring(start).indexOfFirst { it != ' ' }
+        val eol = this.text.indexOfFirst { it == '\n' }
+        return TextRange(
+            start,
+            if (eol > 0) eol else this.textLength
+        )
+    }
+
+val GherkinStep.description
+    get() = descriptionRange.substring(this.text)
+
+fun Module.getGherkinScope()
+    = GlobalSearchScope.getScopeRestrictedByFileTypes(
+        GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE)
