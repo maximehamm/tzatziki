@@ -46,6 +46,7 @@ class TzScenarioCompletion: CompletionContributor() {
             ?: return
 
         data class Item(
+            val step: GherkinStep,
             val description: String,
             val filename: String,
             val definition: AbstractStepDefinition?,
@@ -66,6 +67,7 @@ class TzScenarioCompletion: CompletionContributor() {
                         .map {
                             val definition = it.findDefinitions().firstOrNull()
                             Item(
+                                step = it,
                                 description = it.description,
                                 filename = it.containingFile.name,
                                 definition = definition,
@@ -102,6 +104,7 @@ class TzScenarioCompletion: CompletionContributor() {
                     .withTypeText(typeText)
                     .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                     .withStrikeoutness(deprecated)
+                    .withPsiElement(step.stepHolder)
 
                 resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
         }

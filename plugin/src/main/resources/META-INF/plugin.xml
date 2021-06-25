@@ -142,7 +142,10 @@
               - You will also know in how many files the step is used, for exemple : toto.feature (+2)<br/>
               - Steps related to a deprecated implementation are striked out (Java/Kotlin/Javascript)
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_db068ed9-6907-4f0a-8529-341678c2e248"
-                  alt="Cucumber+" width="419" height="233"></p>
+                  alt="Cucumber+" width="380" height="233"></p>
+              - Press ALT-Space to display the preview of the scenarion holding the step or step's implementation :
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_c314a1dc-3fab-40c9-bcf9-79ddb3bede79"
+                  alt="Cucumber+" width="640" height="233"></p>
           </li>
        <br/>
        Any suggestion ? Let me know !<br/>
