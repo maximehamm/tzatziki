@@ -137,9 +137,10 @@
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
           <li>Step completion suggests all steps already used in current module, not only steps having an implementation :<br/>
-              - The icon tells you if the completion comes from a feature implementation or a feature gherkin file<br/>
+              - The icon tells you if the completion comes from a feature implementation or a feature gherkin file.<br/>
               - The right side gives you the name of the file where the proposal step comes from (i.e a Java class, Ruby, Kotlin, etc) or a feature file name.<br/>
-              - You will also know in how many files the step is used, for exemple : toto.feature (+2)
+              - You will also know in how many files the step is used, for exemple : toto.feature (+2)<br/>
+              - Steps related to a deprecated implementation are striked out (Java/Kotlin/Javascript)
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_db068ed9-6907-4f0a-8529-341678c2e248"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
