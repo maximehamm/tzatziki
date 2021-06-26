@@ -16,7 +16,10 @@
 package io.nimbly.tzatziki.editor
 
 import com.intellij.codeInsight.completion.*
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.codeInsight.lookup.LookupElementRenderer
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
@@ -45,15 +48,6 @@ class TzScenarioCompletion: CompletionContributor() {
         val module = ModuleUtilCore.findModuleForPsiElement(step)
             ?: return
 
-        data class Item(
-            val step: GherkinStep,
-            val description: String,
-            val filename: String,
-            val definition: AbstractStepDefinition?,
-            val tags: Set<String>,
-            val deprecated: Boolean
-        )
-
         val allSteps = mutableSetOf<Item>()
         FilenameIndex
             .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, module.getGherkinScope())
@@ -65,17 +59,7 @@ class TzScenarioCompletion: CompletionContributor() {
                     val steps = file.features
                         .flatMap { feature -> feature.scenarios.toList() }
                         .flatMap { scenario -> scenario.steps.toList() }
-                        .map {
-                            val definition = it.findDefinitions().firstOrNull()
-                            val tags = it.allSteps.map { it.name }.toSet()
-                            Item(
-                                step = it,
-                                description = it.description,
-                                filename = it.containingFile.name,
-                                tags = tags,
-                                definition = definition,
-                                deprecated = definition?.isDeprecated() ?: false
-                        ) }
+                        .map { Item(step = it) }
                         .filter { it.description.isNotEmpty() }
 
                     CachedValueProvider.Result.create(
@@ -99,28 +83,35 @@ class TzScenarioCompletion: CompletionContributor() {
         allSteps2
             .forEach { (stepDescription, items) ->
 
-                var typeText = items.firstOrNull{ it.filename == filename }?.filename ?: items[0].filename
-                if (items.size > 1)
-                    typeText += """ (+${items.size-1})"""
-
-                val deprecated = items.firstOrNull { it.deprecated }?.deprecated ?: false
-                val priority = if (deprecated) 50.0 else 100.0
                 val otherStep = items.find { it.step != step }?.step
-
-                val tags = items
-                    .flatMap { it.step.allSteps }
-                    .map { it.name }
-                    .toSortedSet()
-                    .joinToString(separator = " ", prefix = "  ")
-
                 val lookup = LookupElementBuilder.create(stepDescription)
-                    .withTypeText(typeText)
-                    .withIcon(ActionIcons.CUCUMBER_PLUS_16)
-                    .withStrikeoutness(deprecated)
-                    .withTailText(tags, true)
                     .withPsiElement(otherStep?.stepHolder)
+                    .withIcon(ActionIcons.CUCUMBER_PLUS_16)
+                    .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
+                        override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
-                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
+                            presentation.icon = ActionIcons.CUCUMBER_PLUS_16
+                            presentation.itemText = stepDescription
+
+                            var typeText = items.firstOrNull{ it.filename == filename }?.filename ?: items[0].filename
+                            if (items.size > 1)
+                                typeText += """ (+${items.size-1})"""
+                            presentation.typeText = typeText
+
+                            val deprecated = items.firstOrNull { it.deprecated }?.deprecated ?: false
+                            presentation.isStrikeout = deprecated
+
+                            val tags = items
+                                .flatMap { it.step.allSteps }
+                                .map { it.name }
+                                .toSortedSet()
+                                .joinToString(separator = " ", prefix = "  ")
+
+                            presentation.setTailText(tags, true)
+                        }
+                    })
+
+                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 100.0))
         }
 
         //
@@ -130,24 +121,32 @@ class TzScenarioCompletion: CompletionContributor() {
             var lookup = it.lookupElement
             if (! allStepDescriptions.contains(lookup.lookupString)) {
 
-                var priority = 100.0
                 if (lookup is LookupElementBuilder) {
 
-                    lookup = lookup.withIcon(CucumberIcons.Cucumber)
-                    val obj = lookup.`object`
-                    if (obj is PsiElement) {
+                    lookup = lookup
+                        .withIcon(CucumberIcons.Cucumber)
+                        .withPresentableText(it.lookupElement.lookupString)
+                        .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
+                            override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
-                        val deprecated = allSteps
-                            .firstOrNull() { it.definition?.element == lookup.psiElement }
-                            ?.deprecated ?: false
-                        if (deprecated) priority = 50.0
+                                presentation.icon = CucumberIcons.Cucumber
+                                presentation.itemText = it.lookupElement.lookupString
+                                presentation.isItemTextBold = false
 
-                        lookup = lookup
-                            .withTypeText(obj.containingFile.name)
-                            .withStrikeoutness(deprecated)
-                    }
+                                val obj = lookup.`object`
+                                if (obj is PsiElement) {
+
+                                    presentation.typeText = obj.containingFile.name
+
+                                    val deprecated = allSteps
+                                        .firstOrNull() { it.definition?.element == lookup.psiElement }
+                                        ?.deprecated ?: false
+                                    presentation.isStrikeout = deprecated
+                                }
+                            }
+                        })
                 }
-                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
+                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 100.0))
             }
         }
     }
@@ -159,5 +158,12 @@ class TzScenarioCompletion: CompletionContributor() {
                     = complete(parameters, context, resultSet)
             }
         )
+    }
+
+    private data class Item(val step: GherkinStep) {
+        val description: String by lazy { step.description }
+        val filename: String by lazy { step.containingFile.name }
+        val definition: AbstractStepDefinition? by lazy { step.findDefinitions().firstOrNull() }
+        val deprecated: Boolean by lazy { definition?.isDeprecated() ?: false }
     }
 }
