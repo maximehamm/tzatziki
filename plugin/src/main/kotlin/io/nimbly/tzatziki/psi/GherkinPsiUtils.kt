@@ -19,12 +19,11 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.references.TzCucumberStepReference
-import org.jetbrains.plugins.cucumber.psi.GherkinFileType
-import org.jetbrains.plugins.cucumber.psi.GherkinPsiUtil
-import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
@@ -71,8 +70,27 @@ val GherkinStep.descriptionRange: TextRange
         )
     }
 
-val GherkinStep.description
+val GherkinStepsHolder.feature: GherkinFeature
+    get() = PsiTreeUtil.getParentOfType(this, GherkinFeature::class.java)!!
+
+val GherkinStep.description: String
     get() = descriptionRange.substring(this.text)
+
+val GherkinFeature.tags: List<GherkinTag>
+    get() {
+        val list = mutableListOf<GherkinTag>()
+        var ref: PsiElement? = this
+        while (ref != null) {
+            ref = PsiTreeUtil.getPrevSiblingOfType(ref, GherkinTag::class.java)
+            if (ref != null)
+                list.add(ref)
+        }
+        return list
+    }
+
+val GherkinStep.allSteps: Set<GherkinTag>
+    get() = this.stepHolder.feature.tags.toSet()
+                .union(this.stepHolder.tags.toSet())
 
 fun Module.getGherkinScope()
     = GlobalSearchScope.getScopeRestrictedByFileTypes(

@@ -128,15 +128,15 @@
        <br/>
        <b>Other features :</></b><br/>
        <ul>
-          <li>Toggle Cucumber table smart editing (from Edit menu)</li>
-          <li>Deprecated steps striked out inspection (Java, Kotlin, Javascript)</li>
-          <li>Navigate from Gerkin step definition to its implementation even after modifing the step text</li>
-          <li>Markdown supports into feature header, including pictures references and urls</li>
-          <li>Export markdown to PDF :
+          <li><b>Toggle Cucumber</b> table smart editing (from Edit menu)</li>
+          <li><b>Deprecated steps striked out</b> inspection (Java, Kotlin, Javascript)</li>
+          <li><b>Navigate from Gerkin step</b> definition to its implementation even after modifing the step text</li>
+          <li><b>Markdown supports</b> into feature header, including pictures references and urls</li>
+          <li><b>Export markdown to PDF</b> :
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
-          <li>Step completion suggests all steps already used in current module, not only steps having an implementation :<br/>
+          <li><b>Step completion suggests all steps already used in current module</b>, not only steps having an implementation :<br/>
               - The icon tells you if the completion comes from a feature implementation or a feature gherkin file.<br/>
               - The right side gives you the name of the file where the proposal step comes from (i.e a Java class, Ruby, Kotlin, etc) or a feature file name.<br/>
               - You will also know in how many files the step is used, for exemple : toto.feature (+2)<br/>

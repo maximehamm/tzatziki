@@ -50,6 +50,7 @@ class TzScenarioCompletion: CompletionContributor() {
             val description: String,
             val filename: String,
             val definition: AbstractStepDefinition?,
+            val tags: Set<String>,
             val deprecated: Boolean
         )
 
@@ -66,10 +67,12 @@ class TzScenarioCompletion: CompletionContributor() {
                         .flatMap { scenario -> scenario.steps.toList() }
                         .map {
                             val definition = it.findDefinitions().firstOrNull()
+                            val tags = it.allSteps.map { it.name }.toSet()
                             Item(
                                 step = it,
                                 description = it.description,
                                 filename = it.containingFile.name,
+                                tags = tags,
                                 definition = definition,
                                 deprecated = definition?.isDeprecated() ?: false
                         ) }
@@ -91,24 +94,37 @@ class TzScenarioCompletion: CompletionContributor() {
                 .filter { it.description != description}
                 .groupBy { it.description }
 
+        //
+        // Add completion
         allSteps2
             .forEach { (stepDescription, items) ->
+
                 var typeText = items.firstOrNull{ it.filename == filename }?.filename ?: items[0].filename
                 if (items.size > 1)
                     typeText += """ (+${items.size-1})"""
 
                 val deprecated = items.firstOrNull { it.deprecated }?.deprecated ?: false
                 val priority = if (deprecated) 50.0 else 100.0
+                val otherStep = items.find { it.step != step }?.step
+
+                val tags = items
+                    .flatMap { it.step.allSteps }
+                    .map { it.name }
+                    .toSortedSet()
+                    .joinToString(separator = " ", prefix = "  ")
 
                 val lookup = LookupElementBuilder.create(stepDescription)
                     .withTypeText(typeText)
                     .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                     .withStrikeoutness(deprecated)
-                    .withPsiElement(step.stepHolder)
+                    .withTailText(tags, true)
+                    .withPsiElement(otherStep?.stepHolder)
 
                 resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, priority))
         }
 
+        //
+        // Add and adapt other contributor's completions
         val allStepDescriptions = allSteps.map { it.description }
         resultSet.runRemainingContributors(parameters) {
             var lookup = it.lookupElement
