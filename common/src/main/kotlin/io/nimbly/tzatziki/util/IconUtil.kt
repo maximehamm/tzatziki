@@ -34,6 +34,7 @@ import javax.swing.SwingConstants
 object CommonIcons {
     val TRANSPARENT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/transparent.png", javaClass)
     val COUNT_BASE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/usagesBase.png", javaClass)
+    val COUNT_BASE_ZERO = IconLoader.getIcon("/io/nimbly/tzatziki/icons/usagesBaseGray.png", javaClass)
 }
 
 /**
@@ -109,8 +110,8 @@ fun getNumberIcon(index: Int, foreground: Color): Icon {
     var icon = numberIcons[key]
     if (icon == null) {
         icon = addText(
-            CommonIcons.COUNT_BASE, //TRANSPARENT,
-            "" + index,
+            if (index == 0) CommonIcons.COUNT_BASE_ZERO else CommonIcons.COUNT_BASE,
+            if (index == 0) "-" else ("" + index),
             10f,
             SwingConstants.CENTER,
             foreground

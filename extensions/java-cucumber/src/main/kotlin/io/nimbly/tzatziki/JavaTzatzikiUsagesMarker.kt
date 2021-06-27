@@ -65,16 +65,19 @@ class JavaTzatzikiUsagesMarker : LineMarkerProvider {
                 annotations.forEach { annotation ->
 
                     val steps = groupedByRegex[annotation.value]
-                    if (steps!=null) {
+                    if (steps != null) {
+
+                        val usagesCount = steps.size
+                        val usagesText = if (usagesCount == 1) "1 usage" else "$usagesCount usages"
 
                         val builder = NavigationGutterIconBuilder
-                            .create(getNumberIcon(steps.size, JBColor.foreground()))
+                            .create(getNumberIcon(usagesCount, JBColor.foreground()))
                             .setTargets(steps.map { it.stepHolder }.toSet().sortedBy { it.description })
                             .setAlignment(GutterIconRenderer.Alignment.RIGHT)
-                            .setTooltipText("${steps.size} usages")
+                            .setTooltipText(usagesText)
                             .setPopupTitle(TZATZIKI_NAME)
 
-                        result.add(builder.createLineMarkerInfo(annotation))
+                        result.add(builder.createLineMarkerInfo(annotation.firstChild))
                     }
                 }
         }
