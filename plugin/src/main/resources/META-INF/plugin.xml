@@ -128,24 +128,23 @@
        <br/>
        <b>Other features :</></b><br/>
        <ul>
-          <li><b>Toggle Cucumber</b> table smart editing (from Edit menu)</li>
-          <li><b>Deprecated steps striked out</b> inspection (Java, Kotlin, Javascript)</li>
-          <li><b>Navigate from Gerkin step</b> definition to its implementation even after modifing the step text</li>
-          <li><b>Markdown supports</b> into feature header, including pictures references and urls</li>
-          <li><b>Export markdown to PDF</b> :
+          <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</li>
+          <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</li>
+          <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</li>
+          <li><u>Markdown supports</u> into feature header, including pictures references and urls</li>
+          <li><u>Export markdown to PDF</u> :
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
-          <li><b>Step completion suggests all steps already used in current module</b>, not only steps having an implementation :<br/>
+          <li><u>Step completion suggests all steps already used in current module</u>, not only steps having an implementation :<br/>
               - The icon tells you if the completion comes from a feature implementation or a feature gherkin file.<br/>
               - The right side gives you the name of the file where the proposal step comes from (i.e a Java class, Ruby, Kotlin, etc) or a feature file name.<br/>
               - You will also know in how many files the step is used, for exemple : toto.feature (+2)<br/>
-              - Steps related to a deprecated implementation are striked out (Java/Kotlin/Javascript)
-               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_db068ed9-6907-4f0a-8529-341678c2e248"
-                  alt="Cucumber+" width="380" height="233"></p>
-              - Press ALT-Space to display the preview of the scenarion holding the step or step's implementation :
-               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_c314a1dc-3fab-40c9-bcf9-79ddb3bede79"
-                  alt="Cucumber+" width="640" height="233"></p>
+              - Tags related to step's scenario or step's feature are displayed (gray)<br/>
+              - Steps related to a deprecated implementation are striked out (Java/Kotlin/Javascript)<br/>
+              - Press <u>ALT-Space<u> to display the preview of the scenarion holding the step or step's implementation :
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_d5d33b42-4510-4e4a-b756-db25c50239e6"
+                  alt="Cucumber+" width="777" height="233"></p>
           </li>
        <br/>
        Any suggestion ? Let me know !<br/>

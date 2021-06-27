@@ -48,7 +48,7 @@ class TzScenarioCompletion: CompletionContributor() {
         val module = ModuleUtilCore.findModuleForPsiElement(step)
             ?: return
 
-        val allSteps = mutableSetOf<Item>()
+        val allSteps = mutableSetOf<Step>()
         FilenameIndex
             .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, module.getGherkinScope())
             .map { vfile -> vfile.getFile(project) }
@@ -59,7 +59,7 @@ class TzScenarioCompletion: CompletionContributor() {
                     val steps = file.features
                         .flatMap { feature -> feature.scenarios.toList() }
                         .flatMap { scenario -> scenario.steps.toList() }
-                        .map { Item(step = it) }
+                        .map { Step(it) }
                         .filter { it.description.isNotEmpty() }
 
                     CachedValueProvider.Result.create(
@@ -73,14 +73,12 @@ class TzScenarioCompletion: CompletionContributor() {
         val description = step.description.safeText.trim()
         val filename = step.containingFile.name
 
-        val allSteps2: Map<String, List<Item>>
-            = allSteps
-                .filter { it.description != description}
-                .groupBy { it.description }
-
         //
-        // Add completion
-        allSteps2
+        // Add completions
+        allSteps
+            .filter { it.description != description}
+            .groupBy { it.description }
+            .toSortedMap()
             .forEach { (stepDescription, items) ->
 
                 val otherStep = items.find { it.step != step }?.step
@@ -115,38 +113,35 @@ class TzScenarioCompletion: CompletionContributor() {
         }
 
         //
-        // Add and adapt other contributor's completions
+        // Adapt and add other contributor's completions
         val allStepDescriptions = allSteps.map { it.description }
-        resultSet.runRemainingContributors(parameters) {
-            var lookup = it.lookupElement
-            if (! allStepDescriptions.contains(lookup.lookupString)) {
+        resultSet.runRemainingContributors(parameters) { result ->
+            var lookup = result.lookupElement
+            val lookupString = result.lookupElement.lookupString
+            if (! allStepDescriptions.contains(lookupString)) {
 
                 if (lookup is LookupElementBuilder) {
 
                     lookup = lookup
                         .withIcon(CucumberIcons.Cucumber)
-                        .withPresentableText(it.lookupElement.lookupString)
+                        .withPresentableText(lookupString)
                         .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
+
                             override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
                                 presentation.icon = CucumberIcons.Cucumber
-                                presentation.itemText = it.lookupElement.lookupString
+                                presentation.itemText = lookupString
                                 presentation.isItemTextBold = false
 
                                 val obj = lookup.`object`
                                 if (obj is PsiElement) {
-
                                     presentation.typeText = obj.containingFile.name
-
-                                    val deprecated = allSteps
-                                        .firstOrNull() { it.definition?.element == lookup.psiElement }
-                                        ?.deprecated ?: false
-                                    presentation.isStrikeout = deprecated
+                                    presentation.isStrikeout = obj.isDeprecated()
                                 }
                             }
                         })
                 }
-                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 100.0))
+                resultSet.addElement(PrioritizedLookupElement.withPriority(lookup, 90.0))
             }
         }
     }
@@ -160,10 +155,13 @@ class TzScenarioCompletion: CompletionContributor() {
         )
     }
 
-    private data class Item(val step: GherkinStep) {
+    private data class Step(val step: GherkinStep) {
+
         val description: String by lazy { step.description }
         val filename: String by lazy { step.containingFile.name }
         val definition: AbstractStepDefinition? by lazy { step.findDefinitions().firstOrNull() }
-        val deprecated: Boolean by lazy { definition?.isDeprecated() ?: false }
+
+        val deprecated: Boolean
+            get() = definition?.isDeprecated() ?: false
     }
 }

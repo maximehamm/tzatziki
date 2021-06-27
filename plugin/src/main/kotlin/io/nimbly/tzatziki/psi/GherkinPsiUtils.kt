@@ -106,3 +106,11 @@ fun AbstractStepDefinition.isDeprecated(): Boolean {
     }
     return false;
 }
+
+fun PsiElement.isDeprecated(): Boolean {
+    TZATZIKI().extensionList.forEach {
+        if (it.isDeprecated(this))
+            return true
+    }
+    return false;
+}
