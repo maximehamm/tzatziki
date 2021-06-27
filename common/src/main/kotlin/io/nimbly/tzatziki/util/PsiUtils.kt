@@ -149,16 +149,16 @@ fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection
     return processor.results
 }
 
-fun findStepUsages(element: PsiElement): List<GherkinStep> {
+fun findStepUsages(element: PsiElement): List<PsiReference> {
 
     val scope = CucumberStepSearchUtil.restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(element.project))
     val search = ReferencesSearch.search(element, scope, false)
 
-    val references = mutableListOf<GherkinStep>()
+    val references = mutableListOf<PsiReference>()
     search.forEach(Processor { ref: PsiReference ->
         val elt = ref.element
         if (elt is GherkinStep && ref is CucumberStepReference)
-            references.add(elt)
+            references.add(ref)
         true
     })
 
