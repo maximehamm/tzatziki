@@ -19,9 +19,8 @@ import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.openapi.editor.markup.GutterIconRenderer
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiMethod
+import com.intellij.psi.*
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.JBColor
 import io.nimbly.tzatziki.psi.description
 import io.nimbly.tzatziki.psi.findStepUsages
@@ -37,19 +36,25 @@ class JavaTzatzikiUsagesMarker : LineMarkerProvider {
 
     override fun collectSlowLineMarkers(elements: MutableList<out PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
         elements
-            .filterIsInstance<PsiMethod>()
-            .forEach { method ->
+            .filterIsInstance<PsiJavaToken>()
+            .forEach { token ->
 
-                val annotations: List<PsiLiteralExpression> = method.annotations
-                        .filter { it.resolveAnnotationType()?.qualifiedName?.startsWith("io.cucumber.java") == true }
-                        .mapNotNull { it.parameterList.attributes.firstOrNull()?.value as? PsiLiteralExpression }
-                if (annotations.isEmpty())
+                // Check context
+                val annotation = PsiTreeUtil.getParentOfType(token, PsiAnnotation::class.java)
+                    ?: return@forEach
+                if (annotation.resolveAnnotationType()?.qualifiedName?.startsWith("io.cucumber.java") != true)
                     return@forEach
+                val annotationText = (token.parent as? PsiLiteralExpression)?.value
+                    ?: return@forEach
+                val method = PsiTreeUtil.getParentOfType(token, PsiMethod::class.java)
+                    ?: return@forEach
 
+                // Find method usages
                 val usages = findStepUsages(method)
                 if (usages.isEmpty())
                     return@forEach
 
+                // Group usages by regex
                 val groupedByRegex: Map<String, List<GherkinStep>>
                     = usages.map { it.element }
                             .filterIsInstance<GherkinStep>()
@@ -62,24 +67,23 @@ class JavaTzatzikiUsagesMarker : LineMarkerProvider {
                             .map { it.key to it.value.map { it.second }.toList() }
                             .toMap()
 
-                annotations.forEach { annotation ->
+                // Find annotation usages
+                val steps = groupedByRegex[annotationText]
+                    ?: return@forEach
 
-                    val steps = groupedByRegex[annotation.value]
-                    if (steps != null) {
+                // Add marker
+                val usagesCount = steps.size
+                val usagesText = if (usagesCount == 1) "1 usage" else "$usagesCount usages"
 
-                        val usagesCount = steps.size
-                        val usagesText = if (usagesCount == 1) "1 usage" else "$usagesCount usages"
+                val builder = NavigationGutterIconBuilder
+                    .create(getNumberIcon(usagesCount, JBColor.foreground()))
+                    .setTargets(steps.map { it.stepHolder }.toSet().sortedBy { it.description })
+                    .setAlignment(GutterIconRenderer.Alignment.RIGHT)
+                    .setTooltipText(usagesText)
+                    .setPopupTitle(TZATZIKI_NAME)
 
-                        val builder = NavigationGutterIconBuilder
-                            .create(getNumberIcon(usagesCount, JBColor.foreground()))
-                            .setTargets(steps.map { it.stepHolder }.toSet().sortedBy { it.description })
-                            .setAlignment(GutterIconRenderer.Alignment.RIGHT)
-                            .setTooltipText(usagesText)
-                            .setPopupTitle(TZATZIKI_NAME)
+                result.add(builder.createLineMarkerInfo(token))
 
-                        result.add(builder.createLineMarkerInfo(annotation.firstChild))
-                    }
-                }
         }
     }
 }
