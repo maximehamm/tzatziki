@@ -25,15 +25,20 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.util.CommonProcessors
+import com.intellij.util.Processor
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
+import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil
 
 fun VirtualFile.getFile(project: Project): PsiFile?
     = PsiManager.getInstance(project).findFile(this)
@@ -142,4 +147,20 @@ fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection
 
     search.forEach(processor)
     return processor.results
+}
+
+fun findStepUsages(element: PsiElement): List<GherkinStep> {
+
+    val scope = CucumberStepSearchUtil.restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(element.project))
+    val search = ReferencesSearch.search(element, scope, false)
+
+    val references = mutableListOf<GherkinStep>()
+    search.forEach(Processor { ref: PsiReference ->
+        val elt = ref.element
+        if (elt is GherkinStep && ref is CucumberStepReference)
+            references.add(elt)
+        true
+    })
+
+    return references
 }

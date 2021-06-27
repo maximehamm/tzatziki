@@ -56,7 +56,10 @@ fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
     return null
 }
 
-val GherkinStep.descriptionRange: TextRange
+val PsiElement.description: String
+    get() = descriptionRange.substring(this.text)
+
+val PsiElement.descriptionRange: TextRange
     get() {
         val indexOfFirst = this.text.indexOfFirst { it == ' ' }
         if (indexOfFirst <0)
@@ -72,9 +75,6 @@ val GherkinStep.descriptionRange: TextRange
 
 val GherkinStepsHolder.feature: GherkinFeature
     get() = PsiTreeUtil.getParentOfType(this, GherkinFeature::class.java)!!
-
-val GherkinStep.description: String
-    get() = descriptionRange.substring(this.text)
 
 val GherkinFeature.tags: List<GherkinTag>
     get() {

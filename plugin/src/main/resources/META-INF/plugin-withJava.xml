@@ -4,4 +4,8 @@
         <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavaTzatzikiExtensionPoint"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.nimbly.tzatziki.JavaTzatzikiUsagesMarker"/>
+    </extensions>
+
 </idea-plugin>
