@@ -28,8 +28,8 @@ import io.nimbly.tzatziki.pdf.ELeader
 import io.nimbly.tzatziki.pdf.ESummaryDepth
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.pdf.Picture
-import io.nimbly.tzatziki.psi.getFile
 import io.nimbly.tzatziki.util.TzatzikiException
+import io.nimbly.tzatziki.util.getFile
 import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.util.now
 import java.io.InputStreamReader

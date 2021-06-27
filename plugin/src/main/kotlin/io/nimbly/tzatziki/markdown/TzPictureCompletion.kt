@@ -24,10 +24,10 @@ import com.intellij.patterns.StandardPatterns
 import com.intellij.psi.PsiDirectory
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons.ImagesFileType
-import io.nimbly.tzatziki.psi.getDirectory
-import io.nimbly.tzatziki.psi.safeText
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.findFiles
+import io.nimbly.tzatziki.util.getDirectory
+import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
 class TzPictureCompletion: CompletionContributor() {

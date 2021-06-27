@@ -20,13 +20,14 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
-import com.intellij.psi.util.elementType
 import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.TZATZIKI
-import io.nimbly.tzatziki.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.*
 import org.jetbrains.plugins.cucumber.CucumberUtil
-import org.jetbrains.plugins.cucumber.psi.*
+import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 
 //@see https://github.com/JetBrains/intellij-plugins/tree/master/cucumber/src/org/jetbrains/plugins/cucumber/run
 class TzRunLineMarkerContributor : RunLineMarkerContributor() {

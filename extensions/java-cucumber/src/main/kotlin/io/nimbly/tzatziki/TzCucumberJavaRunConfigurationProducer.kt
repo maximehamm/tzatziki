@@ -21,6 +21,7 @@ import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
+import io.nimbly.tzatziki.psi.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration

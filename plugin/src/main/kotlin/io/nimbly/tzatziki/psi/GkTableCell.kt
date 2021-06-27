@@ -16,6 +16,8 @@
 package io.nimbly.tzatziki.psi
 
 import com.intellij.openapi.util.TextRange
+import io.nimbly.tzatziki.util.nextPipe
+import io.nimbly.tzatziki.util.previousPipe
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import java.awt.Point

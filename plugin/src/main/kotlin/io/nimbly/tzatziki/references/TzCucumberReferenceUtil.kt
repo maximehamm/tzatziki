@@ -13,21 +13,22 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki
+package io.nimbly.tzatziki.references
 
-import org.jetbrains.plugins.cucumber.psi.GherkinStep
-import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import com.intellij.psi.PsiElement
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
-fun findCucumberStepDefinitions(scenario: GherkinStepsHolder): List<AbstractStepDefinition> {
-   return scenario.steps.flatMap { step ->
-       step.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
-   }
+fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
+    element.references.forEach { ref ->
+        val def = when (ref) {
+            is CucumberStepReference -> ref.resolveToDefinition()
+            is TzCucumberStepReference -> ref.resolveToDefinition()
+            else -> null
+        }
+
+        if (def!=null)
+            return def
+    }
+    return null
 }
-
-fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
-    = findCucumberStepReferences().firstOrNull()
-
-fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
-    = references.filterIsInstance<CucumberStepReference>()

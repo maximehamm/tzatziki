@@ -19,7 +19,7 @@ import com.intellij.openapi.actionSystem.ActionPromoter
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
-import io.nimbly.tzatziki.psi.cellAt
+import io.nimbly.tzatziki.util.cellAt
 
 class TzActionPromoter : ActionPromoter {
 

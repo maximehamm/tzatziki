@@ -1,9 +1,11 @@
 <idea-plugin>
 
     <extensions defaultExtensionNs="io.nimbly.tzatziki">
-        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint">
-        </io.nimbly.tzatziki.main>
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider language="kotlin" implementationClass="io.nimbly.tzatziki.KotlinTzatzikiUsagesMarker"/>
+    </extensions>
 
 </idea-plugin>

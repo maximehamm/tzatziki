@@ -22,11 +22,11 @@ import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.psi.*
-import io.nimbly.tzatziki.util.JavaUtil
-import io.nimbly.tzatziki.util.file
-import io.nimbly.tzatziki.util.findTableAt
-import io.nimbly.tzatziki.util.setColumnMode
+import io.nimbly.tzatziki.psi.allRows
+import io.nimbly.tzatziki.psi.cellAt
+import io.nimbly.tzatziki.psi.isHeader
+import io.nimbly.tzatziki.psi.rowAt
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTable

@@ -22,7 +22,6 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.TZATZIKI
-import io.nimbly.tzatziki.references.TzCucumberStepReference
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
@@ -40,20 +39,6 @@ fun loadStepParams(step: GherkinStep): List<TextRange> {
             ?: emptyList()
     }
     return emptyList()
-}
-
-fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
-    element.references.forEach { ref ->
-        val def = when (ref) {
-                is CucumberStepReference -> ref.resolveToDefinition()
-                is TzCucumberStepReference -> ref.resolveToDefinition()
-                else -> null
-            }
-
-        if (def!=null)
-            return def
-    }
-    return null
 }
 
 val PsiElement.description: String
@@ -114,3 +99,15 @@ fun PsiElement.isDeprecated(): Boolean {
     }
     return false;
 }
+
+fun findCucumberStepDefinitions(scenario: GherkinStepsHolder): List<AbstractStepDefinition> {
+   return scenario.steps.flatMap { step ->
+       step.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
+   }
+}
+
+fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
+    = findCucumberStepReferences().firstOrNull()
+
+fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
+    = references.filterIsInstance<CucumberStepReference>()

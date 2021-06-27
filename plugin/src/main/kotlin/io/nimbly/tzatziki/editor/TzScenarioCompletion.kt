@@ -30,7 +30,12 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
 import icons.CucumberIcons
-import io.nimbly.tzatziki.psi.*
+import io.nimbly.tzatziki.psi.allSteps
+import io.nimbly.tzatziki.psi.description
+import io.nimbly.tzatziki.psi.getGherkinScope
+import io.nimbly.tzatziki.psi.isDeprecated
+import io.nimbly.tzatziki.util.getFile
+import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep

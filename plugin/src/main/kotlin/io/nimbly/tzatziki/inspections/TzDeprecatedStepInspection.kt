@@ -21,7 +21,7 @@ import com.intellij.psi.PsiElementVisitor
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.psi.descriptionRange
-import io.nimbly.tzatziki.psi.getCucumberStepDefinition
+import io.nimbly.tzatziki.references.getCucumberStepDefinition
 import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
 import org.jetbrains.plugins.cucumber.psi.GherkinStep

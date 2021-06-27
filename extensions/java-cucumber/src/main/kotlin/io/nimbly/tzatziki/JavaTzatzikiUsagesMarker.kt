@@ -16,23 +16,12 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
-import com.intellij.codeInsight.daemon.LineMarkerProvider
-import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
-import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.ui.JBColor
-import io.nimbly.tzatziki.psi.description
-import io.nimbly.tzatziki.psi.findStepUsages
-import io.nimbly.tzatziki.util.TZATZIKI_NAME
-import io.nimbly.tzatziki.util.getNumberIcon
-import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
+import io.nimbly.tzatziki.util.findStepUsages
 
-class JavaTzatzikiUsagesMarker : LineMarkerProvider {
-
-    override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        return null
-    }
+class JavaTzatzikiUsagesMarker : TzStepsUsagesMarker() {
 
     override fun collectSlowLineMarkers(elements: MutableList<out PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
         elements
@@ -40,50 +29,17 @@ class JavaTzatzikiUsagesMarker : LineMarkerProvider {
             .forEach { token ->
 
                 // Check context
-                val annotation = PsiTreeUtil.getParentOfType(token, PsiAnnotation::class.java)
-                    ?: return@forEach
-                if (annotation.resolveAnnotationType()?.qualifiedName?.startsWith("io.cucumber.java") != true)
-                    return@forEach
-                val annotationText = (token.parent as? PsiLiteralExpression)?.value
-                    ?: return@forEach
-                val method = PsiTreeUtil.getParentOfType(token, PsiMethod::class.java)
-                    ?: return@forEach
+                val annotation = PsiTreeUtil.getParentOfType(token, PsiAnnotation::class.java) ?: return@forEach
+                if (annotation.resolveAnnotationType()?.qualifiedName?.startsWith("io.cucumber.java") != true) return@forEach
+                val annotationText = (token.parent as? PsiLiteralExpression)?.value as? String ?: return@forEach
+                val method = PsiTreeUtil.getParentOfType(token, PsiMethod::class.java) ?: return@forEach
 
                 // Find method usages
                 val usages = findStepUsages(method)
                 if (usages.isEmpty())
                     return@forEach
 
-                // Group usages by regex
-                val groupedByRegex: Map<String, List<GherkinStep>>
-                    = usages.map { it.element }
-                            .filterIsInstance<GherkinStep>()
-                            .flatMap { step ->
-                                step.findDefinitions()
-                                    .toSet()
-                                    .mapNotNull { it.expression }
-                                    .map { it to step } }
-                            .groupBy { it.first }
-                            .map { it.key to it.value.map { it.second }.toList() }
-                            .toMap()
-
-                // Find annotation usages
-                val steps = groupedByRegex[annotationText]
-                    ?: return@forEach
-
-                // Add marker
-                val usagesCount = steps.size
-                val usagesText = if (usagesCount == 1) "1 usage" else "$usagesCount usages"
-
-                val builder = NavigationGutterIconBuilder
-                    .create(getNumberIcon(usagesCount, JBColor.foreground()))
-                    .setTargets(steps.map { it.stepHolder }.toSet().sortedBy { it.description })
-                    .setAlignment(GutterIconRenderer.Alignment.RIGHT)
-                    .setTooltipText(usagesText)
-                    .setPopupTitle(TZATZIKI_NAME)
-
-                result.add(builder.createLineMarkerInfo(token))
-
-        }
+                buildMarkers(token, usages, annotationText, result)
+            }
     }
 }

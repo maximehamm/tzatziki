@@ -24,10 +24,7 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.actions.Direction.*
 import io.nimbly.tzatziki.psi.*
-import io.nimbly.tzatziki.util.FEATURE_HEAD
-import io.nimbly.tzatziki.util.file
-import io.nimbly.tzatziki.util.highlight
-import io.nimbly.tzatziki.util.move
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell

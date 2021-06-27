@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.psi
+package io.nimbly.tzatziki.util
 
 import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER
 import com.intellij.codeInsight.completion.CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED
@@ -163,4 +163,11 @@ fun findStepUsages(element: PsiElement): List<PsiReference> {
     })
 
     return references
+}
+
+fun PsiElement.up(level: Int): PsiElement {
+    var p = this
+    for (i in 1..level)
+        p = p.parent
+    return p
 }

@@ -26,10 +26,10 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
-import io.nimbly.tzatziki.psi.collectReferences
-import io.nimbly.tzatziki.psi.getDocument
-import io.nimbly.tzatziki.psi.getDocumentLine
-import io.nimbly.tzatziki.psi.getFile
+import io.nimbly.tzatziki.util.collectReferences
+import io.nimbly.tzatziki.util.getDocument
+import io.nimbly.tzatziki.util.getDocumentLine
+import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition

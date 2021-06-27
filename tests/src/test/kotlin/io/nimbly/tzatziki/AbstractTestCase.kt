@@ -33,7 +33,6 @@ import com.intellij.testFramework.PsiTestUtil
 import com.intellij.testFramework.fixtures.JavaCodeInsightFixtureTestCase
 import com.intellij.testFramework.fixtures.kotlin.KotlinTester
 import io.nimbly.tzatziki.inspections.TzDeprecatedStepInspection
-import io.nimbly.tzatziki.psi.getDocument
 import io.nimbly.tzatziki.util.*
 import junit.framework.TestCase
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType

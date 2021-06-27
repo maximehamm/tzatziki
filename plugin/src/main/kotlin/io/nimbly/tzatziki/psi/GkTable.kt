@@ -20,9 +20,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import io.nimbly.tzatziki.util.getColumnAt
-import io.nimbly.tzatziki.util.getLineEnd
-import io.nimbly.tzatziki.util.getLineStart
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
