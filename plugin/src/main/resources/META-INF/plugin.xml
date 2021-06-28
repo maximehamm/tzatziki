@@ -28,10 +28,9 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
+         ✓ <b>9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
          ✓ <b>8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implentation. Details bellow.<br/>
          ✓ <b>7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
-         ✓ <b>6.0</b> - Run a single line of a Scenario outline : ► click margin 'run' button near table line (Java, Kotlin) <br/>
-         ✓ <b>5.0</b> - Deprecated step inspection : ► annotate Java/Kotlin/Javascript code as deprecated and let Cucumber+ cross out the step<br/>
        <br/>
        <br/>
 
@@ -123,19 +122,8 @@
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_8d6a3fea-eb62-45f8-a496-4d5c62cd843b"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
-       </ul>
 
-       <br/>
-       <b>Other features :</></b><br/>
-       <ul>
-          <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</li>
-          <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</li>
-          <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</li>
-          <li><u>Markdown supports</u> into feature header, including pictures references and urls</li>
-          <li><u>Export markdown to PDF</u> :
-               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
-                  alt="Cucumber+" width="419" height="233"></p>
-          </li>
+          <br/>
           <li><u>Step completion suggests all steps already used in current module</u>, not only steps having an implementation :<br/>
               - The icon tells you if the completion comes from a feature implementation or a feature gherkin file.<br/>
               - The right side gives you the name of the file where the proposal step comes from (i.e a Java class, Ruby, Kotlin, etc) or a feature file name.<br/>
@@ -146,7 +134,34 @@
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_d5d33b42-4510-4e4a-b756-db25c50239e6"
                   alt="Cucumber+" width="777" height="233"></p>
           </li>
+
+          <br/>
+          <li><u>Export markdown to PDF</u> :
+               - Markdown supports into feature header, including pictures references and urls<br/>
+               - Export to a nice PDF !<br/>
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_bd53be55-c27c-4302-8e21-bc7e69bb3735"
+                  alt="Cucumber+" width="419" height="233"></p>
+          </li>
+
+          <br/>
+          <li><u>Line markers indicating the number of uses of step implementations</u> (Java, Kotlin) :<br/>
+              - The icon indicates the number of scenarios that use this step<br/>
+              - Click to choose a scenario and navigate to it<br/>
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_xxxx"
+                  alt="Cucumber+" width="419" height="233"></p>
+          </li>
+       </ul>
+
        <br/>
+       <b>Other features :</></b><br/>
+       <ul>
+          <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</li>
+          <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</li>
+          <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</li>
+       </ul>
+
+       <br/>
+
        Any suggestion ? Let me know !<br/>
        <br/>
 
