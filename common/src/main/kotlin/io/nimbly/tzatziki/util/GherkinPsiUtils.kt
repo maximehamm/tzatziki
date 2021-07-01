@@ -15,9 +15,12 @@
 
 package io.nimbly.tzatziki.psi
 
+import com.intellij.find.FindManager
+import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
@@ -111,3 +114,19 @@ fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
 
 fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
     = references.filterIsInstance<CucumberStepReference>()
+
+fun findUsages(function: PsiElement): List<PsiReference> {
+
+    val usagesManager = (FindManager.getInstance(function.project) as FindManagerImpl).findUsagesManager
+    val handler = usagesManager.getFindUsagesHandler(function, false)
+        ?: return emptyList()
+
+    val usages = mutableListOf<PsiReference>()
+    handler.processElementUsages(function, {
+        val ref = it.reference
+        if (ref != null)
+            usages.add(ref)
+        true
+    }, handler.findUsagesOptions)
+    return usages
+}

@@ -16,16 +16,14 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.find.FindManager
-import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiReference
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
+import io.nimbly.tzatziki.psi.findUsages
 import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
@@ -59,20 +57,12 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             if (file !is KtFile) return
 
             val element = file.findElementAt(sourcePosition.offset) ?: return
-            val funct = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java) ?: return
+            val function = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java) ?: return
 
-            val usagesManager = (FindManager.getInstance(project) as FindManagerImpl).findUsagesManager
-            val handler = usagesManager.getFindUsagesHandler(funct, false) ?: return
+            // Find usages
+            val usages = findUsages(function)
 
-            val references = mutableListOf<PsiReference>()
-            handler.processElementUsages(funct, {
-                val ref = it.reference
-                if (ref !=null)
-                    references.add(ref)
-                true
-            }, handler.findUsagesOptions)
-
-            references
+            usages
                 .asSequence()
                 .filterIsInstance<CucumberStepReference>()
                 .map { it.element }

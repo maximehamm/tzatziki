@@ -468,7 +468,7 @@ private fun translate(element: LeafPsiElement, text: String, dialect: String): S
         .getKeywords(element.elementType as GherkinElementType)
         ?.filter { it != "*" }
         ?.map { it.length to it }
-        ?.minBy { it.first }
+        ?.minByOrNull { it.first }
         ?.second
 
     return keyword ?: text

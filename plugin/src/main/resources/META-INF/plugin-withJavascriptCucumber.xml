@@ -5,4 +5,8 @@
 <!--        <configurationType implementation="io.nimbly.tzatziki.TzJSRunConfigurationType"/>-->
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+<!--        <codeInsight.lineMarkerProvider language="JavaScript" implementationClass="io.nimbly.tzatziki.JavascriptTzatzikiUsagesMarker"/>-->
+    </extensions>
+
 </idea-plugin>

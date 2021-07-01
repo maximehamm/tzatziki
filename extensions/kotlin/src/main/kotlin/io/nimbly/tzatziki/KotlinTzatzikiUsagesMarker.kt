@@ -17,12 +17,17 @@ package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.find.FindManager
+import com.intellij.find.findUsages.FindUsagesHandler
 import com.intellij.find.impl.FindManagerImpl
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.psi.util.PsiTreeUtil
+import io.nimbly.tzatziki.psi.findUsages
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
 import io.nimbly.tzatziki.util.up
+import org.jetbrains.annotations.Nullable
 import org.jetbrains.kotlin.psi.*
 
 class KotlinTzatzikiUsagesMarker : TzStepsUsagesMarker() {
@@ -41,20 +46,19 @@ class KotlinTzatzikiUsagesMarker : TzStepsUsagesMarker() {
                 if (token.up(6) !is KtDeclarationModifierList) return@forEach
                 val namedFunction = token.up(7) as? KtNamedFunction ?: return@forEach
 
+                // Check class is using cucumber
+                // Not the best way, but I didn't find how to check which class the named function is using...
+                val clazz = PsiTreeUtil.getParentOfType(token, KtClass::class.java) ?: return@forEach
+                clazz.containingKtFile.importList?.imports
+                    ?.map { it.importPath }
+                    ?.find { it?.fqName?.asString()?.startsWith("io.cucumber.") == true }
+                    ?: return@forEach
+
                 // Get annotation text
                 val annotationText = token.text
+                val usages = findUsages(namedFunction)
 
-                val usagesManager = (FindManager.getInstance(token.project) as FindManagerImpl).findUsagesManager
-                val handler = usagesManager.getFindUsagesHandler(namedFunction, false) ?: return
-
-                val usages = mutableListOf<PsiReference>()
-                handler.processElementUsages(namedFunction, {
-                    val ref = it.reference
-                    if (ref !=null)
-                        usages.add(ref)
-                    true
-                }, handler.findUsagesOptions)
-
+                // Build markers
                 buildMarkers(token, usages, annotationText, result)
             }
     }
