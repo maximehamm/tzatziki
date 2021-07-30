@@ -147,7 +147,7 @@
           <li><u>Line markers indicating the number of uses of step implementations</u> (Java, Kotlin) :<br/>
               - The icon indicates the number of scenarios that use this step<br/>
               - Click to choose a scenario and navigate to it<br/>
-               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_xxxx"
+               <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_c680baaf-76ad-49b1-ba03-8a15cd4a7dda"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
        </ul>
