@@ -22,6 +22,7 @@
 
         <!-- TODO
            - Export to PDF with run results colors
+           - Allow to disable Cucumber+ gutter icons
         -->
 
        <b>A better user expérience to run, edit, and print Cucumber features</b><br/>
