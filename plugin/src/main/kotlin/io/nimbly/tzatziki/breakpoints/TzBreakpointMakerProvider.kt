@@ -19,6 +19,7 @@ import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.navigation.GotoRelatedItem
 import com.intellij.openapi.editor.markup.GutterIconRenderer
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
@@ -49,7 +50,10 @@ class TzBreakpointMakerProvider : RelatedItemLineMarkerProvider() {
 
         if (!firstTimeProjects.contains(element.project)) {
             TZATZIKI().extensionList.forEach {
-                it.initBreakpointListener(element.project) }
+                DumbService.getInstance(element.project).smartInvokeLater {
+                    it.initBreakpointListener(element.project)
+                }
+            }
             firstTimeProjects.add(element.project)
         }
 
