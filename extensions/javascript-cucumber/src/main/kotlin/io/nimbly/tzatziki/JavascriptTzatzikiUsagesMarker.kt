@@ -16,24 +16,19 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
-import com.intellij.find.FindManager
-import com.intellij.find.impl.FindManagerImpl
-import com.intellij.lang.javascript.findUsages.JavaScriptFindUsagesHandlerFactory
 import com.intellij.lang.javascript.psi.*
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.tzatziki.psi.findUsages
-import io.nimbly.tzatziki.psi.getGherkinScope
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
-import io.nimbly.tzatziki.util.collectReferences
 import io.nimbly.tzatziki.util.up
 import org.jetbrains.plugins.cucumber.javascript.CucumberJavaScriptUtil
 
 class JavascriptTzatzikiUsagesMarker : TzStepsUsagesMarker() {
 
+    @Suppress("UNUSED_VARIABLE")
     override fun collectSlowLineMarkers(elements: MutableList<out PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
         elements
             .filterIsInstance<LeafPsiElement>()
@@ -52,14 +47,17 @@ class JavascriptTzatzikiUsagesMarker : TzStepsUsagesMarker() {
 
                 val module = ModuleUtilCore.findModuleForPsiElement(token) ?: return
 
-                val usages = findUsages(function)
+                DumbService.getInstance(module.project).runReadActionInSmartMode {
 
-                CucumberJavaScriptUtil.getContentFromLiteralText(annotationText)
-                CucumberJavaScriptUtil.isRegexpString(annotationText)
+                    val usages = findUsages(function)
 
-                CucumberJavaScriptUtil.getCucumberStepTextFromElement(callExpression)
+                    CucumberJavaScriptUtil.getContentFromLiteralText(annotationText)
+                    CucumberJavaScriptUtil.isRegexpString(annotationText)
 
-                buildMarkers(token, usages, annotationText, result)
+                    CucumberJavaScriptUtil.getCucumberStepTextFromElement(callExpression)
+
+                    buildMarkers(token, usages, annotationText, result)
+                }
             }
     }
 }

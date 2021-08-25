@@ -16,6 +16,7 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.*
 import com.intellij.psi.util.PsiTreeUtil
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
@@ -35,11 +36,12 @@ class JavaTzatzikiUsagesMarker : TzStepsUsagesMarker() {
                 val method = PsiTreeUtil.getParentOfType(token, PsiMethod::class.java) ?: return@forEach
 
                 // Find method usages
-                val usages = findStepUsages(method)
-                if (usages.isEmpty())
-                    return@forEach
+                DumbService.getInstance(token.project).runReadActionInSmartMode {
 
-                buildMarkers(token, usages, annotationText, result)
+                    val usages = findStepUsages(method)
+                    if (usages.isNotEmpty())
+                        buildMarkers(token, usages, annotationText, result)
+                }
             }
     }
 }

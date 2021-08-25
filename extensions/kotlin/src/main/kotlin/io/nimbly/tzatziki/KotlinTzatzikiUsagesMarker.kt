@@ -16,18 +16,13 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
-import com.intellij.find.FindManager
-import com.intellij.find.findUsages.FindUsagesHandler
-import com.intellij.find.impl.FindManagerImpl
-import com.intellij.psi.PsiAnnotation
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiReference
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import io.nimbly.tzatziki.psi.findUsages
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
 import io.nimbly.tzatziki.util.up
-import org.jetbrains.annotations.Nullable
 import org.jetbrains.kotlin.psi.*
 
 class KotlinTzatzikiUsagesMarker : TzStepsUsagesMarker() {
@@ -55,11 +50,14 @@ class KotlinTzatzikiUsagesMarker : TzStepsUsagesMarker() {
                     ?: return@forEach
 
                 // Get annotation text
-                val annotationText = token.text
-                val usages = findUsages(namedFunction)
+                DumbService.getInstance(token.project).runReadActionInSmartMode {
 
-                // Build markers
-                buildMarkers(token, usages, annotationText, result)
+                    val annotationText = token.text
+                    val usages = findUsages(namedFunction)
+
+                    // Build markers
+                    buildMarkers(token, usages, annotationText, result)
+                }
             }
     }
 }

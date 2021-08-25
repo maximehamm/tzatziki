@@ -115,6 +115,9 @@ fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
 fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
     = references.filterIsInstance<CucumberStepReference>()
 
+/**
+ * Please take care of @IndexNotReadyException
+ */
 fun findUsages(function: PsiElement): List<PsiReference> {
 
     val usagesManager = (FindManager.getInstance(function.project) as FindManagerImpl).findUsagesManager

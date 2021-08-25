@@ -1,6 +1,7 @@
 var {Then} = require('cucumber');
 var {When} = require('cucumber');
 var {Given} = require('cucumber');
+
 Given(/^Romeo who wants to buy a drink$/, function () {
 
 });

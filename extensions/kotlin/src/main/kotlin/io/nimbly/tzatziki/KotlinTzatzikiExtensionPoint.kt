@@ -16,6 +16,7 @@
 package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -60,18 +61,22 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             val function = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java) ?: return
 
             // Find usages
-            val usages = findUsages(function)
+            DumbService.getInstance(element.project).runReadActionInSmartMode {
 
-            usages
-                .asSequence()
-                .filterIsInstance<CucumberStepReference>()
-                .map { it.element }
-                .filterIsInstance<GherkinStep>()
-                .map { it.containingFile }
-                .toSet()
-                .forEach {
-                    DaemonCodeAnalyzer.getInstance(project).restart(it)
-                }
+                val usages = findUsages(function)
+
+                usages
+                    .asSequence()
+                    .filterIsInstance<CucumberStepReference>()
+                    .map { it.element }
+                    .filterIsInstance<GherkinStep>()
+                    .map { it.containingFile }
+                    .toSet()
+                    .forEach {
+                        DaemonCodeAnalyzer.getInstance(project).restart(it)
+                    }
+
+            }
 
         }
 

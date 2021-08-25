@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="" />
+    <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../rich-example/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../rich-example/.idea/rich-example.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../common/src/main/kotlin/io/nimbly/tzatziki/util/GherkinPsiUtils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../common/src/main/kotlin/io/nimbly/tzatziki/util/GherkinPsiUtils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../extensions/java-cucumber/src/main/kotlin/io/nimbly/tzatziki/JavaTzatzikiUsagesMarker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../extensions/java-cucumber/src/main/kotlin/io/nimbly/tzatziki/JavaTzatzikiUsagesMarker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../extensions/javascript-cucumber/src/main/kotlin/io/nimbly/tzatziki/JavascriptTzatzikiUsagesMarker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../extensions/javascript-cucumber/src/main/kotlin/io/nimbly/tzatziki/JavascriptTzatzikiUsagesMarker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../extensions/kotlin/src/main/kotlin/io/nimbly/tzatziki/KotlinTzatzikiExtensionPoint.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../extensions/kotlin/src/main/kotlin/io/nimbly/tzatziki/KotlinTzatzikiExtensionPoint.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../extensions/kotlin/src/main/kotlin/io/nimbly/tzatziki/KotlinTzatzikiUsagesMarker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../extensions/kotlin/src/main/kotlin/io/nimbly/tzatziki/KotlinTzatzikiUsagesMarker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/features/step_definitions/cocktail.js" beforeDir="false" afterPath="$PROJECT_DIR$/features/step_definitions/cocktail.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -11,13 +23,13 @@
     <option name="done" value="true" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="1" />
   </component>
   <component name="ProjectId" id="1tOcjHggYK559xOTo520ZkE33az" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
@@ -30,7 +42,7 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="javascript.nodejs.core.library.configured.version" value="15.4.0" />
-    <property name="javascript.nodejs.core.library.typings.version" value="15.12.1" />
+    <property name="javascript.nodejs.core.library.typings.version" value="15.14.9" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs.cucumber.cucumber_node_package_dir" value="$PROJECT_DIR$/node_modules/cucumber" />
     <property name="nodejs_package_manager_path" value="npm" />
@@ -85,12 +97,6 @@
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Cucumber.js.Scenario Outline: Sending a message with an o..." />
-        <item itemvalue="Cucumber.js.Scenario Outline: Sending a message with an o... - Example #2" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -130,6 +136,10 @@
       <workItem from="1623078569991" duration="41000" />
       <workItem from="1623078742072" duration="128000" />
       <workItem from="1623078951005" duration="595000" />
+      <workItem from="1629903360621" duration="75000" />
+      <workItem from="1629903506455" duration="85000" />
+      <workItem from="1629903746140" duration="62000" />
+      <workItem from="1629904084886" duration="160000" />
     </task>
     <servers />
   </component>
