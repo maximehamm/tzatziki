@@ -37,7 +37,7 @@ import io.nimbly.tzatziki.psi.format
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
-var TOGGLE_CUCUMBER_PL : Boolean = true
+var TOGGLE_CUCUMBER_PL: Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
@@ -76,7 +76,7 @@ class TzTModuleListener : ProjectManagerListener {
         }
     }
 
-    private class DeletionHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
+    private class DeletionHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             if (dataContext.gherkin && editor.stopBeforeDeletion(getActionId()))
                 return
@@ -86,7 +86,7 @@ class TzTModuleListener : ProjectManagerListener {
         }
     }
 
-    private class TabHandler(actionId : String) : AbstractWriteActionHandler(actionId) {
+    private class TabHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             if (!dataContext.gherkin || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
                 doDefault(editor, caret, dataContext)
@@ -143,7 +143,7 @@ class TzTModuleListener : ProjectManagerListener {
                 releaseSelectionSwitch()
             }
 
-            if (dataContext.gherkin && editor.caretModel.caretCount>1) {
+            if (dataContext.gherkin && editor.caretModel.caretCount > 1) {
 
                 PsiDocumentManager.getInstance(editor.project!!).commitDocument(editor.document)
 
@@ -156,12 +156,15 @@ class TzTModuleListener : ProjectManagerListener {
         }
     }
 
+    @Suppress("DEPRECATION")
     abstract class AbstractWriteActionHandler(private val id: String) : EditorWriteActionHandler() {
         private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext)
             = doDefault(editor, caret, dataContext)
         open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
             = orginHandler.execute(editor, caret, dataContext)
+        override fun isEnabled(editor: Editor, dataContext: DataContext)
+            = orginHandler.isEnabled(editor, dataContext)
         fun getActionId()
             = id
     }
@@ -179,5 +182,4 @@ private val DataContext.gherkin: Boolean
 
 private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandler) {
     setActionHandler(handler.getActionId(), handler)
-
 }
