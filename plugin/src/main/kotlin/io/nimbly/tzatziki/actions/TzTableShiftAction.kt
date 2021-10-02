@@ -23,6 +23,7 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.psi.SmartPointerManager
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.actions.Direction.*
+import io.nimbly.tzatziki.gherkin
 import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
@@ -38,6 +39,9 @@ class TableShiftDownAction : TableShiftAction(DOWN)
 open class TableShiftAction(private val direction: Direction) : TzAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
+
+        if (!event.dataContext.gherkin)
+            return
 
         val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
@@ -59,9 +63,14 @@ open class TableShiftAction(private val direction: Direction) : TzAction() {
             if (editor == null)
                 event.presentation.isVisible = false
             else {
-                val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
-                val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
-                event.presentation.isEnabled = file.cellAt(offset) != null
+                if (event.dataContext.gherkin) {
+                    val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
+                    val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
+                    event.presentation.isEnabled = file.cellAt(offset) != null
+                }
+                else {
+                    event.presentation.isEnabled = false
+                }
             }
         }
     }

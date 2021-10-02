@@ -175,7 +175,7 @@ class TzTModuleListener : ProjectManagerListener {
 
 }
 
-private val DataContext.gherkin: Boolean
+val DataContext.gherkin: Boolean
     get() =
         TOGGLE_CUCUMBER_PL && GherkinFileType.INSTANCE == CommonDataKeys.PSI_FILE.getData(this)?.fileType
 
