@@ -148,6 +148,18 @@ fun GherkinTable.nextRow(row: GherkinTableRow): GherkinTableRow? {
         allRows[i] else null
 }
 
+fun GherkinTable.isCorrupted() : Boolean {
+    var columns = -1
+    allRows.forEach { row ->
+        val c = row.psiCells.size
+        if (columns<0)
+            columns = c
+        if (columns != c)
+            return true
+    }
+    return false
+}
+
 fun GherkinTable.offsetIsOnLeft(offset: Int): Boolean {
 
     val document = getDocument() ?: return false

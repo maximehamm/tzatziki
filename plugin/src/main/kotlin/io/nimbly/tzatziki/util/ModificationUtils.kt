@@ -188,6 +188,9 @@ fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolea
     val table = findTableAt(selectionModel.selectionStart)
     if (table != null) {
 
+//        if (table.isCorrupted())
+//            return false
+
         if (selectionModel.selectionStart >= table.allRows.last().endOffset)
             return false
 
@@ -228,6 +231,9 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
 
     if (table.textLength == 1)
         return false // Table is a single pipe !!
+
+//    if (table.isCorrupted())
+//        return false
 
     if (selectionModel.hasSelection(true)) {
 
@@ -277,7 +283,7 @@ private fun Editor.cleanSelection(table: GherkinTable, cleanHeader: Boolean, sta
     val blankSelection = isSelectionOfBlankCells()
     val coordinates = toClean.first().coordinate
 
-    // Define column abd rows to remove completely
+    // Define columns and rows to remove completely
     val excludedRows =
         if (blankSelection && cleanedDimension.width == table.columnCount)
             coordinates.y until coordinates.y + cleanedDimension.height
