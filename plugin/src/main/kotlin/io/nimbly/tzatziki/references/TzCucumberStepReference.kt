@@ -17,10 +17,7 @@ package io.nimbly.tzatziki.references
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiElementResolveResult
-import com.intellij.psi.PsiPolyVariantReference
-import com.intellij.psi.ResolveResult
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.resolve.ResolveCache
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -80,8 +77,11 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
     override fun isReferenceTo(element: PsiElement): Boolean {
         val resolvedResults = multiResolve(false)
         for (rr in resolvedResults) {
-            if (getElement().manager.areElementsEquivalent(rr.element, element)) {
-                return true
+            try {
+                if (getElement().manager.areElementsEquivalent(rr.element, element)) {
+                    return true
+                }
+            } catch (ignored: PsiInvalidElementAccessException) {
             }
         }
         return false
