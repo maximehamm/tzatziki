@@ -19,6 +19,7 @@ import com.intellij.execution.testframework.AbstractTestProxy
 import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.openapi.project.Project
+import com.intellij.util.SlowOperations
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
@@ -41,16 +42,18 @@ class TzTestStatusListener : TestStatusListener() {
 
         val results = TzTestResult()
 
-        root.allTests
-            .filter { it.children.isEmpty() }
-            .filterIsInstance<SMTestProxy>()
-            .filter { it.locationUrl != null }
-            .forEach { test ->
-                val r = findTestSteps(test, project)
-                results.putAll(r)
-            }
+        SlowOperations.allowSlowOperations<Exception> {
+            root.allTests
+                .filter { it.children.isEmpty() }
+                .filterIsInstance<SMTestProxy>()
+                .filter { it.locationUrl != null }
+                .forEach { test ->
+                    val r = findTestSteps(test, project)
+                    results.putAll(r)
+                }
+            TzTestRegistry.refresh(results)
+        }
 
-        TzTestRegistry.refresh(results)
     }
 
     private fun findTestSteps(test: SMTestProxy, project: Project): TzTestResult {
@@ -85,5 +88,6 @@ class TzTestStatusListener : TestStatusListener() {
     }
 
     override fun testSuiteFinished(root: AbstractTestProxy?) {
+        //Nothing to do
     }
 }
