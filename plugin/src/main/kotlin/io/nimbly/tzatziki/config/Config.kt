@@ -32,6 +32,7 @@ import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.getFile
 import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.util.now
+import java.io.File
 import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.time.format.DateTimeFormatter
@@ -52,8 +53,11 @@ const val EXPORT_PICTURE_DEFAULT_FILENAME = "cucumber+.picture.default.svg"
 const val EXPORT_TEMPLATE_FILENAME = "cucumber+.template.ftl"
 const val EXPORT_TEMPLATE_DEFAULT_FILENAME = "cucumber+.template.default.ftl"
 
+const val FONT = "cucumber+.font.ttf"
+const val FONT_DEFAULT = "cucumber+.font.default.ttf"
+
 val ALL_DEFAULTS = listOf(
-    PROPERTIES_DEFAULT_FILENAME, PROPERTIES_FILENAME,
+    PROPERTIES_DEFAULT_FILENAME, PROPERTIES_FILENAME, FONT_DEFAULT,
     CSS_DEFAULT_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
 
 fun loadConfig(path: VirtualFile, project: Project): Config {
@@ -82,9 +86,10 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
     val cssFile = root.loadCss(path)
     val picture = root.loadPicture(path)
     val frontpage = root.loadTemplate(path)
+    val font = root.loadFont(path)
 
     // Return config
-    return createConfiguration(propertiesFiles, cssFile, picture, frontpage)
+    return createConfiguration(propertiesFiles, cssFile, picture, frontpage, font!!)
 }
 
 fun loadConfig(files: List<VirtualFile>, project: Project): Config {
@@ -189,6 +194,8 @@ private fun VirtualFile.setContentFrom(file: String) {
 private fun getResource(path: String)
     = {}.javaClass.getResourceAsStream(path).readAllBytes()
 
+fun getFile(path: String)
+        = File({}.javaClass.getResource(path)?.file)
 
 private fun VirtualFile.updateDefaultFiles(project: Project) {
     ALL_DEFAULTS.forEach { fileName ->
@@ -263,8 +270,8 @@ private fun VirtualFile.loadAllProperties(file: VirtualFile): List<Properties> {
 
 private fun VirtualFile.loadCss(path: VirtualFile): String {
 
-    val defaultCss = load(path, CSS_DEFAULT_FILENAME)
-    val css = load(path, CSS_FILENAME)
+    val defaultCss = loadContent(path, CSS_DEFAULT_FILENAME)
+    val css = loadContent(path, CSS_FILENAME)
 
     return if (css.isBlank())
         defaultCss
@@ -273,12 +280,18 @@ private fun VirtualFile.loadCss(path: VirtualFile): String {
 }
 
 private fun VirtualFile.loadPicture(path: VirtualFile)
-    = load(path, EXPORT_PICTURE_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME)
+    = loadContent(path, EXPORT_PICTURE_FILENAME, EXPORT_PICTURE_DEFAULT_FILENAME)
 
 private fun VirtualFile.loadTemplate(path: VirtualFile)
-    = load(path, EXPORT_TEMPLATE_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
+    = loadContent(path, EXPORT_TEMPLATE_FILENAME, EXPORT_TEMPLATE_DEFAULT_FILENAME)
 
-private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileName: String? = null): String {
+private fun VirtualFile.loadFont(path: VirtualFile)
+    = load(path, FONT, FONT_DEFAULT)
+
+private fun VirtualFile.loadContent(path: VirtualFile, fileName: String, defaultFileName: String? = null)
+    = load(path, fileName, defaultFileName)?.contentsToByteArray()?.toString(Charsets.UTF_8) ?: ""
+
+private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileName: String? = null): VirtualFile? {
 
     var vf: VirtualFile? = path
     while (vf != null) {
@@ -287,12 +300,12 @@ private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileNam
         if (folder != null) {
             val css = folder.findChild(fileName)
             if (css != null) {
-                return css.contentsToByteArray()!!.toString(Charsets.UTF_8)
+                return css
             }
             if (vf == this && defaultFileName!=null) {
                 val defaultCss = folder.findChild(defaultFileName)
                 if (defaultCss != null) {
-                    return defaultCss.contentsToByteArray()!!.toString(Charsets.UTF_8)
+                    return defaultCss
                 }
             }
         }
@@ -302,7 +315,7 @@ private fun VirtualFile.load(path: VirtualFile, fileName: String, defaultFileNam
         vf = vf.parent
     }
 
-    return ""
+    return null
 }
 
 
@@ -310,7 +323,8 @@ fun createConfiguration(
     propertiesFiles: List<Properties>,
     css: String,
     picture: String,
-    template : String
+    template : String,
+    font: VirtualFile
 ): Config {
 
     fun get(property: String): String {
@@ -339,6 +353,7 @@ fun createConfiguration(
             .toMap()
 
     return Config(
+        font = font,
         topLeft = get("export.topLeft"),
         topCenter = get("export.topCenter"),
         topRight = get("export.topRight"),
@@ -361,6 +376,7 @@ fun createConfiguration(
 }
 
 class Config(
+    val font: VirtualFile,
     val topFontSize: String,
     val bottomFontSize: String,
 
@@ -389,6 +405,7 @@ class Config(
 
     fun buildStyles(): PdfStyle {
         return PdfStyle(
+            font = font,
             bodyFontSize = "25px",
             topFontSize = tune(topFontSize),
             bottomFontSize = tune(bottomFontSize),
@@ -408,7 +425,9 @@ class Config(
                 bottomLeft = "", bottomCenter = "", bottomRight = "",
                 topFontSize =  tune(bottomFontSize), bottomFontSize = tune(bottomFontSize), bodyFontSize = "32px",
                 summaryDepth = summaryDepth, summaryLeader= summaryLeader, summaryFontSize= summaryFontSize, summaryListStyles= summaryListStyles,
-                contentStyle = css)
+                contentStyle = css,
+                font = font
+            )
         )
     }
 

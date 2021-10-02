@@ -15,6 +15,8 @@
 
 package io.nimbly.tzatziki.pdf
 
+import com.intellij.openapi.vfs.VirtualFile
+
 private const val TAG = "@tablesOfContentTag#"
 
 class PdfBuilder(private val style: PdfStyle) {
@@ -81,6 +83,7 @@ class PdfBuilder(private val style: PdfStyle) {
 
         tag("html") {
             tag("head") {
+                sb.append("\n<meta charset=\"utf-8\"/>")
                 tag("style") {
                     style.apply {
                         first?.apply {
@@ -105,9 +108,13 @@ class PdfBuilder(private val style: PdfStyle) {
 
         return sb.toString()
     }
+
+    fun getFont(): VirtualFile
+        = style.font
 }
 
 open class PdfStyle(
+    var font: VirtualFile,
     var bodyFontSize: String,
     var topFontSize: String,
     var bottomFontSize: String,
@@ -130,35 +137,40 @@ open class PdfStyle(
     private fun defaultPagePdfStyle(orientation: String) = """
         size: a4 $orientation; 
         margin: 80px;	
-        
         @top-left{
+              font-family:'cucumberplus';
               font-size:$topFontSize;
               content: '$topLeft';
         }
         
         @top-center{
+              font-family:'cucumberplus';
               font-size:$topFontSize;
               content: '$topCenter';
         }
         
         @top-right{
+              font-family:'cucumberplus';
               font-size:$topFontSize;
               content: '$topRight';
         }
         
         @bottom-left{
+            font-family:'cucumberplus';
             font-size:$bottomFontSize;
             content: '$bottomLeft';	
         }
         
         @bottom-center {
+            font-family:'cucumberplus';
             font-size:$bottomFontSize;
             content: '$bottomCenter';	
         }
         
         @bottom-right {
-             font-size:$bottomFontSize;
-              content:$bottomRight 	
+            font-family:'cucumberplus';
+            font-size:$bottomFontSize;
+            content:$bottomRight 	
         }""".trimIndent()
 
     private fun defaultStandardPdfStyle() = """    
@@ -168,7 +180,9 @@ open class PdfStyle(
          * the bottom margin to the last page. */
         body {
            margin: 0;
+           font-family:'cucumberplus';
            font-size:$bodyFontSize;
+           font-family:'cucumberplus';
         }
         
         page-after {
@@ -184,9 +198,15 @@ open class PdfStyle(
           page-break-before: always;	
         }
        
-       .summary { font-size: $summaryFontSize; }
+       .summary { 
+          font-family:'cucumberplus';
+          font-size: $summaryFontSize; 
+        }
        
-       .toc a { font-size: $summaryFontSize;  }
+       .toc a { 
+          font-family:'cucumberplus';
+          font-size: $summaryFontSize;  
+        }
        
        .toc li::after {
          /* The target-counter function is useful for creating a 
@@ -195,9 +215,11 @@ open class PdfStyle(
           * to the element and returns the page that element is located on.
           * We can use the attr function to pick up the href from the html. */
          content: leader($summaryLeader) target-counter(attr(href), page);
+         font-family:'cucumberplus';
          font-size: $summaryFontSize; 
        }
        .toc li {
+          font-family:'cucumberplus';
           font-size:$summaryFontSize; 
           margin-left: 10px;
        }

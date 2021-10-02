@@ -20,6 +20,7 @@ import com.openhtmltopdf.svgsupport.BatikSVGDrawer
 import freemarker.template.Configuration
 import freemarker.template.Template
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
@@ -35,6 +36,7 @@ fun buildPdf(generator: PdfBuilder, outputStream: OutputStream) {
     PdfRendererBuilder().apply {
         useFastMode()
         useSVGDrawer(BatikSVGDrawer())
+        useFont(File(generator.getFont().path), "cucumberplus")
         withHtmlContent(generated, "..")
         toStream(outputStream)
         run()
