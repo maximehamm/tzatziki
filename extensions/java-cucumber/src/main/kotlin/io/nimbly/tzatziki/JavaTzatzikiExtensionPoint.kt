@@ -17,6 +17,7 @@ package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.debugger.DebuggerManagerEx
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -91,28 +92,30 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
         fun refresh(breakpoint: XBreakpoint<*>) {
 
-            val sourcePosition = breakpoint.sourcePosition ?: return
+            DumbService.getInstance(project).runReadActionInSmartMode {
 
-            val vfile = sourcePosition.file
-            if (!vfile.isValid) return
-            val file = vfile.getFile(project) as? PsiJavaFile ?: return
+                val sourcePosition = breakpoint.sourcePosition ?: return@runReadActionInSmartMode
 
-            val element = file.findElementAt(sourcePosition.offset) ?: return
-            val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return
+                val vfile = sourcePosition.file
+                if (!vfile.isValid) return@runReadActionInSmartMode
+                val file = vfile.getFile(project) as? PsiJavaFile ?: return@runReadActionInSmartMode
 
-            val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
-            val references = method.collectReferences(scope)
-            references
-                .asSequence()
-                .filterIsInstance<CucumberStepReference>()
-                .map { it.element }
-                .filterIsInstance<GherkinStep>()
-                .map { it.containingFile }
-                .toSet()
-                .forEach {
-                    DaemonCodeAnalyzer.getInstance(project).restart(it)
+                val element = file.findElementAt(sourcePosition.offset) ?: return@runReadActionInSmartMode
+                val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return@runReadActionInSmartMode
+
+                val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
+                val references = method.collectReferences(scope)
+                references
+                    .asSequence()
+                    .filterIsInstance<CucumberStepReference>()
+                    .map { it.element }
+                    .filterIsInstance<GherkinStep>()
+                    .map { it.containingFile }
+                    .toSet()
+                    .forEach {
+                        DaemonCodeAnalyzer.getInstance(project).restart(it)
+                    }
             }
-
         }
 
         project.messageBus
