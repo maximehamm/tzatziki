@@ -46,7 +46,7 @@ tasks.runPluginVerifier {
 // https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000620084-how-to-build-a-plugin-that-is-compatible-to-multiple-versions-of-IntelliJ-
 patchPluginXml {
     sinceBuild '202'
-    untilBuild '212.*'
+    untilBuild '213.*'
 
     changeNotes rootProject.ext.changeNotes
 }
