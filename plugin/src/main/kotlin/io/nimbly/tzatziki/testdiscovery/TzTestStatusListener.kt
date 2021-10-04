@@ -18,8 +18,8 @@ package io.nimbly.tzatziki.testdiscovery
 import com.intellij.execution.testframework.AbstractTestProxy
 import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.util.SlowOperations
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
@@ -42,7 +42,7 @@ class TzTestStatusListener : TestStatusListener() {
 
         val results = TzTestResult()
 
-        SlowOperations.allowSlowOperations<Exception> {
+        ApplicationManager.getApplication().runReadAction {
             root.allTests
                 .filter { it.children.isEmpty() }
                 .filterIsInstance<SMTestProxy>()
