@@ -104,6 +104,10 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return@runReadActionInSmartMode
 
                 val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
+
+                // Avoid Index not ready exception
+                DumbService.getInstance(project).completeJustSubmittedTasks()
+
                 val references = method.collectReferences(scope)
                 references
                     .asSequence()

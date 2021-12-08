@@ -227,13 +227,13 @@ fun Editor.createEditorContext(): DataContext {
     /**
      * Since IDEA 2021.1 EAP
     fun Editor.createEditorContext(): DataContext {
-    return SimpleDataContext.builder()
-    .setParent(DataManager.getInstance().getDataContext(contentComponent))
-    .add(CommonDataKeys.HOST_EDITOR, if (this is EditorWindow) delegate else this)
-    .add(CommonDataKeys.EDITOR, this)
-    .build()
+      return SimpleDataContext.builder()
+        .setParent(DataManager.getInstance().getDataContext(contentComponent))
+        .add(CommonDataKeys.HOST_EDITOR, if (this is EditorWindow) delegate else this)
+        .add(CommonDataKeys.EDITOR, this)
+        .build()
     }
-     */
+    */
 
     val hostEditor: Any = if (this is EditorWindow) this.delegate else this
     val map: Map<String, Any> = ContainerUtil.newHashMap(
