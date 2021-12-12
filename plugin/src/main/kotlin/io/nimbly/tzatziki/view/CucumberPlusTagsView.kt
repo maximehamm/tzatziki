@@ -14,20 +14,18 @@
  */
 package io.nimbly.tzatziki.view
 
-import com.intellij.openapi.editor.event.EditorEventMulticaster
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.event.DocumentEvent
+import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.vfs.AsyncFileListener
-import com.intellij.openapi.vfs.AsyncFileListener.ChangeApplier
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import io.nimbly.tzatziki.psi.getGherkinScope
 import io.nimbly.tzatziki.util.findAllTags
-import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.JPanel
@@ -43,7 +41,7 @@ class CucumberPlusTagsView(private val project: Project)
     private fun initTagsPanel(): JPanel {
 
         val p = JBPanelWithEmptyText()
-        p.layout = BorderLayout(20, 20)
+        p.layout = BorderLayout(10, 10)
         p.border = EmptyBorder(10, 10, 10, 10)
         p.withEmptyText("No tags found")
 
@@ -53,38 +51,32 @@ class CucumberPlusTagsView(private val project: Project)
             </html>""".trimMargin())
         p.add(title, BorderLayout.PAGE_START)
 
-        var tagsPanel: JPanel
+        lateinit var tagsPanel: JPanel
+
+        fun refresh() {
+            DumbService.getInstance(project).smartInvokeLater {
+                PsiDocumentManager.getInstance(project).performWhenAllCommitted() {
+                    val newTagsPanel = newTagPanel()
+                    p.remove(tagsPanel)
+                    p.add(newTagsPanel, BorderLayout.CENTER)
+                    tagsPanel = newTagsPanel
+                }
+            }
+        }
+
         DumbService.getInstance(project).smartInvokeLater {
 
             // First tag list initialization
             tagsPanel = newTagPanel()
             p.add(tagsPanel, BorderLayout.CENTER)
 
-            EditorEventMulticaster.
             // Listen to file refreshing
-            VirtualFileManager.getInstance().addAsyncFileListener(object : AsyncFileListener {
-                override fun prepareChange(events: MutableList<out VFileEvent>): ChangeApplier {
-
-                    val featureUpdated = events.find { (it.file?.fileType == GherkinFileType.INSTANCE) } != null
-                    if (!featureUpdated)
-                        return object: ChangeApplier{}
-
-                    return object: ChangeApplier {
-                        override fun afterVfsChange() {
-
-                            DumbService.getInstance(project).smartInvokeLater {
-                                val newTagsPanel = newTagPanel()
-                                p.remove(tagsPanel)
-                                p.add(newTagsPanel, BorderLayout.CENTER)
-                                tagsPanel = newTagsPanel
-                            }
-                        }
-                    }
-                }
+            EditorFactory.getInstance().eventMulticaster.addDocumentListener(object : DocumentListener {
+                override fun documentChanged(event: DocumentEvent) = refresh()
             }, project)
         }
 
-        p.add(JBLabel("Enjoy Cucumber+ !"), BorderLayout.PAGE_END)
+        //p.add(JBLabel("Enjoy Cucumber+ !"), BorderLayout.PAGE_END)
 
         return p
     }
