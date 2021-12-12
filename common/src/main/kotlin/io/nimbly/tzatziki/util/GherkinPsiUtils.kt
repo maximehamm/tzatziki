@@ -18,6 +18,7 @@ package io.nimbly.tzatziki.psi
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
@@ -76,13 +77,17 @@ val GherkinFeature.tags: List<GherkinTag>
         return list
     }
 
-val GherkinStep.allSteps: Set<GherkinTag>
+val GherkinStep.allTags: Set<GherkinTag>
     get() = this.stepHolder.feature.tags.toSet()
                 .union(this.stepHolder.tags.toSet())
 
 fun Module.getGherkinScope()
     = GlobalSearchScope.getScopeRestrictedByFileTypes(
         GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE)
+
+fun Project.getGherkinScope()
+        = GlobalSearchScope.getScopeRestrictedByFileTypes(
+    GlobalSearchScope.projectScope(this), GherkinFileType.INSTANCE)
 
 fun AbstractStepDefinition.isDeprecated(): Boolean {
     val element = element

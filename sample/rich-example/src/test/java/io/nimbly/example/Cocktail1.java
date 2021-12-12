@@ -13,7 +13,7 @@ public class Cocktail1 {
 
     @SuppressWarnings("test")
     @Given("Romeo who wants to buy a drink")
-    @When("an order is declared for Juliette")
+    @When("xx an order is declared for Juliette")
     public void anOrderIsDeclaredForJuliette() {
         order = 0;
     }

@@ -10,13 +10,12 @@ Feature: Cocktail Ordering
 
   Scenario: Creating an empty order
     Given Romeo who wants to buy a drink
-    When an order is declared for Juliette
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store
-      | The Devil in the White City          | Erik Larson |
-      | The Lion, the Witch and the Wardrobe | C.S. Lewis  |
-      | In the Garden of Beasts              | Erik Larson |
+      | Erik Larson | The Devil in the White City          |
+      | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
+      | Erik Larson | In the Garden of Beasts              |
 
   Scenario Outline: KOTLIN Sending a message with an order
     When kotlin for <Who>
@@ -26,14 +25,4 @@ Feature: Cocktail Ordering
       | Who      | expected                            |
       | Juliette | From Romeo to Juliette: Wanna chat? |
       | Juliette | From Romeo to Jerry: Hei!           |
-      | Jerry    | Nothing                             |
-
-  Scenario Outline: JAVA Sending a message with an order
-    When java for <Who>
-    Examples:
-      | Who      |
-      | Juliette |
-      | Juliette |
-      | Jerry    |
-
 

@@ -21,16 +21,18 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.codeInsight.lookup.LookupElementRenderer
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.util.Key
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
 import icons.CucumberIcons
-import io.nimbly.tzatziki.psi.allSteps
+import io.nimbly.tzatziki.psi.allTags
 import io.nimbly.tzatziki.psi.description
 import io.nimbly.tzatziki.psi.getGherkinScope
 import io.nimbly.tzatziki.psi.isDeprecated
@@ -41,7 +43,12 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
+
 class TzScenarioCompletion: CompletionContributor() {
+
+    companion object {
+        private val CacheKey: Key<CachedValue<List<Step>>> = Key.create(Companion::CacheKey.javaClass.simpleName)
+    }
 
     fun complete(parameters: CompletionParameters, context: ProcessingContext, resultSet: CompletionResultSet) {
 
@@ -59,7 +66,7 @@ class TzScenarioCompletion: CompletionContributor() {
             .map { vfile -> vfile.getFile(project) }
             .filterIsInstance<GherkinFile>()
             .forEach { file ->
-                val steps = CachedValuesManager.getCachedValue(file) {
+                val steps = CachedValuesManager.getCachedValue(file, CacheKey) {
 
                     val steps = file.features
                         .flatMap { feature -> feature.scenarios.toList() }
@@ -105,7 +112,7 @@ class TzScenarioCompletion: CompletionContributor() {
                             presentation.isStrikeout = deprecated
 
                             val tags = items
-                                .flatMap { it.step.allSteps }
+                                .flatMap { it.step.allTags }
                                 .map { it.name }
                                 .toSortedSet()
                                 .joinToString(separator = " ", prefix = "  ")

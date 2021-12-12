@@ -29,9 +29,10 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
-         ✓ <b>9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
-         ✓ <b>8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implentation. Details bellow.<br/>
-         ✓ <b>7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
+         ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
+         ✓ <b> 9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
+         ✓ <b> 8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implementation. Details bellow.<br/>
+         ✓ <b> 7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
        <br/>
        <br/>
 
@@ -208,6 +209,9 @@
         // Step completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzScenarioCompletion" order="first"/>
 
+        // Tag completion
+        <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzTagCompletion" order="first"/>
+
         // Step references
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>
 
@@ -227,6 +231,8 @@
         // Breakpoints
         <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>
 
+        // Cucumber properties
+        <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="left" icon="ActionIcons.CUCUMBER_PLUS_16"/>
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
