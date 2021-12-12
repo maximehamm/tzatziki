@@ -26,11 +26,11 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBTextArea
 import com.intellij.uiDesigner.core.GridConstraints
+import com.intellij.uiDesigner.core.GridLayoutManager
 import io.nimbly.tzatziki.psi.getGherkinScope
 import io.nimbly.tzatziki.util.findAllTags
 import java.awt.BorderLayout
 import java.awt.FlowLayout
-import java.awt.GridLayout
 import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 
@@ -89,11 +89,6 @@ class CucumberPlusTagsView(private val project: Project)
 
         // Selection
         val tSelection = JBTextArea(4, 10)
-        val pSelection = JBPanelWithEmptyText(BorderLayout())
-        pSelection.add(JBLabel("""<html>
-                <b>Selection</b> :<br/>
-                </html>""".trimMargin()), BorderLayout.NORTH)
-        pSelection.add(tSelection, BorderLayout.CENTER);
 
         // Tags
         val pTags = JBPanelWithEmptyText(FlowLayout(FlowLayout.LEFT))
@@ -103,16 +98,26 @@ class CucumberPlusTagsView(private val project: Project)
         }
 
         // Main
-        val main = JBPanelWithEmptyText(GridLayout(2, 1))
+        val main = JBPanelWithEmptyText(GridLayoutManager(3, 1))
         main.add(pTags, GridConstraints(
             0, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE,
-            GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_VERTICAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null))
-        main.add(pSelection, GridConstraints(
+
+        main.add(JBLabel("""<html>
+                <b>Selection</b> :<br/><br/>
+                </html>""".trimMargin()), GridConstraints(
             1, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE,
-            GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_GROW,
+            GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE,
+            GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
+            null, null, null))
+
+        main.add(tSelection, GridConstraints(
+            2, 0, 1, 1,
+            GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK,
             null, null, null))
 
         return main
