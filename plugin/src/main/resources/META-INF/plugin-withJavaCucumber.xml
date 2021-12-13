@@ -2,6 +2,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavaRunConfigurationProducer" order="first"/>
+        <runConfigurationExtension implementation="io.nimbly.tzatziki.TzCucumberRunExtension" order="first"/>
     </extensions>
 
 </idea-plugin>

@@ -55,7 +55,7 @@ class CucumberPlusTagsView(private val project: Project)
         p.withEmptyText("No tags found")
 
         p.add(JBLabel("""<html>
-                Only the scenarios with the selected tags will be triggered.<br/><br/>
+                If one or more tags are selected, only the scenarios marked with these tags will be executed.<br/><br/>
                 <b>Select Tags</b> :
                 </html>""".trimMargin()), BorderLayout.PAGE_START)
 
@@ -117,7 +117,7 @@ class CucumberPlusTagsView(private val project: Project)
 
         // Selection label
         main.add(JBLabel("""<html>
-                <b>Selection</b> :<br/>
+                <b>You can adapt the selection here also </b> :<br/>
                 </html>""".trimMargin()), GridConstraints(
             1, 0, 1, 1,
             GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE,
