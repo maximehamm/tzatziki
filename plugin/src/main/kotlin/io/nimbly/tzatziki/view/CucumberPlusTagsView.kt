@@ -34,6 +34,7 @@ import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.findAllTags
 import java.awt.BorderLayout
 import java.awt.FlowLayout
+import javax.swing.BorderFactory
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
@@ -88,17 +89,22 @@ class CucumberPlusTagsView(private val project: Project)
 
     private fun newTagPanel(): JPanel {
 
-        val tags = findAllTags(project, project.getGherkinScope()).sortedBy { it.tag.name.toUpperCase() }
+        val tags: List<String> = findAllTags(project, project.getGherkinScope())
+            .groupBy { it.name }
+            .keys
+            .map { "@$it" }
+            .sortedBy { it.toUpperCase() }
 
         // Tags
         val checks = mutableListOf<JBCheckBox>()
         val pTags = JBPanelWithEmptyText(WrapLayout(FlowLayout.LEFT))
-        (tags.toList() + tags.toList() + tags.toList()).forEach { tag ->
-            val t = JBCheckBox(tag.tag.name)
+        tags.forEach { tag ->
+            val t = JBCheckBox(tag)
             pTags.add(t)
             checks.add(t)
         }
         val sTags = JBScrollPane(pTags, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
+        sTags.border = BorderFactory.createEmptyBorder()
 
         // Main
         val main = JBPanelWithEmptyText(GridLayoutManager(3, 1))
