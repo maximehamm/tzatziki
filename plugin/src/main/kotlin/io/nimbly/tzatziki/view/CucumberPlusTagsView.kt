@@ -21,10 +21,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBPanelWithEmptyText
-import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridLayoutManager
 import io.nimbly.tzatziki.psi.getGherkinScope
@@ -32,6 +29,8 @@ import io.nimbly.tzatziki.util.findAllTags
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.JPanel
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
 import javax.swing.border.EmptyBorder
 
 class CucumberPlusTagsView(private val project: Project)
@@ -92,18 +91,23 @@ class CucumberPlusTagsView(private val project: Project)
 
         // Tags
         val pTags = JBPanelWithEmptyText(FlowLayout(FlowLayout.LEFT))
-        tags.forEach { tag ->
+        (tags.toList() + tags.toList() + tags.toList())
+            .forEach { tag ->
             val t = JBCheckBox(tag.tag.name)
             pTags.add(t)
         }
+        val sTags = JBScrollPane(pTags)
+        sTags.horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_NEVER
+        sTags.verticalScrollBarPolicy = VERTICAL_SCROLLBAR_ALWAYS
 
         // Main
         val main = JBPanelWithEmptyText(GridLayoutManager(3, 1))
-        main.add(pTags, GridConstraints(
+        main.add(sTags, GridConstraints(
             0, 0, 1, 1,
             GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_VERTICAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_WANT_GROW,
-            null, null, null))
+            GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW or GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW or GridConstraints.SIZEPOLICY_WANT_GROW,
+            null, null, null).also { isVertical = false } )
 
         main.add(JBLabel("""<html>
                 <b>Selection</b> :<br/><br/>
@@ -116,8 +120,7 @@ class CucumberPlusTagsView(private val project: Project)
         main.add(tSelection, GridConstraints(
             2, 0, 1, 1,
             GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK,
+            GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_CAN_SHRINK,
             null, null, null))
 
         return main
