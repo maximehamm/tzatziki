@@ -231,8 +231,12 @@
         // Breakpoints
         <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>
 
-        // Cucumber properties
+        // Cucumber tool window
         <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="left" icon="ActionIcons.CUCUMBER_PLUS_16"/>
+
+        // Project settings
+        <projectService serviceImplementation="io.nimbly.tzatziki.settings.CucumberPersistenceState"/>
+
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>

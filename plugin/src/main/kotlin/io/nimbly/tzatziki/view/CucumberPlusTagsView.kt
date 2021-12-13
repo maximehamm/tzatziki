@@ -14,18 +14,23 @@
  */
 package io.nimbly.tzatziki.view
 
+import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
+import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.WrapLayout
 import io.nimbly.tzatziki.psi.getGherkinScope
+import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.findAllTags
 import java.awt.BorderLayout
 import java.awt.FlowLayout
@@ -99,9 +104,9 @@ class CucumberPlusTagsView(private val project: Project)
         val main = JBPanelWithEmptyText(GridLayoutManager(3, 1))
         main.add(sTags, GridConstraints(
             0, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_BOTH,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW or GridConstraints.SIZEPOLICY_WANT_GROW,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW or GridConstraints.SIZEPOLICY_WANT_GROW,
+            GridConstraints.ANCHOR_NORTHWEST, FILL_BOTH,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
             null, null, null))
 
         // Selection label
@@ -110,7 +115,7 @@ class CucumberPlusTagsView(private val project: Project)
                 </html>""".trimMargin()), GridConstraints(
             1, 0, 1, 1,
             GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+            SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null))
 
         // Selection
@@ -118,26 +123,43 @@ class CucumberPlusTagsView(private val project: Project)
         val sSelection = JBScrollPane(tSelection, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
         main.add(sSelection, GridConstraints(
             2, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
-            GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+            GridConstraints.ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
             null, null, null))
 
-        // Update selectiion method
+        // Update selection function
         fun updateSelection() {
-            val t = checks
-                .filter { it.isSelected }
-                .map { it.text }
-                .joinToString(" or ")
-            tSelection.text = t
+
+            // Update selection text
+            val checked = checks.filter { it.isSelected }.map { it.text }.filterNotNull()
+            tSelection.text = checked.joinToString(" or ")
+
+            // Save to settings
+            val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
+            state.selection = tSelection.text
+            state.selectedTags = checked
         }
 
-        // Setup listeners
+        // Load previously checked values
+        val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
         checks.forEach { check ->
-            check.addItemListener { e ->
+            check.isSelected = state.selectedTags.contains(check.text)
+        }
+        tSelection.text = state.selection
+
+        // Setup check boxes listeners
+        checks.forEach { check ->
+            check.addItemListener {
                 updateSelection()
             }
         }
 
         return main
+    }
+
+    companion object {
+        private val DATA_KEY: DataKey<List<String>> = DataKey.create("selectedTags")
+        private val KEY = Key.create<Set<String>?>("CucumberPlusTagsView")
+
     }
 }
