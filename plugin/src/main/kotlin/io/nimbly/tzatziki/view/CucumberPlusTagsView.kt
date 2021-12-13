@@ -78,8 +78,6 @@ class CucumberPlusTagsView(private val project: Project)
             }, project)
         }
 
-        //p.add(JBLabel("Enjoy Cucumber+ !"), BorderLayout.PAGE_END)
-
         return p
     }
 
@@ -87,15 +85,13 @@ class CucumberPlusTagsView(private val project: Project)
 
         val tags = findAllTags(project, project.getGherkinScope()).sortedBy { it.tag.name.toUpperCase() }
 
-        // Selection
-        val tSelection = JBTextArea(4, 10)
-
         // Tags
+        val checks = mutableListOf<JBCheckBox>()
         val pTags = JBPanelWithEmptyText(WrapLayout(FlowLayout.LEFT))
-        (tags.toList() + tags.toList() + tags.toList())
-            .forEach { tag ->
+        (tags.toList() + tags.toList() + tags.toList()).forEach { tag ->
             val t = JBCheckBox(tag.tag.name)
             pTags.add(t)
+            checks.add(t)
         }
         val sTags = JBScrollPane(pTags, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
 
@@ -108,21 +104,40 @@ class CucumberPlusTagsView(private val project: Project)
             GridConstraints.SIZEPOLICY_CAN_SHRINK or GridConstraints.SIZEPOLICY_CAN_GROW or GridConstraints.SIZEPOLICY_WANT_GROW,
             null, null, null))
 
+        // Selection label
         main.add(JBLabel("""<html>
-                <b>Selection</b> :<br/><br/>
+                <b>Selection</b> :<br/>
                 </html>""".trimMargin()), GridConstraints(
             1, 0, 1, 1,
             GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE,
             GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null))
 
-        main.add(tSelection, GridConstraints(
+        // Selection
+        val tSelection = JBTextArea(4, 10).apply { lineWrap = true; wrapStyleWord = true }
+        val sSelection = JBScrollPane(tSelection, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
+        main.add(sSelection, GridConstraints(
             2, 0, 1, 1,
             GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
             GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
             null, null, null))
 
+        // Update selectiion method
+        fun updateSelection() {
+            val t = checks
+                .filter { it.isSelected }
+                .map { it.text }
+                .joinToString(" or ")
+            tSelection.text = t
+        }
+
+        // Setup listeners
+        checks.forEach { check ->
+            check.addItemListener { e ->
+                updateSelection()
+            }
+        }
+
         return main
     }
-
 }
