@@ -14,7 +14,6 @@
  */
 package io.nimbly.tzatziki.view
 
-import com.intellij.openapi.actionSystem.DataKey
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -22,8 +21,8 @@ import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
@@ -55,19 +54,22 @@ class CucumberPlusTagsView(private val project: Project)
         p.withEmptyText("No tags found")
 
         p.add(JBLabel("""<html>
-                If one or more tags are selected, only the scenarios marked with these tags will be executed.<br/><br/>
-                <b>Select Tags</b> :
+                If one or more tags are selected, only the scenarios marked with one or more of those tags will be executed.<br/><br/>
+                <b>Select Tags</b>:
                 </html>""".trimMargin()), BorderLayout.PAGE_START)
 
         lateinit var tagsPanel: JPanel
+        lateinit var tagsList: List<String>
 
         fun refresh() {
             DumbService.getInstance(project).smartInvokeLater {
                 PsiDocumentManager.getInstance(project).performWhenAllCommitted() {
-                    val newTagsPanel = newTagPanel()
+                    val newTagsPanel = newTagPanel(tagsList)
+                        ?: return@performWhenAllCommitted
                     p.remove(tagsPanel)
-                    p.add(newTagsPanel, BorderLayout.CENTER)
-                    tagsPanel = newTagsPanel
+                    p.add(newTagsPanel.first, BorderLayout.CENTER)
+                    tagsPanel = newTagsPanel.first
+                    tagsList = newTagsPanel.second
                 }
             }
         }
@@ -75,7 +77,9 @@ class CucumberPlusTagsView(private val project: Project)
         DumbService.getInstance(project).smartInvokeLater {
 
             // First tag list initialization
-            tagsPanel = newTagPanel()
+            val newTagPanel = newTagPanel(null)
+            tagsPanel = newTagPanel!!.first
+            tagsList = newTagPanel.second
             p.add(tagsPanel, BorderLayout.CENTER)
 
             // Listen to file refreshing
@@ -87,13 +91,18 @@ class CucumberPlusTagsView(private val project: Project)
         return p
     }
 
-    private fun newTagPanel(): JPanel {
+    private fun newTagPanel(currentTags: List<String>?): Pair<JPanel, List<String>>? {
 
-        val tags: List<String> = findAllTags(project, project.getGherkinScope())
+        // Get all tags
+        val tags = findAllTags(project, project.getGherkinScope())
             .groupBy { it.name }
             .keys
             .map { "@$it" }
             .sortedBy { it.toUpperCase() }
+
+        // Check if tags are still the same
+        if (tags == currentTags)
+            return null
 
         // Tags
         val checks = mutableListOf<JBCheckBox>()
@@ -107,21 +116,19 @@ class CucumberPlusTagsView(private val project: Project)
         sTags.border = BorderFactory.createEmptyBorder()
 
         // Main
-        val main = JBPanelWithEmptyText(GridLayoutManager(3, 1))
+        val main = JBPanelWithEmptyText(GridLayoutManager(4, 1))
         main.add(sTags, GridConstraints(
             0, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTHWEST, FILL_BOTH,
+            ANCHOR_NORTHWEST, FILL_BOTH,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
             null, null, null))
 
         // Selection label
-        main.add(JBLabel("""<html>
-                <b>You can adapt the selection here also </b> :<br/>
-                </html>""".trimMargin()), GridConstraints(
+        main.add(JBLabel("""<html><b>You can adapt the selection</b>:<br/></html>""".trimMargin()), GridConstraints(
             1, 0, 1, 1,
-            GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE,
-            SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+            ANCHOR_SOUTHWEST, FILL_NONE,
+            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
             null, null, null))
 
         // Selection
@@ -129,21 +136,30 @@ class CucumberPlusTagsView(private val project: Project)
         val sSelection = JBScrollPane(tSelection, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
         main.add(sSelection, GridConstraints(
             2, 0, 1, 1,
-            GridConstraints.ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
             SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
             null, null, null))
 
+        // Example label
+        main.add(JBLabel("""<html>
+                For example: <i>@tag1 and not @tag2&nbsp;</i></html>""".trimMargin()), GridConstraints(
+            3, 0, 1, 1,
+            ANCHOR_SOUTHWEST, FILL_NONE,
+            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
+            null, null, null))
+
         // Update selection function
-        fun updateSelection() {
-
-            // Update selection text
-            val checked = checks.filter { it.isSelected }.map { it.text }.filterNotNull()
-            tSelection.text = checked.joinToString(" or ")
-
-            // Save to settings
+        fun updateSelection(selectionOnly: Boolean) {
             val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
-            state.selection = tSelection.text
-            state.selectedTags = checked
+            if (selectionOnly) {
+                state.selection = tSelection.text
+            }
+            else {
+                val checked = checks.filter { it.isSelected }.map { it.text }.filterNotNull()
+                tSelection.text = checked.joinToString(" or ")
+                state.selection = tSelection.text
+                state.selectedTags = checked
+            }
         }
 
         // Load previously checked values
@@ -153,19 +169,18 @@ class CucumberPlusTagsView(private val project: Project)
         }
         tSelection.text = state.selection
 
-        // Setup check boxes listeners
+        // Setup listeners
         checks.forEach { check ->
             check.addItemListener {
-                updateSelection()
+                updateSelection(false)
             }
         }
+        tSelection.document.addDocumentListener(object : DocumentAdapter() {
+            override fun textChanged(e: javax.swing.event.DocumentEvent) {
+                updateSelection(true)
+            }
+        })
 
-        return main
-    }
-
-    companion object {
-        private val DATA_KEY: DataKey<List<String>> = DataKey.create("selectedTags")
-        private val KEY = Key.create<Set<String>?>("CucumberPlusTagsView")
-
+        return Pair(main, tags)
     }
 }

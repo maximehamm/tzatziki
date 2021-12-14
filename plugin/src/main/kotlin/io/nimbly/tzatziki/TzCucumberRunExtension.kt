@@ -26,6 +26,8 @@ import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 
 class TzCucumberRunExtension : RunConfigurationExtension() {
 
+    // TODO Do it for Kotlin
+    // TODO Do it for Javascript
     @Throws(ExecutionException::class)
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T,
