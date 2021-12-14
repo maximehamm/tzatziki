@@ -25,6 +25,7 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
+import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.TZATZIKI
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
@@ -65,6 +66,32 @@ val PsiElement.descriptionRange: TextRange
 val GherkinStepsHolder.feature: GherkinFeature
     get() = PsiTreeUtil.getParentOfType(this, GherkinFeature::class.java)!!
 
+val GherkinStepsHolder.isBackground: Boolean
+    get() = this is GherkinScenario && this.isBackground
+
+fun GherkinStepsHolder.checkExpression(tagExpression: Expression?): Boolean {
+    if (tagExpression == null)
+        return true
+    if (isBackground)
+        return true
+    if (tagExpression.evaluate(this.allTags.map { it.name }))
+        return true
+    return false
+}
+
+fun GherkinFeature.checkExpression(tagExpression: Expression?): Boolean {
+    if (tagExpression == null)
+        return true
+    return this.scenarios.find {
+        !it.isBackground && it.checkExpression(tagExpression) } != null
+}
+
+fun GherkinFile.checkExpression(tagExpression: Expression?): Boolean {
+    if (tagExpression == null)
+        return true
+    return this.features.find { it.checkExpression(tagExpression) } != null
+}
+
 val GherkinFeature.tags: List<GherkinTag>
     get() {
         val list = mutableListOf<GherkinTag>()
@@ -76,6 +103,10 @@ val GherkinFeature.tags: List<GherkinTag>
         }
         return list
     }
+
+val GherkinStepsHolder.allTags: Set<GherkinTag>
+    get() = this.feature.tags.toSet()
+        .union(this.tags.toSet())
 
 val GherkinStep.allTags: Set<GherkinTag>
     get() = this.stepHolder.feature.tags.toSet()

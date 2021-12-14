@@ -20,6 +20,9 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.StoragePathMacros
+import io.cucumber.tagexpressions.Expression
+import io.cucumber.tagexpressions.TagExpressionParser
+
 
 @State(name = "ProjectCucumberState", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceState> {
@@ -34,6 +37,17 @@ class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceSta
     override fun loadState(state: CucumberPersistenceState) {
         this.selection = state.selection
         this.selectedTags = state.selectedTags
+    }
+
+    fun tagExpression(): Expression? {
+        if (selection.isNullOrBlank())
+            return null
+
+        return try {
+            TagExpressionParser.parse(selection)
+        } catch (ignored: Exception) {
+            null
+        }
     }
 
     companion object {

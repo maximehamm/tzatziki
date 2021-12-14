@@ -16,6 +16,7 @@ dependencies {
 
     implementation("org.freemarker:freemarker:2.3.23")
     implementation('com.github.rjeschke:txtmark:0.13')
+    implementation("io.cucumber:tag-expressions:4.1.0")
 
     runtimeOnly project(':extensions:java')
     runtimeOnly project(':extensions:java-cucumber')

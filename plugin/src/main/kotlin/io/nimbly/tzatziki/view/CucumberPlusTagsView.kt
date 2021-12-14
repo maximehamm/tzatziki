@@ -54,9 +54,11 @@ class CucumberPlusTagsView(private val project: Project)
         p.withEmptyText("No tags found")
 
         p.add(JBLabel("""<html>
-                If one or more tags are selected, only the scenarios marked with one or more of those tags will be executed (Java / Kotlin only).<br/><br/>
-                <b>Select Tags</b>:
-                </html>""".trimMargin()), BorderLayout.PAGE_START)
+            If one or more tags are selected, only the scenarios marked with those tags will be considered for:<br/>
+              • Cucumber tests execution (<i>Java and Kotlin only</i>)<br/>
+              • Exported to PDF<br/><br/>
+            <b>Select Tags</b>:
+            </html>""".trimMargin()), BorderLayout.PAGE_START)
 
         lateinit var tagsPanel: JPanel
         lateinit var tagsList: List<String>

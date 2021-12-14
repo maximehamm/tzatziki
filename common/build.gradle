@@ -5,6 +5,10 @@ plugins {
 
 group 'io.nimbly.tzatziki'
 
+dependencies {
+    implementation("io.cucumber:tag-expressions:4.1.0")
+}
+
 jar {
     archiveBaseName = 'tzatziki-common'
 }

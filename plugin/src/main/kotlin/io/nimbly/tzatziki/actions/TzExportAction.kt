@@ -21,6 +21,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicatorProvider
 import com.intellij.openapi.project.DumbService
@@ -35,10 +36,13 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import icons.ActionIcons.CUCUMBER_PLUS
+import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
+import io.nimbly.tzatziki.psi.checkExpression
 import io.nimbly.tzatziki.psi.loadStepParams
+import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
@@ -69,9 +73,15 @@ class TzExportAction : AnAction() {
     private fun exportFeatures(paths: List<VirtualFile>, project: Project) {
 
         // Find all relative gherkin files
-        val files = loadGherkinFiles(paths, project)
-        if (files.isEmpty())
+        val allFiles = loadGherkinFiles(paths, project)
+        if (allFiles.isEmpty())
             throw TzatzikiException("No Cucumber feature found !")
+
+        // Filter per tags
+        val tagExpression = ServiceManager.getService(project, CucumberPersistenceState::class.java).tagExpression()
+        val files = allFiles.filter { it.checkExpression(tagExpression) }
+        if (files.isEmpty())
+            throw TzatzikiException("No Cucumber feature found having scenarios matching selected tags !")
 
         // Get project root
         val tempDir = FileUtilRt.createTempDirectory("cucumber+", null, true)
@@ -120,7 +130,7 @@ class TzExportAction : AnAction() {
         generator.breakPage()
 
         // Build as Html
-        val visitor = TzatizkiVisitor(generator, config.language)
+        val visitor = TzatizkiVisitor(generator, config.language, tagExpression)
         files.forEach {
             it.accept(visitor)
             if (it != files.last())
@@ -210,7 +220,7 @@ class TzExportAction : AnAction() {
     override fun isDumbAware()
         = true
 
-    private class TzatizkiVisitor(val generator: PdfBuilder, val dialect: String) : GherkinElementVisitor(), PsiRecursiveVisitor {
+    private class TzatizkiVisitor(val generator: PdfBuilder, val dialect: String, val tagExpression: Expression?) : GherkinElementVisitor(), PsiRecursiveVisitor {
 
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()
@@ -309,6 +319,9 @@ class TzExportAction : AnAction() {
         }
 
         override fun visitScenarioOutline(scenario: GherkinScenarioOutline) {
+            if (!scenario.checkExpression(tagExpression)) {
+                return super.visitElement(scenario)
+            }
             summary(scenario) {
                 nobreak {
                     p("scenario") { super.visitScenarioOutline(scenario) }
@@ -317,6 +330,9 @@ class TzExportAction : AnAction() {
         }
 
         override fun visitScenario(scenario: GherkinScenario) {
+            if (!scenario.checkExpression(tagExpression)) {
+                return super.visitElement(scenario)
+            }
             summary(scenario) {
                 nobreak {
                     p("scenario") { super.visitScenario(scenario) }
