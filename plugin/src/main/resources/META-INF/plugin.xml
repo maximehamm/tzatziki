@@ -20,19 +20,14 @@
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
 
-        <!-- TODO
-           - Export to PDF with run results colors
-           - Allow to disable Cucumber+ gutter icons
-        -->
-
        <b>A better user expérience to run, edit, and print Cucumber features</b><br/>
        <br/>
 
        <b><u>NEW!</u></b><br/>
+         ✓ <b>11.0</b> - Tool view to let you select Gherkin tags to filter tests execution, feature exportation to PDF.<br/>
          ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
-         ✓ <b> 9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
-         ✓ <b> 8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implementation. Details bellow.<br/>
-         ✓ <b> 7.0</b> - Breakpoint line markers in Gherkin files (Java, Kotlin) <br/>
+         ✓ <b>&nbsp;9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
+         ✓ <b>&nbsp;8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implementation. Details bellow.<br/>
        <br/>
        <br/>
 

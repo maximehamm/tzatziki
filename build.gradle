@@ -18,7 +18,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '10.0.0'
+    version '11.0.0'
 }
 
 ext {
@@ -27,6 +27,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>11.0</b> Tool view to let you select Gherkin tags to filter tests execution, feature exportation to PDF.</li>
          <li><b>10.0</b> Tag completion (cursor location after @)</li>
          <li><b>9.2</b> IntelliJ IDEA 2021.3 compatibility</li>
          <li><b>9.1</b> Export features to PDF now supports Cyrillic. You can also put your prefered font at ".cucumber+/cucumber+.font.ttf" </li>
