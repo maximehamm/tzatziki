@@ -232,7 +232,7 @@
         <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>
 
         // Cucumber tool window
-        <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="left" icon="ActionIcons.CUCUMBER_PLUS_16"/>
+        <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="right" icon="ActionIcons.CUCUMBER_PLUS_16"/>
 
         // Project settings
         <projectService serviceImplementation="io.nimbly.tzatziki.settings.CucumberPersistenceState"/>

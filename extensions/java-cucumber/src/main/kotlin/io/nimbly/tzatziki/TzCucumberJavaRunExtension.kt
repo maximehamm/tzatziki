@@ -24,9 +24,8 @@ import com.intellij.openapi.components.ServiceManager
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 
-class TzCucumberRunExtension : RunConfigurationExtension() {
+class TzCucumberJavaRunExtension : RunConfigurationExtension() {
 
-    // TODO Do it for Kotlin
     // TODO Do it for Javascript
     @Throws(ExecutionException::class)
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(

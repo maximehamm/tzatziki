@@ -1,8 +1,11 @@
 <idea-plugin>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <runConfigurationExtension implementation="io.nimbly.tzatziki.TzCucumberJavaRunExtension" order="first"/>
+    </extensions>
+
     <extensions defaultExtensionNs="io.nimbly.tzatziki">
-        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavascriptTzatzikiExtensionPoint">
-        </io.nimbly.tzatziki.main>
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavascriptTzatzikiExtensionPoint"/>
     </extensions>
 
 
