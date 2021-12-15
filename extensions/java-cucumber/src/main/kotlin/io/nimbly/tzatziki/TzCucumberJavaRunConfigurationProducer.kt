@@ -29,6 +29,7 @@ import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurat
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
 
@@ -39,14 +40,14 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
     ): Boolean {
 
         val element = sourceElement.get()
-        val cell = element.parent as? GherkinTableCell
+        val row = findRow(element.parent)
             ?: return false
 
-        cell.parentOfType<GherkinStepsHolder>()
+        row.parentOfType<GherkinStepsHolder>()
             ?: return false
 
-        val line = getLineNumber(element)
-        val example = cell.row.rowNumber
+        val line = findLineNumber(element)
+        val example = row.rowNumber
 
         super.setupConfigurationFromContext(configuration, context, sourceElement)
 
@@ -62,15 +63,15 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         val element = context.psiLocation ?:
             return false
-        val cell = element.parent as? GherkinTableCell
+        val row = findRow(element.parent)
             ?: return false
 
         val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
-        val line = getLineNumber(element)
+        val line = findLineNumber(element)
         if (line != configLine)
             return false
 
-        val example = cell.row.rowNumber
+        val example = row.rowNumber
         return configuration.name.endsWith(" - Example #$example")
     }
 
@@ -79,9 +80,9 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
     }
 
     override fun shouldReplace(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
-        val cell = self.sourceElement.parent as? GherkinTableCell
+        val row = findRow(self.sourceElement.parent)
             ?: return false
-        val scenario = cell.parentOfType<GherkinStepsHolder>()
+        val scenario = row.parentOfType<GherkinStepsHolder>()
             ?: return false
         val definition = findCucumberStepDefinitions(scenario).firstOrNull()
             ?: return false
@@ -90,9 +91,19 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         return true
     }
 
-    private fun getLineNumber(element: PsiElement): Int? {
+    override fun getConfigurationName(context: ConfigurationContext): String {
+        return super.getConfigurationName(context)
+    }
+
+    private fun findLineNumber(element: PsiElement): Int? {
         val document = PsiDocumentManager.getInstance(element.containingFile.project).getDocument(element.containingFile)
             ?: return null
         return document.getLineNumber(element.textOffset) + 1
+    }
+
+    private fun findRow(element: PsiElement): GherkinTableRow? {
+        return element as? GherkinTableRow
+            ?: element.parent as? GherkinTableRow
+            ?: (element.parent as? GherkinTableCell)?.row
     }
 }
