@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.psi
+package io.nimbly.tzatziki.util
 
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl

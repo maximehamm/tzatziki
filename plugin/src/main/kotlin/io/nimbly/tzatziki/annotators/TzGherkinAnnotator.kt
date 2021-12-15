@@ -25,7 +25,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.TokenSet
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtilCore
-import io.nimbly.tzatziki.psi.findCucumberStepReference
+import io.nimbly.tzatziki.util.findCucumberStepReference
 import org.jetbrains.plugins.cucumber.CucumberBundle
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinScenarioOutlineImpl

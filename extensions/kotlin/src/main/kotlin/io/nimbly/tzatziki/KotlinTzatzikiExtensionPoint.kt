@@ -24,7 +24,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
-import io.nimbly.tzatziki.psi.findUsages
+import io.nimbly.tzatziki.util.findUsages
 import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction

@@ -21,13 +21,13 @@ import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.parentOfType
-import io.nimbly.tzatziki.psi.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
 import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.util.ellipsis
+import io.nimbly.tzatziki.util.findPreviousSiblingsOfType
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
-import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.*
 
 class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
@@ -46,7 +46,6 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
             ?: return false
 
         val line = findLineNumber(element)
-        val example = row.rowNumber
 
         super.setupConfigurationFromContext(configuration, context, sourceElement)
 
@@ -62,8 +61,8 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         configuration: CucumberJavaRunConfiguration,
         context: ConfigurationContext): Boolean {
 
-        val element = context.psiLocation ?:
-            return false
+        val element = context.psiLocation
+            ?: return false
 
         val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
         val line = findLineNumber(element)
@@ -78,14 +77,10 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
     }
 
     override fun shouldReplace(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
-        val row = findRow(self.sourceElement.parent)
-            ?: return false
-        val scenario = row.parentOfType<GherkinStepsHolder>()
-            ?: return false
-        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
-            ?: return false
-        if (definition !is AbstractJavaStepDefinition)
-            return false
+        // Warning : this method should return within some millis...
+        // If not, the run action presentation will ignore custom config name
+        // build by getConfigurationName method
+        // @See BaseRunConfigurationAction:update()
         return true
     }
 
@@ -105,11 +100,14 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         var block = ""
         if (row.table.parent is GherkinExamplesBlock) {
             val title = row.table.parent.node.findChildByType(GherkinTokenTypes.TEXT)
-            if (title != null) {
-                var t = title.text.substringBefore("\n").take(12)
-                if (t.length < title.text.length)
-                    t += "..."
-                block = " - " + t.take(12)
+            block = if (title != null) {
+                " - ${title.text.substringBefore("\n").ellipsis(12)}"
+            } else {
+                " - ${row.table.parent
+                    .findPreviousSiblingsOfType<GherkinTag>()
+                    .joinToString(", ") { it.name }
+                    .ellipsis(12)
+                }"
             }
         }
         val example = row.rowNumber

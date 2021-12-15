@@ -21,8 +21,8 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import io.nimbly.tzatziki.psi.findUsages
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
+import io.nimbly.tzatziki.util.findUsages
 import io.nimbly.tzatziki.util.up
 import org.jetbrains.plugins.cucumber.javascript.CucumberJavaScriptUtil
 

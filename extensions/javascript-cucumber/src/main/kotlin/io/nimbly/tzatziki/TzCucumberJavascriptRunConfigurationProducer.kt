@@ -36,9 +36,9 @@ import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.parentOfType
 import icons.ActionIcons.CUCUMBER_PLUS_SVG
-import io.nimbly.tzatziki.psi.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
+import io.nimbly.tzatziki.util.findCucumberStepDefinitions
 import org.jetbrains.plugins.cucumber.javascript.JavaScriptStepDefinition
 import org.jetbrains.plugins.cucumber.javascript.run.CucumberJavaScriptRunConfiguration
 import org.jetbrains.plugins.cucumber.psi.*

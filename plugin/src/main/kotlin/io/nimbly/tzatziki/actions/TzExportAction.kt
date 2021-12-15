@@ -40,8 +40,6 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
-import io.nimbly.tzatziki.psi.checkExpression
-import io.nimbly.tzatziki.psi.loadStepParams
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*

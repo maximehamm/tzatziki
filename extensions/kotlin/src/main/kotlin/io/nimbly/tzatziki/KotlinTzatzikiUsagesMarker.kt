@@ -20,8 +20,8 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
-import io.nimbly.tzatziki.psi.findUsages
 import io.nimbly.tzatziki.usages.TzStepsUsagesMarker
+import io.nimbly.tzatziki.util.findUsages
 import io.nimbly.tzatziki.util.up
 import org.jetbrains.kotlin.psi.*
 

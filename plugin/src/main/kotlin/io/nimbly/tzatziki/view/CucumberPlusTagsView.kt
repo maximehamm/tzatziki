@@ -28,9 +28,9 @@ import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.WrapLayout
-import io.nimbly.tzatziki.psi.getGherkinScope
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.findAllTags
+import io.nimbly.tzatziki.util.getGherkinScope
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.BorderFactory

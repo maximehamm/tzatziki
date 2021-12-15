@@ -22,7 +22,11 @@ import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
 import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.TZATZIKI
-import io.nimbly.tzatziki.psi.*
+import io.nimbly.tzatziki.psi.firstCell
+import io.nimbly.tzatziki.psi.isHeader
+import io.nimbly.tzatziki.psi.row
+import io.nimbly.tzatziki.psi.table
+import io.nimbly.tzatziki.util.findCucumberStepDefinitions
 import org.jetbrains.plugins.cucumber.CucumberUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinFile

@@ -171,3 +171,25 @@ fun PsiElement.up(level: Int): PsiElement {
         p = p.parent
     return p
 }
+
+inline fun <reified T: PsiElement> PsiElement.findPreviousSiblingsOfType(): List<T> {
+    val found = mutableListOf<T>()
+    var elt = this.node
+    while (elt != null) {
+        val psi = elt.psi
+        if (psi is T)
+            found.add(psi)
+        if (elt.treePrev == elt.treeParent)
+            elt = null
+        else
+            elt = elt.treePrev
+    }
+    return found
+}
+
+fun String.ellipsis(length: Int): String {
+    var t = this.take(length)
+    if (t.length < this.length)
+        t += "..."
+    return t
+}

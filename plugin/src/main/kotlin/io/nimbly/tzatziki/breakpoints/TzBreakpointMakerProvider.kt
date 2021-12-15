@@ -24,7 +24,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
 import io.nimbly.tzatziki.TZATZIKI
-import io.nimbly.tzatziki.psi.findCucumberStepReferences
+import io.nimbly.tzatziki.util.findCucumberStepReferences
 import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep

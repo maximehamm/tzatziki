@@ -24,9 +24,9 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
-import io.nimbly.tzatziki.psi.description
-import io.nimbly.tzatziki.psi.getGherkinScope
+import io.nimbly.tzatziki.util.description
 import io.nimbly.tzatziki.util.findAllTags
+import io.nimbly.tzatziki.util.getGherkinScope
 import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
