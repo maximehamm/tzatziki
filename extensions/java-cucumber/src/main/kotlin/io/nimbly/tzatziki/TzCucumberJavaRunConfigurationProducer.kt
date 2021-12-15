@@ -24,12 +24,11 @@ import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.psi.findCucumberStepDefinitions
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
+import io.nimbly.tzatziki.psi.table
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
-import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
-import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import org.jetbrains.plugins.cucumber.psi.*
 
 class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
 
@@ -51,8 +50,10 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         super.setupConfigurationFromContext(configuration, context, sourceElement)
 
+        if (configuration.filePath.matches(".*:[0-9]+$".toRegex()))
+            return true
+
         configuration.filePath = configuration.filePath + ":" + line;
-        configuration.name = configuration.name + " - Example #" + example
 
         return true
     }
@@ -63,16 +64,13 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         val element = context.psiLocation ?:
             return false
-        val row = findRow(element.parent)
-            ?: return false
 
         val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
         val line = findLineNumber(element)
         if (line != configLine)
             return false
 
-        val example = row.rowNumber
-        return configuration.name.endsWith(" - Example #$example")
+        return configuration.filePath.endsWith(":$line")
     }
 
     override fun isPreferredConfiguration(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
@@ -92,7 +90,30 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
     }
 
     override fun getConfigurationName(context: ConfigurationContext): String {
-        return super.getConfigurationName(context)
+        val name = super.getConfigurationName(context)
+        if (name.matches(".*(- Example n°)[0-9]+\$".toRegex()))
+            return name
+
+        val element = context.psiLocation
+            ?: return name
+        val row = findRow(element.parent)
+            ?: return name
+
+        row.parentOfType<GherkinStepsHolder>()
+            ?: return name
+
+        var block = ""
+        if (row.table.parent is GherkinExamplesBlock) {
+            val title = row.table.parent.node.findChildByType(GherkinTokenTypes.TEXT)
+            if (title != null) {
+                var t = title.text.substringBefore("\n").take(12)
+                if (t.length < title.text.length)
+                    t += "..."
+                block = " - " + t.take(12)
+            }
+        }
+        val example = row.rowNumber
+        return "$name$block - Example n°$example"
     }
 
     private fun findLineNumber(element: PsiElement): Int? {
