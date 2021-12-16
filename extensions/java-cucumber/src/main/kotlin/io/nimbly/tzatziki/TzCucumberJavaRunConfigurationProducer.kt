@@ -20,6 +20,7 @@ import com.intellij.execution.actions.ConfigurationFromContext
 import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
@@ -39,13 +40,13 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
     ): Boolean {
 
         val element = sourceElement.get()
-        val row = findRow(element.parent)
-            ?: return false
+        if (!element.isValid) return false
+        val file = element.containingFile ?: return false
 
-        row.parentOfType<GherkinStepsHolder>()
-            ?: return false
+        val row = findRow(element.parent) ?: return false
+        row.parentOfType<GherkinStepsHolder>() ?: return false
 
-        val line = findLineNumber(element)
+        val line = findLineNumber(file, element)
 
         super.setupConfigurationFromContext(configuration, context, sourceElement)
 
@@ -65,7 +66,7 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
             ?: return false
 
         val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
-        val line = findLineNumber(element)
+        val line = findLineNumber(element.containingFile, element)
         if (line != configLine)
             return false
 
@@ -114,8 +115,8 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         return "$name$block - Example n°$example"
     }
 
-    private fun findLineNumber(element: PsiElement): Int? {
-        val document = PsiDocumentManager.getInstance(element.containingFile.project).getDocument(element.containingFile)
+    private fun findLineNumber(file: PsiFile, element: PsiElement): Int? {
+        val document = PsiDocumentManager.getInstance(file.project).getDocument(file)
             ?: return null
         return document.getLineNumber(element.textOffset) + 1
     }
