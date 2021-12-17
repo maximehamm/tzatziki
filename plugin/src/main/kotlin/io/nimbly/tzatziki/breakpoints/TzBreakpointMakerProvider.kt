@@ -15,8 +15,9 @@
 
 package io.nimbly.tzatziki.breakpoints
 
+import com.intellij.codeInsight.daemon.LineMarkerInfo
+import com.intellij.codeInsight.daemon.LineMarkerProviderDescriptor
 import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
-import com.intellij.codeInsight.daemon.RelatedItemLineMarkerProvider
 import com.intellij.navigation.GotoRelatedItem
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.DumbService
@@ -29,11 +30,38 @@ import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
-class TzBreakpointMakerProvider : RelatedItemLineMarkerProvider() {
+class TzBreakpointMakerProvider : LineMarkerProviderDescriptor() {
 
     var firstTimeProjects = mutableSetOf<Project>()
 
-    override fun collectNavigationMarkers(
+    override fun getName(): String {
+       return "Step breakpoint"
+    }
+
+    override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
+        return null
+    }
+
+    override fun collectSlowLineMarkers(
+        elements: MutableList<out PsiElement>,
+        result: MutableCollection<in LineMarkerInfo<*>>) {
+
+        val project = elements.firstOrNull()?.project
+        if (project!=null && !firstTimeProjects.contains(project)) {
+            TZATZIKI().extensionList.forEach {
+                DumbService.getInstance(project).smartInvokeLater {
+                    it.initBreakpointListener(project)
+                }
+            }
+            firstTimeProjects.add(project)
+        }
+
+        elements.forEach {
+            collectNavigationMarkers(it, result)
+        }
+    }
+
+    private fun collectNavigationMarkers(
         element: PsiElement,
         result: MutableCollection<in RelatedItemLineMarkerInfo<*>>) {
 
@@ -48,15 +76,6 @@ class TzBreakpointMakerProvider : RelatedItemLineMarkerProvider() {
         if (step.keyword != element.node)
             return
 
-        if (!firstTimeProjects.contains(element.project)) {
-            TZATZIKI().extensionList.forEach {
-                DumbService.getInstance(element.project).smartInvokeLater {
-                    it.initBreakpointListener(element.project)
-                }
-            }
-            firstTimeProjects.add(element.project)
-        }
-
         val definitions = step.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
         if (definitions.isEmpty())
             return
@@ -69,7 +88,7 @@ class TzBreakpointMakerProvider : RelatedItemLineMarkerProvider() {
             element,
             step.textRange,
             breakpoint.icon,
-            { breakpoint.tooltip },
+            { breakpoint.file.name + ' ' + breakpoint.tooltip },
             { event, elt -> breakpoint.navigatable.navigate(true) },
             GutterIconRenderer.Alignment.RIGHT,
             { breakpoint.targets.map { GotoRelatedItem(it) } })

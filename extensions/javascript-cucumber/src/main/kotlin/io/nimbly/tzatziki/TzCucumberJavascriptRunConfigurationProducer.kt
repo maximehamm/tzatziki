@@ -127,7 +127,7 @@ class TzCucumberJavascriptRunConfigurationProducer : LazyRunConfigurationProduce
             ?: return false
         val scenario = cell.parentOfType<GherkinStepsHolder>()
             ?: return false
-        val definition = findCucumberStepDefinitions(scenario).firstOrNull()
+        val definition = scenario.findCucumberStepDefinitions().firstOrNull()
             ?: return false
         if (definition !is JavaScriptStepDefinition)
             return false

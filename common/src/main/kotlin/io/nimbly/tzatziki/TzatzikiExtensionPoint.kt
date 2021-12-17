@@ -19,6 +19,7 @@ import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import javax.swing.Icon
 
@@ -40,4 +41,5 @@ class TzBreakpoint(
     val navigatable: Navigatable,
     val tooltip: String,
     val icon: Icon,
+    val file: PsiFile,
     val targets: List<PsiElement>)

@@ -77,7 +77,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                             if (breakpoint.xBreakpoint.isEnabled) breakpoint.xBreakpoint.type.enabledIcon
                             else breakpoint.xBreakpoint.type.disabledIcon
 
-                        tzbreakpoint = TzBreakpoint(navigatable, tooltip, icon,
+                        tzbreakpoint = TzBreakpoint(navigatable, tooltip, icon, method.containingFile,
                             listOfNotNull(source, method, breakpoint.evaluationElement))
 
                         if (breakpoint.xBreakpoint.isEnabled)

@@ -16,6 +16,7 @@
 package io.nimbly.tzatziki.run
 
 import com.intellij.execution.TestStateStorage
+import com.intellij.execution.lineMarker.ExecutorAction
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
@@ -34,7 +35,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 
 //@see https://github.com/JetBrains/intellij-plugins/tree/master/cucumber/src/org/jetbrains/plugins/cucumber/run
-class TzRunLineMarkerContributor : RunLineMarkerContributor() {
+class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
 
     override fun getInfo(element: PsiElement): Info? {
         if (element !is LeafElement)
@@ -60,7 +61,7 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
         val scenario = cell.parentOfType<GherkinStepsHolder>()
             ?: return null
 
-        val definitions = findCucumberStepDefinitions(scenario)
+        val definitions = scenario.findCucumberStepDefinitions()
         if (definitions.isEmpty())
             return null
 
@@ -76,7 +77,7 @@ class TzRunLineMarkerContributor : RunLineMarkerContributor() {
         return TestStateStorage.getInstance(element.project).getState('"' + url + '"')
     }
 
-    private fun getInfo(state: TestStateStorage.Record?): Info {
-        return withExecutorActions(getTestStateIcon(state, false))
-    }
+    private fun getInfo(state: TestStateStorage.Record?)
+        = Info(getTestStateIcon(state, false),
+            ExecutorAction.getActions(1)) { "Run single line" }
 }

@@ -221,7 +221,7 @@
 
         // Run line markers
         <runLineMarkerContributor id="cucumberPlusLineMarkerContributor" language="Gherkin"
-                                  implementationClass="io.nimbly.tzatziki.run.TzRunLineMarkerContributor"/>
+                                  implementationClass="io.nimbly.tzatziki.run.TzSingleLineRunLineMarkerContributor"/>
 
         // Breakpoints
         <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>

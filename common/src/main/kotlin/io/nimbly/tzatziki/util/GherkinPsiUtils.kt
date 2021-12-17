@@ -139,17 +139,17 @@ fun PsiElement.isDeprecated(): Boolean {
     return false;
 }
 
-fun findCucumberStepDefinitions(scenario: GherkinStepsHolder): List<AbstractStepDefinition> {
-   return scenario.steps.flatMap { step ->
-       step.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
-   }
-}
-
 fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
     = findCucumberStepReferences().firstOrNull()
 
 fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
     = references.filterIsInstance<CucumberStepReference>()
+
+fun GherkinStep.findCucumberStepDefinitions(): List<AbstractStepDefinition>
+    = this.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }
+
+fun GherkinStepsHolder.findCucumberStepDefinitions(): List<AbstractStepDefinition>
+    = steps.flatMap { step -> step.findCucumberStepDefinitions() }
 
 /**
  * Please take care of @IndexNotReadyException
