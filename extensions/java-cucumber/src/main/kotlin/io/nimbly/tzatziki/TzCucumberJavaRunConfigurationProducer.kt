@@ -62,11 +62,11 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         configuration: CucumberJavaRunConfiguration,
         context: ConfigurationContext): Boolean {
 
-        val element = context.psiLocation
-            ?: return false
+        val element = context.psiLocation ?: return false
+        val file = element.containingFile ?: return false
 
         val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
-        val line = findLineNumber(element.containingFile, element)
+        val line = findLineNumber(file, element)
         if (line != configLine)
             return false
 
