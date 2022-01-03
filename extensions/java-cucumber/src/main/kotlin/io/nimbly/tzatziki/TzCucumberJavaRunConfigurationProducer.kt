@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2022  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +41,10 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         val element = sourceElement.get()
         if (!element.isValid) return false
+        val parent = element.parent ?: return false
         val file = element.containingFile ?: return false
 
-        val row = findRow(element.parent) ?: return false
+        val row = findRow(parent) ?: return false
         row.parentOfType<GherkinStepsHolder>() ?: return false
 
         val line = findLineNumber(file, element)

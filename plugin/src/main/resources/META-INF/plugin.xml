@@ -24,7 +24,7 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
-         ✓ <b>11.0</b> - Tool view to let you select Gherkin tags to filter tests execution, feature exportation to PDF.<br/>
+         ✓ <b>11.0</b> - Select Gherkin tags to filter for tests execution / for feature exportation to PDF (use new Cucumber+ tool view !)<br/>
          ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
          ✓ <b>&nbsp;9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
          ✓ <b>&nbsp;8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implementation. Details bellow.<br/>
@@ -152,6 +152,8 @@
        <br/>
        <b>Other features :</></b><br/>
        <ul>
+          <li><u>Select Gherkin tags to filter for tests execution / for feature exportation to PDF (use Cucumber+ tool view)</u></li>
+          <li><u>Tag completion (cursor location after @)</li>
           <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</li>
           <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</li>
           <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</li>
