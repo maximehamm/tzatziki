@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2022  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -117,7 +117,10 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
         val stepDefinitions = CachedValuesManager.getCachedValue(featureFile) {
             val allStepDefinition: MutableList<AbstractStepDefinition> = ArrayList()
             for (e in frameworks) {
-                allStepDefinition.addAll(e.loadStepsFor(featureFile, module))
+                val def = e.loadStepsFor(featureFile, module)
+                if (def != null) {
+                    allStepDefinition.addAll(def.filterNotNull())
+                }
             }
             CachedValueProvider.Result.create<List<AbstractStepDefinition>>(
                 allStepDefinition,
