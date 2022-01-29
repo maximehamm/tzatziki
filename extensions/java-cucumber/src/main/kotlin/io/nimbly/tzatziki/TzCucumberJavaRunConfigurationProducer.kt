@@ -51,10 +51,11 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         super.setupConfigurationFromContext(configuration, context, sourceElement)
 
-        if (configuration.filePath.matches(".*:[0-9]+$".toRegex()))
+        val filePath = configuration.filePath ?: return false
+        if (filePath.matches(".*:[0-9]+$".toRegex()))
             return true
 
-        configuration.filePath = configuration.filePath + ":" + line;
+        configuration.filePath = filePath + ":" + line;
 
         return true
     }
@@ -65,13 +66,14 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
 
         val element = context.psiLocation ?: return false
         val file = element.containingFile ?: return false
+        val filePath = configuration.filePath ?: return false
 
-        val configLine = configuration.filePath.substringAfterLast(":").toIntOrNull()
+        val configLine = filePath.substringAfterLast(":").toIntOrNull()
         val line = findLineNumber(file, element)
         if (line != configLine)
             return false
 
-        return configuration.filePath.endsWith(":$line")
+        return filePath.endsWith(":$line")
     }
 
     override fun isPreferredConfiguration(self: ConfigurationFromContext, other: ConfigurationFromContext): Boolean {
