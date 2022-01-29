@@ -18,7 +18,6 @@ package io.nimbly.tzatziki
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.openapi.project.DumbService
-import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.pom.Navigatable
@@ -27,19 +26,18 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider
-import io.nimbly.tzatziki.util.collectReferences
 import io.nimbly.tzatziki.util.getDocument
 import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
-import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
 import javax.swing.Icon
 
@@ -116,9 +114,9 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
         fun refresh(breakpoint: XBreakpoint<*>) {
 
-            // Optimisation to avoid expensive cost of searching all references
+            // Optimisation to avoid expensive cost of searching for references
             val elements: MutableSet<PsiElement>? = breakpoint.getUserData(TzBreakpointMakerProvider.BKEY)
-            if (elements != null) {
+            if (elements != null && !elements.any { !it.isValid }) {
                 elements
                     .map { it.containingFile }
                     .toSet()
@@ -138,26 +136,27 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 val element = file.findElementAt(sourcePosition.offset) ?: return@runReadActionInSmartMode
                 val method = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return@runReadActionInSmartMode
 
-                val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
-
                 // Avoid Index not ready exception
                 DumbService.getInstance(project).completeJustSubmittedTasks()
 
-                val references = try {
-                    method.collectReferences(scope)
-                } catch (e: IndexNotReadyException) {
-                    return@runReadActionInSmartMode
-                }
+                val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
+                val alreadyPerformed = mutableSetOf<PsiFile>()
+                ReferencesSearch.search(method, scope)
+                    .forEachAsync {
+                        if (it is GherkinStep) {
+                            val f = it.element.containingFile
+                            if (!alreadyPerformed.contains(f)) {
 
-                references
-                    .asSequence()
-                    .filterIsInstance<CucumberStepReference>()
-                    .map { it.element }
-                    .filterIsInstance<GherkinStep>()
-                    .map { it.containingFile }
-                    .toSet()
-                    .forEach {
-                        DaemonCodeAnalyzer.getInstance(project).restart(it)
+                                alreadyPerformed.add(f)
+
+                                // Avoid Index not ready exception
+                                DumbService.getInstance(project).completeJustSubmittedTasks()
+
+                                // Restart code analyzer
+                                DaemonCodeAnalyzer.getInstance(project).restart(f)
+                            }
+                        }
+                        true
                     }
             }
         }
