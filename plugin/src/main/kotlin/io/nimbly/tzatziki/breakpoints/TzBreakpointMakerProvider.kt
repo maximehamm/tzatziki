@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2022  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import com.intellij.navigation.GotoRelatedItem
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
 import io.nimbly.tzatziki.TZATZIKI
@@ -93,7 +94,22 @@ class TzBreakpointMakerProvider : LineMarkerProviderDescriptor() {
             GutterIconRenderer.Alignment.RIGHT,
             { breakpoint.targets.map { GotoRelatedItem(it) } })
 
+
+        var userData = breakpoint.getUserData(BKEY)
+        if (userData != null) {
+            userData.add(element)
+        } else {
+            userData = mutableSetOf()
+            userData.add(element)
+            breakpoint.putUserData(BKEY,userData)
+        }
+
+
         result.add(info)
+    }
+
+    companion object {
+        val BKEY = Key.create<MutableSet<PsiElement>>("Cucumber+")
     }
     
 }

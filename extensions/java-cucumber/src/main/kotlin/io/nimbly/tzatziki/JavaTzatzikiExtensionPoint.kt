@@ -20,7 +20,10 @@ import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
@@ -28,6 +31,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
+import io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider
 import io.nimbly.tzatziki.util.collectReferences
 import io.nimbly.tzatziki.util.getDocument
 import io.nimbly.tzatziki.util.getDocumentLine
@@ -37,6 +41,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
+import javax.swing.Icon
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
@@ -62,6 +67,24 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             .breakpointManager
             .breakpoints
 
+        class JBreakpoint(
+            val xBreakpoint: XBreakpoint<*>,
+            navigatable: Navigatable,
+            tooltip: String,
+            icon: Icon,
+            file: PsiFile,
+            targets: List<PsiElement>
+        ) : TzBreakpoint(navigatable, tooltip, icon, file, targets) {
+
+            override fun <T> getUserData(key: Key<T>): T? {
+                return xBreakpoint.getUserData(key)
+            }
+
+            override fun <T : Any?> putUserData(key: Key<T>, value: T?) {
+                xBreakpoint.putUserData(key, value)
+            }
+        }
+
         var tzbreakpoint: TzBreakpoint? = null
         methods
             .filter { it.getDocument() != null }
@@ -78,7 +101,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                             if (breakpoint.xBreakpoint.isEnabled) breakpoint.xBreakpoint.type.enabledIcon
                             else breakpoint.xBreakpoint.type.disabledIcon
 
-                        tzbreakpoint = TzBreakpoint(navigatable, tooltip, icon, method.containingFile,
+                        tzbreakpoint = JBreakpoint(breakpoint.xBreakpoint, navigatable, tooltip, icon, method.containingFile,
                             listOfNotNull(source, method, breakpoint.evaluationElement))
 
                         if (breakpoint.xBreakpoint.isEnabled)
@@ -92,6 +115,16 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
     override fun initBreakpointListener(project: Project) {
 
         fun refresh(breakpoint: XBreakpoint<*>) {
+
+            // Optimisation to avoid expensive cost of searching all references
+            val elements: MutableSet<PsiElement>? = breakpoint.getUserData(TzBreakpointMakerProvider.BKEY)
+            if (elements != null) {
+                elements
+                    .map { it.containingFile }
+                    .toSet()
+                    .forEach { DaemonCodeAnalyzer.getInstance(project).restart(it) }
+                return
+            }
 
             // Avoid Index not ready exception
             DumbService.getInstance(project).runReadActionInSmartMode {

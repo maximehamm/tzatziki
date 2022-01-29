@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2022  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@ package io.nimbly.tzatziki
 
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.UserDataHolder
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -37,9 +38,9 @@ object TZATZIKI {
         ExtensionPointName.create("$nameSpace.io.nimbly.tzatziki.main")
 }
 
-class TzBreakpoint(
+abstract class TzBreakpoint(
     val navigatable: Navigatable,
     val tooltip: String,
     val icon: Icon,
     val file: PsiFile,
-    val targets: List<PsiElement>)
+    val targets: List<PsiElement>) : UserDataHolder
