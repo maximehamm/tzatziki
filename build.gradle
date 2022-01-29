@@ -71,7 +71,7 @@ ext {
      */
 }
 
-ext { // 2021.1
+ext {
     versions = [gherkin: '211.6693.111',
                 cucumberJava: '211.6693.111',
                 cucumberJavascript: '211.6693.65',
