@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2022  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@ package io.nimbly.tzatziki
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiJavaFile
@@ -92,6 +93,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
         fun refresh(breakpoint: XBreakpoint<*>) {
 
+            // Avoid Index not ready exception
             DumbService.getInstance(project).runReadActionInSmartMode {
 
                 val sourcePosition = breakpoint.sourcePosition ?: return@runReadActionInSmartMode
@@ -108,7 +110,12 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 // Avoid Index not ready exception
                 DumbService.getInstance(project).completeJustSubmittedTasks()
 
-                val references = method.collectReferences(scope)
+                val references = try {
+                    method.collectReferences(scope)
+                } catch (e: IndexNotReadyException) {
+                    return@runReadActionInSmartMode
+                }
+
                 references
                     .asSequence()
                     .filterIsInstance<CucumberStepReference>()
