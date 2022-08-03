@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="" />
+    <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../.run/RUN.run.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.run/RUN.run.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../plugin/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../plugin/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/features/cocktail.feature" beforeDir="false" afterPath="$PROJECT_DIR$/features/cocktail.feature" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../kotlin-easy-as-pie/easy.feature" beforeDir="false" afterPath="$PROJECT_DIR$/../kotlin-easy-as-pie/easy.feature" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/rich-example.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/rich-example.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/src/test/resources/io/nimbly/example/cocktail.feature" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/src/test/resources/io/nimbly/example/cocktail.feature" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -13,8 +27,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectCodeStyleSettingsMigration">
-    <option name="version" value="1" />
+    <option name="version" value="2" />
+  </component>
+  <component name="ProjectCucumberState">
+    <option name="selectedTags">
+      <list>
+        <option value="@Dev" />
+      </list>
+    </option>
+    <option name="selection" value="@Dev" />
   </component>
   <component name="ProjectId" id="1tOcjHggYK559xOTo520ZkE33az" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -24,21 +49,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="aspect.path.notification.shown" value="true" />
-    <property name="javascript.nodejs.core.library.configured.version" value="15.4.0" />
-    <property name="javascript.nodejs.core.library.typings.version" value="15.14.9" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="nodejs.cucumber.cucumber_node_package_dir" value="$PROJECT_DIR$/node_modules/cucumber" />
-    <property name="nodejs_package_manager_path" value="npm" />
-    <property name="project.structure.last.edited" value="Project" />
-    <property name="project.structure.proportion" value="0.15" />
-    <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
-  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "/Users/Maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
+  }
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/features" />
@@ -49,7 +72,26 @@
       <recent name="$PROJECT_DIR$/features" />
     </key>
   </component>
-  <component name="RunManager" selected="Cucumber.js.Scenario Outline: Sending a message with an o...">
+  <component name="RunManager" selected="Cucumber Java.Scenario: Creating an empty order">
+    <configuration name="Scenario: Creating an empty order" type="CucumberJavaRunConfigurationType" factoryName="Cucumber java" temporary="true" nameIsGenerated="true">
+      <option name="CUCUMBER_CORE_VERSION" value="1" />
+      <option name="FILE_PATH" value="$PROJECT_DIR$/features/cocktail.feature" />
+      <option name="MAIN_CLASS_NAME" value="cucumber.cli.Main" />
+      <module name="javascript-easy-as-pie" />
+      <option name="NAME_FILTER" value="^Creating an empty order$" />
+      <option name="PROGRAM_PARAMETERS" value=" --format org.jetbrains.plugins.cucumber.java.run.CucumberJvmSMFormatter --monochrome --name &quot;^Creating an empty order$&quot;" />
+      <option name="SUGGESTED_NAME" value="Scenario: Creating an empty order" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_WORKING_DIR$" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="cucumber.cli.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Scenario Outline: Sending a message with an o... - Example #1" type="cucumber+.js" factoryName="Cucumber+.js" temporary="true">
       <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature:27" />
       <option name="myNameFilter" value="^Sending a message with an order$" />
@@ -78,13 +120,11 @@
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="Scenario Outline: Sending a message with an o..." type="cucumber.js" factoryName="Cucumber.js" temporary="true">
-      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature" />
-      <option name="myNameFilter" value="^Sending a message with an order$" />
-      <option name="cucumberJsArguments" value="" />
-      <option name="workingDirectory" value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Cucumber Java.Scenario: Creating an empty order" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -129,6 +169,14 @@
       <workItem from="1629903746140" duration="62000" />
       <workItem from="1629904084886" duration="160000" />
       <workItem from="1629904542376" duration="57000" />
+      <workItem from="1639512265605" duration="427000" />
+      <workItem from="1639512773930" duration="47000" />
+      <workItem from="1639512910207" duration="176000" />
+      <workItem from="1639513152328" duration="616000" />
+      <workItem from="1639513826329" duration="107000" />
+      <workItem from="1639514141133" duration="106000" />
+      <workItem from="1639514310237" duration="10000" />
+      <workItem from="1650958688177" duration="823000" />
     </task>
     <servers />
   </component>
@@ -139,10 +187,10 @@
     <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__1.ic" NAME="Scenario: Sending a message with an order - Example #1 Coverage Results" MODIFIED="1622904095845" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>cucumber.cli.*</FILTER>
     </SUITE>
-    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__2.ic" NAME="Scenario: Sending a message with an order - Example #2 Coverage Results" MODIFIED="1622903530079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order.ic" NAME="Scenario: Sending a message with an order Coverage Results" MODIFIED="1622927757175" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>cucumber.cli.*</FILTER>
     </SUITE>
-    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order.ic" NAME="Scenario: Sending a message with an order Coverage Results" MODIFIED="1622927757175" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__2.ic" NAME="Scenario: Sending a message with an order - Example #2 Coverage Results" MODIFIED="1622903530079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>cucumber.cli.*</FILTER>
     </SUITE>
   </component>

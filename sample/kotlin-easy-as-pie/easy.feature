@@ -1,3 +1,4 @@
+@Test
 Feature: Some feature
   Scenario: A scenario
     Given This is given

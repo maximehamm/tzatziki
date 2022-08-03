@@ -8,6 +8,7 @@ Feature: Cocktail Ordering
   ![Chat](images/chart.svg)
   <img src='images/candles.png' style='width:40px; position:absolute; top:0px; left:330px'/>
 
+  @Dev
   Scenario: Creating an empty order
     Given Romeo who wants to buy a drink
     When an order is declared for Juliette
