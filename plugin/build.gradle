@@ -41,13 +41,17 @@ intellij {
 }
 
 tasks.runPluginVerifier {
-    ideVersions("IC-203.7148.40, CL-211.5787.12, PS-211.5787.18") //IC-203.7148.40, IU-203.7148.40, CL-211.5787.12, PS-211.5787.18
+    ideVersions(
+            "IC-203.8084.24, " +
+            "IC-211.7628.15, " +
+            "IC-223.7571.182")
+    //IC-203.7148.40, IU-203.7148.40, CL-211.5787.12, PS-211.5787.18
 }
 
 // https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000620084-how-to-build-a-plugin-that-is-compatible-to-multiple-versions-of-IntelliJ-
 patchPluginXml {
     sinceBuild '202'
-    untilBuild '222.*'
+    untilBuild '223.*'
 
     changeNotes rootProject.ext.changeNotes
 }

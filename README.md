@@ -30,14 +30,18 @@ Setup a system variable :
 _Token is known by Maxime HAMM :)_
 
 ## Prepare to publish a release
-- Build using task `build` from root module 
+- Clean and build all
+  - Clean all `Taks > build > clean`
+  - Build all `Taks > build > build`
+  - Build plugin `plugin > Tasks > intellij > buildplugin`
 - Run tests in `./test` module
 - Verify compatibility using task `runPluginVerifier` from `plugin` module
 
 ## Publishing a new release
 - Upgrade version in `./build.gradle`
 - Update change note in `./plugin/build.gradle`
-- Publish to marketplace using task `publishPlugin` from module `.plugin`
+- Publish to marketplace 
+  - Using task `plugin > Tasks > intellij > publishPlugin`
 
 *Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.*
 

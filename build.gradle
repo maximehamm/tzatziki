@@ -19,7 +19,7 @@ plugins {
 
 allprojects {
     group = 'io.nimbly.tzatziki'
-    version '11.2.0'
+    version '11.3.0'
 }
 
 ext {
@@ -28,6 +28,7 @@ ext {
        <br/>
        Change notes :
        <ul>
+         <li><b>11.3</b> IntelliJ IDEA 2022.3 compatibility</li>
          <li><b>11.0</b> Tool view to let you select Gherkin tags to filter tests execution, feature exportation to PDF.</li>
          <li><b>10.0</b> Tag completion (cursor location after @)</li>
          <li><b>9.2</b> IntelliJ IDEA 2021.3 compatibility</li>
