@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2023  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import io.nimbly.tzatziki.editor.ITALIC
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import org.apache.commons.lang.StringUtils
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinFeatureHeaderImpl
-import java.util.*
 import java.util.regex.Pattern
 
 private val BOLD_PATTERN = Pattern.compile("[^\\*]*(\\*\\*[^\\*]*\\*\\*)[^\\*]*", Pattern.MULTILINE)

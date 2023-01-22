@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2021 Maxime HAMM & Pierre Michel BRET
+ * Copyright (C) 2023 Maxime HAMM & Pierre Michel BRET
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
