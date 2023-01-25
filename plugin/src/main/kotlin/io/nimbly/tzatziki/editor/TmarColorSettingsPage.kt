@@ -68,7 +68,7 @@ class TzColorSettingsPage : ColorSettingsPage {
 
     override fun getAttributeDescriptors()
         = listOf(AttributesDescriptor("Test passed", TEST_OK),
-                AttributesDescriptor("Test deffect", TEST_KO),
+                AttributesDescriptor("Test defect", TEST_KO),
                 AttributesDescriptor("Test ignored", TEST_IGNORED),
                 AttributesDescriptor("Step is deprecated", DEPRECATED)).toTypedArray()
 
