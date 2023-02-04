@@ -1,6 +1,6 @@
 plugins {
     id 'org.jetbrains.intellij'
-    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.0'
 }
 
 group 'io.nimbly.tzatziki'
@@ -14,8 +14,8 @@ dependencies {
     implementation project(':common')
 }
 
-compileKotlin { kotlinOptions.jvmTarget = "11" }
-compileTestKotlin { kotlinOptions.jvmTarget = "11" }
+compileKotlin { kotlinOptions.jvmTarget = "17" }
+compileTestKotlin { kotlinOptions.jvmTarget = "17" }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
