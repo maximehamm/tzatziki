@@ -12,6 +12,9 @@ jar {
 dependencies {
     implementation project(':plugin')
     implementation project(':common')
+
+    compileOnly files('lib/javascript-openapi.jar')
+    compileOnly files('lib/JavaScriptLanguage.jar')
 }
 
 compileKotlin { kotlinOptions.jvmTarget = "17" }
@@ -21,7 +24,7 @@ compileTestKotlin { kotlinOptions.jvmTarget = "17" }
 intellij {
     version = rootProject.ext.plugin_idea_version
     plugins = ["Gherkin:${versions.gherkin}",
-//               "JavaScriptLanguage",
+               // "JavaScriptLanguage",
                "cucumber-javascript:${versions.cucumberJavascript}"]
 }
 

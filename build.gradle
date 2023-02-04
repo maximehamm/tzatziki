@@ -17,10 +17,6 @@ plugins {
     id('org.jetbrains.intellij') version '1.1.2'
 }
 
-//wrapper {
-//    gradleVersion = '7.6' //version required
-//}
-
 allprojects {
     group = 'io.nimbly.tzatziki'
     version '11.4.0'

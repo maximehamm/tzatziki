@@ -1,0 +1,1 @@
+--additional-os=windows --additional-os=linux --additional-os=mac js-predefined-all

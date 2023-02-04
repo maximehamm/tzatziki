@@ -27,7 +27,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
 import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.util.findCucumberStepReferences
-import org.jetbrains.kotlin.utils.addToStdlib.firstNotNullResult
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
@@ -81,9 +80,10 @@ class TzBreakpointMakerProvider : LineMarkerProviderDescriptor() {
         if (definitions.isEmpty())
             return
 
-        val breakpoint = TZATZIKI().extensionList.firstNotNullResult {
-                it.findBreakpoint(element, definitions)
-        } ?: return
+        val breakpoint = TZATZIKI().extensionList
+             .find {it != null}
+            ?.findBreakpoint(element, definitions)
+            ?: return
 
         val info = RelatedItemLineMarkerInfo<PsiElement>(
             element,

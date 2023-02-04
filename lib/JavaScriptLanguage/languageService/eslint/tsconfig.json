@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "noImplicitReturns": true,
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "bin",
+    "sourceMap": true
+  },
+  "compileOnSave": false
+}
