@@ -1,6 +1,0 @@
-{
-  "private": true,
-  "dependencies": {
-    "semver": "6.3.0"
-  }
-}
