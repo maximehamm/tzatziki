@@ -228,6 +228,9 @@
         // Breakpoints
         <codeInsight.lineMarkerProvider language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointMakerProvider"/>
 
+        // Collapse Block
+        <lang.foldingBuilder language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzFoldingContributor"/>
+
         // Cucumber tool window
         <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="right" icon="ActionIcons.CUCUMBER_PLUS_16"/>
 

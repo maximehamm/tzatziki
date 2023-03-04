@@ -148,7 +148,9 @@ fun Editor.highlight(start: Int, end: Int, columnMode: Boolean = true) {
 
 fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableList<TextRange>?) {
 
-    HighlightManager.getInstance(project)
+    val p = project ?: return
+
+    HighlightManager.getInstance(p)
         .addOccurrenceHighlight(this, start, end, SEARCH_RESULT_ATTRIBUTES, HIDE_BY_ANY_KEY, null)
 
     outHighlightersRanges?.add(TextRange(start, end))
@@ -158,7 +160,10 @@ fun Editor.clearHighlights(
     outHighlighters: MutableCollection<RangeHighlighter?>,
     outHighlightersRanges: MutableCollection<TextRange?>?
 ) {
-    val highlightManager = HighlightManager.getInstance(project)
+
+    val p = project ?: return
+
+    val highlightManager = HighlightManager.getInstance(p)
     outHighlighters.forEach(Consumer { r: RangeHighlighter? ->
         highlightManager.removeSegmentHighlighter(
             this,

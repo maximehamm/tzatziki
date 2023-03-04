@@ -163,6 +163,8 @@ class TzTModuleListener : ProjectManagerListener {
             = doDefault(editor, caret, dataContext)
         open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
             = orginHandler.execute(editor, caret, dataContext)
+
+        @Deprecated("Deprecated in Java")
         override fun isEnabled(editor: Editor, dataContext: DataContext)
             = orginHandler.isEnabled(editor, dataContext)
         fun getActionId()
