@@ -1,10 +1,12 @@
 plugins {
-    id 'org.jetbrains.intellij'
-    id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+    id("org.jetbrains.intellij") version "1.12.0"
+    id("org.jetbrains.kotlin.jvm") version "1.8.10"
+
     //id 'scala'
 }
 
 group 'io.nimbly.tzatziki'
+//version '1.0-SNAPSHOT'
 
 dependencies {
     implementation project(':common')
@@ -20,8 +22,8 @@ dependencies {
 
     runtimeOnly project(':extensions:java')
     runtimeOnly project(':extensions:java-cucumber')
-    runtimeOnly project(':extensions:javascript')
-    runtimeOnly project(':extensions:javascript-cucumber')
+//    runtimeOnly project(':extensions:javascript')
+//    runtimeOnly project(':extensions:javascript-cucumber')
     runtimeOnly project(':extensions:kotlin')
     runtimeOnly project(':extensions:scala')
 }
@@ -31,29 +33,34 @@ configurations {
     all*.exclude group: "xml-apis", module: "xml-apis-ext"
 }
 
-compileKotlin { kotlinOptions.jvmTarget = "17" }
-compileTestKotlin { kotlinOptions.jvmTarget = "17" }
+compileKotlin {  kotlinOptions.jvmTarget = "18" }
+compileTestKotlin { kotlinOptions.jvmTarget = "18" }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
+    type    = rootProject.ext.plugin_idea_type
     version = rootProject.ext.plugin_idea_version
     plugins = rootProject.ext.plugin_idea_plugins
 }
 
 //tasks.runPluginVerifier {
-//    ideVersions(
-//            "IC-203.8084.24, " +
-//            "IC-211.7628.15, " +
-//            "IC-223.7571.182")
+//    ideVersions = [
+//            "IC-203.8084.24",
+//            "IC-211.7628.15",
+//            "IC-223.7571.182"]
 //    //IC-203.7148.40, IU-203.7148.40, CL-211.5787.12, PS-211.5787.18
 //}
 
 // https://intellij-support.jetbrains.com/hc/en-us/community/posts/360000620084-how-to-build-a-plugin-that-is-compatible-to-multiple-versions-of-IntelliJ-
-patchPluginXml {
-    sinceBuild = '202'
-    untilBuild = '231.*'
-    changeNotes = rootProject.ext.changeNotes
-}
+//patchPluginXml {
+////    version.set("${project.version}")
+//    sinceBuild.set("221")
+//    untilBuild.set("223.*")
+//
+////    sinceBuild = '202'
+////    untilBuild = '231.*'
+////    changeNotes = rootProject.ext.changeNotes
+//}
 
 tasks.buildSearchableOptions {
     enabled = false

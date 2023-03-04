@@ -18,7 +18,7 @@ Import using gradle (Gradle should use Java 11)
 - Launch task `build` from root module
 - Run all tests from module `./test`
 
-## Run
+## Run  
 Launch task `runIde` from `plugin` module
 
 ## Get ready to publish to market place

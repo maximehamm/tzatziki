@@ -14,7 +14,8 @@
  */
 plugins {
     // https://github.com/JetBrains/gradle-intellij-plugin/
-    id('org.jetbrains.intellij') version '1.1.2'
+    id('org.jetbrains.intellij') version '1.12.0'
+    id('org.jetbrains.kotlin.jvm') version '1.8.10'
 }
 
 allprojects {
@@ -74,14 +75,15 @@ ext {
      */
 }
 
-ext { // 2022.2.4
-    versions = [gherkin: '223.8617.8',              // https://plugins.jetbrains.com/plugin/9164-gherkin/versions
-                cucumberJava: '223.7571.123',       // https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
-                cucumberJavascript: '223.7571.113', // https://plugins.jetbrains.com/plugin/7418-cucumber-js
-                properties: '223.7571.117',         // https://plugins.jetbrains.com/plugin/11594-properties/versions
-                scala: '2022.3.15',                 // https://plugins.jetbrains.com/plugin/1347-scala/versions
-                psiViewer: '2022.3']                // https://plugins.jetbrains.com/plugin/227-psiviewer/versions
-    plugin_idea_version = 'IU-223.8617.56'
+ext { // 2023.1 EAP
+    versions = [gherkin: '231.6471.1',              // https://plugins.jetbrains.com/plugin/9164-gherkin/versions
+                cucumberJava: '231.6471.13',        // https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+                cucumberJavascript: '231.6471.1',   // https://plugins.jetbrains.com/plugin/7418-cucumber-js
+                properties: '231.6471.1',           // https://plugins.jetbrains.com/plugin/11594-properties/versions
+                scala: '2023.1.6',                  // https://plugins.jetbrains.com/plugin/1347-scala/versions
+                psiViewer: '231-SNAPSHOT']          // https://plugins.jetbrains.com/plugin/227-psiviewer/versions
+    plugin_idea_type    = 'IU'
+    plugin_idea_version = 'IU-2022.3.2' //''LATEST-EAP-SNAPSHOT' //'2022.3.2'
     plugin_idea_plugins = ["Gherkin:${versions.gherkin}",
                            "Kotlin",
                            "org.intellij.intelliLang",
@@ -89,13 +91,36 @@ ext { // 2022.2.4
                            "JUnit",
                            "cucumber-java:${versions.cucumberJava}",
                            // "JavaScriptLanguage",
-                           "cucumber-javascript:${versions.cucumberJavascript}",
-                           "JavaScriptDebugger",
+                           // "cucumber-javascript:${versions.cucumberJavascript}",
+                           // "JavaScriptDebugger",
                            //"org.intellij.scala:${versions.scala}",
                            //"com.github.danielwegener.cucumber-scala:2021.1",
                            "com.intellij.properties:${versions.properties}",
                            "PsiViewer:${versions.psiViewer}"]
 }
+
+//ext { // 2022.2.4
+//    versions = [gherkin: '223.8617.8',              // https://plugins.jetbrains.com/plugin/9164-gherkin/versions
+//                cucumberJava: '223.7571.123',       // https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+//                cucumberJavascript: '223.7571.113', // https://plugins.jetbrains.com/plugin/7418-cucumber-js
+//                properties: '223.7571.117',         // https://plugins.jetbrains.com/plugin/11594-properties/versions
+//                scala: '2022.3.15',                 // https://plugins.jetbrains.com/plugin/1347-scala/versions
+//                psiViewer: '2022.3']                // https://plugins.jetbrains.com/plugin/227-psiviewer/versions
+//    plugin_idea_version =  'IU-223.8617.56' // 'IU-LATEST-EAP-SNAPSHOT' //
+//    plugin_idea_plugins = ["Gherkin:${versions.gherkin}",
+//                           "Kotlin",
+//                           "org.intellij.intelliLang",
+//                           "java",
+//                           "JUnit",
+//                           "cucumber-java:${versions.cucumberJava}",
+//                           // "JavaScriptLanguage",
+//                           "cucumber-javascript:${versions.cucumberJavascript}",
+//                           "JavaScriptDebugger",
+//                           //"org.intellij.scala:${versions.scala}",
+//                           //"com.github.danielwegener.cucumber-scala:2021.1",
+//                           "com.intellij.properties:${versions.properties}",
+//                           "PsiViewer:${versions.psiViewer}"]
+//}
 
 //ext { // 2021.1
 //    versions = [gherkin: '211.6693.111',
@@ -177,8 +202,8 @@ dependencies {
     implementation project(':common')
     implementation project(':extensions:java')
     implementation project(':extensions:java-cucumber')
-    implementation project(':extensions:javascript')
-    implementation project(':extensions:javascript-cucumber')
+//    implementation project(':extensions:javascript')
+//    implementation project(':extensions:javascript-cucumber')
     implementation project(':extensions:kotlin')
     implementation project(':extensions:scala')
     testImplementation project(':tests')
