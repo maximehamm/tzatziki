@@ -1,6 +1,12 @@
 <idea-plugin>
 
+    <extensions defaultExtensionNs="io.nimbly.tzatziki">
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavaTzatzikiExtensionPoint"/>
+    </extensions>
+
     <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.nimbly.tzatziki.JavaTzatzikiUsagesMarker"/>
+
         <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavaRunConfigurationProducer" order="first"/>
         <runConfigurationExtension implementation="io.nimbly.tzatziki.TzCucumberJavaRunExtension" order="first"/>
     </extensions>

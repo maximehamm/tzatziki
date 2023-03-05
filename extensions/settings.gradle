@@ -1,6 +1,0 @@
-include 'java'
-include 'java-cucumber'
-include 'javascript'
-include 'javascript-cucumber'
-include 'kotlin'
-include 'scala'
