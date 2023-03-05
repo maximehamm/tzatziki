@@ -15,11 +15,29 @@
 
 package io.nimbly.tzatziki.util
 
+import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
+import javax.swing.event.HyperlinkEvent
+
+fun Project.notification(
+    text: String,
+    notificationType: NotificationType = NotificationType.INFORMATION,
+    function: ((event: String) -> Any?)? = null) {
+
+    getNotificationGroup().createNotification(
+        TZATZIKI_NAME, "<html>$text</html>", notificationType) {
+            notification: Notification, event: HyperlinkEvent ->
+        if (function!=null)
+            function(event.description)
+        notification.expire();
+    }.notify(this)
+}
+
+/*
+
+COMPATIBILITY FIX
 
 fun Project.notification(
     text: String,
@@ -48,5 +66,6 @@ fun Project.notificationAction(
     }
 
     notif.notify(this);
-
 }
+
+*/
