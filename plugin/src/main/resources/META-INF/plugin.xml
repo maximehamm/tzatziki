@@ -238,8 +238,6 @@
         // Project settings
         <projectService serviceImplementation="io.nimbly.tzatziki.settings.CucumberPersistenceState"/>
 
-        <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
-
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
@@ -260,6 +258,16 @@
     <extensionPoints>
         <extensionPoint name="io.nimbly.tzatziki.main" interface="io.nimbly.tzatziki.TzatzikiExtensionPoint"/>
     </extensionPoints>
+
+    <applicationListeners>
+        <!-- Depreacated !! Replace by :
+            <extensions>
+             <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
+            </extensions>
+        -->
+        <listener class="io.nimbly.tzatziki.TzTModuleListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
 
     <actions>
 

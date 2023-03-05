@@ -23,7 +23,9 @@ class CucumberPlusFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
 
-        val contentFactory = ContentFactory.getInstance()
+        // Deprecated : replace by
+        //    val contentFactory = ContentFactory.getInstance()
+        val contentFactory = ContentFactory.SERVICE.getInstance()
         toolWindow.contentManager.addContent(
             contentFactory.createContent(CucumberPlusTagsView(project), "Tags", false))
     }
