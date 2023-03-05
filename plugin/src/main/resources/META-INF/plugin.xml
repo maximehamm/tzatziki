@@ -238,6 +238,8 @@
         // Project settings
         <projectService serviceImplementation="io.nimbly.tzatziki.settings.CucumberPersistenceState"/>
 
+        <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
+
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
@@ -252,19 +254,12 @@
     <depends optional="true" config-file="plugin-withJavaCucumber.xml">cucumber-java</depends>
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
-<!--    <depends optional="true" config-file="plugin-withJavascript.xml">JavaScript</depends>-->
-<!--    <depends optional="true" config-file="plugin-withJavascriptCucumber.xml">cucumber-javascript</depends>-->
 
     <!-- Extension point
         https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->
     <extensionPoints>
         <extensionPoint name="io.nimbly.tzatziki.main" interface="io.nimbly.tzatziki.TzatzikiExtensionPoint"/>
     </extensionPoints>
-
-    <applicationListeners>
-        <listener class="io.nimbly.tzatziki.TzTModuleListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 
     <actions>
 
