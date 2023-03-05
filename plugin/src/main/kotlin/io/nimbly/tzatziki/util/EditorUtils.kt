@@ -228,26 +228,11 @@ fun EditorEx.toggleColumnMode() {
 }
 
 fun Editor.createEditorContext(): DataContext {
-
-    /**
-     * Since IDEA 2021.1 EAP
-    fun Editor.createEditorContext(): DataContext {
-      return SimpleDataContext.builder()
+    return SimpleDataContext.builder()
         .setParent(DataManager.getInstance().getDataContext(contentComponent))
         .add(CommonDataKeys.HOST_EDITOR, if (this is EditorWindow) delegate else this)
         .add(CommonDataKeys.EDITOR, this)
         .build()
-    }
-    */
-
-    val hostEditor: Any = if (this is EditorWindow) this.delegate else this
-    val map: Map<String, Any> = ContainerUtil.newHashMap(
-        Pair.create(CommonDataKeys.HOST_EDITOR.name, hostEditor),
-        Pair.createNonNull(CommonDataKeys.EDITOR.name, this),
-        Pair.createNonNull(CommonDataKeys.CARET.name, this.caretModel.currentCaret)
-    )
-    val parent = DataManager.getInstance().getDataContext(this.contentComponent)
-    return SimpleDataContext.getSimpleContext(map, parent)
 }
 
 fun Editor.setColumnMode(columnnMode: Boolean) {
