@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "12.0.0"
+    version = "12.0.1"
 }
 
 val notes by extra {"""

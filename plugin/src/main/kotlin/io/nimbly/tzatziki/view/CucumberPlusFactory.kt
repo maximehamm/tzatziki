@@ -22,7 +22,8 @@ import com.intellij.ui.content.ContentFactory
 class CucumberPlusFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val contentFactory = ContentFactory.SERVICE.getInstance()
+
+        val contentFactory = ContentFactory.getInstance()
         toolWindow.contentManager.addContent(
             contentFactory.createContent(CucumberPlusTagsView(project), "Tags", false))
     }
