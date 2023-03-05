@@ -15,22 +15,38 @@
 
 package io.nimbly.tzatziki.util
 
-import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
-import javax.swing.event.HyperlinkEvent
 
 fun Project.notification(
     text: String,
-    notificationType: NotificationType = NotificationType.INFORMATION,
-    function: ((event: String) -> Any?)? = null) {
+    notificationType: NotificationType = NotificationType.INFORMATION) {
 
-    getNotificationGroup().createNotification(
-        TZATZIKI_NAME, "<html>$text</html>", notificationType) {
-            notification: Notification, event: HyperlinkEvent ->
-        if (function!=null)
-            function(event.description)
-        notification.expire();
-    }.notify(this)
+    getNotificationGroup()
+        .createNotification(TZATZIKI_NAME, text, notificationType)
+        .notify(this)
+}
+
+fun Project.notificationAction(
+    text: String,
+    notificationType: NotificationType = NotificationType.INFORMATION,
+    actions: Map<String, (() -> Any?)>) {
+
+    val notif = getNotificationGroup()
+        .createNotification(TZATZIKI_NAME, text, notificationType)
+
+    actions.forEach { (actionText, function) ->
+        notif.addAction(object : AnAction(actionText) {
+            override fun actionPerformed(e: AnActionEvent) {
+                function()
+                notif.expire();
+            }
+         })
+    }
+
+    notif.notify(this);
+
 }

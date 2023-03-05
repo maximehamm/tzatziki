@@ -16,6 +16,7 @@
 package io.nimbly.tzatziki.config
 
 import com.intellij.lang.properties.psi.PropertiesFile
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -28,10 +29,7 @@ import io.nimbly.tzatziki.pdf.ELeader
 import io.nimbly.tzatziki.pdf.ESummaryDepth
 import io.nimbly.tzatziki.pdf.PdfStyle
 import io.nimbly.tzatziki.pdf.Picture
-import io.nimbly.tzatziki.util.TzatzikiException
-import io.nimbly.tzatziki.util.getFile
-import io.nimbly.tzatziki.util.notification
-import io.nimbly.tzatziki.util.now
+import io.nimbly.tzatziki.util.*
 import java.io.File
 import java.io.InputStreamReader
 import java.nio.charset.Charset
@@ -73,9 +71,11 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
     if (rootConfig == null) {
 
         rootConfig = root.copyDefaultsToFolder(path, project)
-        project.notification("Configuration <a href='PROP'>files</a> were created") {
-            PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
-        }
+        project.notificationAction("Configuration were created", NotificationType.INFORMATION,
+            mapOf("Open" to {
+                PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
+            })
+        )
     }
 
     // Update default files
@@ -211,9 +211,11 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
             }
             PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-            project.notification("Configuration <a href='PROP'>file</a> added") {
-                PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-            }
+            project.notificationAction("Configuration file added", NotificationType.INFORMATION,
+                mapOf("Open file" to {
+                    PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+                })
+            )
 
         } else if (fileName != PROPERTIES_FILENAME) {
 
@@ -227,9 +229,11 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
                 }
                 PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-                project.notification("Configuration <a href='PROP'>file</a> upated") {
-                    PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-                }
+                project.notificationAction("Configuration file upated", NotificationType.INFORMATION,
+                    mapOf("Open file" to {
+                        PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+                    })
+                )
             }
         }
     }

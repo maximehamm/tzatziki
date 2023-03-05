@@ -18,6 +18,7 @@ package io.nimbly.tzatziki.util
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.util.PropertiesComponent
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 
@@ -36,18 +37,12 @@ fun askToVote(project: Project) {
     else if (version != currentVersion) {
 
         // Plugin was updated... 'looks like your ready to vote !
-        project.notification(
-            """Thank you for using $TZATZIKI_NAME !<br/>
-                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
-                       <td><a href='REVIEW'>Review</a></td>
-                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
-                       <td><a href='DISMISS'>Dismiss</a></td>
-                    </tr></table>""") {
-            when (it) {
-                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
-                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
-            }
-        }
+        project.notificationAction("Thank you for using $TZATZIKI_NAME !", NotificationType.INFORMATION,
+            mapOf(
+                "Review" to { BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-") },
+                "Submit a bug or suggestion" to { BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues") },
+            )
+        )
 
         PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
     }
