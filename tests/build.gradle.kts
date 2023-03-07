@@ -3,24 +3,16 @@ plugins {
     id("org.jetbrains.intellij") version "1.13.1"
 }
 
-val versions: Map<String, String> by rootProject.extra
-
 intellij {
-    version.set(versions["intellij-version"])
+    version.set("IU-2021.3.1")
     plugins.set(listOf(
-        "Gherkin:${versions["gherkin"]}",
+        "Gherkin:213.5744.223",
         "Kotlin",
         "org.intellij.intelliLang",
         "java",
         "JUnit",
-        "cucumber-java:${versions["cucumberJava"]}",
-        //"JavaScriptLanguage",
-        //"cucumber-javascript:${versions.cucumberJava
-        //"JavaScriptDebugger",
-        "org.intellij.scala:${versions["scala"]}",
-        //"com.github.danielwegener.cucumber-scala:202
-        "com.intellij.properties:${versions["properties"]}",
-        "PsiViewer:${versions["psiViewer"]}",
+        "cucumber-java:213.5744.125",
+        "com.intellij.properties:213.6461.46",
     ))
 }
 
@@ -39,6 +31,13 @@ dependencies {
 }
 
 tasks {
+    withType<JavaCompile> {
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "11"
+    }
     buildSearchableOptions {
         enabled = false
     }

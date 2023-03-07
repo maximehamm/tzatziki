@@ -2,11 +2,6 @@
 
 import java.net.URI
 
-plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
-    id("org.jetbrains.intellij") version "1.13.1"
-}
-
 allprojects {
     group = "io.nimbly.tzatziki"
     version = "12.0.2"
@@ -97,18 +92,4 @@ allprojects {
             url = URI("https://dl.bintray.com/jetbrains/intellij-plugin-service")
         }
     }
-
-    tasks {
-        withType<JavaCompile> {
-            sourceCompatibility = "11"
-            targetCompatibility = "11"
-        }
-        withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            kotlinOptions.jvmTarget = "11"
-        }
-    }
-}
-
-intellij {
-    version.set(versions["intellij-version"])
 }
