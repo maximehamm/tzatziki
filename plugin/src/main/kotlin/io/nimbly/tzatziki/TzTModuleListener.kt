@@ -132,6 +132,11 @@ class TzTModuleListener : ProjectManagerListener {
     private class PasteHandler : AbstractWriteActionHandler(ACTION_EDITOR_PASTE) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
 
+            if (CommonDataKeys.EDITOR.getData(dataContext) == null) {
+                super.doExecute(editor, null, dataContext)
+                return
+            }
+
             val offset = editor.caretModel.offset
             if (dataContext.gherkin && editor.smartPaste(dataContext))
                 return
