@@ -23,6 +23,12 @@ dependencies {
     runtimeOnly(project(":extensions:scala"))
 }
 
+configurations.all {
+    // This is important for PDF export
+    exclude("xml-apis", "xml-apis")
+    exclude("xml-apis", "xml-apis-ext")
+}
+
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
@@ -40,6 +46,11 @@ intellij {
         "PsiViewer:${versions["psiViewer"]}",
     ))
 }
+
+//configurations {
+//    all*.exclude group: "xml-apis", module: "xml-apis"
+//    all*.exclude group: "xml-apis", module: "xml-apis-ext"
+//}
 
 tasks {
 
