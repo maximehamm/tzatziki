@@ -16,6 +16,7 @@
 package io.nimbly.tzatziki.actions
 
 import com.github.rjeschke.txtmark.Processor
+import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -186,6 +187,20 @@ class TzExportAction : AnAction() {
 
     override fun update(event: AnActionEvent) {
 
+        // Selecting a gherkin file outside of source path
+        val nav = event.getData(CommonDataKeys.NAVIGATABLE_ARRAY) as? Array<*>
+        if (nav != null && nav.size == 1) {
+
+            val f = nav[0] as? PsiFileNode
+            if (f?.value?.fileType == GherkinFileType.INSTANCE) {
+                event.presentation.isEnabledAndVisible = true
+                event.presentation.text = "Export feature to PDF"
+                super.update(event)
+                return
+            }
+        }
+
+        // Selecting from resource path
         val file = event.getData(CommonDataKeys.PSI_FILE)
         val project = event.getData(CommonDataKeys.PROJECT)
         val vfiles = event.getData(CommonDataKeys.VIRTUAL_FILE_ARRAY)
