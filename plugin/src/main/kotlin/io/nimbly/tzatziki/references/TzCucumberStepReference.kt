@@ -14,7 +14,15 @@
  */
 package io.nimbly.tzatziki.references
 
+import com.intellij.codeInsight.daemon.impl.IdentifierHighlighterPass
+import com.intellij.debugger.SourcePosition
+import com.intellij.debugger.impl.DebuggerContextImpl
+import com.intellij.debugger.impl.PositionUtil
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
@@ -22,12 +30,14 @@ import com.intellij.psi.impl.source.resolve.ResolveCache
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.plugins.cucumber.CucumberJvmExtensionPoint
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
 import java.util.*
 import java.util.stream.Collectors
+
 
 val LAST_VALID = Key<Array<ResolveResult>>("LAST_VALID")
 
@@ -101,7 +111,7 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
         return CucumberStepHelper.findStepDefinitions(
             myStep.containingFile, (myStep as GherkinStepImpl))
     }
-    private fun multiResolveInner(): Array<ResolveResult> {
+    internal fun multiResolveInner(): Array<ResolveResult> {
 
         val module = ModuleUtilCore.findModuleForPsiElement(myStep)
             ?: return ResolveResult.EMPTY_ARRAY
@@ -129,10 +139,12 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
         }
 
         val resolved = mutableSetOf<PsiElement>()
+
         for (stepDefinition in stepDefinitions) {
             if (stepDefinition.supportsStep(myStep)) {
                 for (stepVariant in stepVariants) {
                     val element = stepDefinition.element
+                    ProgressManager.checkCanceled()
                     if (stepDefinition.matches(stepVariant!!) && element != null && !resolved.contains(element)) {
                         resolved.add(element)
                         break
@@ -147,7 +159,11 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
 
     private class MyResolver : ResolveCache.PolyVariantResolver<TzCucumberStepReference> {
         override fun resolve(ref: TzCucumberStepReference, incompleteCode: Boolean): Array<ResolveResult> {
-            return ref.multiResolveInner()
+
+            return ProgressManager.getInstance().runProcess<Array<ResolveResult>>({
+                    ref.multiResolveInner()
+                }, EmptyProgressIndicator()
+            )
         }
     }
 
