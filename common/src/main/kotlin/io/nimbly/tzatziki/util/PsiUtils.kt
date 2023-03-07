@@ -193,3 +193,7 @@ fun String.ellipsis(length: Int): String {
         t += "..."
     return t
 }
+
+inline fun <reified T : PsiElement> PsiElement.parentOfTypeIs(withSelf: Boolean = false): T? {
+    return PsiTreeUtil.getParentOfType(this, T::class.java, !withSelf)
+}

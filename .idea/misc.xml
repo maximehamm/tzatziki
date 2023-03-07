@@ -207,7 +207,7 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_19" default="true" project-jdk-name="IntelliJ IDEA IU-231.6471.13" project-jdk-type="IDEA JDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="IntelliJ IDEA IU-231.6471.13" project-jdk-type="IDEA JDK">
     <output url="file://$PROJECT_DIR$/build" />
   </component>
 </project>

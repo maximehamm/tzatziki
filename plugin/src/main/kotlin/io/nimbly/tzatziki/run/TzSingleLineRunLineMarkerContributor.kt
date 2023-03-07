@@ -21,13 +21,13 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
-import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.TZATZIKI
 import io.nimbly.tzatziki.psi.firstCell
 import io.nimbly.tzatziki.psi.isHeader
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.table
 import io.nimbly.tzatziki.util.findCucumberStepDefinitions
+import io.nimbly.tzatziki.util.parentOfTypeIs
 import org.jetbrains.plugins.cucumber.CucumberUtil
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -58,7 +58,7 @@ class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
         if (cell != cell.row.firstCell)
             return null
 
-        val scenario = cell.parentOfType<GherkinStepsHolder>()
+        val scenario = cell.parentOfTypeIs<GherkinStepsHolder>()
             ?: return null
 
         val definitions = scenario.findCucumberStepDefinitions()

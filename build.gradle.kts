@@ -9,7 +9,7 @@ plugins {
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "12.0.1"
+    version = "12.0.2"
 }
 
 val notes by extra {"""
@@ -100,11 +100,11 @@ allprojects {
 
     tasks {
         withType<JavaCompile> {
-            sourceCompatibility = "17"
-            targetCompatibility = "17"
+            sourceCompatibility = "11"
+            targetCompatibility = "11"
         }
         withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            kotlinOptions.jvmTarget = "17"
+            kotlinOptions.jvmTarget = "11"
         }
     }
 }

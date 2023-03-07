@@ -18,7 +18,8 @@ package io.nimbly.tzatziki
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocCommentOwner
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.parentOfType
+import com.intellij.psi.util.PsiTreeUtil
+import io.nimbly.tzatziki.util.parentOfTypeIs
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.scala.lang.psi.api.ScalaRecursiveElementVisitor
 import org.jetbrains.plugins.scala.lang.psi.api.expr.ScMethodCall
@@ -33,7 +34,7 @@ class ScalaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         if (parent !is ScMethodCall)
             return false
 
-        val clazz = parent.parentOfType<ScClass>()
+        val clazz = parent.parentOfTypeIs<ScClass>()
         if (clazz !=null && clazz.isDeprecated)
             return true
 

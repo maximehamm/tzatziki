@@ -21,12 +21,12 @@ import com.intellij.openapi.util.Ref
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.util.parentOfType
 import io.nimbly.tzatziki.psi.row
 import io.nimbly.tzatziki.psi.rowNumber
 import io.nimbly.tzatziki.psi.table
 import io.nimbly.tzatziki.util.ellipsis
 import io.nimbly.tzatziki.util.findPreviousSiblingsOfType
+import io.nimbly.tzatziki.util.parentOfTypeIs
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.psi.*
@@ -45,7 +45,7 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         val file = element.containingFile ?: return false
 
         val row = findRow(parent) ?: return false
-        row.parentOfType<GherkinStepsHolder>() ?: return false
+        row.parentOfTypeIs<GherkinStepsHolder>() ?: return false
 
         val line = findLineNumber(file, element)
 
@@ -98,7 +98,7 @@ class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurat
         val row = findRow(element.parent)
             ?: return name
 
-        row.parentOfType<GherkinStepsHolder>()
+        row.parentOfTypeIs<GherkinStepsHolder>()
             ?: return name
 
         var block = ""
