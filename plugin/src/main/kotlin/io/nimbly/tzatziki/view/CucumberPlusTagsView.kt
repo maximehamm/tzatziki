@@ -31,6 +31,7 @@ import com.intellij.util.ui.WrapLayout
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.findAllTags
 import io.nimbly.tzatziki.util.getGherkinScope
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.BorderFactory
@@ -39,8 +40,7 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 
-class CucumberPlusTagsView(private val project: Project)
-    : SimpleToolWindowPanel(true, false) {
+class CucumberPlusTagsView(private val project: Project) : SimpleToolWindowPanel(true, false) {
 
     init {
         setContent(initTagsPanel())
@@ -53,12 +53,16 @@ class CucumberPlusTagsView(private val project: Project)
         p.border = EmptyBorder(10, 10, 10, 10)
         p.withEmptyText("No tags found")
 
-        p.add(JBLabel("""<html>
+        p.add(
+            JBLabel(
+                """<html>
             The selected tags will be used to filter:<br/>
              &nbsp; ✓ <b>Cucumber tests execution</b> (<i>Java, Kotlin</i>)<br/>
              &nbsp; ✓ <b>Features exportation to PDF</b><br/><br/>
             <b>Select Tags</b>:
-            </html>""".trimMargin()), BorderLayout.PAGE_START)
+            </html>""".trimMargin()
+            ), BorderLayout.PAGE_START
+        )
 
         lateinit var tagsPanel: JPanel
         lateinit var tagsList: List<String>
@@ -86,7 +90,14 @@ class CucumberPlusTagsView(private val project: Project)
 
             // Listen to file refreshing
             EditorFactory.getInstance().eventMulticaster.addDocumentListener(object : DocumentListener {
-                override fun documentChanged(event: DocumentEvent) = refresh()
+                override fun documentChanged(event: DocumentEvent) {
+                    if (project.isOpen && !project.isDisposed) {
+                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.document)
+                        val isGherkinFile = psiFile?.fileType == GherkinFileType.INSTANCE
+                        if (isGherkinFile)
+                            refresh()
+                    }
+                }
             }, project)
         }
 
@@ -119,44 +130,57 @@ class CucumberPlusTagsView(private val project: Project)
 
         // Main
         val main = JBPanelWithEmptyText(GridLayoutManager(4, 1))
-        main.add(sTags, GridConstraints(
-            0, 0, 1, 1,
-            ANCHOR_NORTHWEST, FILL_BOTH,
-            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-            null, null, null))
+        main.add(
+            sTags, GridConstraints(
+                0, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_BOTH,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                null, null, null
+            )
+        )
 
         // Selection label
-        main.add(JBLabel("""<html><b>You can adapt the selection</b>:<br/></html>""".trimMargin()), GridConstraints(
-            1, 0, 1, 1,
-            ANCHOR_SOUTHWEST, FILL_NONE,
-            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
-            null, null, null))
+        main.add(
+            JBLabel("""<html><b>You can adapt the selection</b>:<br/></html>""".trimMargin()), GridConstraints(
+                1, 0, 1, 1,
+                ANCHOR_SOUTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
 
         // Selection
         val tSelection = JBTextArea(4, 10).apply { lineWrap = true; wrapStyleWord = true }
         val sSelection = JBScrollPane(tSelection, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_NEVER)
-        main.add(sSelection, GridConstraints(
-            2, 0, 1, 1,
-            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
-            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
-            null, null, null))
+        main.add(
+            sSelection, GridConstraints(
+                2, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+                null, null, null
+            )
+        )
 
         // Example label
-        main.add(JBLabel("""<html>
-                For example: <i>@tag1 and not @tag2&nbsp;</i></html>""".trimMargin()), GridConstraints(
-            3, 0, 1, 1,
-            ANCHOR_SOUTHWEST, FILL_NONE,
-            SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
-            null, null, null))
+        main.add(
+            JBLabel(
+                """<html>
+                For example: <i>@tag1 and not @tag2&nbsp;</i></html>""".trimMargin()
+            ), GridConstraints(
+                3, 0, 1, 1,
+                ANCHOR_SOUTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
 
         // Update selection function
         fun updateSelection(selectionOnly: Boolean) {
             val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
             if (selectionOnly) {
                 state.selection = tSelection.text
-            }
-            else {
+            } else {
                 val checked = checks.filter { it.isSelected }.map { it.text }.filterNotNull()
                 tSelection.text = checked.joinToString(" or ")
                 state.selection = tSelection.text
