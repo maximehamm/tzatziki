@@ -1,5 +1,6 @@
 package io.nimbly.example;
 
+import io.cucumber.java.en.But;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 

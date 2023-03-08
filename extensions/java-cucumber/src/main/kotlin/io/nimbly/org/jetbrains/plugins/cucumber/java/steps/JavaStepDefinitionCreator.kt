@@ -5,6 +5,7 @@ import com.intellij.codeInsight.daemon.impl.quickfix.CreateFromUsageUtils
 import com.intellij.codeInsight.template.*
 import com.intellij.ide.fileTemplates.FileTemplateDescriptor
 import com.intellij.ide.fileTemplates.FileTemplateManager
+import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -194,24 +195,33 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
     }
 
     protected fun buildStepDefinitionByStep(step: GherkinStep, file: PsiFile): PsiMethod {
-        val language = file.language
         val annotationPackage = AnnotationPackageProvider().getAnnotationPackageFor(step)
         val methodAnnotation = String.format("@%s.", annotationPackage)
         val cucumberStep = createStep(step)
-        val generator = SnippetGenerator(JavaSnippet())
+        val generator = snippetGenerator()
         var snippet = generator.getSnippet(cucumberStep, FunctionNameGenerator(CamelCaseConcatenator()))
         if (CucumberJavaUtil.isCucumberExpressionsAvailable(step)) {
             snippet = replaceRegexpWithCucumberExpression(snippet, step.name)
         }
         snippet = snippet.replaceFirst("@".toRegex(), methodAnnotation)
         snippet = processGeneratedStepDefinition(snippet, step)
-        val factory = JVMElementFactories.requireFactory(language, step.project)
+        val factory = jvmElementFactory(file, step)
         val methodFromCucumberLibraryTemplate = factory.createMethodFromText(snippet, step)
         return try {
             createStepDefinitionFromSnippet(methodFromCucumberLibraryTemplate, step, factory)
         } catch (e: Exception) {
             methodFromCucumberLibraryTemplate
         }
+    }
+
+    open fun jvmElementFactory(file: PsiFile, step: GherkinStep ): JVMElementFactory {
+        val language = file.language
+        val factory = JVMElementFactories.requireFactory(language, step.project)
+        return factory
+    }
+
+    protected open fun snippetGenerator(): SnippetGenerator {
+        return SnippetGenerator(JavaSnippet())
     }
 
     companion object {
@@ -227,7 +237,7 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
             return stepDefinition.replace("PendingException", CucumberJavaUtil.getCucumberPendingExceptionFqn(context))
         }
 
-        private fun replaceRegexpWithCucumberExpression(snippet: String, step: String): String {
+        fun replaceRegexpWithCucumberExpression(snippet: String, step: String): String {
             try {
                 val registry = ParameterTypeRegistry(Locale.getDefault())
                 val generator = CucumberExpressionGenerator(registry)

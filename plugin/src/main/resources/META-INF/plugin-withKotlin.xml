@@ -8,4 +8,8 @@
         <codeInsight.lineMarkerProvider language="kotlin" implementationClass="io.nimbly.tzatziki.KotlinTzatzikiUsagesMarker"/>
     </extensions>
 
+    <extensions defaultExtensionNs="org.jetbrains.plugins.cucumber">
+        <steps.cucumberJvmExtensionPoint implementation="io.nimbly.tzatziki.generation.TzGherkinKotlinExtension" order="last"/>
+    </extensions>
+
 </idea-plugin>

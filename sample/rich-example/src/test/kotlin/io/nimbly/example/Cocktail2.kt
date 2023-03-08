@@ -21,6 +21,7 @@ import io.cucumber.java.en.Given
 import io.cucumber.java.en.Then
 import io.cucumber.java.en.When
 import org.junit.Assert
+import io.cucumber.java.en.But
 
 class Cocktail2 {
     @Given("a global administrator named {string}")
@@ -139,5 +140,9 @@ class Cocktail2 {
     @ParameterType(".*")
     fun any(value: String): String {
         return value
+    }
+
+    @When("this is a tests")
+    fun thisIsATests() {
     }
 }
