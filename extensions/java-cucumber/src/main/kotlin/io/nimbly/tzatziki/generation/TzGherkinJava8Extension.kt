@@ -1,22 +1,28 @@
 package io.nimbly.tzatziki.generation
 
-import com.intellij.psi.PsiFile
+import gherkin.formatter.model.Step
+import io.nimbly.org.jetbrains.plugins.cucumber.java.steps.Java8StepDefinitionCreator
 import org.jetbrains.plugins.cucumber.StepDefinitionCreator
 import org.jetbrains.plugins.cucumber.java.CucumberJava8Extension
-import org.jetbrains.plugins.cucumber.java.steps.Java8StepDefinitionCreator
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
-import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 
 class TzGherkinJava8Extension : CucumberJava8Extension() {
 
     override fun getStepDefinitionCreator(): StepDefinitionCreator {
-        return TzcreateStepDefinition()
+        return TzCreateJava8StepDefinition()
     }
 
-    private class TzcreateStepDefinition : Java8StepDefinitionCreator() {
-        override fun createStepDefinition(step: GherkinStep, file: PsiFile, withTemplate: Boolean): Boolean {
-            val stepX = if (step is GherkinStepImpl) TzGherkinStep(step) else step
-            return super.createStepDefinition(stepX, file, withTemplate)
+    class TzCreateJava8StepDefinition : Java8StepDefinitionCreator() {
+
+        override fun createStep(step: GherkinStep): Step {
+            return Step(
+                ArrayList(),
+                step.keyword.text.fixName(),
+                step.name.stripAccents(),
+                0,
+                null,
+                null
+            )
         }
     }
 

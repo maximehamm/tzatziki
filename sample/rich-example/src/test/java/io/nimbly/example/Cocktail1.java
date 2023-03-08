@@ -23,6 +23,7 @@ public class Cocktail1 {
     @When("nothing")
     public void anOrderIsDeclaredForJuliette(String s) {
     }
+
 }
 
 
