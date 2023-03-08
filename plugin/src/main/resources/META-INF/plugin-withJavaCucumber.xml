@@ -11,4 +11,9 @@
         <runConfigurationExtension implementation="io.nimbly.tzatziki.TzCucumberJavaRunExtension" order="first"/>
     </extensions>
 
+    <extensions defaultExtensionNs="org.jetbrains.plugins.cucumber">
+        <steps.cucumberJvmExtensionPoint implementation="io.nimbly.tzatziki.generation.TzGherkinJavaExtension" order="last"/>
+        <steps.cucumberJvmExtensionPoint implementation="io.nimbly.tzatziki.generation.TzGherkinJava8Extension" order="last"/>
+    </extensions>
+
 </idea-plugin>

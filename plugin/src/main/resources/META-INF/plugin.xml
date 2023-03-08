@@ -24,6 +24,7 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
+         ✓ <b>13.0</b> - Improve step generation for Java and Kotlin : fix gherkin plugin issue when using '*' as step keyword instead of 'when', 'then', etc.<br/>
          ✓ <b>12.0</b> - Allow to fold tables and multi line strings<br/>
          ✓ <b>11.0</b> - Select Gherkin tags to filter for tests execution / for feature exportation to PDF (use new Cucumber+ tool view !)<br/>
          ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
