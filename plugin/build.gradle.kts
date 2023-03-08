@@ -47,11 +47,6 @@ intellij {
     ))
 }
 
-//configurations {
-//    all*.exclude group: "xml-apis", module: "xml-apis"
-//    all*.exclude group: "xml-apis", module: "xml-apis-ext"
-//}
-
 tasks {
 
     withType<JavaCompile> {
