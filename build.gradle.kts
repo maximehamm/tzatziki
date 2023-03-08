@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "12.0.3"
+    version = "13.0.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,8 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul>
+         <li><b>13.0</b> Improve step generation for Java : remove accent from generated method</li>
+         <li><b>13.0</b> Improve step generation for Java : fix gherkin plugin issue when using '*' as step keyword instead of 'when', 'then', etc.</li>
          <li><b>12.0</b> Upgrade Intellij libs to latest 2022</li>
          <li><b>11.5</b> Allow to fold tables and multi line strings</li>
          <li><b>11.4</b> IntelliJ IDEA 2023.1 compatibility</li>

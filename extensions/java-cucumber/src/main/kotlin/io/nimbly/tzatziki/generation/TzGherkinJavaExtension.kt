@@ -16,7 +16,7 @@ class TzGherkinJavaExtension : CucumberJavaExtension() {
     private class TzcreateStepDefinition : JavaStepDefinitionCreator() {
         override fun createStepDefinition(step: GherkinStep, file: PsiFile, withTemplate: Boolean): Boolean {
             val stepX = if (step is GherkinStepImpl) TzGherkinStep(step) else step
-            return super.createStepDefinition(stepX, file, withTemplate)x
+            return super.createStepDefinition(stepX, file, withTemplate)
         }
     }
 
