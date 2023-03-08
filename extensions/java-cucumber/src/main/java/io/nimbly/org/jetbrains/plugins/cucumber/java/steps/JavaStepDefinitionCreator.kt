@@ -31,7 +31,7 @@ import org.jetbrains.plugins.cucumber.java.steps.AnnotationPackageProvider
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.util.*
 
-open class TzJavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
+open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
     override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {
         val newClass = CreateClassUtil.createClassNamed(
             name,
@@ -220,7 +220,7 @@ open class TzJavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
         private const val FILE_TEMPLATE_CUCUMBER_JAVA_STEP_DEFINITION_JAVA = "Cucumber Java Step Definition.java"
         private const val DEFAULT_STEP_KEYWORD = "Given"
         private val LOG = Logger.getInstance(
-            TzJavaStepDefinitionCreator::class.java
+            JavaStepDefinitionCreator::class.java
         )
 
         fun processGeneratedStepDefinition(stepDefinition: String, context: PsiElement): String {

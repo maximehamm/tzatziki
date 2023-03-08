@@ -1,11 +1,11 @@
 package io.nimbly.tzatziki.generation
 
 import gherkin.formatter.model.Step
-import io.nimbly.org.jetbrains.plugins.cucumber.java.steps.TzJavaStepDefinitionCreator
+import io.nimbly.org.jetbrains.plugins.cucumber.java.steps.JavaStepDefinitionCreator
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.text.Normalizer
 
-class TzCreateJavaStepDefinition : TzJavaStepDefinitionCreator() {
+class TzCreateJavaStepDefinition : JavaStepDefinitionCreator() {
 
     override fun createStep(step: GherkinStep): Step {
         return Step(

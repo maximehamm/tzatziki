@@ -15,13 +15,11 @@ import com.intellij.psi.util.PsiTreeUtil
 import cucumber.runtime.snippets.CamelCaseConcatenator
 import cucumber.runtime.snippets.FunctionNameGenerator
 import cucumber.runtime.snippets.SnippetGenerator
-import gherkin.formatter.model.Step
 import org.jetbrains.plugins.cucumber.java.steps.Java8Snippet
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
-import java.util.ArrayList
 
 
-open class Java8StepDefinitionCreator : TzJavaStepDefinitionCreator() {
+open class Java8StepDefinitionCreator : JavaStepDefinitionCreator() {
 
     override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {
         val result = super.createStepDefinitionContainer(dir, name)
