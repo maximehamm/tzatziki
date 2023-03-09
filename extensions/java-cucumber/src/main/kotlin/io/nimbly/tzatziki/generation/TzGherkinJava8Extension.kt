@@ -18,7 +18,7 @@ class TzGherkinJava8Extension : CucumberJava8Extension() {
             return Step(
                 ArrayList(),
                 step.keyword.text.fixName(),
-                step.name.stripAccents(),
+                step.name, //.stripAccents(),
                 0,
                 null,
                 null

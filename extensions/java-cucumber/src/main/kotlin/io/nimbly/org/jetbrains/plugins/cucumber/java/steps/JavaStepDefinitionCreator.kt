@@ -5,7 +5,6 @@ import com.intellij.codeInsight.daemon.impl.quickfix.CreateFromUsageUtils
 import com.intellij.codeInsight.template.*
 import com.intellij.ide.fileTemplates.FileTemplateDescriptor
 import com.intellij.ide.fileTemplates.FileTemplateManager
-import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -21,11 +20,13 @@ import com.intellij.psi.codeStyle.JavaCodeStyleManager
 import com.intellij.psi.util.CreateClassUtil
 import com.intellij.psi.util.PsiTreeUtil
 import cucumber.runtime.snippets.CamelCaseConcatenator
+import cucumber.runtime.snippets.Concatenator
 import cucumber.runtime.snippets.FunctionNameGenerator
 import cucumber.runtime.snippets.SnippetGenerator
 import gherkin.formatter.model.Step
 import io.cucumber.cucumberexpressions.CucumberExpressionGenerator
 import io.cucumber.cucumberexpressions.ParameterTypeRegistry
+import io.nimbly.tzatziki.generation.stripAccents
 import org.jetbrains.plugins.cucumber.AbstractStepDefinitionCreator
 import org.jetbrains.plugins.cucumber.java.CucumberJavaUtil
 import org.jetbrains.plugins.cucumber.java.steps.AnnotationPackageProvider
@@ -33,6 +34,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.util.*
 
 open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
+
     override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {
         val newClass = CreateClassUtil.createClassNamed(
             name,
@@ -52,7 +54,7 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
 
             // snippet text
             val element = buildStepDefinitionByStep(step, file)
-            var addedElement: PsiMethod? = clazz.add(element) as PsiMethod
+            var addedElement = clazz.add(element) as PsiMethod?
             addedElement = CodeInsightUtilCore.forcePsiPostprocessAndRestoreElement(addedElement!!)
             JavaCodeStyleManager.getInstance(project).shortenClassReferences(addedElement!!)
             val editor = FileEditorManager.getInstance(project).selectedTextEditor
@@ -194,14 +196,31 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
         return STEP_DEFINITION_SUFFIX
     }
 
+    class FakeStep(val step: GherkinStep) : GherkinStep by step {
+        override fun getName(): String {
+            return step.name.replace("<\\w+>".toRegex(), "@\"\"@")
+        }
+    }
+
+    class TzFunctionNameGenerator(concatenator: Concatenator) : FunctionNameGenerator(concatenator) {
+        override fun generateFunctionName(sentence: String): String {
+            return super.generateFunctionName(sentence.stripAccents())
+        }
+    }
+
     protected fun buildStepDefinitionByStep(step: GherkinStep, file: PsiFile): PsiMethod {
         val annotationPackage = AnnotationPackageProvider().getAnnotationPackageFor(step)
         val methodAnnotation = String.format("@%s.", annotationPackage)
-        val cucumberStep = createStep(step)
         val generator = snippetGenerator()
-        var snippet = generator.getSnippet(cucumberStep, FunctionNameGenerator(CamelCaseConcatenator()))
+
+        var snippet: String // = generator.getSnippet(cucumberStep, FunctionNameGenerator(CamelCaseConcatenator()))
         if (CucumberJavaUtil.isCucumberExpressionsAvailable(step)) {
+            snippet = generator.getSnippet(createStep(FakeStep(step)), TzFunctionNameGenerator(CamelCaseConcatenator()))
             snippet = replaceRegexpWithCucumberExpression(snippet, step.name)
+                        .replace("<\\w+>".toRegex(), "{}")
+        }
+        else {
+            snippet = generator.getSnippet(createStep(step), TzFunctionNameGenerator(CamelCaseConcatenator()))
         }
         snippet = snippet.replaceFirst("@".toRegex(), methodAnnotation)
         snippet = processGeneratedStepDefinition(snippet, step)

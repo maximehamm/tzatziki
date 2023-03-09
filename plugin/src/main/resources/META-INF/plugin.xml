@@ -24,7 +24,7 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
-         ✓ <b>14.0</b> - Improve step generation for Kotlin : generate Kotlin steps<br/>
+         ✓ <b>14.0</b> - Improve Kotlin supports : generate Kotlin steps<br/>
          ✓ <b>13.1</b> - Improve step generation for Java : remove accent from generated method<br/>
          ✓ <b>13.0</b> - Improve step generation for Java : fix gherkin plugin issue when using '*' as step keyword instead of 'when', 'then', etc.<br/>
          ✓ <b>12.0</b> - Allow to fold tables and multi line strings<br/>

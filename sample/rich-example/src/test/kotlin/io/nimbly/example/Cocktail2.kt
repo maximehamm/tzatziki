@@ -145,4 +145,20 @@ class Cocktail2 {
     @When("this is a tests")
     fun thisIsATests() {
     }
+
+    @When("the tickêt must saÿ {string}")
+    fun theTicketMustSay(arg0: String, arg1: String) {
+    }
+
+    @When("kotlin {int} fôr the {} and {} hello")
+    fun kotlinForTheAndHello(arg0: Int, arg1: String, arg2: String) {
+    }
+
+    @Given("Ceçi ést un Ÿô Éxamplè & c'est {int} tout")
+    fun ceciEstUnYoExampleCEstTout(arg0: Int) {
+    }
+
+    @But("bla {int} bla {string} bla")
+    fun blaBlaBla(arg0: Int, arg1: String) {
+    }
 }

@@ -7,8 +7,10 @@ allprojects {
     version = "14.0.0"
 }
 
-//TODO : Generating steps for scenario outlines
-//TODO : contribute to cucumber-java plugin to remove imported classes
+//TODO : generate Kotlin class
+//TODO : contribute to cucumber-java plugin... adapt API to e able to expend classes
+//TODO : Display list of all features... organize feature per Tags... filter feature per tags...
+//TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
