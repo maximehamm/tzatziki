@@ -1,27 +1,33 @@
 package io.nimbly.tzatziki.generation
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import cucumber.runtime.snippets.CamelCaseConcatenator
-import cucumber.runtime.snippets.FunctionNameGenerator
 import cucumber.runtime.snippets.SnippetGenerator
 import gherkin.formatter.model.Step
 import io.nimbly.org.jetbrains.plugins.cucumber.java.steps.JavaStepDefinitionCreator
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration
+import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.core.getPackage
 import org.jetbrains.kotlin.idea.util.application.runWriteAction
-import org.jetbrains.kotlin.idea.util.module
-import org.jetbrains.kotlin.idea.util.sourceRoots
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
+import org.jetbrains.plugins.cucumber.BDDFrameworkType
 import org.jetbrains.plugins.cucumber.StepDefinitionCreator
 import org.jetbrains.plugins.cucumber.java.CucumberJavaUtil
 import org.jetbrains.plugins.cucumber.java.steps.AnnotationPackageProvider
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * @see <a href="https://github.com/jlagerweij/cucumber-kotlin/blob/master/src/main/kotlin/net/lagerwey/plugins/cucumber/kotlin/steps/KotlinStepDefinitionCreator.kt">Kotlin plugin</a>
@@ -32,12 +38,20 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
         return TzCreateKotlinStepDefinition()
     }
 
+    override fun getStepFileType(): BDDFrameworkType {
+        return BDDFrameworkType(KotlinFileType.INSTANCE);
+    }
+
+    override fun getStepDefinitionContainers(featureFile: GherkinFile): MutableCollection<out PsiFile> {
+        return emptyList<PsiFile>().toMutableList()
+    }
+
     class TzCreateKotlinStepDefinition : JavaStepDefinitionCreator() {
 
         private var snippetGeneratorCache: SnippetGenerator? = null
 
         override fun createStep(step: GherkinStep): Step {
-            return Step(
+                return Step(
                 ArrayList(),
                 step.keyword.text.fixName(),
                 step.name, //.stripAccents(),
@@ -49,31 +63,25 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
 
         override fun createStepDefinitionContainer(directory: PsiDirectory, name: String): PsiFile {
 
-            if (!isKotlinFolder(directory)) {
-                return super.createStepDefinitionContainer(directory, name)
+            val application = ApplicationManager.getApplication()
+            var file = application.runWriteAction<KtFile> {
+                directory.createFile("$name.kt") as KtFile
             }
 
-            val file = runWriteAction { directory.createFile(name) } as KtFile
             val ktPsiFactory = KtPsiFactory(file.project, markGenerated = true)
-            val psiPackage = directory.getPackage()?.qualifiedName
-            val apiClassName = "kt"
-            val importDirective = ktPsiFactory.createImportDirective(ImportPath.fromString("cucumber.api.java8.$apiClassName"))
-            val newLines = ktPsiFactory.createNewLine(2)
-            val ktClass = ktPsiFactory.createClass("""
-            class ${name.replace(".kt", "")} : $apiClassName {
-                init {
-                }
-            }
-            """.trimIndent())
 
-            runWriteAction {
-                if (psiPackage != null && psiPackage != "") {
-                    file.add(ktPsiFactory.createPackageDirective(FqName(psiPackage)))
-                    file.add(newLines)
-                }
-                file.add(importDirective)
-                file.add(newLines)
+            file = application.runWriteAction<KtFile> {
+                val psiPackage = directory.getPackage()?.qualifiedName
+                if (psiPackage != null)
+                    file.packageFqName = FqName(psiPackage)
+                file.add(ktPsiFactory.createNewLine(2))
+
+                val ktClass = ktPsiFactory.createClass("""
+                    class $name  {
+                        
+                    }""".trimIndent())
                 file.add(ktClass)
+                file
             }
 
             return file
@@ -112,7 +120,8 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
 
             val exp: KtNamedFunction = ktPsiFactory.createFunction(snippet)
 
-            val added = runWriteAction {
+            val application = ApplicationManager.getApplication()
+            val added = application.runWriteAction<KtNamedFunction> {
 
                 val importList = ktFile.importList
                 if (importList != null && !importList.imports.map { it.importPath }.contains(importDirective.importPath))
@@ -133,26 +142,45 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
         private fun PsiFile.ktFile(step: GherkinStep)
                 = PsiManager.getInstance(step.project).findFile(virtualFile) as? KtFile
 
-        private fun isKotlinFolder(directory: PsiDirectory): Boolean {
-
-            val sourceRoots = directory.module?.sourceRoots
-
-            return true
-//            val root = sourceRoots.find { it.path.endsWith("kotlin") } ?: sourceRoots.find { it.path.endsWith("java") }
-//            val rootDir = root?.toPsiDirectory(step.project) ?: return stepDir
-//            val packageName = stepDir.getPackage()?.qualifiedName
-//            if (packageName.isNullOrBlank()) return rootDir
-//            var dir = rootDir
-//            packageName.split(".").forEach { subdirName ->
-//                var subDir = dir.findSubdirectory(subdirName)
-//                if (subDir == null) {
-//                    subDir = runWriteAction {
-//                        dir.createSubdirectory(subdirName)
-//                    }
-//                }
-//                dir = subDir
-//            }
-//            return dir
+        override fun getDefaultStepDefinitionFolderPath(step: GherkinStep): String {
+            val featureFile = step.containingFile
+            if (featureFile != null) {
+                val psiDirectory = featureFile.containingDirectory
+                val project = step.project
+                if (psiDirectory != null) {
+                    val projectFileIndex = ProjectRootManager.getInstance(project).fileIndex
+                    val directory = psiDirectory.virtualFile
+                    if (projectFileIndex.isInContent(directory)) {
+                        var sourceRoot = projectFileIndex.getSourceRootForFile(directory)
+                        val module = projectFileIndex.getModuleForFile(featureFile.virtualFile)
+                        if (module != null) {
+                            val sourceRoots = ModuleRootManager.getInstance(module).sourceRoots
+                            if (sourceRoot != null && sourceRoot.name == "resources") {
+                                val resourceParent = sourceRoot.parent
+                                for (vFile in sourceRoots) {
+                                    if (vFile.path.startsWith(resourceParent.path) && vFile.name == "kotlin") {
+                                        sourceRoot = vFile
+                                        break
+                                    }
+                                }
+                            } else {
+                                if (sourceRoots.size > 0) {
+                                    sourceRoot = sourceRoots[sourceRoots.size - 1]
+                                }
+                            }
+                        }
+                        var packageName = ""
+                        if (sourceRoot != null) {
+                            packageName = CucumberJavaUtil.getPackageOfStepDef(step)
+                        }
+                        val packagePath = packageName.replace('.', '/')
+                        val path = sourceRoot?.path ?: directory.path
+                        return FileUtil.join(path, packagePath)
+                    }
+                }
+            }
+            assert(featureFile != null)
+            return Objects.requireNonNull(featureFile!!.containingDirectory).virtualFile.path
         }
     }
 }
