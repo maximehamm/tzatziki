@@ -2,6 +2,7 @@ package io.nimbly.org.jetbrains.plugins.cucumber.java.steps
 
 import cucumber.runtime.snippets.Snippet
 
+// See https://github.com/JetBrains/intellij-plugins/tree/master/cucumber-java
 class JavaSnippet : Snippet {
 
     override fun arguments(argumentTypes: List<Class<*>>): String {

@@ -14,7 +14,6 @@ import io.nimbly.org.jetbrains.plugins.cucumber.java.steps.JavaStepDefinitionCre
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.core.getPackage
-import org.jetbrains.kotlin.idea.util.application.runWriteAction
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
@@ -24,10 +23,8 @@ import org.jetbrains.plugins.cucumber.BDDFrameworkType
 import org.jetbrains.plugins.cucumber.StepDefinitionCreator
 import org.jetbrains.plugins.cucumber.java.CucumberJavaUtil
 import org.jetbrains.plugins.cucumber.java.steps.AnnotationPackageProvider
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * @see <a href="https://github.com/jlagerweij/cucumber-kotlin/blob/master/src/main/kotlin/net/lagerwey/plugins/cucumber/kotlin/steps/KotlinStepDefinitionCreator.kt">Kotlin plugin</a>
@@ -40,10 +37,6 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
 
     override fun getStepFileType(): BDDFrameworkType {
         return BDDFrameworkType(KotlinFileType.INSTANCE);
-    }
-
-    override fun getStepDefinitionContainers(featureFile: GherkinFile): MutableCollection<out PsiFile> {
-        return emptyList<PsiFile>().toMutableList()
     }
 
     class TzCreateKotlinStepDefinition : JavaStepDefinitionCreator() {
@@ -61,17 +54,17 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
             )
         }
 
-        override fun createStepDefinitionContainer(directory: PsiDirectory, name: String): PsiFile {
+        override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {
 
             val application = ApplicationManager.getApplication()
             var file = application.runWriteAction<KtFile> {
-                directory.createFile("$name.kt") as KtFile
+                dir.createFile("$name.kt") as KtFile
             }
 
             val ktPsiFactory = KtPsiFactory(file.project, markGenerated = true)
 
             file = application.runWriteAction<KtFile> {
-                val psiPackage = directory.getPackage()?.qualifiedName
+                val psiPackage = dir.getPackage()?.qualifiedName
                 if (psiPackage != null)
                     file.packageFqName = FqName(psiPackage)
                 file.add(ktPsiFactory.createNewLine(2))
@@ -143,6 +136,11 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
                 = PsiManager.getInstance(step.project).findFile(virtualFile) as? KtFile
 
         override fun getDefaultStepDefinitionFolderPath(step: GherkinStep): String {
+
+//           if (currentFileType != BDDFrameworkType(KotlinFileType.INSTANCE)) {
+//                return super.getDefaultStepDefinitionFolderPath(step)
+//            }
+
             val featureFile = step.containingFile
             if (featureFile != null) {
                 val psiDirectory = featureFile.containingDirectory

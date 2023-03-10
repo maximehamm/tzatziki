@@ -8,7 +8,6 @@ allprojects {
 }
 
 //TODO : generate Kotlin class
-//TODO : contribute to cucumber-java plugin... adapt API to e able to expend classes
 //TODO : Display list of all features... organize feature per Tags... filter feature per tags...
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""

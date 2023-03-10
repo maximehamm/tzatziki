@@ -33,7 +33,7 @@ import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.util.regex.Pattern
 
 //https://youtrack.jetbrains.com/issue/IDEA-269898
-@Deprecated("Remove this when Jetbrain issue IDEA-269898 will be fixed")
+// ("Remove this when Jetbrain issue IDEA-269898 will be fixed")
 class TzGherkinAnnotator : Annotator {
     override fun annotate(psiElement: PsiElement, holder: AnnotationHolder) {
         psiElement.accept(TzGherkinAnnotatorVisitor(holder))

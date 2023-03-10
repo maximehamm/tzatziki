@@ -33,6 +33,7 @@ import org.jetbrains.plugins.cucumber.java.steps.AnnotationPackageProvider
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.util.*
 
+// See https://github.com/JetBrains/intellij-plugins/tree/master/cucumber-java
 open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
 
     override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {

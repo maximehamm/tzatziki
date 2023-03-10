@@ -18,7 +18,7 @@ import cucumber.runtime.snippets.SnippetGenerator
 import org.jetbrains.plugins.cucumber.java.steps.Java8Snippet
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
-
+// See https://github.com/JetBrains/intellij-plugins/tree/master/cucumber-java
 open class Java8StepDefinitionCreator : JavaStepDefinitionCreator() {
 
     override fun createStepDefinitionContainer(dir: PsiDirectory, name: String): PsiFile {

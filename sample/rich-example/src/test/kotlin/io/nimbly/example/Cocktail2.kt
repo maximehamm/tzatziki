@@ -142,7 +142,5 @@ class Cocktail2 {
         return value
     }
 
-    @Given("Ceçi ést un Ÿô Éxamplè & c'est {int} tout")
-    fun ceciEstUnYoExampleCEstTout(arg0: Int) {
-    }
+
 }

@@ -28,7 +28,7 @@ import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
 //https://youtrack.jetbrains.com/issue/IDEA-269898
-@Deprecated("Remove this when Jetbrain issue IDEA-269898 will be fixed")
+// Remove this when Jetbrain issue IDEA-269898 will be fixed")
 class TzCucumberStepInspection : GherkinInspection() {
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
@@ -51,8 +51,8 @@ class TzCucumberStepInspection : GherkinInspection() {
                 var fix: CucumberCreateStepFix? = null
                 var allStepsFix: CucumberCreateAllStepsFix? = null
                 if (CucumberStepHelper.getExtensionCount() > 0) {
-                    fix = CucumberCreateStepFix()
-                    allStepsFix = CucumberCreateAllStepsFix()
+                    fix = TzCucumberCreateStepFix()
+                    allStepsFix = TzCucumberCreateAllStepsFix()
                 }
                 holder.registerProblem(
                     reference.element,
