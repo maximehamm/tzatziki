@@ -7,8 +7,9 @@ allprojects {
     version = "14.1.0"
 }
 
-//TODO : generate Kotlin class
 //TODO : Display list of all features... organize feature per Tags... filter feature per tags...
+//   plugin page : https://plugins.jetbrains.com/plugin/16716-gherkin-overview
+//   code : https://github.com/picimako/gherkin-overview
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>

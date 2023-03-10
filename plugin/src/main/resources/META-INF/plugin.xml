@@ -20,7 +20,7 @@
             url="https://www.linkedin.com/in/maxime-hamm/">Maxime HAMM</vendor>
     <description><![CDATA[
 
-       <b>A better user experience to run, edit, and print Cucumber features</b><br/>
+       <b>The best Cucumber user experience to run, edit, print Gherkin features... and develop with Java, Kotlin, Scala...</b><br/>
        <br/>
 
        <b><u>NEW!</u></b><br/>
@@ -31,7 +31,6 @@
          ✓ <b>11.0</b> - Select Gherkin tags to filter for tests execution / for feature exportation to PDF (use new Cucumber+ tool view !)<br/>
          ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
          ✓ <b>&nbsp;9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>
-         ✓ <b>&nbsp;8.0</b> - Step completion suggests all steps already used in current module, not only steps having an implementation. Details bellow.<br/>
        <br/>
        <br/>
 
