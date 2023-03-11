@@ -1,4 +1,4 @@
-Feature: Cocktail Ordering
+Feature: Cocktail Ordering xxxxxx
 
   **This is Nice date !**
   - Revenue was off the chart
@@ -9,8 +9,11 @@ Feature: Cocktail Ordering
   <img src='images/candles.png' style='width:40px; position:absolute; top:0px; left:330px'/>
 
   @Production
-  Scenario: Creating an empty order
+  Scenario: Creating an empty order xxxdd
     Given Romeo who wants to buy a drink
+    * this is a tests
+    Given Ceçi ést un Ÿô Éxamplè & c'est 0 tout
+    But bla 1 bla "xx" bla
     Then there is 0 cocktails in the order
     Then there is 0 cocktails in the order
     And Romeo pays his order
@@ -19,9 +22,11 @@ Feature: Cocktail Ordering
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
 
+Feature: Toto
+
   Scenario Outline: Sending a message with an order
-    When kotlin for <Who>
-    Then the ticket must say "<expected>"
+    * kotlin 5 fôr the <Who> and <expected> hello
+    * the tickêt must saÿ "<expected>"
 
     @Basics
     Examples:

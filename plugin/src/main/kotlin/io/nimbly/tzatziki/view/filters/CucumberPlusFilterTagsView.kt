@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.tzatziki.view
+package io.nimbly.tzatziki.view.filters
 
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
@@ -27,6 +27,7 @@ import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import io.nimbly.tzatziki.util.findAllTags
@@ -40,17 +41,17 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 
-class CucumberPlusTagsView(private val project: Project) : SimpleToolWindowPanel(true, false) {
+class CucumberPlusFilterTagsView(private val project: Project) : SimpleToolWindowPanel(true, false) {
 
     init {
-        setContent(initTagsPanel())
+        setContent(initPanel())
     }
 
-    private fun initTagsPanel(): JPanel {
+    private fun initPanel(): JPanel {
 
         val p = JBPanelWithEmptyText()
         p.layout = BorderLayout(10, 10)
-        p.border = EmptyBorder(10, 10, 10, 10)
+        p.border = JBUI.Borders.empty(10)
         p.withEmptyText("No tags found")
 
         p.add(

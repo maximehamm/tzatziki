@@ -35,7 +35,8 @@ object ActionIcons {
     @JvmField val CUCUMBER_PLUS = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
     @JvmField val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)
 
-    @JvmField val CUCUMBER_PLUS_SVG = IconManager.getInstance().getIcon("org/jetbrains/plugins/cucumber/icons/cucumber.svg", javaClass)
+//    @JvmField val CUCUMBER_PLUS_SVG =
+//        IconManager.getInstance().loadRasterizedIcon("/io/nimbly/tzatziki/icons/cucumber-plus.svg", javaClass.classLoader, 1845835180, 0)
 
     val ImagesFileType = IconManager.getInstance().getIcon("/org/intellij/images/icons/ImagesFileType.svg", javaClass)
 

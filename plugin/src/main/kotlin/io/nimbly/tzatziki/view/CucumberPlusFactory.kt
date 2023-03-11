@@ -18,6 +18,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
+import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
+import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView
 
 class CucumberPlusFactory : ToolWindowFactory {
 
@@ -26,7 +28,11 @@ class CucumberPlusFactory : ToolWindowFactory {
         // Deprecated : replace by
         //    val contentFactory = ContentFactory.getInstance()
         val contentFactory = ContentFactory.SERVICE.getInstance()
+
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(CucumberPlusTagsView(project), "Tags", false))
+            contentFactory.createContent(CucumberPlusFeaturesView(project), "Features", false))
+
+        toolWindow.contentManager.addContent(
+            contentFactory.createContent(CucumberPlusFilterTagsView(project), "Filters", false))
     }
 }

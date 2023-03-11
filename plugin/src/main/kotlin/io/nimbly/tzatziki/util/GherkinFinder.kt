@@ -24,19 +24,38 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
-private val CacheKey: Key<CachedValue<List<Tag>>> = Key.create("io.nimbly.tzatziki.util.tagsfinder")
+private val CacheTagsKey: Key<CachedValue<List<Tag>>> = Key.create("io.nimbly.tzatziki.util.tagsfinder")
+
+/**
+ * find all gherkin files
+ */
+fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
+
+    val scope = project.getGherkinScope()
+
+    val allFeatures = mutableSetOf<GherkinFile>()
+    FilenameIndex
+        .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, scope)
+        .map { vfile -> vfile.getFile(project) }
+        .filterIsInstance<GherkinFile>()
+        .forEach { file ->
+            allFeatures.add(file)
+        }
+
+    return allFeatures
+}
 
 /**
  * find all gherkin tags
  */
-fun findAllTags(project: Project, scope: GlobalSearchScope): MutableSet<Tag> {
+fun findAllTags(project: Project, scope: GlobalSearchScope): Set<Tag> {
     val allTags = mutableSetOf<Tag>()
     FilenameIndex
         .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, scope)
         .map { vfile -> vfile.getFile(project) }
         .filterIsInstance<GherkinFile>()
         .forEach { file ->
-            val tags = CachedValuesManager.getCachedValue(file, CacheKey) {
+            val tags = CachedValuesManager.getCachedValue(file, CacheTagsKey) {
 
                 val tags = PsiTreeUtil.collectElements(file) { element -> element is GherkinTag }
                     .map { Tag(it as GherkinTag) }
