@@ -20,7 +20,6 @@ import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import javax.swing.JPanel
-import javax.swing.border.EmptyBorder
 
 class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowPanel(true, false) {
 

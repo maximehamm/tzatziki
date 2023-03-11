@@ -1,18 +1,19 @@
 package io.nimbly.tzatziki.view.features
 
+import com.intellij.ide.CommonActionsManager
+import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiDirectory
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiTreeChangeEvent
-import com.intellij.psi.PsiTreeChangeListener
+import com.intellij.psi.*
 import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
@@ -23,15 +24,15 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.JPanel
 import javax.swing.tree.DefaultMutableTreeNode
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
-class FeaturePanel(val project: Project) : JPanel(), Disposable {
+class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposable {
 
     val structure = GherkinTreeStructure(this)
     val model = StructureTreeModel(structure, this)
     val tree = DnDAwareTree(AsyncTreeModel(model, this))
+    val treeExpander = DefaultTreeExpander(tree)
 
     init {
         layout = BorderLayout()
@@ -43,6 +44,16 @@ class FeaturePanel(val project: Project) : JPanel(), Disposable {
 
         add(JBScrollPane(tree))
         TreeSpeedSearch(tree)
+
+        val toolbarGroup = DefaultActionGroup()
+        toolbarGroup.addSeparator()
+        toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
+        toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
+
+        val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)
+        toolbar.targetComponent = tree
+
+        setToolbar(toolbar.component)
 
         tree.addMouseListener(MouseListening(tree, project))
     }
@@ -132,4 +143,5 @@ class MouseListening(val tree: DnDAwareTree, private val project: Project) : Mou
         }
     }
 }
+
 
