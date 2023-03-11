@@ -10,7 +10,6 @@ import io.nimbly.tzatziki.view.features.node.GherkinFileNode
 import io.nimbly.tzatziki.view.features.node.ProjectNode
 import io.nimbly.tzatziki.view.features.node.ScenarioNode
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreeModel
@@ -26,22 +25,22 @@ class GherkinTreeModel(private val project: Project) : TreeModel, Disposable {
 
     override fun getChild(parent: Any, index: Int): Any? {
         if (parent is ProjectNode) {
-            return childrenOfProjet(parent.element).getOrNull(index)
+            return childrenOfProjet(parent).getOrNull(index)
         } else if (parent is GherkinFileNode) {
-            return childrenOfGherkinFile(parent.element).getOrNull(index)
+            return childrenOfGherkinFile(parent).getOrNull(index)
         } else if (parent is FeatureNode) {
-            return childrenOfFeature(parent.element).getOrNull(index)
+            return childrenOfFeature(parent).getOrNull(index)
         }
         return null
     }
 
     override fun getChildCount(parent: Any): Int {
         if (parent is ProjectNode) {
-            return childrenOfProjet(parent.element).size
+            return childrenOfProjet(parent).size
         } else if (parent is GherkinFileNode) {
-            return childrenOfGherkinFile(parent.element).size
+            return childrenOfGherkinFile(parent).size
         } else if (parent is FeatureNode) {
-            return childrenOfFeature(parent.element).size
+            return childrenOfFeature(parent).size
         }
         return 0
     }
@@ -59,11 +58,11 @@ class GherkinTreeModel(private val project: Project) : TreeModel, Disposable {
 
     override fun getIndexOfChild(parent: Any, child: Any): Int {
         if (parent is ProjectNode) {
-            return childrenOfProjet(parent.element).size
+            return childrenOfProjet(parent).size
         } else if (parent is GherkinFileNode) {
-            return childrenOfGherkinFile(parent.element).size
+            return childrenOfGherkinFile(parent).size
         } else if (parent is FeatureNode) {
-            return childrenOfFeature(parent.element).size
+            return childrenOfFeature(parent).size
         }
         return -1
     }
@@ -86,25 +85,28 @@ class GherkinTreeModel(private val project: Project) : TreeModel, Disposable {
     }
 
 
-    private fun childrenOfProjet(project: Project): List<GherkinFileNode> {
-        if (childrenOfProjet == null) {
-            childrenOfProjet =
-                findAllGerkinsFiles(project)
-                    .map { GherkinFileNode(project, it) }
-                    .sortedBy { it.toString()}
-        }
-        return childrenOfProjet!!
-    }
-
-    private fun childrenOfGherkinFile(gherkinFile: GherkinFile): List<FeatureNode> {
-        return gherkinFile.features
-            .map { FeatureNode(gherkinFile.project, it) }
+    private fun childrenOfProjet(projectNode: ProjectNode): List<GherkinFileNode> {
+//        if (childrenOfProjet == null) {
+//            childrenOfProjet =
+//                findAllGerkinsFiles(project)
+//                    .map { GherkinFileNode(project, it) }
+//                    .sortedBy { it.toString()}
+//        }
+//        return childrenOfProjet!!
+        return findAllGerkinsFiles(project)
+            .map { GherkinFileNode(project, projectNode, it) }
             .sortedBy { it.toString()}
     }
 
-    private fun childrenOfFeature(feature: GherkinFeature): List<ScenarioNode> {
-        return feature.scenarios
-            .map { ScenarioNode(feature.project, it) }
+    private fun childrenOfGherkinFile(gherkinFileNode: GherkinFileNode): List<FeatureNode> {
+        return gherkinFileNode.gherkinFile.features
+            .map { FeatureNode(project, gherkinFileNode, it) }
+            .sortedBy { it.toString()}
+    }
+
+    private fun childrenOfFeature(feature: FeatureNode): List<ScenarioNode> {
+        return feature.feature.scenarios
+            .map { ScenarioNode(project, feature, it) }
             .sortedBy { it.toString()}
     }
 

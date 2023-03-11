@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.view.features.node
 
 import com.intellij.icons.AllIcons
+import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.project.Project
 import icons.CucumberIcons
@@ -20,10 +21,10 @@ class ProjectNode(val p: Project) : NodeDescriptor<Project>(p, null) {
     }
 }
 
-class GherkinFileNode(val p: Project, val gherkinFile: GherkinFile): NodeDescriptor<GherkinFile>(p, null) {
-    override fun getElement() = gherkinFile
+class GherkinFileNode(val p: Project, val parent: ProjectNode, val gherkinFile: GherkinFile)
+        : HierarchyNodeDescriptor(p, parent, gherkinFile, false) {
     override fun update(): Boolean {
-        myName = element.containingFile.name.substringBeforeLast(".")
+        myName = containingFile!!.name.substringBeforeLast(".")
         icon = CucumberIcons.Cucumber
         return true
     }
@@ -32,10 +33,10 @@ class GherkinFileNode(val p: Project, val gherkinFile: GherkinFile): NodeDescrip
     }
 }
 
-class FeatureNode(val p: Project, val feature: GherkinFeature): NodeDescriptor<GherkinFeature>(p, null) {
-    override fun getElement() = feature
+class FeatureNode(val p: Project, val parent: GherkinFileNode, val feature: GherkinFeature)
+        : HierarchyNodeDescriptor(p, parent, feature, false) {
     override fun update(): Boolean {
-        myName = element.featureName
+        myName = (psiElement as GherkinFeature).featureName
         icon = AllIcons.General.ReaderMode
         return true
     }
@@ -44,10 +45,10 @@ class FeatureNode(val p: Project, val feature: GherkinFeature): NodeDescriptor<G
     }
 }
 
-class ScenarioNode(val p: Project, val scenario: GherkinStepsHolder): NodeDescriptor<GherkinStepsHolder>(p, null) {
-    override fun getElement() = scenario
+class ScenarioNode(val p: Project, val parent: FeatureNode, val scenario: GherkinStepsHolder)
+       : HierarchyNodeDescriptor(p, parent, scenario, false) {
     override fun update(): Boolean {
-        myName = element.scenarioName.trim().ifEmpty { "Scenario" }
+        myName = (psiElement as GherkinStepsHolder).scenarioName.trim().ifEmpty { "Scenario" }
         icon = AllIcons.Nodes.BookmarkGroup
         return true
     }
