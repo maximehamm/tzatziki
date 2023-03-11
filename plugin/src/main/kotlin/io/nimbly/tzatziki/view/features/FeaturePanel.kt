@@ -8,6 +8,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiTreeChangeEvent
@@ -71,8 +72,11 @@ class PsiChangeListener(val panel: FeaturePanel) : PsiTreeChangeListener {
         val parent = event.parent
             ?: return
         val elt = panel.structure.getParentElement(parent)
-        if (elt != null)
+        if (elt != null) {
             panel.model.invalidateAsync(elt, true)
+        } else if (parent is PsiDirectory){
+            panel.model.invalidateAsync()
+        }
     }
 }
 
