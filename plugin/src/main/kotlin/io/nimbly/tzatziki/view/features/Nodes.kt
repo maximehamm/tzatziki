@@ -73,17 +73,4 @@ class ScenarioNode(p: Project, val scenario: GherkinStepsHolder) : AbstractNode<
 
 abstract class AbstractNode<T: Any> (p: Project, value: T) : AbstractTreeNode<T>(p, value), Navigatable {
 
-    override fun canNavigate(): Boolean = true
-    override fun canNavigateToSource(): Boolean = true
-    override fun navigate(requestFocus: Boolean) {
-//        val v = value
-//        if (v is PsiElement) {
-//
-//            val fileEditorManager = FileEditorManager.getInstance(project)
-//            val virtualFile = v.containingFile.virtualFile
-//            fileEditorManager.openFile(virtualFile, true, fileEditorManager.isFileOpen(virtualFile))
-//            fileEditorManager.setSelectedEditor(virtualFile, "text-editor")
-//        }
-
-    }
 }

@@ -29,6 +29,7 @@ class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceSta
 
     var selectedTags: List<String> = emptyList()
     var selection: String? = null
+    var groupTag: Boolean? = null
 
     override fun getState(): CucumberPersistenceState {
         return this
@@ -37,6 +38,7 @@ class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceSta
     override fun loadState(state: CucumberPersistenceState) {
         this.selection = state.selection
         this.selectedTags = state.selectedTags
+        this.groupTag = state.groupTag
     }
 
     fun tagExpression(): Expression? {

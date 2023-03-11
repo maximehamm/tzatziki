@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.view.features
 
+import com.intellij.icons.AllIcons
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
@@ -7,8 +8,8 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -18,6 +19,8 @@ import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
+import icons.CollaborationToolsIcons
+import io.nimbly.tzatziki.settings.CucumberPersistenceState
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -46,9 +49,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         TreeSpeedSearch(tree)
 
         val toolbarGroup = DefaultActionGroup()
-        toolbarGroup.addSeparator()
         toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
+        toolbarGroup.add(GroupByTagAction(this))
 
         val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)
         toolbar.targetComponent = tree
@@ -60,6 +63,24 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     override fun dispose() {
         model.dispose()
+    }
+
+    fun groupByTag(grouping: Boolean) {
+        val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
+        state.groupTag = grouping
+    }
+
+    class GroupByTagAction(val panel: FeaturePanel) : ToggleAction() {
+        init {
+            this.templatePresentation.text = "Group by tags"
+            this.templatePresentation.icon = CollaborationToolsIcons.Review.Branch
+        }
+        override fun isSelected(e: AnActionEvent): Boolean {
+            val state = ServiceManager.getService(panel.project, CucumberPersistenceState::class.java)
+            return state.groupTag == true
+        }
+        override fun setSelected(e: AnActionEvent, state: Boolean) = panel.groupByTag(state)
+        override fun getActionUpdateThread() = ActionUpdateThread.EDT
     }
 }
 
