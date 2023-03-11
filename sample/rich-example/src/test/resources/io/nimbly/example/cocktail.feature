@@ -1,4 +1,4 @@
-Feature: Cocktail Ordering xxxx
+Feature: Cocktail Ordering
 
   **This is Nice date !**
   - Revenue was off the chart
@@ -10,7 +10,7 @@ Feature: Cocktail Ordering xxxx
 
   @Production
   Scenario: Creating an empty order
-    Given Romeo who wants to buy a drink
+    Given Romeo who wants to buy a drinksx
     * this is a tests
     Given Ceçi ést un Ÿô Éxamplè & c'est 0 tout
     But bla 1 bla "xx" bla

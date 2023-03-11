@@ -9,7 +9,6 @@ import io.nimbly.tzatziki.view.features.node.FeatureNode
 import io.nimbly.tzatziki.view.features.node.GherkinFileNode
 import io.nimbly.tzatziki.view.features.node.ProjectNode
 import io.nimbly.tzatziki.view.features.node.ScenarioNode
-import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreeModel
