@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 class DisposalService : Disposable {
 
     override fun dispose() {
+        //NA
     }
 
     companion object {

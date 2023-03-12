@@ -14,12 +14,20 @@
  */
 package io.nimbly.tzatziki.view
 
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiTreeChangeEvent
+import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.ui.content.ContentFactory
 import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
+import io.nimbly.tzatziki.view.features.DisposalService
 import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
 class CucumberPlusFactory : ToolWindowFactory {
 
@@ -29,10 +37,62 @@ class CucumberPlusFactory : ToolWindowFactory {
         //    val contentFactory = ContentFactory.getInstance()
         val contentFactory = ContentFactory.SERVICE.getInstance()
 
+        val featuresView = CucumberPlusFeaturesView(project)
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(CucumberPlusFeaturesView(project), "Features", false))
+            contentFactory.createContent(featuresView, "Features", false))
 
+        val filterTagsView = CucumberPlusFilterTagsView(project)
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(CucumberPlusFilterTagsView(project), "Filters", false))
+            contentFactory.createContent(filterTagsView, "Filters", false))
+
+        PsiManager.getInstance(project).addPsiTreeChangeListener(
+            PsiChangeListener(filterTagsView, featuresView),
+            DisposalService.getInstance(project)
+        )
+    }
+
+    class PsiChangeListener(
+        val filterView: CucumberPlusFilterTagsView,
+        val featuresView: CucumberPlusFeaturesView
+    ) : PsiTreeChangeListener {
+
+        override fun beforeChildAddition(event: PsiTreeChangeEvent) = Unit
+        override fun beforeChildRemoval(event: PsiTreeChangeEvent) = Unit
+        override fun beforeChildReplacement(event: PsiTreeChangeEvent) = Unit
+        override fun beforeChildMovement(event: PsiTreeChangeEvent) = Unit
+        override fun beforeChildrenChange(event: PsiTreeChangeEvent) = Unit
+        override fun beforePropertyChange(event: PsiTreeChangeEvent) = Unit
+
+        override fun childAdded(event: PsiTreeChangeEvent) = event(event)
+        override fun childMoved(event: PsiTreeChangeEvent) = event(event)
+        override fun childRemoved(event: PsiTreeChangeEvent) = event(event)
+        override fun propertyChanged(event: PsiTreeChangeEvent) = event(event)
+
+        override fun childReplaced(event: PsiTreeChangeEvent) {
+            val tag = event.parent as? GherkinTag
+            if (tag != null)
+                refresh(filterView.project)
+        }
+
+        override fun childrenChanged(event: PsiTreeChangeEvent) {
+            val parent = event.parent
+                ?: return
+            if (parent.containingFile !is GherkinFile)
+                return
+            refresh(filterView.project)
+        }
+
+        private fun event(event: PsiTreeChangeEvent) {
+            //NA
+        }
+
+        fun refresh(project: Project) {
+            DumbService.getInstance(project).smartInvokeLater {
+                PsiDocumentManager.getInstance(project).performWhenAllCommitted() {
+                    filterView.refresh()
+                    featuresView.refreshTags()
+                }
+            }
+        }
     }
 }

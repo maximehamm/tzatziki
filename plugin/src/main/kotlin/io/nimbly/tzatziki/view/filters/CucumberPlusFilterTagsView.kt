@@ -39,7 +39,7 @@ import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 
-class CucumberPlusFilterTagsView(private val project: Project) : SimpleToolWindowPanel(true, false) {
+class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(true, false) {
 
     lateinit var tagsList: List<String>
 
@@ -67,11 +67,6 @@ class CucumberPlusFilterTagsView(private val project: Project) : SimpleToolWindo
             ), BorderLayout.PAGE_START
         )
 
-        PsiManager.getInstance(project).addPsiTreeChangeListener(
-            PsiChangeListener(this),
-            DisposalService.getInstance(project)
-        )
-
         DumbService.getInstance(project).smartInvokeLater {
 
             // First tag list initialization
@@ -84,18 +79,14 @@ class CucumberPlusFilterTagsView(private val project: Project) : SimpleToolWindo
         return panel
     }
 
-    fun refresh() {
-        // println("REFRESH")
-        DumbService.getInstance(project).smartInvokeLater {
-            PsiDocumentManager.getInstance(project).performWhenAllCommitted() {
-                val newTagsPanel = newTagPanel(tagsList)
-                    ?: return@performWhenAllCommitted
-                panel.remove(tagsPanel)
-                panel.add(newTagsPanel.first, BorderLayout.CENTER)
-                tagsPanel = newTagsPanel.first
-                tagsList = newTagsPanel.second
-            }
-        }
+    fun refresh(): List<String> {
+        val newTagsPanel = newTagPanel(tagsList)
+            ?: return emptyList()
+        panel.remove(tagsPanel)
+        panel.add(newTagsPanel.first, BorderLayout.CENTER)
+        tagsPanel = newTagsPanel.first
+        tagsList = newTagsPanel.second
+        return tagsList
     }
 
     private fun newTagPanel(currentTags: List<String>?): Pair<JPanel, List<String>>? {
@@ -202,42 +193,5 @@ class CucumberPlusFilterTagsView(private val project: Project) : SimpleToolWindo
         })
 
         return Pair(main, tags)
-    }
-}
-
-class PsiChangeListener(val panel: CucumberPlusFilterTagsView) : PsiTreeChangeListener {
-
-    override fun beforeChildAddition(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildRemoval(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildReplacement(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildMovement(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildrenChange(event: PsiTreeChangeEvent) = Unit
-    override fun beforePropertyChange(event: PsiTreeChangeEvent) = Unit
-
-    override fun childAdded(event: PsiTreeChangeEvent) = event(event)
-    override fun childMoved(event: PsiTreeChangeEvent) = event(event)
-    override fun childRemoved(event: PsiTreeChangeEvent) = event(event)
-    override fun propertyChanged(event: PsiTreeChangeEvent) = event(event)
-
-    override fun childReplaced(event: PsiTreeChangeEvent) {
-        val tag = event.parent as? GherkinTag
-        if (tag != null)
-            panel.refresh()
-    }
-
-    override fun childrenChanged(event: PsiTreeChangeEvent) {
-        val parent = event.parent
-            ?: return
-        if (parent.containingFile !is GherkinFile)
-            return
-        panel.refresh()
-    }
-
-    private fun event(event: PsiTreeChangeEvent) {
-//        val parent = event.parent
-//            ?: return
-//        if (parent.containingFile !is GherkinFile)
-//            return
-//        print("*")
     }
 }

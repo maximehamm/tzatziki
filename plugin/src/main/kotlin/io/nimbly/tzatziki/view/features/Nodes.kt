@@ -3,11 +3,12 @@ package io.nimbly.tzatziki.view.features
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import icons.CollaborationToolsIcons
 import icons.CucumberIcons
+import io.nimbly.tzatziki.util.Tag
 import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -24,6 +25,20 @@ class ProjectNode(val p: Project) : AbstractNode<Project>(p, p) {
         return findAllGerkinsFiles(p)
             .map { GherkinFileNode(p, it) }
             .sortedBy { it.toString()}
+            .toMutableList()
+    }
+}
+
+class GherkinTagNode(val p: Project, val tag: String, val gherkinFiles: List<GherkinFile>) : AbstractTreeNode<String>(p, tag) {
+
+    override fun update(presentation: PresentationData) {
+        presentation.presentableText = tag
+        presentation.setIcon(CollaborationToolsIcons.Review.Branch)
+    }
+
+    override fun getChildren(): MutableCollection<out AbstractTreeNode<*>> {
+        return gherkinFiles
+            .map { GherkinFileNode(p, it) }
             .toMutableList()
     }
 }

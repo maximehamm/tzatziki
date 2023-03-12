@@ -1,12 +1,9 @@
 package io.nimbly.tzatziki.view.features
 
-import com.intellij.icons.AllIcons
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.ide.util.treeView.AbstractTreeStructure
-import com.intellij.ide.util.treeView.NodeDescriptor
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.ServiceManager
@@ -21,9 +18,10 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
 import io.nimbly.tzatziki.settings.CucumberPersistenceState
-import org.jetbrains.plugins.cucumber.psi.GherkinFeature
+import io.nimbly.tzatziki.util.Tag
+import io.nimbly.tzatziki.util.findAllTags
+import io.nimbly.tzatziki.util.getGherkinScope
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -32,8 +30,11 @@ import javax.swing.tree.DefaultMutableTreeNode
 // See com.intellij.ide.bookmark.ui.BookmarksView
 class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposable {
 
-    val structure = GherkinTreeStructure(this)
+//    val structure = GherkinTreeStructure(this)
+    val structure = GherkinTreeTagStructure(this)
+
     val model = StructureTreeModel(structure, this)
+
     val tree = DnDAwareTree(AsyncTreeModel(model, this))
     val treeExpander = DefaultTreeExpander(tree)
 
@@ -68,6 +69,18 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     fun groupByTag(grouping: Boolean) {
         val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
         state.groupTag = grouping
+    }
+
+    fun refreshTags() {
+        val tags: Map<String, List<GherkinFile>> = findAllTags(project, project.getGherkinScope())
+            .sortedBy { it.name }
+            .map { it.name to it.tag.containingFile  }
+            .groupBy { it.first }
+            .map { it.key to
+                    it.value.toMap().values.map { it as GherkinFile }.sortedBy { it.name } }
+            .toMap()
+        structure.tags = tags
+        model.invalidateAsync()
     }
 
     class GroupByTagAction(val panel: FeaturePanel) : ToggleAction() {
@@ -109,36 +122,6 @@ class PsiChangeListener(val panel: FeaturePanel) : PsiTreeChangeListener {
         } else if (parent is PsiDirectory){
             panel.model.invalidateAsync()
         }
-    }
-}
-
-// See com.intellij.ide.bookmark.ui.tree.BookmarksTreeStructure
-class GherkinTreeStructure(val panel: FeaturePanel) : AbstractTreeStructure() {
-    private val root = ProjectNode(panel.project)
-
-    override fun commit() = Unit
-    override fun hasSomethingToCommit() = false
-
-    override fun createDescriptor(element: Any, parent: NodeDescriptor<*>?)
-        = element as NodeDescriptor<*>
-
-    override fun getRootElement(): Any = root
-
-    override fun getParentElement(element: Any): Any? {
-        if (element is GherkinFile) {
-            return ProjectNode(element.project)
-        } else if (element is GherkinFeature) {
-            return GherkinFileNode(element.project, element.parent as GherkinFile)
-        } else if (element is GherkinStepsHolder) {
-            return FeatureNode(element.project, element.parent as GherkinFeature)
-        }
-        return null
-    }
-
-    override fun getChildElements(element: Any): Array<Any> {
-        if (element is AbstractTreeNode<*>)
-            return element.children.toTypedArray()
-        return emptyArray<Any>()
     }
 }
 

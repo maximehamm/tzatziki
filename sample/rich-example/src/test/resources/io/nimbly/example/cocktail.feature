@@ -10,8 +10,8 @@ Feature: Cocktail Ordering
 
   Ceci est plutot cool !
 
-  @Advanced
-  Scenario: This is the scenario sdd qsfddds
+  @Advancedzzzz
+  Scenario: This is the scenario
     Given Romeo who wants to buy a drink
     * this is a tests
 

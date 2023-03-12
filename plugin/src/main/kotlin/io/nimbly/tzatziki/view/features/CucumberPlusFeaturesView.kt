@@ -23,6 +23,8 @@ import javax.swing.JPanel
 
 class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowPanel(true, false) {
 
+    val featurePanel = FeaturePanel(project)
+
     init {
         setContent(initPanel())
     }
@@ -33,10 +35,13 @@ class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowP
         p.layout = BorderLayout(10, 10)
         p.border = JBUI.Borders.empty(10)
         p.withEmptyText("No feature found")
-
-        p.add(FeaturePanel(project))
+        p.add(featurePanel)
 
         return p
+    }
+
+    fun refreshTags() {
+        featurePanel.refreshTags()
     }
 
 

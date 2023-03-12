@@ -45,13 +45,21 @@ class TzTModuleListener : ProjectManagerListener {
 
     override fun projectOpened(project: Project) {
         if (!handlerInitialized) {
+
             initTypedHandler()
             initMouseListener(project)
-            handlerInitialized = true
+            initTagListener(project)
 
+            handlerInitialized = true
             askToVote(project)
         }
     }
+
+    private fun initTagListener() {
+
+
+    }
+
 
     private fun initTypedHandler() {
 
