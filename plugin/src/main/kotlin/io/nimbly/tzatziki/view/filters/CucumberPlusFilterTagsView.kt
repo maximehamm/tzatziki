@@ -169,17 +169,17 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
                 tSelection.text = checked.joinToString(" or ")
                 state.selection = tSelection.text
                 state.selectedTags = checked
-
-                val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
-                val tagService = project.getService(TzTagService::class.java)
-                tagService.updateTagsFilter(expression)
             }
+
+            val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
+            val tagService = project.getService(TzTagService::class.java)
+            tagService.updateTagsFilter(expression)
         }
 
         // Load previously checked values
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
         checks.forEach { check ->
-            check.isSelected = state.selectedTags.contains(check.text)
+            check.isSelected = state.selectedTags.contains("@" + check.text)
         }
         tSelection.text = state.selection
 

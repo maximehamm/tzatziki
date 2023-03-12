@@ -4,18 +4,17 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "14.1.0"
+    version = "15.0.0"
 }
 
-//TODO : Display list of all features... organize feature per Tags... filter feature per tags...
-//   plugin page : https://plugins.jetbrains.com/plugin/16716-gherkin-overview
-//   code : https://github.com/picimako/gherkin-overview
+//TODO : Run test from C+ tool window
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>15.0</b> Display list of features, let group and filter them by tag names</li>
          <li><b>14.1</b> Kotlin support : generate class and step functions</li>
          <li><b>13.1</b> Java : remove accent from generated method</li>
          <li><b>13.0</b> Java : fix gherkin plugin issue when using '*' as step keyword instead of 'when', 'then', etc.</li>

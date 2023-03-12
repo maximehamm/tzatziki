@@ -155,6 +155,18 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             return state.filterByTags == true
         }
         override fun setSelected(e: AnActionEvent, state: Boolean) {
+
+            val exp: Expression?
+            if (state) {
+                val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
+                exp = stateService.tagExpression()
+            } else {
+                exp = null
+            }
+
+            val tagService = panel.project.getService(TzTagService::class.java)
+            tagService.updateTagsFilter(exp)
+
             panel.filterByTag(state)
         }
         override fun getActionUpdateThread() = ActionUpdateThread.BGT

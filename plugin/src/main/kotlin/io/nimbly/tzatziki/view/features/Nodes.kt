@@ -76,6 +76,7 @@ class FeatureNode(p: Project, val feature: GherkinFeature, exp: Expression?) : A
 
     override fun getChildren(): MutableCollection<out AbstractTreeNode<*>> {
         return feature.scenarios
+            .filter { it.scenarioKeyword != "Background" }
             .filter { it.checkExpression(filterByTags) }
             .map { ScenarioNode(project, it, filterByTags) }
             .sortedBy { it.toString()}
