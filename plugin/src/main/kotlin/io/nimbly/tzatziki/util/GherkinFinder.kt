@@ -16,13 +16,9 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Key
 import com.intellij.psi.search.FilenameIndex
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
-import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
 /**
  * find all gherkin files

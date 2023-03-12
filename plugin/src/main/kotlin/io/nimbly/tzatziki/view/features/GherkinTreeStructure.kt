@@ -3,13 +3,20 @@ package io.nimbly.tzatziki.view.features
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
+import io.cucumber.tagexpressions.Expression
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 
-abstract class GherkinTreeStructure(panel: FeaturePanel) : AbstractTreeStructure() {
+abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractTreeStructure() {
 
-    private val root = ProjectNode(panel.project)
+    var filterByTags: Expression? = null
+        set(value) {
+            field = value
+            root = ProjectNode(panel.project, filterByTags)
+        }
+
+    private var root = ProjectNode(panel.project, filterByTags)
 
     override fun commit() = Unit
     override fun hasSomethingToCommit() = false
@@ -21,11 +28,11 @@ abstract class GherkinTreeStructure(panel: FeaturePanel) : AbstractTreeStructure
 
     override fun getParentElement(element: Any): Any? {
         if (element is GherkinFile) {
-            return ProjectNode(element.project)
+            return ProjectNode(element.project, filterByTags)
         } else if (element is GherkinFeature) {
-            return GherkinFileNode(element.project, element.parent as GherkinFile)
+            return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
         } else if (element is GherkinStepsHolder) {
-            return FeatureNode(element.project, element.parent as GherkinFeature)
+            return FeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
         }
         return null
     }

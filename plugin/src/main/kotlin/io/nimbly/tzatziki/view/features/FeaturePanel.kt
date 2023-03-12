@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.view.features
 
+import com.intellij.icons.AllIcons
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
@@ -27,7 +28,6 @@ import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
-import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
@@ -56,6 +56,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
         toolbarGroup.add(GroupByTagAction(this))
+        toolbarGroup.add(FilterTagAction(this))
 
         val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)
         toolbar.targetComponent = tree
@@ -83,6 +84,18 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         //NA
     }
 
+    fun filterByTag(filter: Boolean) {
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        state.filterByTags = filter
+
+        if (filter)
+            this.structure.filterByTags = state.tagExpression()
+        else
+            this.structure.filterByTags = null
+
+        forceRefresh()
+    }
+
     fun groupByTag(grouping: Boolean) {
 
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
@@ -94,7 +107,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     fun refreshTags(tags: SortedMap<String, Tag>) {
-        if (structure.groupByTags) {
+        if (structure.groupByTags || structure.filterByTags != null) {
             val stags = tags
                 .map { it.key to it.value.gFiles.toList() }
                 .toMap()
@@ -114,14 +127,22 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             return state.groupTag == true
         }
         override fun setSelected(e: AnActionEvent, state: Boolean) {
-
             panel.groupByTag(state)
+        }
+        override fun getActionUpdateThread() = ActionUpdateThread.BGT
+    }
 
-//            DumbService.getInstance(panel.project).smartInvokeLater {
-//                PsiDocumentManager.getInstance(panel.project).performLaterWhenAllCommitted() {
-//                    panel.groupByTag(state)
-//                }
-//            }
+    class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
+        init {
+            this.templatePresentation.text = "Filter per tags"
+            this.templatePresentation.icon = AllIcons.General.Filter
+        }
+        override fun isSelected(e: AnActionEvent): Boolean {
+            val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
+            return state.filterByTags == true
+        }
+        override fun setSelected(e: AnActionEvent, state: Boolean) {
+            panel.filterByTag(state)
         }
         override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }

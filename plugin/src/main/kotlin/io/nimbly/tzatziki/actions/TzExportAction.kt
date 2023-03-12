@@ -129,7 +129,7 @@ class TzExportAction : AnAction() {
         generator.breakPage()
 
         // Build as Html
-        val visitor = TzatizkiVisitor(generator, config.language, tagExpression)
+        val visitor = TzatizkiVisitor(generator, tagExpression)
         files.forEach {
             it.accept(visitor)
             if (it != files.last())
@@ -233,7 +233,7 @@ class TzExportAction : AnAction() {
     override fun isDumbAware()
         = true
 
-    private class TzatizkiVisitor(val generator: PdfBuilder, val dialect: String, val tagExpression: Expression?) : GherkinElementVisitor(), PsiRecursiveVisitor {
+    private class TzatizkiVisitor(val generator: PdfBuilder, val tagExpression: Expression?) : GherkinElementVisitor(), PsiRecursiveVisitor {
 
         private val stackTags = mutableListOf<String>()
         private val context = mutableListOf<PsiElement>()

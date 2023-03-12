@@ -162,7 +162,7 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
             if (selectionOnly) {
                 state.selection = tSelection.text
             } else {
-                val checked = checks.filter { it.isSelected }.map { it.text }.filterNotNull()
+                val checked = checks.filter { it.isSelected }.mapNotNull { it.text }.map { "@$it" }
                 tSelection.text = checked.joinToString(" or ")
                 state.selection = tSelection.text
                 state.selectedTags = checked

@@ -1,9 +1,7 @@
 package io.nimbly.tzatziki.view.features
 
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.ide.util.treeView.AbstractTreeStructure
-import com.intellij.ide.util.treeView.NodeDescriptor
-import com.intellij.psi.PsiFile
+import io.nimbly.tzatziki.util.checkExpression
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -20,11 +18,11 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
             return super.getParentElement(element)
 
         if (element is GherkinFile) {
-            return ProjectNode(element.project)
+            return ProjectNode(element.project, filterByTags)
         } else if (element is GherkinFeature) {
-            return GherkinFileNode(element.project, element.parent as GherkinFile)
+            return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
         } else if (element is GherkinStepsHolder) {
-            return FeatureNode(element.project, element.parent as GherkinFeature)
+            return FeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
         }
         return null
     }
@@ -35,7 +33,13 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
 
         if (element is ProjectNode)
             return tags
-                ?.map { GherkinTagNode(element.project, it.key, it.value.sortedBy { it.name }) }?.toTypedArray()
+                ?.filter { filterByTags?.evaluate(listOf("@" + it.key)) ?: true }
+                ?.map { GherkinTagNode(
+                    element.project,
+                    it.key,
+                    it.value.sortedBy { it.name },
+                    filterByTags
+                ) }?.toTypedArray()
                 ?: emptyArray()
 
         if (element is AbstractTreeNode<*>)

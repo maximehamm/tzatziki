@@ -29,6 +29,7 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
     var selectedTags: List<String> = emptyList()
     var selection: String? = null
     var groupTag: Boolean? = null
+    var filterByTags: Boolean? = null
 
     override fun getState(): TzPersistenceStateService {
         return this
@@ -38,6 +39,7 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
         this.selection = state.selection
         this.selectedTags = state.selectedTags
         this.groupTag = state.groupTag
+        this.filterByTags = state.filterByTags
     }
 
     fun tagExpression(): Expression? {

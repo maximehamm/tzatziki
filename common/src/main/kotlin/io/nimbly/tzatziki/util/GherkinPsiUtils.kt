@@ -82,6 +82,8 @@ fun GherkinStepsHolder.checkExpression(tagExpression: Expression?): Boolean {
 fun GherkinFeature.checkExpression(tagExpression: Expression?): Boolean {
     if (tagExpression == null)
         return true
+    if (tagExpression.evaluate(this.tags.map { it.name }))
+        return true
     return this.scenarios.find {
         !it.isBackground && it.checkExpression(tagExpression) } != null
 }
