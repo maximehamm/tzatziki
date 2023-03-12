@@ -18,9 +18,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
-import io.nimbly.tzatziki.services.TagEvent
-import io.nimbly.tzatziki.services.TagEventListener
-import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.*
 import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
 import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView
 
@@ -42,10 +40,16 @@ class CucumberPlusFactory : ToolWindowFactory {
 
         val tagService = project.getService(TzTagService::class.java)
 
-        tagService.addListener(object : TagEventListener {
+        tagService.addTagsListener(object : TagsEventListener {
             override fun tagsUpdated(event: TagEvent) {
                 filterTagsView.refresh(event.tags)
                 featuresView.refreshTags(event.tags)
+            }
+        })
+
+        tagService.addTagsFilterListener(object : TagsFilterEventListener {
+            override fun tagsFilterUpdated(event: TagFilterEvent) {
+                featuresView.refreshTags(event.tagsFilter)
             }
         })
 

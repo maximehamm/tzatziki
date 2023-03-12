@@ -27,6 +27,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
 import icons.ActionIcons
+import io.cucumber.tagexpressions.Expression
+import io.cucumber.tagexpressions.TagExpressionParser
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
@@ -161,11 +163,16 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
             val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
             if (selectionOnly) {
                 state.selection = tSelection.text
-            } else {
+            }
+            else {
                 val checked = checks.filter { it.isSelected }.mapNotNull { it.text }.map { "@$it" }
                 tSelection.text = checked.joinToString(" or ")
                 state.selection = tSelection.text
                 state.selectedTags = checked
+
+                val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
+                val tagService = project.getService(TzTagService::class.java)
+                tagService.updateTagsFilter(expression)
             }
         }
 

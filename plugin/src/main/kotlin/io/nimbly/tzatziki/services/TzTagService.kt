@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
@@ -12,6 +13,8 @@ import com.intellij.psi.PsiTreeChangeListener
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.*
+import io.cucumber.tagexpressions.Expression
+import io.cucumber.tagexpressions.TagExpressionParser
 import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.view.features.DisposalService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -23,7 +26,11 @@ import java.util.*
 class TzTagService(val project: Project) : Disposable {
 
     private var tags: SortedMap<String, Tag>? = null
-    private val listeners = mutableListOf<TagEventListener>()
+    private var tagsFilter: Expression? = null
+    private var tagsFilterInitialized = false
+
+    private val tagsListeners = mutableListOf<TagsEventListener>()
+    private val tagsFilterListeners = mutableListOf<TagsFilterEventListener>()
 
     init {
         PsiManager.getInstance(project).addPsiTreeChangeListener(
@@ -39,20 +46,35 @@ class TzTagService(val project: Project) : Disposable {
         return tags!!
     }
 
-    fun addListener(listener: TagEventListener) {
-        this.listeners.add(listener)
+    fun getTagsFilter(): Expression? {
+        if (!tagsFilterInitialized) {
+            val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+            tagsFilter = state.tagExpression()
+            tagsFilterInitialized = true
+        }
+        return tagsFilter
     }
 
-    fun disposeListener(listener: TagEventListener) {
-        this.listeners.remove(listener)
+    fun addTagsListener(listener: TagsEventListener) {
+        this.tagsListeners.add(listener)
     }
-
-    private fun updateListeners(tags: SortedMap<String, Tag>) {
+    private fun updateTags(tags: SortedMap<String, Tag>) {
         this.tags = tags
-        this.listeners.forEach {
+        this.tagsListeners.forEach {
             it.tagsUpdated(TagEvent(tags, this))
         }
     }
+
+    fun addTagsFilterListener(listener: TagsFilterEventListener) {
+        this.tagsFilterListeners.add(listener)
+    }
+    fun updateTagsFilter(tagsFilter: Expression?) {
+        this.tagsFilter = tagsFilter
+        this.tagsFilterListeners.forEach {
+            it.tagsFilterUpdated(TagFilterEvent(tagsFilter, this))
+        }
+    }
+
 
     internal fun refreshTags(updateListeners: Boolean = true) {
 
@@ -65,7 +87,7 @@ class TzTagService(val project: Project) : Disposable {
 
         // Update and inform listeners
         if (updateListeners)
-            updateListeners(tags)
+            updateTags(tags)
         else
             this.tags = tags
     }
@@ -81,11 +103,16 @@ class TzTagService(val project: Project) : Disposable {
     }
 }
 
-interface TagEventListener : EventListener {
+interface TagsEventListener : EventListener {
     fun tagsUpdated(event: TagEvent) {}
 }
-
 class TagEvent(val tags: SortedMap<String, Tag>, source: Any) : EventObject(source)
+
+interface TagsFilterEventListener : EventListener {
+    fun tagsFilterUpdated(event: TagFilterEvent) {}
+}
+class TagFilterEvent(val tagsFilter: Expression?, source: Any) : EventObject(source)
+
 
 private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListener {
 

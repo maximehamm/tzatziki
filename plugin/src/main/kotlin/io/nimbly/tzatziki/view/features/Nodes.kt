@@ -34,21 +34,6 @@ class ProjectNode(val p: Project, exp: Expression?) : AbstractNode<Project>(p, p
     override fun isAlwaysExpand(): Boolean {
         return true
     }
-
-//    private val comparingValue get() = value.toString() + "#" + filterByTags?.toString()
-//
-//    override fun hashCode(): Int {
-//        return super.hashCode() + filterByTags.toString().hashCode()
-//    }
-//    override fun equals(other: Any?): Boolean {
-//        if (other === this) return true
-//        if (other == null || other.javaClass != javaClass)
-//            return false
-//        return Comparing.equal<Any>(
-//            comparingValue,
-//            (other as ProjectNode).comparingValue
-//        )
-//    }
 }
 
 class GherkinTagNode(val p: Project, val tag: String, val gherkinFiles: List<GherkinFile>, val filterByTags: Expression?) : AbstractTreeNode<String>(p, tag) {
@@ -115,20 +100,4 @@ abstract class AbstractNode<T: Any>(
     p: Project,
     value: T,
     var filterByTags: Expression?
-) : AbstractTreeNode<T>(p, value), Navigatable {
-
-//    private val comparingValue get() = value.toString() + "#" + filterByTags?.toString()
-//
-//    override fun hashCode(): Int {
-//        return super.hashCode() + filterByTags.toString().hashCode()
-//    }
-//    override fun equals(other: Any?): Boolean {
-//        if (other === this) return true
-//        if (other == null || other.javaClass != javaClass)
-//            return false
-//        return Comparing.equal<Any>(
-//            comparingValue,
-//            (other as AbstractNode<*>).comparingValue
-//        )
-//    }
-}
+) : AbstractTreeNode<T>(p, value), Navigatable

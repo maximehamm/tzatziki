@@ -20,6 +20,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
+import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
@@ -74,8 +75,10 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
                 // First tag list initialization
                 val tagService = project.getService(TzTagService::class.java)
-                val tags = tagService.getTags()
-                refreshTags(tags)
+                refreshTags(
+                    tagService.getTags(),
+                    tagService.getTagsFilter()
+                )
             }
         }
     }
@@ -115,6 +118,16 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             structure.tags = stags
         }
         model.invalidateAsync()
+    }
+
+    fun refreshTags(tagsFilter: Expression?) {
+        structure.filterByTags = tagsFilter
+        model.invalidateAsync()
+    }
+
+    private fun refreshTags(tags: SortedMap<String, Tag>, tagsFilter: Expression?) {
+        structure.filterByTags = tagsFilter
+        refreshTags(tags)
     }
 
     class GroupByTagAction(val panel: FeaturePanel) : ToggleAction() {

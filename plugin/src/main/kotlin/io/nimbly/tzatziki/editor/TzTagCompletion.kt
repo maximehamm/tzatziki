@@ -38,7 +38,6 @@ class TzTagCompletion: CompletionContributor() {
         if (origin !is GherkinTag)
             return
 
-
         // Find all tags
         val tagService = origin.project.getService(TzTagService::class.java)
         val allTags = tagService.getTags()

@@ -18,6 +18,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.util.ui.JBUI
+import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import java.awt.BorderLayout
 import java.util.*
@@ -46,5 +47,8 @@ class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowP
         featurePanel.refreshTags(tags)
     }
 
+    fun refreshTags(tagsFilter: Expression?) {
+        featurePanel.refreshTags(tagsFilter)
+    }
 
 }
