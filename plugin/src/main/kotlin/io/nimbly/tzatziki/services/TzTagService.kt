@@ -128,8 +128,8 @@ private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListen
 class Tag(gherkinTag: GherkinTag) {
 
     val name: String
-    private val _tags: MutableSet<GherkinTag>
-    private val _files: MutableSet<GherkinFile>
+    internal val _tags: MutableSet<GherkinTag>
+    internal val _files: MutableSet<GherkinFile>
 
     init {
         name = gherkinTag.name
@@ -169,11 +169,14 @@ private fun findAllTags(project: Project, scope: GlobalSearchScope): Map<String,
             }
 
             tags.forEach { gtag: GherkinTag ->
-                var tag = allTags[gtag.name]
+                val name = gtag.name.substringAfter("@")
+                var tag = allTags[name]
                 if (tag == null) {
                     tag = Tag(gtag)
-                    allTags[gtag.name] = tag
+                    allTags[name] = tag
                 }
+                tag._tags.add(gtag)
+                tag._files.add(gtag.containingFile as GherkinFile)
             }
         }
     return allTags.toSortedMap()

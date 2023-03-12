@@ -20,6 +20,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.codeInsight.lookup.LookupElementRenderer
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
@@ -44,22 +45,21 @@ class TzTagCompletion: CompletionContributor() {
 
         //
         // Add completions
-        val description = origin.description.safeText.trim()
+        val description = origin.name.safeText.trim().substringAfter("@")
         val filename = origin.containingFile.name
         allTags
-            .filter {it.value.name.substringAfter("@") != description}
+            .filter {it.key != description}
             .toSortedMap()
-            .forEach { (tagDescription, tag) ->
+                .forEach { (tagDescription, tag) ->
 
                 val other = tag.gtags.find { it.containingFile != origin }
-                val lookup = LookupElementBuilder.create(tagDescription.substringAfter("@"))
+                val lookup = LookupElementBuilder.create(tagDescription)
                     .withPsiElement(other?.navigationElement)
-                    .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                     .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
                         override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
-                            presentation.icon = ActionIcons.CUCUMBER_PLUS_16
-                            presentation.itemText = tagDescription.substringAfter("@")
+                            presentation.icon = ActionIcons.TAG
+                            presentation.itemText = tagDescription
 
                             var typeText = tag.gFiles.firstOrNull{ it.name == filename }?.name ?: tag.gFiles.first().name
                             if (tag.gtags.size > 1)

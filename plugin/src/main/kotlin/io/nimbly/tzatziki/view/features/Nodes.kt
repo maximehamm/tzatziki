@@ -5,6 +5,7 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
+import icons.ActionIcons
 import icons.CollaborationToolsIcons
 import icons.CucumberIcons
 import io.nimbly.tzatziki.util.findAllGerkinsFiles
@@ -31,7 +32,7 @@ class GherkinTagNode(val p: Project, val tag: String, val gherkinFiles: List<Ghe
 
     override fun update(presentation: PresentationData) {
         presentation.presentableText = tag
-        presentation.setIcon(CollaborationToolsIcons.Review.Branch)
+        presentation.setIcon(ActionIcons.TAG)
     }
 
     override fun getChildren(): MutableCollection<out AbstractTreeNode<*>> {

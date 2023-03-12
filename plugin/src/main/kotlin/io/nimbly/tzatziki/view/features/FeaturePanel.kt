@@ -8,9 +8,11 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
@@ -19,6 +21,7 @@ import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
+import io.nimbly.tzatziki.services.TzTagService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
@@ -53,6 +56,16 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         setToolbar(toolbar.component)
 
         tree.addMouseListener(MouseListening(tree, project))
+
+        DumbService.getInstance(project).smartInvokeLater {
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted{
+
+                // First tag list initialization
+                val tagService = project.getService(TzTagService::class.java)
+                val tags = tagService.getTags()
+                refreshTags(tags)
+            }
+        }
     }
 
     override fun dispose() {

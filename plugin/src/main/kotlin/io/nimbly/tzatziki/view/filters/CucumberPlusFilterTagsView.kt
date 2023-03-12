@@ -26,6 +26,7 @@ import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import icons.ActionIcons
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
@@ -47,20 +48,28 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
     private fun initPanel(): JPanel {
 
+        val blabla = JBPanelWithEmptyText()
+        blabla.layout = BorderLayout()
+        blabla.border = JBUI.Borders.empty()
+        blabla.withEmptyText("")
+        blabla.add(
+            JBLabel("""<html>
+                The selected tags will be used to filter:<br/>
+                 &nbsp; ✓ <b>Cucumber tests execution</b> (<i>Java, Kotlin</i>)<br/>
+                 &nbsp; ✓ <b>Features exportation to PDF</b><br/><br/>
+                </html>""".trimMargin()
+            ), BorderLayout.PAGE_START
+        )
+        blabla.add(
+            JBLabel(ActionIcons.TAG).apply {
+                this.text = """<html><b>Select Tags</b>:</html>"""
+            }, BorderLayout.LINE_START
+        )
+
         panel.layout = BorderLayout(10, 10)
         panel.border = JBUI.Borders.empty(10)
         panel.withEmptyText("No tags found")
-
-        panel.add(
-            JBLabel(
-                """<html>
-            The selected tags will be used to filter:<br/>
-             &nbsp; ✓ <b>Cucumber tests execution</b> (<i>Java, Kotlin</i>)<br/>
-             &nbsp; ✓ <b>Features exportation to PDF</b><br/><br/>
-            <b>Select Tags</b>:
-            </html>""".trimMargin()
-            ), BorderLayout.PAGE_START
-        )
+        panel.add(blabla, BorderLayout.PAGE_START)
 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted{
@@ -110,7 +119,10 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
         // Selection label
         main.add(
-            JBLabel("""<html><b>You can adapt the selection</b>:<br/></html>""".trimMargin()), GridConstraints(
+            JBLabel(ActionIcons.TAG).apply {
+                this.text = """<html><b>You can adapt the selection</b>:<br/></html>"""
+            },
+            GridConstraints(
                 1, 0, 1, 1,
                 ANCHOR_SOUTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
