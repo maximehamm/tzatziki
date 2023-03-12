@@ -27,6 +27,7 @@ import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
+import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
 
 // See com.intellij.ide.bookmark.ui.BookmarksView

@@ -26,6 +26,10 @@ class ProjectNode(val p: Project) : AbstractNode<Project>(p, p) {
             .sortedBy { it.toString()}
             .toMutableList()
     }
+
+    override fun isAlwaysExpand(): Boolean {
+        return true
+    }
 }
 
 class GherkinTagNode(val p: Project, val tag: String, val gherkinFiles: List<GherkinFile>) : AbstractTreeNode<String>(p, tag) {
