@@ -10,7 +10,7 @@ Feature: Cocktail Ordering
 
   Ceci est plutot cool !
 
-  @Advanced @chrome
+  @Advanced @chrom
   Scenario: This is the scenario
     Given Romeo who wants to buy a drink
     * this is a tests
@@ -29,7 +29,7 @@ Feature: Cocktail Ordering
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
 
-Feature: Toto he
+Feature: Toto the heroe
 
   Scenario Outline: Sending a message with an order
     * kotlin 5 fôr the <Who> and <expected> hello

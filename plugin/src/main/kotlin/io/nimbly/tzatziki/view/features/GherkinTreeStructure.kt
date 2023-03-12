@@ -7,7 +7,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 
-class GherkinTreeStructure(val panel: FeaturePanel) : AbstractTreeStructure() {
+abstract class GherkinTreeStructure(panel: FeaturePanel) : AbstractTreeStructure() {
 
     private val root = ProjectNode(panel.project)
 
@@ -15,7 +15,7 @@ class GherkinTreeStructure(val panel: FeaturePanel) : AbstractTreeStructure() {
     override fun hasSomethingToCommit() = false
 
     override fun createDescriptor(element: Any, parent: NodeDescriptor<*>?)
-        = element as NodeDescriptor<*>
+            = element as NodeDescriptor<*>
 
     override fun getRootElement(): Any = root
 

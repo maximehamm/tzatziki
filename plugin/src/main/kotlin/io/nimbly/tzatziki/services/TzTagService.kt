@@ -43,6 +43,10 @@ class TzTagService(val project: Project) : Disposable {
         this.listeners.add(listener)
     }
 
+    fun disposeListener(listener: TagEventListener) {
+        this.listeners.remove(listener)
+    }
+
     private fun updateListeners(tags: SortedMap<String, Tag>) {
         this.tags = tags
         this.listeners.forEach {

@@ -23,7 +23,6 @@ import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -33,21 +32,26 @@ import javax.swing.tree.DefaultMutableTreeNode
 // See com.intellij.ide.bookmark.ui.BookmarksView
 class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposable {
 
-//    val structure = GherkinTreeStructure(this)
-    val structure = GherkinTreeTagStructure(this)
-
-    val model = StructureTreeModel(structure, this)
-
-    val tree = DnDAwareTree(AsyncTreeModel(model, this))
-    val treeExpander = DefaultTreeExpander(tree)
+    val structure: GherkinTreeTagStructure
+    val model: StructureTreeModel<GherkinTreeTagStructure>
 
     init {
+
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        val grouping = state.groupTag == true
+
+        structure = GherkinTreeTagStructure(this).apply { groupByTags = grouping }
+        model = StructureTreeModel(structure, this)
+
+        val tree = DnDAwareTree(AsyncTreeModel(model, this))
+
         layout = BorderLayout()
 
         add(JBScrollPane(tree))
         TreeSpeedSearch(tree)
 
         val toolbarGroup = DefaultActionGroup()
+        val treeExpander = DefaultTreeExpander(tree)
         toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
         toolbarGroup.add(GroupByTagAction(this))
@@ -59,8 +63,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         tree.addMouseListener(MouseListening(tree, project))
 
+        forceRefresh()
+    }
+
+    private fun forceRefresh() {
         DumbService.getInstance(project).smartInvokeLater {
-            PsiDocumentManager.getInstance(project).performWhenAllCommitted{
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
                 // First tag list initialization
                 val tagService = project.getService(TzTagService::class.java)
@@ -71,20 +79,27 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     override fun dispose() {
-        model.dispose()
+        //NA
     }
 
     fun groupByTag(grouping: Boolean) {
 
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
         state.groupTag = grouping
+
+        this.structure.groupByTags = grouping
+
+        forceRefresh()
     }
 
     fun refreshTags(tags: SortedMap<String, Tag>) {
-        structure.tags = tags
-            .map { it.key to it.value.gFiles.toList() }
-            .toMap()
-            .toSortedMap(TagComparator)
+        if (structure.groupByTags) {
+            val stags = tags
+                .map { it.key to it.value.gFiles.toList() }
+                .toMap()
+                .toSortedMap(TagComparator)
+            structure.tags = stags
+        }
         model.invalidateAsync()
     }
 
@@ -97,7 +112,16 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
             return state.groupTag == true
         }
-        override fun setSelected(e: AnActionEvent, state: Boolean) = panel.groupByTag(state)
+        override fun setSelected(e: AnActionEvent, state: Boolean) {
+
+            panel.groupByTag(state)
+
+//            DumbService.getInstance(panel.project).smartInvokeLater {
+//                PsiDocumentManager.getInstance(panel.project).performLaterWhenAllCommitted() {
+//                    panel.groupByTag(state)
+//                }
+//            }
+        }
         override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }
 }

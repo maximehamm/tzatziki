@@ -9,21 +9,16 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import java.util.SortedMap
 
-class GherkinTreeTagStructure(val panel: FeaturePanel) : AbstractTreeStructure() {
-
-    private val root = ProjectNode(panel.project)
+class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel) {
 
     var tags: SortedMap<String, List<GherkinFile>>? = null
 
-    override fun commit() = Unit
-    override fun hasSomethingToCommit() = false
-
-    override fun createDescriptor(element: Any, parent: NodeDescriptor<*>?)
-        = element as NodeDescriptor<*>
-
-    override fun getRootElement(): Any = root
+    var groupByTags: Boolean = false
 
     override fun getParentElement(element: Any): Any? {
+        if (!groupByTags)
+            return super.getParentElement(element)
+
         if (element is GherkinFile) {
             return ProjectNode(element.project)
         } else if (element is GherkinFeature) {
@@ -35,6 +30,9 @@ class GherkinTreeTagStructure(val panel: FeaturePanel) : AbstractTreeStructure()
     }
 
     override fun getChildElements(element: Any): Array<Any> {
+        if (!groupByTags)
+            return super.getChildElements(element)
+
         if (element is ProjectNode)
             return tags
                 ?.map { GherkinTagNode(element.project, it.key, it.value.sortedBy { it.name }) }?.toTypedArray()
