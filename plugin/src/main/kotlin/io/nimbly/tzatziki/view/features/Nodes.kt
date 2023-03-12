@@ -5,10 +5,8 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiFile
 import icons.CollaborationToolsIcons
 import icons.CucumberIcons
-import io.nimbly.tzatziki.util.Tag
 import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile

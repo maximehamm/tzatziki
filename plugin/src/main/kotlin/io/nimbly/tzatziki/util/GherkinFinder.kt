@@ -24,8 +24,6 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
-private val CacheTagsKey: Key<CachedValue<List<Tag>>> = Key.create("io.nimbly.tzatziki.util.tagsfinder")
-
 /**
  * find all gherkin files
  */
@@ -43,35 +41,4 @@ fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
         }
 
     return allFeatures
-}
-
-/**
- * find all gherkin tags
- */
-fun findAllTags(project: Project, scope: GlobalSearchScope): Set<Tag> {
-    val allTags = mutableSetOf<Tag>()
-    FilenameIndex
-        .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, scope)
-        .map { vfile -> vfile.getFile(project) }
-        .filterIsInstance<GherkinFile>()
-        .forEach { file ->
-            val tags = CachedValuesManager.getCachedValue(file, CacheTagsKey) {
-
-                val tags = PsiTreeUtil.collectElements(file) { element -> element is GherkinTag }
-                    .map { Tag(it as GherkinTag) }
-                    .filter { it.name.isNotEmpty() }
-
-                CachedValueProvider.Result.create(
-                    tags,
-                    PsiModificationTracker.MODIFICATION_COUNT, file
-                )
-            }
-            allTags.addAll(tags)
-        }
-    return allTags
-}
-
-data class Tag(val tag: GherkinTag) {
-    val name: String by lazy { tag.name.substringAfter("@") }
-    val filename: String by lazy { tag.containingFile.name }
 }

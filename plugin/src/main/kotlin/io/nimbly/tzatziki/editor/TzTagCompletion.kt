@@ -24,9 +24,8 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
+import io.nimbly.tzatziki.services.TzTagService
 import io.nimbly.tzatziki.util.description
-import io.nimbly.tzatziki.util.findAllTags
-import io.nimbly.tzatziki.util.getGherkinScope
 import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
@@ -38,35 +37,33 @@ class TzTagCompletion: CompletionContributor() {
         if (origin !is GherkinTag)
             return
 
-        val module = ModuleUtilCore.findModuleForPsiElement(origin)
-            ?: return
 
         // Find all tags
-        val allTags = findAllTags(module.project, module.getGherkinScope())
+        val tagService = origin.project.getService(TzTagService::class.java)
+        val allTags = tagService.getTags()
 
         //
         // Add completions
         val description = origin.description.safeText.trim()
         val filename = origin.containingFile.name
         allTags
-            .filter { it.name != description}
-            .groupBy { it.name }
+            .filter {it.value.name.substringAfter("@") != description}
             .toSortedMap()
-            .forEach { (tagDescription, items) ->
+            .forEach { (tagDescription, tag) ->
 
-                val other = items.find { it.tag != origin }?.tag
-                val lookup = LookupElementBuilder.create(tagDescription)
+                val other = tag.gtags.find { it.containingFile != origin }
+                val lookup = LookupElementBuilder.create(tagDescription.substringAfter("@"))
                     .withPsiElement(other?.navigationElement)
                     .withIcon(ActionIcons.CUCUMBER_PLUS_16)
                     .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
                         override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
                             presentation.icon = ActionIcons.CUCUMBER_PLUS_16
-                            presentation.itemText = tagDescription
+                            presentation.itemText = tagDescription.substringAfter("@")
 
-                            var typeText = items.firstOrNull{ it.filename == filename }?.filename ?: items[0].filename
-                            if (items.size > 1)
-                                typeText += """ (+${items.size-1})"""
+                            var typeText = tag.gFiles.firstOrNull{ it.name == filename }?.name ?: tag.gFiles.first().name
+                            if (tag.gtags.size > 1)
+                                typeText += """ (+${tag.gtags.size-1})"""
                             presentation.typeText = typeText
                         }
                     })

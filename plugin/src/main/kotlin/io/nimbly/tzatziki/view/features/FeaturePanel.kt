@@ -11,15 +11,14 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.pom.Navigatable
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
 import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
+import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
-import io.nimbly.tzatziki.util.findAllTags
-import io.nimbly.tzatziki.util.getGherkinScope
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
@@ -39,11 +38,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     init {
         layout = BorderLayout()
-
-        PsiManager.getInstance(project).addPsiTreeChangeListener(
-            PsiChangeListener(this),
-            DisposalService.getInstance(project)
-        )
 
         add(JBScrollPane(tree))
         TreeSpeedSearch(tree)
@@ -71,15 +65,10 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         state.groupTag = grouping
     }
 
-    fun refreshTags(tags: List<String>) {
-        val tags: Map<String, List<GherkinFile>> = findAllTags(project, project.getGherkinScope())
-            .sortedBy { it.name }
-            .map { it.name to it.tag.containingFile  }
-            .groupBy { it.first }
-            .map { it.key to
-                    it.value.toMap().values.map { it as GherkinFile }.sortedBy { it.name } }
-            .toMap()
+    fun refreshTags(tags: Map<String, Tag>) {
         structure.tags = tags
+            .map { it.key to it.value.gFiles.toList<GherkinFile>() }
+            .toMap()
         model.invalidateAsync()
     }
 
@@ -96,35 +85,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }
 }
-
-class PsiChangeListener(val panel: FeaturePanel) : PsiTreeChangeListener {
-
-    override fun beforeChildAddition(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildRemoval(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildReplacement(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildMovement(event: PsiTreeChangeEvent) = Unit
-    override fun beforeChildrenChange(event: PsiTreeChangeEvent) = Unit
-    override fun beforePropertyChange(event: PsiTreeChangeEvent) = Unit
-
-    override fun childAdded(event: PsiTreeChangeEvent) = refresh(event)
-    override fun childMoved(event: PsiTreeChangeEvent) = refresh(event)
-    override fun childRemoved(event: PsiTreeChangeEvent) = refresh(event)
-    override fun childReplaced(event: PsiTreeChangeEvent) = refresh(event)
-    override fun childrenChanged(event: PsiTreeChangeEvent) = refresh(event)
-    override fun propertyChanged(event: PsiTreeChangeEvent) = refresh(event)
-
-    private fun refresh(event: PsiTreeChangeEvent) {
-        val parent = event.parent
-            ?: return
-        val elt = panel.structure.getParentElement(parent)
-        if (elt != null) {
-            panel.model.invalidateAsync(elt, true)
-        } else if (parent is PsiDirectory){
-            panel.model.invalidateAsync()
-        }
-    }
-}
-
 
 class MouseListening(val tree: DnDAwareTree, private val project: Project) : MouseAdapter() {
 

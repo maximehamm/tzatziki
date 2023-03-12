@@ -26,6 +26,7 @@ import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
 import java.awt.BorderLayout
@@ -75,19 +76,19 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         return panel
     }
 
-    fun refresh(tags: List<String>) {
+    fun refresh(tags: Map<String, Tag>) {
         val newTagsPanel = newTagPanel(tags)
         panel.remove(tagsPanel)
         panel.add(newTagsPanel, BorderLayout.CENTER)
         tagsPanel = newTagsPanel
     }
 
-    private fun newTagPanel(tags: List<String>): JPanel {
+    private fun newTagPanel(tags: Map<String, Tag>): JPanel {
 
         // Tags
         val checks = mutableListOf<JBCheckBox>()
         val pTags = JBPanelWithEmptyText(WrapLayout(FlowLayout.LEFT))
-        tags.forEach { tag ->
+        tags.forEach { (tag, _) ->
             val t = JBCheckBox(tag)
             pTags.add(t)
             checks.add(t)
