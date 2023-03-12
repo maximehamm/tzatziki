@@ -32,6 +32,7 @@ import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
 import java.awt.BorderLayout
 import java.awt.FlowLayout
+import java.util.*
 import javax.swing.BorderFactory
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
@@ -85,14 +86,14 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         return panel
     }
 
-    fun refresh(tags: Map<String, Tag>) {
+    fun refresh(tags: SortedMap<String, Tag>) {
         val newTagsPanel = newTagPanel(tags)
         panel.remove(tagsPanel)
         panel.add(newTagsPanel, BorderLayout.CENTER)
         tagsPanel = newTagsPanel
     }
 
-    private fun newTagPanel(tags: Map<String, Tag>): JPanel {
+    private fun newTagPanel(tags: SortedMap<String, Tag>): JPanel {
 
         // Tags
         val checks = mutableListOf<JBCheckBox>()

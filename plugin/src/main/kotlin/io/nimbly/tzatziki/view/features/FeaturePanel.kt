@@ -20,12 +20,14 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
 import io.nimbly.tzatziki.services.Tag
+import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.util.*
 import javax.swing.tree.DefaultMutableTreeNode
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
@@ -78,10 +80,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         state.groupTag = grouping
     }
 
-    fun refreshTags(tags: Map<String, Tag>) {
+    fun refreshTags(tags: SortedMap<String, Tag>) {
         structure.tags = tags
-            .map { it.key to it.value.gFiles.toList<GherkinFile>() }
+            .map { it.key to it.value.gFiles.toList() }
             .toMap()
+            .toSortedMap(TagComparator)
         model.invalidateAsync()
     }
 

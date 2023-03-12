@@ -22,7 +22,7 @@ import java.util.*
 @Service(Service.Level.PROJECT)
 class TzTagService(val project: Project) : Disposable {
 
-    private var tags: Map<String, Tag>? = null
+    private var tags: SortedMap<String, Tag>? = null
     private val listeners = mutableListOf<TagEventListener>()
 
     init {
@@ -32,7 +32,7 @@ class TzTagService(val project: Project) : Disposable {
         )
     }
 
-    fun getTags(): Map<String, Tag> {
+    fun getTags(): SortedMap<String, Tag> {
         if (tags == null) {
             refreshTags(false)
         }
@@ -43,7 +43,7 @@ class TzTagService(val project: Project) : Disposable {
         this.listeners.add(listener)
     }
 
-    private fun updateListeners(tags: Map<String, Tag>) {
+    private fun updateListeners(tags: SortedMap<String, Tag>) {
         this.tags = tags
         this.listeners.forEach {
             it.tagsUpdated(TagEvent(tags, this))
@@ -53,7 +53,7 @@ class TzTagService(val project: Project) : Disposable {
     internal fun refreshTags(updateListeners: Boolean = true) {
 
         // Get all tags
-        val tags: Map<String, Tag> = findAllTags(project, project.getGherkinScope())
+        val tags = findAllTags(project, project.getGherkinScope())
 
         // Check if tags are still the same
         if (tags == this.tags)
@@ -81,7 +81,7 @@ interface TagEventListener : EventListener {
     fun tagsUpdated(event: TagEvent) {}
 }
 
-class TagEvent(val tags: Map<String, Tag>, source: Any) : EventObject(source)
+class TagEvent(val tags: SortedMap<String, Tag>, source: Any) : EventObject(source)
 
 private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListener {
 
@@ -125,7 +125,7 @@ private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListen
     }
 }
 
-class Tag(gherkinTag: GherkinTag) {
+class Tag(gherkinTag: GherkinTag): Comparable<Tag> {
 
     val name: String
     internal val _tags: MutableSet<GherkinTag>
@@ -145,11 +145,15 @@ class Tag(gherkinTag: GherkinTag) {
         _tags.add(tag)
         _files.add(tag.containingFile as GherkinFile)
     }
+
+    override fun compareTo(other: Tag): Int {
+       return this.name.compareTo(other.name)
+    }
 }
 
 private val CacheTagsKey: Key<CachedValue<List<GherkinTag>>> = Key.create("io.nimbly.tzatziki.util.tagsfinder")
 
-private fun findAllTags(project: Project, scope: GlobalSearchScope): Map<String, Tag> {
+private fun findAllTags(project: Project, scope: GlobalSearchScope): SortedMap<String, Tag> {
     val allTags = mutableMapOf<String, Tag>()
     FilenameIndex
         .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, scope)
@@ -179,6 +183,21 @@ private fun findAllTags(project: Project, scope: GlobalSearchScope): Map<String,
                 tag._files.add(gtag.containingFile as GherkinFile)
             }
         }
-    return allTags.toSortedMap()
+    return allTags.toSortedMap(TagComparator)
 }
 
+object TagComparator : Comparator<String> {
+    override fun compare(o1: String?, o2: String?): Int {
+        if (o1 == null || o2 == null)
+            return 0
+
+        val uo1 = o1.uppercase()
+        val uo2 = o2.uppercase()
+
+        val c = uo1.compareTo(uo2)
+        if (c != 0)
+            return c
+
+        return o1.compareTo(o2)
+    }
+}

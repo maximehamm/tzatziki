@@ -7,12 +7,13 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import java.util.SortedMap
 
 class GherkinTreeTagStructure(val panel: FeaturePanel) : AbstractTreeStructure() {
 
     private val root = ProjectNode(panel.project)
 
-    var tags: Map<String, List<GherkinFile>>? = null
+    var tags: SortedMap<String, List<GherkinFile>>? = null
 
     override fun commit() = Unit
     override fun hasSomethingToCommit() = false

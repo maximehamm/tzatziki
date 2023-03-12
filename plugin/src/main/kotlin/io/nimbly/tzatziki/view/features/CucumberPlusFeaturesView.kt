@@ -20,6 +20,7 @@ import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.util.ui.JBUI
 import io.nimbly.tzatziki.services.Tag
 import java.awt.BorderLayout
+import java.util.*
 import javax.swing.JPanel
 
 class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowPanel(true, false) {
@@ -41,7 +42,7 @@ class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowP
         return p
     }
 
-    fun refreshTags(tags: Map<String, Tag>) {
+    fun refreshTags(tags: SortedMap<String, Tag>) {
         featurePanel.refreshTags(tags)
     }
 
