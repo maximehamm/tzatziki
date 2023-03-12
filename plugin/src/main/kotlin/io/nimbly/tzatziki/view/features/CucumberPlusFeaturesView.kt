@@ -40,8 +40,8 @@ class CucumberPlusFeaturesView(private val project: Project) : SimpleToolWindowP
         return p
     }
 
-    fun refreshTags() {
-        featurePanel.refreshTags()
+    fun refreshTags(tags: List<String>) {
+        featurePanel.refreshTags(tags)
     }
 
 

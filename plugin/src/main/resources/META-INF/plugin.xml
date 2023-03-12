@@ -242,7 +242,8 @@
         <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="right" icon="ActionIcons.CUCUMBER_PLUS_16"/>
 
         // Project settings
-        <projectService serviceImplementation="io.nimbly.tzatziki.settings.CucumberPersistenceState"/>
+        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzPersistenceStateService"/>
+        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzTagService"/>
 
     </extensions>
 

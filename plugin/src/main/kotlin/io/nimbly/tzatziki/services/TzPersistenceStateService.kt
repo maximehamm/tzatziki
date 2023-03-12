@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.settings
+package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
@@ -23,19 +23,18 @@ import com.intellij.openapi.components.StoragePathMacros
 import io.cucumber.tagexpressions.Expression
 import io.cucumber.tagexpressions.TagExpressionParser
 
-
 @State(name = "ProjectCucumberState", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
-class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceState> {
+class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateService> {
 
     var selectedTags: List<String> = emptyList()
     var selection: String? = null
     var groupTag: Boolean? = null
 
-    override fun getState(): CucumberPersistenceState {
+    override fun getState(): TzPersistenceStateService {
         return this
     }
 
-    override fun loadState(state: CucumberPersistenceState) {
+    override fun loadState(state: TzPersistenceStateService) {
         this.selection = state.selection
         this.selectedTags = state.selectedTags
         this.groupTag = state.groupTag
@@ -53,8 +52,8 @@ class CucumberPersistenceState : PersistentStateComponent<CucumberPersistenceSta
     }
 
     companion object {
-        fun getInstance(): CucumberPersistenceState {
-            return ApplicationManager.getApplication().getService(CucumberPersistenceState::class.java)
+        fun getInstance(): TzPersistenceStateService {
+            return ApplicationManager.getApplication().getService(TzPersistenceStateService::class.java)
         }
     }
 }

@@ -21,7 +21,7 @@ import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.components.ServiceManager
-import io.nimbly.tzatziki.settings.CucumberPersistenceState
+import io.nimbly.tzatziki.services.TzPersistenceStateService
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 
 class TzCucumberJavaRunExtension : RunConfigurationExtension() {
@@ -35,7 +35,7 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
         if (configuration !is CucumberJavaRunConfiguration)
             return
 
-        val state = ServiceManager.getService(configuration.project, CucumberPersistenceState::class.java)
+        val state = ServiceManager.getService(configuration.project, TzPersistenceStateService::class.java)
         val sel: String? = state.selection
 
         if (sel.isNullOrBlank()) {

@@ -17,8 +17,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import icons.CollaborationToolsIcons
-import io.nimbly.tzatziki.settings.CucumberPersistenceState
-import io.nimbly.tzatziki.util.Tag
+import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.util.findAllTags
 import io.nimbly.tzatziki.util.getGherkinScope
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -67,11 +66,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     fun groupByTag(grouping: Boolean) {
-        val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
+
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
         state.groupTag = grouping
     }
 
-    fun refreshTags() {
+    fun refreshTags(tags: List<String>) {
         val tags: Map<String, List<GherkinFile>> = findAllTags(project, project.getGherkinScope())
             .sortedBy { it.name }
             .map { it.name to it.tag.containingFile  }
@@ -89,11 +89,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             this.templatePresentation.icon = CollaborationToolsIcons.Review.Branch
         }
         override fun isSelected(e: AnActionEvent): Boolean {
-            val state = ServiceManager.getService(panel.project, CucumberPersistenceState::class.java)
+            val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
             return state.groupTag == true
         }
         override fun setSelected(e: AnActionEvent, state: Boolean) = panel.groupByTag(state)
-        override fun getActionUpdateThread() = ActionUpdateThread.EDT
+        override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }
 }
 

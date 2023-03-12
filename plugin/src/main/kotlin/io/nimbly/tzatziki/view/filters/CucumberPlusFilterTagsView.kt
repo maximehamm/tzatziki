@@ -18,7 +18,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.psi.*
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
@@ -26,12 +26,8 @@ import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
-import io.nimbly.tzatziki.settings.CucumberPersistenceState
-import io.nimbly.tzatziki.util.findAllTags
-import io.nimbly.tzatziki.util.getGherkinScope
-import io.nimbly.tzatziki.view.features.DisposalService
-import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinTag
+import io.nimbly.tzatziki.services.TzPersistenceStateService
+import io.nimbly.tzatziki.services.TzTagService
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import javax.swing.BorderFactory
@@ -40,8 +36,6 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 
 class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(true, false) {
-
-    lateinit var tagsList: List<String>
 
     val panel = JBPanelWithEmptyText()
     lateinit var tagsPanel: JPanel
@@ -68,39 +62,27 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         )
 
         DumbService.getInstance(project).smartInvokeLater {
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted{
 
-            // First tag list initialization
-            val newTagPanel = newTagPanel(null)
-            tagsPanel = newTagPanel!!.first
-            tagsList = newTagPanel.second
-            panel.add(tagsPanel, BorderLayout.CENTER)
+                // First tag list initialization
+                val tagService = project.getService(TzTagService::class.java)
+                val tags = tagService.getTags()
+                tagsPanel = newTagPanel(tags)
+                panel.add(tagsPanel, BorderLayout.CENTER)
+            }
         }
 
         return panel
     }
 
-    fun refresh(): List<String> {
-        val newTagsPanel = newTagPanel(tagsList)
-            ?: return emptyList()
+    fun refresh(tags: List<String>) {
+        val newTagsPanel = newTagPanel(tags)
         panel.remove(tagsPanel)
-        panel.add(newTagsPanel.first, BorderLayout.CENTER)
-        tagsPanel = newTagsPanel.first
-        tagsList = newTagsPanel.second
-        return tagsList
+        panel.add(newTagsPanel, BorderLayout.CENTER)
+        tagsPanel = newTagsPanel
     }
 
-    private fun newTagPanel(currentTags: List<String>?): Pair<JPanel, List<String>>? {
-
-        // Get all tags
-        val tags = findAllTags(project, project.getGherkinScope())
-            .groupBy { it.name }
-            .keys
-            .map { "@$it" }
-            .sortedBy { it.toUpperCase() }
-
-        // Check if tags are still the same
-        if (tags == currentTags)
-            return null
+    private fun newTagPanel(tags: List<String>): JPanel {
 
         // Tags
         val checks = mutableListOf<JBCheckBox>()
@@ -162,7 +144,7 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
         // Update selection function
         fun updateSelection(selectionOnly: Boolean) {
-            val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
+            val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
             if (selectionOnly) {
                 state.selection = tSelection.text
             } else {
@@ -174,7 +156,7 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         }
 
         // Load previously checked values
-        val state = ServiceManager.getService(project, CucumberPersistenceState::class.java)
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
         checks.forEach { check ->
             check.isSelected = state.selectedTags.contains(check.text)
         }
@@ -192,6 +174,6 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
             }
         })
 
-        return Pair(main, tags)
+        return main
     }
 }
