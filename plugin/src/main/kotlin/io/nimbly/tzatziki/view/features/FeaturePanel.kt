@@ -28,7 +28,6 @@ import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
-import org.jetbrains.concurrency.AsyncPromise
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -71,7 +70,14 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         tree.addMouseListener(MouseListening(tree, project))
 
+        initTagService()
         forceRefresh()
+    }
+
+    private fun initTagService() {
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        val tagService = project.getService(TzTagService::class.java)
+        tagService.updateTagsFilter(state.tagExpression())
     }
 
     private fun forceRefresh() {
@@ -79,10 +85,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
                 // First tag list initialization
+                val filterActivated = ServiceManager.getService(project, TzPersistenceStateService::class.java).filterByTags == true
                 val tagService = project.getService(TzTagService::class.java)
                 refreshTags(
                     tagService.getTags(),
-                    tagService.getTagsFilter()
+                    if (filterActivated) tagService.getTagsFilter() else null
                 )
             }
         }
@@ -164,6 +171,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         }
         override fun setSelected(e: AnActionEvent, state: Boolean) {
             panel.groupByTag(state)
+
+            val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
+            stateService.groupTag = state
         }
 
         // Compatibility : introduced 2022.2.4
@@ -190,6 +200,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
                 exp = null
             }
 
+            val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
+            stateService.groupTag = state
+            
             val tagService = panel.project.getService(TzTagService::class.java)
             tagService.updateTagsFilter(exp)
 
