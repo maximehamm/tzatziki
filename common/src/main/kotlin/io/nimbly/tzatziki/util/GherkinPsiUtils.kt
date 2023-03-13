@@ -26,7 +26,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.TZATZIKI
+import io.nimbly.tzatziki.Tzatziki
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
@@ -126,7 +126,7 @@ fun AbstractStepDefinition.isDeprecated(): Boolean {
     val element = element
         ?: return false
 
-    TZATZIKI().extensionList.forEach {
+    Tzatziki().extensionList.forEach {
         if (it.isDeprecated(element))
             return true
     }
@@ -134,7 +134,7 @@ fun AbstractStepDefinition.isDeprecated(): Boolean {
 }
 
 fun PsiElement.isDeprecated(): Boolean {
-    TZATZIKI().extensionList.forEach {
+    Tzatziki().extensionList.forEach {
         if (it.isDeprecated(this))
             return true
     }

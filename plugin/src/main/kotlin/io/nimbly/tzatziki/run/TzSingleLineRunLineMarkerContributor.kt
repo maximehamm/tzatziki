@@ -21,7 +21,7 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.impl.source.tree.LeafElement
-import io.nimbly.tzatziki.TZATZIKI
+import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.psi.firstCell
 import io.nimbly.tzatziki.psi.isHeader
 import io.nimbly.tzatziki.psi.row
@@ -65,7 +65,7 @@ class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
         if (definitions.isEmpty())
             return null
 
-        TZATZIKI().extensionList.find { it.canRunStep(definitions) }
+        Tzatziki().extensionList.find { it.canRunStep(definitions) }
             ?: return null
 
         val state = getTestStateStorage(element)

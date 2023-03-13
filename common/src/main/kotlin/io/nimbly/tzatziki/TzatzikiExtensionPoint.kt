@@ -24,18 +24,17 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import javax.swing.Icon
 
-private const val nameSpace = "io.nimbly.tzatziki"
-
 interface TzatzikiExtensionPoint {
+
     fun isDeprecated(element: PsiElement): Boolean
     fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean
     fun findBreakpoint(source: PsiElement, stepDefinitions: List<AbstractStepDefinition>): TzBreakpoint?
     fun initBreakpointListener(project: Project)
 }
 
-object TZATZIKI {
+object Tzatziki {
     operator fun invoke(): ExtensionPointName<TzatzikiExtensionPoint> =
-        ExtensionPointName.create("$nameSpace.io.nimbly.tzatziki.main")
+        ExtensionPointName.create("io.nimbly.tzatziki.io.nimbly.tzatziki.main")
 }
 
 abstract class TzBreakpoint(

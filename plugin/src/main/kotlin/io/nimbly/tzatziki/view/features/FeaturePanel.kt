@@ -1,15 +1,11 @@
 package io.nimbly.tzatziki.view.features
 
-import com.intellij.icons.AllIcons
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.actionSystem.ToggleAction
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
@@ -22,25 +18,28 @@ import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
-import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.view.features.actions.FilterTagAction
+import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
+import io.nimbly.tzatziki.view.features.actions.RunTestAction
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreeSelectionModel
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
 class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposable {
 
     val structure: GherkinTreeTagStructure
     val model: StructureTreeModel<GherkinTreeTagStructure>
-
+    val tree: DnDAwareTree
     init {
 
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
@@ -48,8 +47,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         structure = GherkinTreeTagStructure(this).apply { groupByTags = grouping }
         model = StructureTreeModel(structure, this)
-
-        val tree = DnDAwareTree(AsyncTreeModel(model, this))
+        tree = DnDAwareTree(AsyncTreeModel(model, this))
 
         layout = BorderLayout()
 
@@ -62,13 +60,14 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
         toolbarGroup.add(GroupByTagAction(this))
         toolbarGroup.add(FilterTagAction(this))
+        toolbarGroup.add(RunTestAction(this))
 
         val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)
         toolbar.targetComponent = tree
-
         setToolbar(toolbar.component)
-
         tree.addMouseListener(MouseListening(tree, project))
+
+        tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
 
         initTagService()
         forceRefresh()
@@ -159,59 +158,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         refreshTags(tags)
     }
 
-    @Suppress("MissingActionUpdateThread")
-    class GroupByTagAction(val panel: FeaturePanel) : ToggleAction() {
-        init {
-            this.templatePresentation.text = "Group by tags"
-            this.templatePresentation.icon = ActionIcons.TAG_GRAY
-        }
-        override fun isSelected(e: AnActionEvent): Boolean {
-            val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-            return state.groupTag == true
-        }
-        override fun setSelected(e: AnActionEvent, state: Boolean) {
-            panel.groupByTag(state)
-
-            val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-            stateService.groupTag = state
-        }
-
-        // Compatibility : introduced 2022.2.4
-        //override fun getActionUpdateThread() = ActionUpdateThread.BGT
-    }
-
-    @Suppress("MissingActionUpdateThread")
-    class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
-        init {
-            this.templatePresentation.text = "Filter per tags"
-            this.templatePresentation.icon = AllIcons.General.Filter
-        }
-        override fun isSelected(e: AnActionEvent): Boolean {
-            val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-            return state.filterByTags == true
-        }
-        override fun setSelected(e: AnActionEvent, state: Boolean) {
-
-            val exp: Expression?
-            if (state) {
-                val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-                exp = stateService.tagExpression()
-            } else {
-                exp = null
-            }
-
-            val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-            stateService.groupTag = state
-            
-            val tagService = panel.project.getService(TzTagService::class.java)
-            tagService.updateTagsFilter(exp)
-
-            panel.filterByTag(state)
-        }
-
-        // Compatibility : introduced 2022.2.4
-        //override fun getActionUpdateThread() = ActionUpdateThread.BGT
-    }
 }
 
 class MouseListening(val tree: DnDAwareTree, private val project: Project) : MouseAdapter() {
@@ -236,4 +182,20 @@ class MouseListening(val tree: DnDAwareTree, private val project: Project) : Mou
     }
 }
 
+class MyDataContext : DataContext {
+
+    private val myMap = mutableMapOf<String?, Any?>()
+
+    override fun getData(dataId: String): Any? {
+        return myMap[dataId]
+    }
+
+    fun put(dataId: String, data: Any?) {
+        myMap[dataId] = data
+    }
+
+    fun <T> put(dataKey: DataKey<T>, data: T) {
+        this.put(dataKey.name, data)
+    }
+}
 

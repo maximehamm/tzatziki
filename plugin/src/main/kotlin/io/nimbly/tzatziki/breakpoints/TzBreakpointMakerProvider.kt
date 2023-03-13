@@ -25,7 +25,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.source.tree.LeafElement
-import io.nimbly.tzatziki.TZATZIKI
+import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.findCucumberStepReferences
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -48,7 +48,7 @@ class TzBreakpointMakerProvider : LineMarkerProviderDescriptor() {
 
         val project = elements.firstOrNull()?.project
         if (project!=null && !firstTimeProjects.contains(project)) {
-            TZATZIKI().extensionList.forEach {
+            Tzatziki().extensionList.forEach {
                 DumbService.getInstance(project).smartInvokeLater {
                     it.initBreakpointListener(project)
                 }
@@ -80,7 +80,7 @@ class TzBreakpointMakerProvider : LineMarkerProviderDescriptor() {
         if (definitions.isEmpty())
             return
 
-        val breakpoint = TZATZIKI().extensionList.firstNotNullOfOrNull {
+        val breakpoint = Tzatziki().extensionList.firstNotNullOfOrNull {
                 it.findBreakpoint(element, definitions)
         } ?: return
 
