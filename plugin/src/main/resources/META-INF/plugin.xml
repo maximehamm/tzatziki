@@ -33,6 +33,14 @@
        <br/>
        <br/>
 
+       <b>Display list of features in Cucumber+ tool window</b><br/>
+       <ul>
+          <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_18e4b62f-df93-4b0e-9aae-d87475cc73bc"
+                 alt="Cucumber+" width="419" height="233"></p>
+          <li>Group feature per tag</li>
+          <li>Filter features per tags</li>
+       </ul>
+
        <b>Tests inspection and runner</b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_b1cc840f-57a1-4119-8473-4e715f1c9a9f"

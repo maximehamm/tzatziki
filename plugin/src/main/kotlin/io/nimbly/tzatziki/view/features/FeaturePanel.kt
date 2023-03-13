@@ -6,7 +6,10 @@ import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
@@ -19,16 +22,18 @@ import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
-import icons.CollaborationToolsIcons
+import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
+import org.jetbrains.concurrency.AsyncPromise
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import javax.swing.tree.DefaultMutableTreeNode
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
@@ -117,12 +122,29 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
                 .toSortedMap(TagComparator)
             structure.tags = stags
         }
-        model.invalidateAsync()
+        invalidateAsync()
     }
 
     fun refreshTags(tagsFilter: Expression?) {
         structure.filterByTags = tagsFilter
-        model.invalidateAsync()
+        invalidateAsync()
+    }
+
+    @Deprecated("Intellij 2022.2.4 compatibilty")
+    private fun invalidateAsync() {
+
+        // New method
+        // model.invalidateAsync()
+
+        // Old method compatibity
+        val future: CompletableFuture<Any> = CompletableFuture<Any>()
+        model.invoker.compute<Any> {
+            val result = model.invalidate()
+            future.complete(result)
+
+            if (!future.isDone) future.completeExceptionally(AsyncPromise.CANCELED)
+            null
+        }.onError { ex: Throwable? -> future.completeExceptionally(ex) }
     }
 
     private fun refreshTags(tags: SortedMap<String, Tag>, tagsFilter: Expression?) {
@@ -130,10 +152,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         refreshTags(tags)
     }
 
+    @Suppress("MissingActionUpdateThread")
     class GroupByTagAction(val panel: FeaturePanel) : ToggleAction() {
         init {
             this.templatePresentation.text = "Group by tags"
-            this.templatePresentation.icon = CollaborationToolsIcons.Review.Branch
+            this.templatePresentation.icon = ActionIcons.TAG_GRAY
         }
         override fun isSelected(e: AnActionEvent): Boolean {
             val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
@@ -142,9 +165,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         override fun setSelected(e: AnActionEvent, state: Boolean) {
             panel.groupByTag(state)
         }
-        override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
+        // Compatibility : introduced 2022.2.4
+        //override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }
 
+    @Suppress("MissingActionUpdateThread")
     class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
         init {
             this.templatePresentation.text = "Filter per tags"
@@ -169,7 +195,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
             panel.filterByTag(state)
         }
-        override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
+        // Compatibility : introduced 2022.2.4
+        //override fun getActionUpdateThread() = ActionUpdateThread.BGT
     }
 }
 

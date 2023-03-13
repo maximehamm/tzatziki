@@ -58,6 +58,7 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         blabla.add(
             JBLabel("""<html>
                 The selected tags will be used to filter:<br/>
+                 &nbsp; ✓ <b>List of features</b> (<i>Java, Kotlin</i>)<br/>
                  &nbsp; ✓ <b>Cucumber tests execution</b> (<i>Java, Kotlin</i>)<br/>
                  &nbsp; ✓ <b>Features exportation to PDF</b><br/><br/>
                 </html>""".trimMargin()

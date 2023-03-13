@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "15.0.0"
+    version = "15.0.5"
 }
 
 //TODO : Run test from C+ tool window
