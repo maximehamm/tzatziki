@@ -4,7 +4,6 @@ import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Comparing
 import com.intellij.pom.Navigatable
 import icons.ActionIcons
 import icons.CucumberIcons
@@ -14,7 +13,6 @@ import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
-import java.util.*
 
 class ProjectNode(val p: Project, exp: Expression?) : AbstractNode<Project>(p, p, exp) {
 
@@ -88,7 +86,7 @@ class ScenarioNode(p: Project, val scenario: GherkinStepsHolder, exp: Expression
 
     override fun update(presentation: PresentationData) {
         presentation.presentableText = scenario.scenarioName.trim().ifEmpty { "Scenario" }
-        presentation.setIcon(AllIcons.Nodes.BookmarkGroup)
+        presentation.setIcon(ActionIcons.STEP)
     }
 
     override fun getChildren(): MutableCollection<out AbstractTreeNode<*>> {

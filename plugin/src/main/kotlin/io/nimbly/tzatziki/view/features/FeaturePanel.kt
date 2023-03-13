@@ -142,7 +142,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             val result = model.invalidate()
             future.complete(result)
 
-            if (!future.isDone) future.completeExceptionally(AsyncPromise.CANCELED)
+            if (!future.isDone) future.completeExceptionally(Exception("Canceled"))
             null
         }.onError { ex: Throwable? -> future.completeExceptionally(ex) }
     }
