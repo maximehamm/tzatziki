@@ -30,7 +30,7 @@ class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
         }
 
         val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-        stateService.groupTag = state
+        stateService.filterByTags = state
 
         val tagService = panel.project.getService(TzTagService::class.java)
         tagService.updateTagsFilter(exp)

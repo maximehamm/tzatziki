@@ -18,6 +18,7 @@ package io.nimbly.tzatziki.util
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
@@ -118,9 +119,16 @@ fun Module.getGherkinScope()
     = GlobalSearchScope.getScopeRestrictedByFileTypes(
         GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE)
 
-fun Project.getGherkinScope()
-        = GlobalSearchScope.getScopeRestrictedByFileTypes(
-    GlobalSearchScope.projectScope(this), GherkinFileType.INSTANCE)
+
+fun Project.getGherkinScope(): GlobalSearchScope {
+
+    var scope = GlobalSearchScope.EMPTY_SCOPE
+    ModuleManager.getInstance(this).modules.forEach { module ->
+        scope = scope.union(module.getGherkinScope())
+    }
+
+    return scope
+}
 
 fun AbstractStepDefinition.isDeprecated(): Boolean {
     val element = element

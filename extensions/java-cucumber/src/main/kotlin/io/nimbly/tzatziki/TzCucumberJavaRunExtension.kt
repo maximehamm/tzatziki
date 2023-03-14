@@ -27,7 +27,7 @@ import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 class TzCucumberJavaRunExtension : RunConfigurationExtension() {
 
     @Throws(ExecutionException::class)
-    override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
+    override fun <T : RunConfigurationBase<*>> updateJavaParameters(
         configuration: T,
         params: JavaParameters,
         runnerSettings: RunnerSettings?) {
@@ -36,8 +36,7 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
             return
 
         val state = ServiceManager.getService(configuration.project, TzPersistenceStateService::class.java)
-        val sel: String? = state.selection
-
+        val sel: String? = if (state.filterByTags != true) null else state.selection
         if (sel.isNullOrBlank()) {
             params.vmParametersList.properties.remove("cucumber.filter.tags")
         }

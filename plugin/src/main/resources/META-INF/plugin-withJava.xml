@@ -8,6 +8,8 @@
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.nimbly.tzatziki.JavaTzatzikiUsagesMarker"/>
 
         <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavaRunConfigurationProducer" order="first"/>
+<!--        <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavaAllFeaturesInFolderRunConfigurationProducer" order="first"/>-->
+
         <runConfigurationExtension implementation="io.nimbly.tzatziki.TzCucumberJavaRunExtension" order="first"/>
     </extensions>
 
