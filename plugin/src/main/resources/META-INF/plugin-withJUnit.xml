@@ -1,7 +1,0 @@
-<idea-plugin>
-
-    <extensions defaultExtensionNs="io.nimbly.tzatziki">
-        <io.nimbly.tzatziki.run implementation="io.nimbly.tzatziki.JavaTzatzikiRunExtensionPoint"/>
-    </extensions>
-
-</idea-plugin>

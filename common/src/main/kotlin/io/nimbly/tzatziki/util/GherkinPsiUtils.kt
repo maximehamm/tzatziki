@@ -18,8 +18,8 @@ package io.nimbly.tzatziki.util
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
@@ -31,6 +31,7 @@ import io.nimbly.tzatziki.Tzatziki
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
+
 
 fun loadStepParams(step: GherkinStep): List<TextRange> {
     val references = step.references
@@ -122,9 +123,13 @@ fun Module.getGherkinScope()
 
 fun Project.getGherkinScope(): GlobalSearchScope {
 
+    val vFiles = ProjectRootManager.getInstance(this).contentRootsFromAllModules
+
     var scope = GlobalSearchScope.EMPTY_SCOPE
-    ModuleManager.getInstance(this).modules.forEach { module ->
-        scope = scope.union(module.getGherkinScope())
+    vFiles.forEach { vdir ->
+        val module = vdir.getDirectory(this)?.getModule()
+        if (module != null)
+            scope = scope.union(module.getGherkinScope())
     }
 
     return scope

@@ -53,13 +53,14 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         add(JBScrollPane(tree))
         TreeSpeedSearch(tree)
+        val treeExpander = DefaultTreeExpander(tree)
 
         val toolbarGroup = DefaultActionGroup()
-        val treeExpander = DefaultTreeExpander(tree)
         toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
         toolbarGroup.add(GroupByTagAction(this))
         toolbarGroup.add(FilterTagAction(this))
+
         toolbarGroup.add(RunTestAction(this))
 
         val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)

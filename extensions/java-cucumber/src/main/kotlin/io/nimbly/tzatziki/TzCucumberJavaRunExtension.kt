@@ -27,7 +27,7 @@ import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 class TzCucumberJavaRunExtension : RunConfigurationExtension() {
 
     @Throws(ExecutionException::class)
-    override fun <T : RunConfigurationBase<*>> updateJavaParameters(
+    override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T,
         params: JavaParameters,
         runnerSettings: RunnerSettings?) {

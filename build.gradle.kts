@@ -4,16 +4,16 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "15.0.5"
+    version = "15.0.8"
 }
 
-//TODO : Run test from C+ tool window
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>15.1</b> Run Cucumber tests fro C+ tool view</li>
          <li><b>15.0</b> Display list of features, let group and filter them by tag names</li>
          <li><b>14.1</b> Kotlin support : generate class and step functions</li>
          <li><b>13.1</b> Java : remove accent from generated method</li>

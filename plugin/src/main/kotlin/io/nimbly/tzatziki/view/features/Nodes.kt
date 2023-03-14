@@ -7,31 +7,21 @@ import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
-import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiManager
-import com.intellij.psi.impl.file.PsiDirectoryFactory
 import icons.ActionIcons
 import icons.CucumberIcons
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.util.TzDataContext
-import io.nimbly.tzatziki.util.checkExpression
-import io.nimbly.tzatziki.util.findAllGerkinsFiles
-import io.nimbly.tzatziki.util.getDirectory
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaAllFeaturesInFolderRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
-import java.io.File
 
 class ProjectNode(p: Project, exp: Expression?) : AbstractTzNode<Project>(p, p, exp), TzRunnableNode {
 
@@ -62,19 +52,15 @@ class ProjectNode(p: Project, exp: Expression?) : AbstractTzNode<Project>(p, p, 
         val basePath = value.basePath
         if (basePath != null) {
 
-            val virtualFile = VfsUtil.findFileByIoFile(File(basePath), true);
-            if (virtualFile != null) {
-                
-                val psiDirectory = PsiManager.getInstance(project).findDirectory(virtualFile)
-                if (psiDirectory != null) {
+            val psiDirectory = project.getDirectory()
+            if (psiDirectory != null) {
 
-                    dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(psiDirectory))
-                    dataContext.put(PlatformCoreDataKeys.MODULE, ModuleUtilCore.findModuleForPsiElement(psiDirectory))
-                }
+                dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(psiDirectory))
+                dataContext.put(LangDataKeys.MODULE, psiDirectory.getModule())
             }
         }
 
-        return ConfigurationContext.getFromContext(dataContext, ActionPlaces.TOOLBAR)
+        return ConfigurationContext.getFromContext(dataContext)
     }
 }
 
@@ -134,9 +120,9 @@ class FeatureNode(p: Project, feature: GherkinFeature, exp: Expression?) : Abstr
         val dataContext = TzDataContext()
         dataContext.put(CommonDataKeys.PROJECT, project)
         dataContext.put(CommonDataKeys.PSI_FILE, value.containingFile)
-        dataContext.put(PlatformCoreDataKeys.MODULE, ModuleUtilCore.findModuleForPsiElement(value))
+        dataContext.put(LangDataKeys.MODULE, value.getModule())
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
-        return ConfigurationContext.getFromContext(dataContext, ActionPlaces.TOOLBAR)
+        return ConfigurationContext.getFromContext(dataContext)
     }
 }
 
@@ -160,9 +146,9 @@ class ScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Expression?) :
         val dataContext = TzDataContext()
         dataContext.put(CommonDataKeys.PROJECT, project)
         dataContext.put(CommonDataKeys.PSI_FILE, value.containingFile)
-        dataContext.put(PlatformCoreDataKeys.MODULE, ModuleUtilCore.findModuleForPsiElement(value))
+        dataContext.put(CucumberPlusDataKeys.MODULE, value.getModule())
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
-        return ConfigurationContext.getFromContext(dataContext, ActionPlaces.TOOLBAR)
+        return ConfigurationContext.getFromContext(dataContext)
     }
 }
 

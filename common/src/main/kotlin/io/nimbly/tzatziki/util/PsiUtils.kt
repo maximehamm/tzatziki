@@ -22,6 +22,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
@@ -39,14 +40,27 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil
+import java.io.File
 
 fun VirtualFile.getFile(project: Project): PsiFile?
     = PsiManager.getInstance(project).findFile(this)
 
+fun Project.getDirectory(): PsiDirectory? {
+
+    val basePath = this.basePath
+        ?: return null
+
+    val virtualFile = VfsUtil.findFileByIoFile(File(basePath), true);
+    if (virtualFile == null)
+        return null
+
+    return PsiManager.getInstance(this).findDirectory(virtualFile)
+}
+
 fun VirtualFile.getDirectory(project: Project): PsiDirectory?
     = PsiManager.getInstance(project).findDirectory(this)
 
-fun PsiFile.getModule(): Module?
+fun PsiElement.getModule(): Module?
     = ModuleUtilCore.findModuleForPsiElement(this)
 
 fun PsiFile.cellAt(offset: Int): GherkinTableCell? {
