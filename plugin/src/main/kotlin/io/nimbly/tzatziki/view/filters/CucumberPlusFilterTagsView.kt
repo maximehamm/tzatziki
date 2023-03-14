@@ -14,6 +14,11 @@
  */
 package io.nimbly.tzatziki.view.filters
 
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -33,6 +38,7 @@ import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
 import java.util.*
 import javax.swing.BorderFactory
@@ -60,14 +66,12 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
                 The selected tags will be used to filter:<br/>
                  &nbsp; ✓ <b>List of features</b> (<i>Java, Kotlin</i>)<br/>
                  &nbsp; ✓ <b>Cucumber tests execution</b> (<i>Java, Kotlin</i>)<br/>
-                 &nbsp; ✓ <b>Features exportation to PDF</b><br/><br/>
+                 &nbsp; ✓ <b>Features exportation to PDF</b><br/>
                 </html>""".trimMargin()
             ), BorderLayout.PAGE_START
         )
         blabla.add(
-            JBLabel(ActionIcons.TAG).apply {
-                this.text = """<html><b>Select Tags</b>:</html>"""
-            }, BorderLayout.LINE_START
+            filterPanel()
         )
 
         panel.layout = BorderLayout(10, 10)
@@ -87,6 +91,44 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         }
 
         return panel
+    }
+
+    private fun filterPanel(): JBPanelWithEmptyText {
+
+        val label = JBLabel(ActionIcons.TAG).apply {
+            this.text = """<html><b>Select Tags</b>:</html>"""
+        }
+
+        // Filter
+        val filter = SimpleToolWindowPanel(false, true)
+        filter.layout = BorderLayout()
+        filter.border = JBUI.Borders.empty()
+        filter.withEmptyText("")
+
+        val toolbarGroup = DefaultActionGroup()
+        toolbarGroup.add(FilterItAction(project))
+
+        val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeature", toolbarGroup, true)
+        toolbar.targetComponent = filter
+        filter.toolbar = toolbar.component
+
+        //
+        val main = JBPanelWithEmptyText(GridLayoutManager(1, 2))
+        main.border = JBUI.Borders.empty()
+        main.add(label, GridConstraints(
+            0, 0, 1, 1,
+            ANCHOR_NORTHWEST, FILL_BOTH,
+            SIZEPOLICY_CAN_GROW, SIZEPOLICY_WANT_GROW,
+            Dimension(32, 52), null, null
+        ))
+        main.add(filter, GridConstraints(
+            0, 1, 1, 1,
+            ANCHOR_SOUTHWEST, FILL_NONE,
+            SIZEPOLICY_WANT_GROW, SIZEPOLICY_CAN_SHRINK,
+            null, null, null
+        ) )
+
+        return main
     }
 
     fun refresh(tags: SortedMap<String, Tag>) {
@@ -170,11 +212,19 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
                 tSelection.text = checked.joinToString(" or ")
                 state.selection = tSelection.text
                 state.selectedTags = checked
+
+                state.filterByTags = checked.isNotEmpty()
+
+                val tagService = project.getService(TzTagService::class.java)
+                tagService.updateTagsFilter(state.tagExpression())
             }
 
-            val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
-            val tagService = project.getService(TzTagService::class.java)
-            tagService.updateTagsFilter(expression)
+            try {
+                val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
+                val tagService = project.getService(TzTagService::class.java)
+                tagService.updateTagsFilter(expression)
+            } catch (ignored: Exception) {
+            }
         }
 
         // Load previously checked values
@@ -198,4 +248,34 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
         return main
     }
+}
+
+class FilterItAction(val project: Project) : ToggleAction() {
+    init {
+        this.templatePresentation.text = "Filter per tags"
+        this.templatePresentation.icon = AllIcons.General.Filter
+    }
+    override fun isSelected(e: AnActionEvent): Boolean {
+        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        return state.filterByTags == true
+    }
+    override fun setSelected(e: AnActionEvent, state: Boolean) {
+
+        val exp: Expression?
+        if (state) {
+            val stateService = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+            exp = stateService.tagExpression()
+        } else {
+            exp = null
+        }
+
+        val stateService = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        stateService.filterByTags = state
+
+        val tagService = project.getService(TzTagService::class.java)
+        tagService.updateTagsFilter(exp)
+    }
+
+    // Compatibility : introduced 2022.2.4
+    //override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }
