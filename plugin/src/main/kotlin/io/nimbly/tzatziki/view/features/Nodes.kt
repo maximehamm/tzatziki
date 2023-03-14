@@ -62,6 +62,8 @@ class ProjectNode(p: Project, exp: Expression?) : AbstractTzNode<Project>(p, p, 
 
         return ConfigurationContext.getFromContext(dataContext)
     }
+
+    override fun getRunActionText() = "Run all Cucumber tests..."
 }
 
 class GherkinTagNode(p: Project, tag: String, val gherkinFiles: List<GherkinFile>, val filterByTags: Expression?) : AbstractTreeNode<String>(p, tag) {
@@ -124,6 +126,8 @@ class FeatureNode(p: Project, feature: GherkinFeature, exp: Expression?) : Abstr
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
         return ConfigurationContext.getFromContext(dataContext)
     }
+
+    override fun getRunActionText() = "Run feature..."
 }
 
 class ScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Expression?) : AbstractTzPsiElementNode<GherkinStepsHolder>(p, scenario, exp), TzRunnableNode {
@@ -150,12 +154,16 @@ class ScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Expression?) :
         dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
         return ConfigurationContext.getFromContext(dataContext)
     }
+
+    override fun getRunActionText() = "Run scenario..."
+
 }
 
 interface TzRunnableNode {
 
     fun getRunConfiguration(): RunConfigurationProducer<*>?
     fun getRunDataContext(): ConfigurationContext
+    fun getRunActionText(): String
 }
 
 abstract class AbstractTzPsiElementNode<T: PsiElement>(

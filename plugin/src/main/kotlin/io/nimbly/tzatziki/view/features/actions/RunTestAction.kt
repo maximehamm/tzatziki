@@ -10,11 +10,13 @@ import io.nimbly.tzatziki.view.features.TzRunnableNode
 import org.jetbrains.kotlin.utils.IDEAPluginsCompatibilityAPI
 import javax.swing.tree.DefaultMutableTreeNode
 
+private const val PRESENTATION_TEXT = "Run Cucumber..."
+
 @Suppress("MissingActionUpdateThread")
 class RunTestAction(val panel: FeaturePanel) : AnAction() {
 
     init {
-        this.templatePresentation.text = "Run Cucumber tests..."
+        this.templatePresentation.text = PRESENTATION_TEXT
         this.templatePresentation.icon = ActionIcons.RUN
     }
 
@@ -47,5 +49,6 @@ class RunTestAction(val panel: FeaturePanel) : AnAction() {
         val userObject: Any? = component?.userObject
 
         e.presentation.isEnabled = userObject is TzRunnableNode
+        e.presentation.text = (userObject as? TzRunnableNode)?.getRunActionText() ?: PRESENTATION_TEXT
     }
 }

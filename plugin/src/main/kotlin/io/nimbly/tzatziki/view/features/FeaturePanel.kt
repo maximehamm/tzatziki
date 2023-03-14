@@ -133,8 +133,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     fun refreshTags(tagsFilter: Expression?) {
-        structure.filterByTags = tagsFilter
-        invalidateAsync()
+
+        val filterActivated = ServiceManager.getService(project, TzPersistenceStateService::class.java).filterByTags == true
+        if (filterActivated) {
+            structure.filterByTags = tagsFilter
+            invalidateAsync()
+        }
     }
 
     @Deprecated("Intellij 2022.2.4 compatibilty")
