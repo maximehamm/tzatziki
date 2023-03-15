@@ -10,22 +10,21 @@ Feature: Cocktail Ordering
 
   Ceci est plutot cool !
 
-  @Advanced @chrom
+  @Advanced @Chrome
   Scenario: This is the scenario
     Given Romeo who wants to buy a drink
-    * this is a tests
+    * this is a test ddssd sdf sdfsdf
+
+
 
   @Production
   Scenario: Creating an empty order
-    Given Romeo who wants to buy a drinksx
-    * this is a tests
-    Given Ceçi ést un Ÿô Éxamplè & c'est 0 tout
-    But bla 1 bla "xx" bla
+    Given Romeo who wants to buy a drink
     Then there is 0 cocktails in the order
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store
-      | Erik Larson | The Devil in the White City          |
+      | Erik Larson | The Devil in the White City      |
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
 
