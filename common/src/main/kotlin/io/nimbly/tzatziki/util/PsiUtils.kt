@@ -50,12 +50,14 @@ fun Project.getDirectory(): PsiDirectory? {
     val basePath = this.basePath
         ?: return null
 
-    val virtualFile = VfsUtil.findFileByIoFile(File(basePath), true);
-    if (virtualFile == null)
-        return null
+    val virtualFile = VfsUtil.findFileByIoFile(File(basePath), true)
+        ?: return null;
 
     return PsiManager.getInstance(this).findDirectory(virtualFile)
 }
+
+fun Project.rootModule()
+    = this.getDirectory()?.getModule()
 
 fun VirtualFile.getDirectory(project: Project): PsiDirectory?
     = PsiManager.getInstance(project).findDirectory(this)

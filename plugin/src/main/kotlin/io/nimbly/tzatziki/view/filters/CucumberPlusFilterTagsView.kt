@@ -14,7 +14,6 @@
  */
 package io.nimbly.tzatziki.view.filters
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
@@ -250,10 +249,11 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
     }
 }
 
+@Suppress("MissingActionUpdateThread")
 class FilterItAction(val project: Project) : ToggleAction() {
     init {
         this.templatePresentation.text = "Filter per tags"
-        this.templatePresentation.icon = AllIcons.General.Filter
+        this.templatePresentation.icon = ActionIcons.FILTER
     }
     override fun isSelected(e: AnActionEvent): Boolean {
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)

@@ -1,10 +1,9 @@
-package io.nimbly.tzatziki.view.features
+package io.nimbly.tzatziki.view.features.structure
 
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
-import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
-import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
-import io.nimbly.tzatziki.view.features.nodes.ProjectNode
+import io.nimbly.tzatziki.util.getModule
+import io.nimbly.tzatziki.view.features.FeaturePanel
+import io.nimbly.tzatziki.view.features.nodes.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -14,27 +13,25 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
 
     var tags: SortedMap<String, List<GherkinFile>>? = null
 
-    var groupByTags: Boolean = false
+    var groupTag: Boolean = false
 
+    // PROJECT < ... < (TAG) < FILE < FEATURE < SCENARIO
     override fun getParentElement(element: Any): Any? {
-        if (!groupByTags)
+        if (!groupTag)
             return super.getParentElement(element)
 
         if (element is GherkinFile) {
-            return ProjectNode(element.project, filterByTags)
-        } else if (element is GherkinFeature) {
-            return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
-        } else if (element is GherkinStepsHolder) {
-            return GherkinFeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
+            return ModuleNode(element.getModule()!!, filterByTags)
         }
-        return null
+
+        return super.getParentElement(element)
     }
 
     override fun getChildElements(element: Any): Array<Any> {
-        if (!groupByTags)
+        if (!groupTag)
             return super.getChildElements(element)
 
-        if (element is ProjectNode)
+        if (element is ModuleNode)
             return tags
                 ?.filter { filterByTags?.evaluate(listOf("@" + it.key)) ?: true }
                 ?.map { GherkinTagNode(

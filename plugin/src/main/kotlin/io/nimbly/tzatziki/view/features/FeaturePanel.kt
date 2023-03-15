@@ -5,7 +5,8 @@ import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
@@ -24,8 +25,10 @@ import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
 import io.nimbly.tzatziki.view.features.actions.FilterTagAction
+import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
 import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
 import io.nimbly.tzatziki.view.features.actions.RunTestAction
+import io.nimbly.tzatziki.view.features.structure.GherkinTreeTagStructure
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -43,9 +46,10 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     init {
 
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        val grouping = state.groupTag == true
 
-        structure = GherkinTreeTagStructure(this).apply { groupByTags = grouping }
+        structure = GherkinTreeTagStructure(this).apply {
+            this.groupTag = state.groupTag == true
+        }
         model = StructureTreeModel(structure, this)
         tree = DnDAwareTree(AsyncTreeModel(model, this))
 
@@ -58,6 +62,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         val toolbarGroup = DefaultActionGroup()
         toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
         toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
+        toolbarGroup.add(GroupByModuleAction(this))
         toolbarGroup.add(GroupByTagAction(this))
         toolbarGroup.add(FilterTagAction(this))
 
@@ -116,13 +121,13 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
         state.groupTag = grouping
 
-        this.structure.groupByTags = grouping
+        this.structure.groupTag = grouping
 
         forceRefresh()
     }
 
     fun refreshTags(tags: SortedMap<String, Tag>) {
-        if (structure.groupByTags || structure.filterByTags != null) {
+        if (structure.groupTag || structure.filterByTags != null) {
             val stags = tags
                 .map { it.key to it.value.gFiles.toList() }
                 .toMap()

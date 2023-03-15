@@ -41,8 +41,13 @@ object ActionIcons {
 
     @JvmField val STEP = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/step.svg", javaClass)
 
+    @JvmField val FILTER = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/filter.svg", javaClass)
+
     @JvmField val TAG = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/tag.svg", javaClass)
     @JvmField val TAG_GRAY = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/tagGray.svg", javaClass)
+
+    @JvmField val GROUP_BY_MODULE = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/groupByModule.svg", javaClass)
+    @JvmField val MODULE_DIRECTORY = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/moduleDirectory.svg", javaClass)
 
     val ImagesFileType = IconManager.getInstance().getIcon("/org/intellij/images/icons/ImagesFileType.svg", javaClass)
 

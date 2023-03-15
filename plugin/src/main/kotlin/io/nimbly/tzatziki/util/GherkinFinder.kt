@@ -15,8 +15,10 @@
 
 package io.nimbly.tzatziki.util
 
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
@@ -24,8 +26,16 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
  * find all gherkin files
  */
 fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
-
     val scope = project.getGherkinScope()
+    return findAllGerkinsFiles(scope, project)
+}
+
+fun findAllGerkinsFiles(module: Module): Set<GherkinFile> {
+    val scope = module.getGherkinScope()
+    return findAllGerkinsFiles(scope, module.project)
+}
+
+private fun findAllGerkinsFiles(scope: GlobalSearchScope, project: Project): Set<GherkinFile> {
 
     val allFeatures = mutableSetOf<GherkinFile>()
     FilenameIndex

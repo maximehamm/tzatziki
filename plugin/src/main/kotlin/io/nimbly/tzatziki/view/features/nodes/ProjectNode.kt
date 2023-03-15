@@ -14,6 +14,7 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaAllFeaturesInFolderRunConfigurationProducer
 
+@Deprecated("Replaced by ")
 class ProjectNode(p: Project, exp: Expression?) : AbstractTzNode<Project>(p, p, exp), TzRunnableNode {
 
     override fun update(presentation: PresentationData) {

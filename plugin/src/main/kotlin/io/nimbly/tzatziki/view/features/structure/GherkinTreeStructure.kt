@@ -1,12 +1,14 @@
-package io.nimbly.tzatziki.view.features
+package io.nimbly.tzatziki.view.features.structure
 
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
+import com.intellij.openapi.components.ComponentManager
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
-import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
-import io.nimbly.tzatziki.view.features.nodes.ProjectNode
+import io.nimbly.tzatziki.util.getModule
+import io.nimbly.tzatziki.util.rootModule
+import io.nimbly.tzatziki.view.features.FeaturePanel
+import io.nimbly.tzatziki.view.features.nodes.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -16,10 +18,11 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
     var filterByTags: Expression? = null
         set(value) {
             field = value
-            root = ProjectNode(panel.project, filterByTags)
+            root = rootNode(panel.project, filterByTags)
         }
 
-    private var root = ProjectNode(panel.project, filterByTags)
+    private var root: AbstractTzNode<out ComponentManager>
+        = rootNode(panel.project, filterByTags)
 
     override fun commit() = Unit
     override fun hasSomethingToCommit() = false
@@ -29,9 +32,10 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
 
     override fun getRootElement(): Any = root
 
+    // PROJECT < ... < FILE < FEATURE < SCENARIO
     override fun getParentElement(element: Any): Any? {
         if (element is GherkinFile) {
-            return ProjectNode(element.project, filterByTags)
+            return ModuleNode(element.getModule()!!, filterByTags)
         } else if (element is GherkinFeature) {
             return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
         } else if (element is GherkinStepsHolder) {
