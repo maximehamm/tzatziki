@@ -18,7 +18,6 @@ package io.nimbly.tzatziki
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions.*
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -35,9 +34,7 @@ import io.nimbly.tzatziki.mouse.TZMouseAdapter
 import io.nimbly.tzatziki.mouse.TzSelectionModeManager.blockSelectionSwitch
 import io.nimbly.tzatziki.mouse.TzSelectionModeManager.releaseSelectionSwitch
 import io.nimbly.tzatziki.psi.format
-import io.nimbly.tzatziki.services.TzTagService
 import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.view.features.DisposalService
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
 var TOGGLE_CUCUMBER_PL: Boolean = true

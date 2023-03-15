@@ -1,7 +1,10 @@
 package io.nimbly.tzatziki.view.features
 
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import io.nimbly.tzatziki.util.checkExpression
+import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
+import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
+import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
+import io.nimbly.tzatziki.view.features.nodes.ProjectNode
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -22,7 +25,7 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
         } else if (element is GherkinFeature) {
             return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
         } else if (element is GherkinStepsHolder) {
-            return FeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
+            return GherkinFeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
         }
         return null
     }

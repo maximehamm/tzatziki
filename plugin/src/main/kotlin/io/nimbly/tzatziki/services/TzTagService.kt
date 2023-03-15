@@ -14,7 +14,6 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.*
 import io.cucumber.tagexpressions.Expression
-import io.cucumber.tagexpressions.TagExpressionParser
 import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.view.features.DisposalService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
