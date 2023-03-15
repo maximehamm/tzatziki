@@ -22,6 +22,8 @@ import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.components.ServiceManager
 import io.nimbly.tzatziki.services.TzPersistenceStateService
+import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.tagService
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 
 class TzCucumberJavaRunExtension : RunConfigurationExtension() {
@@ -35,8 +37,8 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
         if (configuration !is CucumberJavaRunConfiguration)
             return
 
-        val state = ServiceManager.getService(configuration.project, TzPersistenceStateService::class.java)
-        val sel: String? = if (state.filterByTags != true) null else state.selection
+        val state = configuration.project.tagService()
+        val sel: String? = if (!state.filterByTags) null else state.selection
         if (sel.isNullOrBlank()) {
             params.vmParametersList.properties.remove("cucumber.filter.tags")
         }

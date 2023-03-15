@@ -20,10 +20,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.services.Tag
-import io.nimbly.tzatziki.services.TagComparator
-import io.nimbly.tzatziki.services.TzPersistenceStateService
-import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.*
 import io.nimbly.tzatziki.view.features.actions.FilterTagAction
 import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
 import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
@@ -45,10 +42,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     val tree: DnDAwareTree
     init {
 
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-
+        val tagService = project.tagService()
         structure = GherkinTreeTagStructure(this).apply {
-            this.groupTag = state.groupTag == true
+            this.groupTag = tagService.groupTag == true
         }
         model = StructureTreeModel(structure, this)
         tree = DnDAwareTree(AsyncTreeModel(model, this))
@@ -75,23 +71,23 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
 
-        initTagService()
+//        initTagService()
         forceRefresh()
     }
 
-    private fun initTagService() {
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        val tagService = project.getService(TzTagService::class.java)
-        tagService.updateTagsFilter(state.tagExpression())
-    }
+//    private fun initTagService() {
+//        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+//        val tagService = project.tagService()
+//        tagService.updateTagsFilter(state.tagExpression())
+//    }
 
     private fun forceRefresh() {
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
                 // First tag list initialization
-                val filterActivated = ServiceManager.getService(project, TzPersistenceStateService::class.java).filterByTags == true
-                val tagService = project.getService(TzTagService::class.java)
+                val tagService = project.tagService()
+                val filterActivated = tagService.filterByTags
                 refreshTags(
                     tagService.getTags(),
                     if (filterActivated) tagService.getTagsFilter() else null
@@ -105,11 +101,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     fun filterByTag(filter: Boolean) {
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        state.filterByTags = filter
+
+        val tagService = project.tagService()
+        tagService.filterByTags = filter
 
         if (filter)
-            this.structure.filterByTags = state.tagExpression()
+            this.structure.filterByTags = tagService.tagExpression()
         else
             this.structure.filterByTags = null
 
@@ -118,8 +115,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     fun groupByTag(grouping: Boolean) {
 
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        state.groupTag = grouping
+        project.tagService().groupTag = grouping
 
         this.structure.groupTag = grouping
 
@@ -139,7 +135,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     fun refreshTags(tagsFilter: Expression?) {
 
-        val filterActivated = ServiceManager.getService(project, TzPersistenceStateService::class.java).filterByTags == true
+        val filterActivated = project.tagService().filterByTags
         if (filterActivated) {
             structure.filterByTags = tagsFilter
             invalidateAsync()

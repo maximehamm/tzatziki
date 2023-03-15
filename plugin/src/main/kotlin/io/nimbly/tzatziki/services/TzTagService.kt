@@ -38,6 +38,33 @@ class TzTagService(val project: Project) : Disposable {
         )
     }
 
+    var filterByTags: Boolean
+        get() = state().filterByTags == true
+        set(b) {
+            state().filterByTags = b
+        }
+
+    var groupTag: Boolean
+        get() = state().groupTag == true
+        set(b) {
+            state().groupTag = b
+        }
+
+    var selectedTags: List<String>
+        get() = state().selectedTags
+        set(b) {
+            state().selectedTags = b
+        }
+
+    var selection: String?
+        get() = state().selection
+        set(v) {
+            state().selection = v
+        }
+
+    fun tagExpression(): Expression? =
+            state().tagExpression()
+
     fun getTags(): SortedMap<String, Tag> {
         if (tags == null) {
             refreshTags(false)
@@ -47,12 +74,15 @@ class TzTagService(val project: Project) : Disposable {
 
     fun getTagsFilter(): Expression? {
         if (!tagsFilterInitialized) {
-            val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+            val state = state()
             tagsFilter = state.tagExpression()
             tagsFilterInitialized = true
         }
         return tagsFilter
     }
+
+    private fun state()
+        = ServiceManager.getService(project, TzPersistenceStateService::class.java)
 
     fun addTagsListener(listener: TagsEventListener) {
         this.tagsListeners.add(listener)
@@ -100,7 +130,11 @@ class TzTagService(val project: Project) : Disposable {
     override fun dispose() {
         this.tags = null
     }
+
 }
+
+fun Project.tagService(): TzTagService
+    = this.getService(TzTagService::class.java)
 
 interface TagsEventListener : EventListener {
     fun tagsUpdated(event: TagEvent) {}

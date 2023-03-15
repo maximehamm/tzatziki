@@ -42,6 +42,7 @@ import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
 import io.nimbly.tzatziki.services.TzPersistenceStateService
+import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
@@ -77,7 +78,7 @@ class TzExportAction : AnAction() {
             throw TzatzikiException("No Cucumber feature found !")
 
         // Filter per tags
-        val tagExpression = ServiceManager.getService(project, TzPersistenceStateService::class.java).tagExpression()
+        val tagExpression = project.tagService().tagExpression()
         val files = allFiles.filter { it.checkExpression(tagExpression) }
         if (files.isEmpty())
             throw TzatzikiException("No Cucumber feature found having scenarios matching selected tags !")

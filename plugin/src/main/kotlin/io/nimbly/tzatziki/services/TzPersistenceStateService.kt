@@ -26,10 +26,11 @@ import io.cucumber.tagexpressions.TagExpressionParser
 @State(name = "ProjectCucumberState", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateService> {
 
-    var selectedTags: List<String> = emptyList()
-    var selection: String? = null
-    var groupTag: Boolean? = null
-    var filterByTags: Boolean? = null
+    internal var selectedTags: List<String> = emptyList()
+    internal var selection: String? = null
+
+    internal var groupTag: Boolean? = null
+    internal var filterByTags: Boolean? = null
 
     override fun getState(): TzPersistenceStateService {
         return this

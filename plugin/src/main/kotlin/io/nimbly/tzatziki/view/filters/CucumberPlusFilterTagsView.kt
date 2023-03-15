@@ -18,7 +18,6 @@ import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -34,8 +33,8 @@ import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.cucumber.tagexpressions.TagExpressionParser
 import io.nimbly.tzatziki.services.Tag
-import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.tagService
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
@@ -202,36 +201,34 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
         // Update selection function
         fun updateSelection(selectionOnly: Boolean) {
-            val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+            val tagService = project.tagService()
             if (selectionOnly) {
-                state.selection = tSelection.text
+                tagService.selection = tSelection.text
             }
             else {
                 val checked = checks.filter { it.isSelected }.mapNotNull { it.text }.map { "@$it" }
                 tSelection.text = checked.joinToString(" or ")
-                state.selection = tSelection.text
-                state.selectedTags = checked
 
-                state.filterByTags = checked.isNotEmpty()
+                tagService.selection = tSelection.text
+                tagService.selectedTags = checked
+                tagService.filterByTags = checked.isNotEmpty()
 
-                val tagService = project.getService(TzTagService::class.java)
-                tagService.updateTagsFilter(state.tagExpression())
+                tagService.updateTagsFilter(tagService.tagExpression())
             }
 
             try {
                 val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
-                val tagService = project.getService(TzTagService::class.java)
                 tagService.updateTagsFilter(expression)
             } catch (ignored: Exception) {
             }
         }
 
         // Load previously checked values
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        val tagService = project.tagService()
         checks.forEach { check ->
-            check.isSelected = state.selectedTags.contains("@" + check.text)
+            check.isSelected = tagService.selectedTags.contains("@" + check.text)
         }
-        tSelection.text = state.selection
+        tSelection.text = tagService.selection
 
         // Setup listeners
         checks.forEach { check ->
@@ -256,23 +253,20 @@ class FilterItAction(val project: Project) : ToggleAction() {
         this.templatePresentation.icon = ActionIcons.FILTER
     }
     override fun isSelected(e: AnActionEvent): Boolean {
-        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        return state.filterByTags == true
+        return project.tagService().filterByTags
     }
     override fun setSelected(e: AnActionEvent, state: Boolean) {
 
+        val tagService = project.tagService()
+
         val exp: Expression?
         if (state) {
-            val stateService = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-            exp = stateService.tagExpression()
+            exp = tagService.tagExpression()
         } else {
             exp = null
         }
 
-        val stateService = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-        stateService.filterByTags = state
-
-        val tagService = project.getService(TzTagService::class.java)
+        tagService.filterByTags = state
         tagService.updateTagsFilter(exp)
     }
 

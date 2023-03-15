@@ -1,13 +1,10 @@
 package io.nimbly.tzatziki.view.features.actions
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.components.ServiceManager
 import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.services.TzPersistenceStateService
-import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.view.features.FeaturePanel
 
 @Suppress("MissingActionUpdateThread")
@@ -17,23 +14,20 @@ class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
         this.templatePresentation.icon = ActionIcons.FILTER
     }
     override fun isSelected(e: AnActionEvent): Boolean {
-        val state = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-        return state.filterByTags == true
+        return panel.project.tagService().filterByTags
     }
     override fun setSelected(e: AnActionEvent, state: Boolean) {
 
+        val tagService = panel.project.tagService()
+
         val exp: Expression?
         if (state) {
-            val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-            exp = stateService.tagExpression()
+            exp = tagService.tagExpression()
         } else {
             exp = null
         }
 
-        val stateService = ServiceManager.getService(panel.project, TzPersistenceStateService::class.java)
-        stateService.filterByTags = state
-
-        val tagService = panel.project.getService(TzTagService::class.java)
+        tagService.filterByTags = state
         tagService.updateTagsFilter(exp)
 
         panel.filterByTag(state)
