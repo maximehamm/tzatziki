@@ -1,0 +1,8 @@
+rootProject.name = 'rich-example'
+
+include 'france'
+include 'worldwide'
+
+//findProject('france')?.name = 'france'
+//findProject('worldwide')?.name = 'worldwide'
+

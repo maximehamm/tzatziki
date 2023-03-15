@@ -1,4 +1,4 @@
-package io.nimbly.example;
+package example;
 
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Given;
