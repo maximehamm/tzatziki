@@ -12,6 +12,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/customer" />
+            <option value="$PROJECT_DIR$/supplier" />
+            <option value="$PROJECT_DIR$/supplier/france" />
+            <option value="$PROJECT_DIR$/supplier/worldwide" />
           </set>
         </option>
       </GradleProjectSettings>

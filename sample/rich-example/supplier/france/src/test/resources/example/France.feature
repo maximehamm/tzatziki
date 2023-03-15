@@ -8,6 +8,15 @@ Feature: Cocktail Ordering
   ![Chat](images/chart.svg)
   <img src='images/candles.png' style='width:40px; position:absolute; top:0px; left:330px'/>
 
+  Ceci est plutot cool !
+
+  @Advanced @Chrome
+  Scenario: This is the scenario
+    Given Romeo who wants to buy a drink
+    * this is a test ddssd sdf sdfsdf
+
+
+
   @Production
   Scenario: Creating an empty order
     Given Romeo who wants to buy a drink
@@ -15,13 +24,15 @@ Feature: Cocktail Ordering
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store
-      | Erik Larson | The Devil in the White City          |
+      | Erik Larson | The Devil in the White City      |
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
 
+Feature: Toto the heroe
+
   Scenario Outline: Sending a message with an order
-    When kotlin for <Who>
-    Then the ticket must say "<expected>"
+    * kotlin 5 fôr the <Who> and <expected> hello
+    * the tickêt must saÿ "<expected>"
 
     @Basics
     Examples:
