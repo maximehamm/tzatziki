@@ -7,7 +7,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import icons.ActionIcons
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.TzRunnableNode
-import org.jetbrains.kotlin.utils.IDEAPluginsCompatibilityAPI
 import javax.swing.tree.DefaultMutableTreeNode
 
 private const val PRESENTATION_TEXT = "Run Cucumber..."
@@ -20,7 +19,6 @@ class RunTestAction(val panel: FeaturePanel) : AnAction() {
         this.templatePresentation.icon = ActionIcons.RUN
     }
 
-    @OptIn(IDEAPluginsCompatibilityAPI::class)
     override fun actionPerformed(e: AnActionEvent) {
 
         val component = panel.tree.selectionPath?.lastPathComponent as? DefaultMutableTreeNode

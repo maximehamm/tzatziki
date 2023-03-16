@@ -20,8 +20,8 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
         if (!groupTag)
             return super.getParentElement(element)
 
-        if (element is GherkinFile) {
-            return ModuleNode(element.getModule()!!, filterByTags)
+        if (element is GherkinTagNode) {
+            return createModuleNode(element.project, filterByTags)
         }
 
         return super.getParentElement(element)
@@ -42,9 +42,6 @@ class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel)
                 ) }?.toTypedArray()
                 ?: emptyArray()
 
-        if (element is AbstractTreeNode<*>)
-            return element.children.toTypedArray()
-
-        return emptyArray()
+        return super.getChildElements(element)
     }
 }
