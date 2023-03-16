@@ -1,2 +1,45 @@
+plugins {
+    id 'groovy'
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+}
+
 group 'io.nimbly.example'
 version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'org.codehaus.groovy:groovy-all:3.0.5'
+
+    testCompile 'io.cucumber:cucumber-java:6.8.1'
+    testCompile 'io.cucumber:cucumber-junit:6.8.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty', '--glue', 'hellocucumber', 'src/test/resources']
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
