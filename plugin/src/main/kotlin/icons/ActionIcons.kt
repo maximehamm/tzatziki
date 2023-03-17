@@ -15,11 +15,10 @@
 
 package icons
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.IconManager
-import javax.swing.Icon
 
+// See Intellij Icons here : https://jetbrains.design/intellij/resources/icons_list/
 object ActionIcons {
 
     @JvmField val SHIFT_LEFT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-shift-left-16x16.png", javaClass)

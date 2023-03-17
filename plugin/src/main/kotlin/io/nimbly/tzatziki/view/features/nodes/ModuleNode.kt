@@ -40,6 +40,14 @@ class ModuleNode(
     override fun getChildren(): List<AbstractTzNode<out UserDataHolder>> {
 
         val allSubModules = tree.getModulesInGroup(ModuleGroup(path))
+        if (allSubModules.isEmpty()) {
+
+            return findAllGerkinsFiles(project)
+                .filter { it.checkExpression(filterByTags) }
+                .map { GherkinFileNode(project, it, filterByTags) }
+                .sortedBy { it.toString()}
+                .toMutableList()
+        }
 
         val subModules = mutableListOf<ModuleNode>()
         val subFiles = mutableSetOf<GherkinFileNode>()

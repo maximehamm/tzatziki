@@ -1,5 +1,25 @@
 package io.nimbly.tzatziki.view.features
 
+import io.cucumber.tagexpressions.Expression
+import io.nimbly.tzatziki.services.Tag
+import io.nimbly.tzatziki.services.TagComparator
+import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.util.file
+import io.nimbly.tzatziki.util.parentOfTypeIs
+import io.nimbly.tzatziki.view.features.actions.FilterTagAction
+import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
+import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
+import io.nimbly.tzatziki.view.features.actions.LocateAction
+import io.nimbly.tzatziki.view.features.actions.RunTestAction
+import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
+import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
+import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
+import io.nimbly.tzatziki.view.features.structure.GherkinTreeTagStructure
+import org.jetbrains.plugins.cucumber.psi.GherkinFeature
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinScenario
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import com.intellij.ide.CommonActionsManager
 import com.intellij.ide.DefaultTreeExpander
 import com.intellij.ide.dnd.aware.DnDAwareTree
@@ -7,11 +27,11 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.ui.getTreePath
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -19,19 +39,14 @@ import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
-import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.services.*
-import io.nimbly.tzatziki.view.features.actions.FilterTagAction
-import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
-import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
-import io.nimbly.tzatziki.view.features.actions.RunTestAction
-import io.nimbly.tzatziki.view.features.structure.GherkinTreeTagStructure
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreeModel
+import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
 
 // See com.intellij.ide.bookmark.ui.BookmarksView
@@ -40,6 +55,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     val structure: GherkinTreeTagStructure
     val model: StructureTreeModel<GherkinTreeTagStructure>
     val tree: DnDAwareTree
+    val treeSearcher: TreeSpeedSearch
     init {
 
         val tagService = project.tagService()
@@ -52,34 +68,28 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         layout = BorderLayout()
 
         add(JBScrollPane(tree))
-        TreeSpeedSearch(tree)
+        treeSearcher = TreeSpeedSearch(tree)
         val treeExpander = DefaultTreeExpander(tree)
 
-        val toolbarGroup = DefaultActionGroup()
-        toolbarGroup.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
-        toolbarGroup.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
-        toolbarGroup.add(GroupByModuleAction(this))
-        toolbarGroup.add(GroupByTagAction(this))
-        toolbarGroup.add(FilterTagAction(this))
+        val group = DefaultActionGroup().also {
+            it.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
+            it.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
+            it.add(LocateAction(this))
+            it.add(GroupByModuleAction(this))
+            it.add(GroupByTagAction(this))
+            it.add(FilterTagAction(this))
+            it.add(RunTestAction(this))
+        }
 
-        toolbarGroup.add(RunTestAction(this))
-
-        val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", toolbarGroup, false)
+        val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", group, false)
         toolbar.targetComponent = tree
         setToolbar(toolbar.component)
         tree.addMouseListener(MouseListening(tree, project))
 
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
 
-//        initTagService()
         forceRefresh()
     }
-
-//    private fun initTagService() {
-//        val state = ServiceManager.getService(project, TzPersistenceStateService::class.java)
-//        val tagService = project.tagService()
-//        tagService.updateTagsFilter(state.tagExpression())
-//    }
 
     private fun forceRefresh() {
         DumbService.getInstance(project).smartInvokeLater {
@@ -162,6 +172,40 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     private fun refreshTags(tags: SortedMap<String, Tag>, tagsFilter: Expression?) {
         structure.filterByTags = tagsFilter
         refreshTags(tags)
+    }
+
+    fun selectFromEditor() {
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        val editor = fileEditorManager.selectedTextEditor
+            ?: return
+        val file = editor.file as? GherkinFile
+            ?: return
+
+        DumbService.getInstance(project).smartInvokeLater {
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted {
+
+                fun Any.path(): TreePath?
+                    = tree.model.getTreePath(this)
+
+                val offset = editor.caretModel.currentCaret.offset
+                val element = file.findElementAt(offset)
+
+                val candidates = mutableListOf<TreePath?>()
+
+                if (element != null) {
+                    element.parentOfTypeIs<GherkinStepsHolder>(true)?.let {
+                        candidates.add(GherkinScenarioNode(project, it, null).path())
+                    }
+                    element.parentOfTypeIs<GherkinFeature>(true)?.let {
+                        candidates.add(GherkinFeatureNode(project, it, null).path())
+                    }
+                }
+                candidates.add(GherkinFileNode(project, file, null).path())
+                val target = candidates.firstOrNull { it != null }
+
+                tree.selectionPath = target
+            }
+        }
     }
 
 }

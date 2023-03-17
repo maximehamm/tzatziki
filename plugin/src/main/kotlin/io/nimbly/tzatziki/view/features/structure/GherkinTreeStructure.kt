@@ -3,10 +3,10 @@ package io.nimbly.tzatziki.view.features.structure
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.getModule
 import io.nimbly.tzatziki.view.features.FeaturePanel
-import io.nimbly.tzatziki.view.features.nodes.AbstractTzNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
+import io.nimbly.tzatziki.view.features.nodes.createModuleGroupTree
 import io.nimbly.tzatziki.view.features.nodes.createModuleNode
 import io.nimbly.tzatziki.view.features.nodes.parent
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
@@ -15,8 +15,13 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
-import com.intellij.openapi.components.ComponentManager
+import com.intellij.openapi.module.ModuleManager
 
+/**
+ * Some documentation :
+ * https://intellij-sdk-docs-cn.github.io/intellij/sdk/docs/user_interface_components/lists_and_trees.html?search=tree
+ *
+ */
 @Suppress("UnstableApiUsage")
 abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractTreeStructure() {
 
@@ -39,16 +44,37 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
 
     // PROJECT < ... < FILE < FEATURE < SCENARIO
     override fun getParentElement(element: Any): Any? {
-        if (element is ModuleNode) {
-            return createModuleNode(panel.project, filterByTags, element.value!!.parent())
-        } else if (element is GherkinFile) {
-            return createModuleNode(panel.project, filterByTags, element.getModule()!!)
-        } else if (element is GherkinFeature) {
-            return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
-        } else if (element is GherkinStepsHolder) {
-            return GherkinFeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
+        when (element) {
+            is ModuleNode -> {
+                val parentModule = element.value?.parent()
+                    ?: return null
+                return createModuleNode(panel.project, filterByTags, parentModule)
+            }
+
+            is GherkinFile -> {
+                val module = element.getModule()
+                    ?: return null
+
+                val tree = createModuleGroupTree(panel.project)
+                val grouper = tree.grouper
+                val path = grouper.getGroupPath(module)
+
+                val mainModule =  ModuleManager.getInstance(panel.project).findModuleByName(path.joinToString("."))
+                    ?: return null
+
+                return createModuleNode(panel.project, filterByTags, mainModule)
+            }
+
+            is GherkinFeature -> {
+                return GherkinFileNode(element.project, element.parent as GherkinFile, filterByTags)
+            }
+
+            is GherkinStepsHolder -> {
+                return GherkinFeatureNode(element.project, element.parent as GherkinFeature, filterByTags)
+            }
+
+            else -> return null
         }
-        return null
     }
 
     override fun getChildElements(element: Any): Array<Any> {

@@ -8,7 +8,6 @@ import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.ide.projectView.impl.ModuleGroup
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleGrouper
 import com.intellij.openapi.project.Project
@@ -16,8 +15,6 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
-import com.intellij.psi.SmartPointerManager
-import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -49,7 +46,7 @@ fun Module.parent(): Module? {
     val tree = createModuleGroupTree(this.project)
 
     val path = ModuleGrouper.instanceFor(this.project).getGroupPath(this).dropLast(1)
-    val parent: Module = tree.getModulesInGroup(ModuleGroup(path)).first()
+    val parent: Module? = tree.getModulesInGroup(ModuleGroup(path)).firstOrNull()
 
    return parent
 }
@@ -81,7 +78,7 @@ fun createModuleNode(
 //    get() = value
 //        .element
 
-private fun createModuleGroupTree(project: Project): ModuleGroupsTree {
+internal fun createModuleGroupTree(project: Project): ModuleGroupsTree {
     return CachedValuesManager.getManager(project).getCachedValue(project, key, {
         val tree = ModuleGroupsTree(ModuleGrouper.instanceFor(project))
         CachedValueProvider.Result.createSingleDependency(tree, ProjectRootManager.getInstance(project))
