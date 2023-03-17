@@ -46,7 +46,6 @@ import com.intellij.util.ui.tree.TreeUtil
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import javax.swing.tree.DefaultMutableTreeNode
@@ -186,7 +185,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             ?: return
         val file = editor.file as? GherkinFile
             ?: return
-        val filepath = file.virtualFile.path.path
 
         val fileStack = mutableSetOf<Any>().apply {
             this.add(file)
@@ -256,8 +254,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     fun Any.path(): TreePath? = tree.model.getTreePath(this)
 
 }
-
-private val String.path get() = Path.of(this)
 
 class MouseListening(val tree: DnDAwareTree, private val project: Project) : MouseAdapter() {
 
