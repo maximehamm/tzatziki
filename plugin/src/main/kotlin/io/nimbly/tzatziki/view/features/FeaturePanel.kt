@@ -11,7 +11,6 @@ import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
 import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
 import io.nimbly.tzatziki.view.features.actions.LocateAction
 import io.nimbly.tzatziki.view.features.actions.RunTestAction
-import io.nimbly.tzatziki.view.features.nodes.AbstractTzNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
@@ -31,7 +30,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -81,9 +79,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             it.add(CommonActionsManager.getInstance().createExpandAllAction(treeExpander, this))
             it.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
             it.add(LocateAction(this))
+            it.addSeparator(" ")
             it.add(GroupByModuleAction(this))
             it.add(GroupByTagAction(this))
             it.add(FilterTagAction(this))
+            it.addSeparator(" ")
             it.add(RunTestAction(this))
         }
 

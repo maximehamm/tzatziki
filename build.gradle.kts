@@ -4,11 +4,10 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "15.1.1"
+    version = "15.1.2"
 }
 
-//TODO : C+ View : add an action to select node in tree
-//TODO : C+ View : add an action to hide files
+//TODO : C+ View : print + use tag filter only if filter is activated
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>

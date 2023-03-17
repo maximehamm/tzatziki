@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.view.features.structure
 
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.getModule
+import io.nimbly.tzatziki.util.getModuleManager
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
@@ -59,7 +60,7 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
                 val grouper = tree.grouper
                 val path = grouper.getGroupPath(module)
 
-                val mainModule =  ModuleManager.getInstance(panel.project).findModuleByName(path.joinToString("."))
+                val mainModule =  panel.project.getModuleManager().findModuleByName(path.joinToString("."))
                     ?: return null
 
                 return createModuleNode(panel.project, filterByTags, mainModule)
