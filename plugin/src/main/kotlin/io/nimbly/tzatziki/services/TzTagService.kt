@@ -19,6 +19,7 @@ import io.nimbly.tzatziki.view.features.DisposalService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
+import com.intellij.psi.PsiDirectory
 import java.util.*
 
 @Service(Service.Level.PROJECT)
@@ -105,7 +106,11 @@ class TzTagService(val project: Project) : Disposable {
     }
 
 
-    internal fun refreshTags(updateListeners: Boolean = true) {
+    internal fun refreshStructure() {
+        refreshTags(true, true)
+    }
+
+    internal fun refreshTags(updateListeners: Boolean = true, force: Boolean = true) {
 
         // Get all tags
         val tags = findAllTags(project, project.getGherkinScope())
@@ -156,10 +161,40 @@ private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListen
     override fun beforeChildrenChange(event: PsiTreeChangeEvent) = Unit
     override fun beforePropertyChange(event: PsiTreeChangeEvent) = Unit
 
-    override fun childAdded(event: PsiTreeChangeEvent) = event(event)
-    override fun childMoved(event: PsiTreeChangeEvent) = event(event)
-    override fun childRemoved(event: PsiTreeChangeEvent) = event(event)
-    override fun propertyChanged(event: PsiTreeChangeEvent) = event(event)
+    override fun childMoved(event: PsiTreeChangeEvent) {
+        if (event.child is GherkinFile) {
+            refresh(true)
+        }
+        event(event)
+    }
+    override fun childRemoved(event: PsiTreeChangeEvent) {
+        if (event.child is GherkinFile) {
+            refresh(true)
+        }
+        event(event)
+    }
+    override fun childAdded(event: PsiTreeChangeEvent) {
+        if (event.child is GherkinFile) {
+            refresh(true)
+        }
+        event(event)
+    }
+
+    override fun propertyChanged(event: PsiTreeChangeEvent) {
+        if (event.parent is PsiDirectory && event.propertyName == "fileName") {
+            // Renaming file
+            val file = event.element
+            if (file !is GherkinFile)
+                return
+            refresh(true)
+        }
+        if (event.propertyName == "roots") {
+            // Renaming module 
+            refresh(true)
+        }
+
+        event(event)
+    }
 
     override fun childReplaced(event: PsiTreeChangeEvent) {
         val tag = event.parent as? GherkinTag
@@ -180,10 +215,10 @@ private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListen
         //NA
     }
 
-    fun refresh() {
+    fun refresh(structure: Boolean = false) {
         DumbService.getInstance(service.project).smartInvokeLater {
             PsiDocumentManager.getInstance(service.project).performLaterWhenAllCommitted() {
-                service.refreshTags()
+                service.refreshTags(true, structure)
             }
         }
     }

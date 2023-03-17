@@ -16,6 +16,8 @@ import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
+import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -56,7 +58,7 @@ fun createModuleNode(
     project: Project,
     filterByTags: Expression?,
     fromModule: Module? = null
-): AbstractTzNode<out ComponentManager> {
+): ModuleNode {
 
     val tree = createModuleGroupTree(project)
 
@@ -74,6 +76,10 @@ fun createModuleNode(
     val name = path.last()
     return ModuleNode(module, name, tree, path, filterByTags)
 }
+
+//val <T : PsiElement> AbstractTzSmartPsiElementNode<T>.valueElement
+//    get() = value
+//        .element
 
 private fun createModuleGroupTree(project: Project): ModuleGroupsTree {
     return CachedValuesManager.getManager(project).getCachedValue(project, key, {

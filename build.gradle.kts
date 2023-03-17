@@ -7,6 +7,8 @@ allprojects {
     version = "15.1.1"
 }
 
+//TODO : C+ View : add an action to select node in tree
+//TODO : C+ View : add an action to hide files
 //TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>

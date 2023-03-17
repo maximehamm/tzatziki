@@ -26,7 +26,7 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
             root = createModuleNode(panel.project, filterByTags)
         }
 
-    private var root: AbstractTzNode<out ComponentManager>
+    private var root: ModuleNode
         = createModuleNode(panel.project, filterByTags)
 
     override fun commit() = Unit

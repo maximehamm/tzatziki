@@ -1,5 +1,11 @@
 package io.nimbly.tzatziki.view.features.nodes
 
+import io.cucumber.tagexpressions.Expression
+import io.nimbly.tzatziki.util.TzDataContext
+import io.nimbly.tzatziki.util.checkExpression
+import io.nimbly.tzatziki.util.getModule
+import org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer
+import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import com.intellij.execution.Location
 import com.intellij.execution.PsiLocation
 import com.intellij.execution.actions.ConfigurationContext
@@ -10,12 +16,6 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.project.Project
-import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.util.TzDataContext
-import io.nimbly.tzatziki.util.checkExpression
-import io.nimbly.tzatziki.util.getModule
-import org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer
-import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 
 class GherkinFeatureNode(p: Project, feature: GherkinFeature, exp: Expression?) : AbstractTzPsiElementNode<GherkinFeature>(p, feature, exp),
     TzRunnableNode {
