@@ -34,12 +34,12 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
     }
 
     override fun getRunDataContext(): ConfigurationContext {
-        val dataContext = TzDataContext()
-        dataContext.put(CommonDataKeys.PROJECT, project)
-        dataContext.put(CommonDataKeys.PSI_FILE, value.containingFile)
-        dataContext.put(CucumberPlusDataKeys.MODULE, value.getModule())
-        dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
-        return ConfigurationContext.getFromContext(dataContext)
+        val context = TzDataContext()
+        context.put(CommonDataKeys.PROJECT, project)
+        context.put(CommonDataKeys.PSI_FILE, value.containingFile)
+        context.put(CucumberPlusDataKeys.MODULE, value.getModule())
+        context.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
+        return context.configutation()
     }
 
     override fun getRunActionText() = "Run scenario..."

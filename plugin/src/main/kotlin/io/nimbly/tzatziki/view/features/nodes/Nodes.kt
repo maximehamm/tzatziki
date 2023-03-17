@@ -2,20 +2,20 @@
 
 package io.nimbly.tzatziki.view.features.nodes
 
-import com.intellij.execution.actions.ConfigurationContext
-import com.intellij.execution.actions.RunConfigurationProducer
-import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.openapi.components.ComponentManager
-import com.intellij.openapi.project.Project
-import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiElement
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.rootModule
+import com.intellij.execution.actions.ConfigurationContext
+import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.ide.projectView.impl.ModuleGroup
+import com.intellij.ide.util.treeView.AbstractTreeNode
+import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleGrouper
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
+import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiElement
 import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
