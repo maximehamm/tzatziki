@@ -13,7 +13,6 @@ Feature: Some terse yet descriptive text of what is desired
     Then some testable outcome is achieved
     And something else we can check happens too
 
-Feature: Post something
   Scenario: Wilson posts to his own blog
     Given I am logged in as Wilson
     When I try to post to "Expensive Therapy"

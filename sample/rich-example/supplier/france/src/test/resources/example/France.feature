@@ -13,7 +13,7 @@ Feature: Cocktail Ordering
   @Advanced @Chrome
   Scenario: This is the scenario
     Given Romeo who wants to buy a drink
-    * this is a test ddssd sdf sdfsdf
+    * this is a test
 
 
 
@@ -24,24 +24,6 @@ Feature: Cocktail Ordering
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store
-      | Erik Larson | The Devil in the White City      |
+      | Erik Larson | The Devil in the White City          |
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
-
-Feature: Toto the heroe
-
-  Scenario Outline: Sending a message with an order
-    * kotlin 5 fôr the <Who> and <expected> hello
-    * the tickêt must saÿ "<expected>"
-
-    @Basics
-    Examples:
-      | Who      | expected                            |
-      | Juliette | From Romeo to Juliette: Wanna chat? |
-      | Juliette | From Romeo to Jerry: Hei!           |
-
-    @Advanced
-    Examples: Advance feature
-      | Who      | expected                            |
-      | Juliette | From Romeo to Juliette: Wanna chat? |
-      | Juliette | From Romeo to Jerry: Hei!           |

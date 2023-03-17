@@ -1,7 +1,5 @@
 plugins {
-    id 'groovy'
     id 'java'
-    id 'org.jetbrains.kotlin.jvm'
 }
 
 group 'io.nimbly.example'
@@ -13,8 +11,10 @@ repositories {
 
 dependencies {
 
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation 'org.codehaus.groovy:groovy-all:3.0.5'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.7.22"
+    testCompile 'io.cucumber:cucumber-java:6.8.1'
+    testCompile 'io.cucumber:cucumber-junit:6.8.1'
+
 }
 
 test {
