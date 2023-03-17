@@ -45,8 +45,16 @@ fun Module.parent(): Module? {
 
     val tree = createModuleGroupTree(this.project)
 
-    val path = ModuleGrouper.instanceFor(this.project).getGroupPath(this).dropLast(1)
-    val parent: Module? = tree.getModulesInGroup(ModuleGroup(path)).firstOrNull()
+    val fullPath = ModuleGrouper.instanceFor(this.project).getGroupPath(this)
+    val path = fullPath.dropLast(1)
+    val parent: Module?
+    if (path.isEmpty()) {
+        val p = tree.root()
+        parent = if (p == this) null else p
+    } else {
+        val modulesInGroup = tree.getModulesInGroup(ModuleGroup(path))
+        parent = modulesInGroup.find { this.name.startsWith(it.name)}
+    }
 
    return parent
 }
@@ -112,6 +120,7 @@ class ModuleGroupsTree (val grouper: ModuleGrouper) {
     }
 
     fun getModulesInGroup(group: ModuleGroup): Collection<Module> = childModules[group]
+    fun root(): Module? = grouper.getAllModules().firstOrNull()
 }
 
 private val key = Key.create<CachedValue<ModuleGroupsTree>>("TZ_MODULE_GROUPS_TREE")
