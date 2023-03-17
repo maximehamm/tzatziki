@@ -13,11 +13,13 @@ Feature: Some terse yet descriptive text of what is desired
     Then some testable outcome is achieved
     And something else we can check happens too
 
+  @Dev
   Scenario: Wilson posts to his own blog
     Given I am logged in as Wilson
     When I try to post to "Expensive Therapy"
     Then I should see "Your article was published."
 
+  @Dev @Advanced
   Scenario: Wilson fails to post to somebody else's blog
     Given I am logged in as Wilson
     When I try to post to "Greg's anti-tax rants"

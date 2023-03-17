@@ -8,7 +8,7 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.checkExpression
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 
-class GherkinTagNode(p: Project, tag: String, val gherkinFiles: List<GherkinFile>, val filterByTags: Expression?) : AbstractTreeNode<String>(p, tag) {
+class GherkinTagNode(p: Project, tag: String, val gherkinFiles: List<GherkinFile>, filterByTags: Expression?) : AbstractTzNode<String>(p, tag, filterByTags) {
 
     override fun update(presentation: PresentationData) {
         presentation.presentableText = value

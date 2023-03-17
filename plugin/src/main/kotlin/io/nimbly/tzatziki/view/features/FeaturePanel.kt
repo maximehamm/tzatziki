@@ -11,6 +11,7 @@ import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
 import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
 import io.nimbly.tzatziki.view.features.actions.LocateAction
 import io.nimbly.tzatziki.view.features.actions.RunTestAction
+import io.nimbly.tzatziki.view.features.nodes.AbstractTzNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
@@ -91,7 +92,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         setToolbar(toolbar.component)
         tree.addMouseListener(MouseListening(tree, project))
 
-        tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
+        tree.selectionModel.selectionMode = TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION
 
         forceRefresh()
     }
@@ -196,25 +197,46 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             }
         }
 
+        // Find target
+        val offset = editor.caretModel.currentCaret.offset
+        val element = file.findElementAt(offset)
+        val candidates = mutableListOf<PsiElement?>()
+        if (element != null) {
+            candidates.add(element.parentOfTypeIs<GherkinStepsHolder>(true))
+            candidates.add(element.parentOfTypeIs<GherkinFeature>(true))
+        }
+        candidates.add(file)
+
+        // Expand nodes & select them
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
-                TreeUtil.promiseExpand(tree) { tp ->
-
+                // Expand and collect
+                val allPaths = mutableListOf<TreePath>()
+                var treePath: TreePath? = null
+                TreeUtil.promiseExpand(tree) { tp: TreePath ->
                     val userObject = (tp.lastPathComponent as? DefaultMutableTreeNode)?.userObject
                     if (userObject != null) {
-                        if (userObject is ModuleNode && fileStack.contains(userObject.value))
+                        if (userObject is ModuleNode && fileStack.contains(userObject.value)) {
                             Action.CONTINUE
-                        else if (userObject is GherkinScenarioNode && userObject.value.containingFile == file)
+                        } else if (userObject is GherkinScenarioNode && userObject.value.containingFile == file) {
+                            if (candidates.contains(userObject.value)) treePath = tp
                             Action.CONTINUE
-                        else if (userObject is GherkinFeatureNode && userObject.value.containingFile == file)
+                        } else if (userObject is GherkinFeatureNode && userObject.value.containingFile == file) {
+                            if (candidates.contains(userObject.value)) treePath = tp
                             Action.CONTINUE
-                        else if (userObject is GherkinFileNode && userObject.file == file)
+                        } else if (userObject is GherkinFileNode && userObject.file == file) {
+                            treePath = tp
                             Action.CONTINUE
-                        else if (userObject is GherkinTagNode && userObject.children.contains(GherkinFileNode(project, file, null)))
+                        } else if (userObject is GherkinTagNode && userObject.children.contains(GherkinFileNode(project, file, null))) {
+                            if (treePath != null) {
+                                allPaths.add(treePath!!)
+                                treePath = null
+                            }
                             Action.CONTINUE
-                        else
+                        } else {
                             Action.SKIP_CHILDREN
+                        }
                     }
                     else {
                         Action.CONTINUE
@@ -222,23 +244,10 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
                 }
                 .onProcessed {
 
-                    val offset = editor.caretModel.currentCaret.offset
-                    val element = file.findElementAt(offset)
+                    if (treePath != null)
+                        allPaths.add(treePath!!)
 
-                    val candidates = mutableListOf<TreePath?>()
-
-                    if (element != null) {
-                        element.parentOfTypeIs<GherkinStepsHolder>(true)?.let {
-                            candidates.add(GherkinScenarioNode(project, it, null).path())
-                        }
-                        element.parentOfTypeIs<GherkinFeature>(true)?.let {
-                            candidates.add(GherkinFeatureNode(project, it, null).path())
-                        }
-                    }
-                    candidates.add(GherkinFileNode(project, file, null).path())
-                    val target = candidates.firstOrNull { it != null }
-
-                    tree.selectionPath = target ?: it
+                    tree.selectionPaths = allPaths.toTypedArray()
                 }
             }
         }
