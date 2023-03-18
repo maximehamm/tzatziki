@@ -43,6 +43,7 @@
           <li>Export features to pdf</li>
        </ul>
 
+       <br/>
        <b>Tests inspection and runner</b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_b1cc840f-57a1-4119-8473-4e715f1c9a9f"
@@ -164,11 +165,10 @@
        <br/>
        <b>Other features :</></b><br/>
        <ul>
-          <li><u>Select Gherkin tags to filter for tests execution / for feature exportation to PDF (use Cucumber+ tool view)</u></li>
-          <li><u>Tag completion (cursor location after @)</li>
-          <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</li>
-          <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</li>
-          <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</li>
+          <li><u>Tag completion (cursor location after @)</u></li>
+          <li><u>Toggle Cucumber</u> table smart editing (from Edit menu)</u></li>
+          <li><u>Deprecated steps striked out</u> inspection (Java, Kotlin, Javascript)</u></li>
+          <li><u>Navigate from Gerkin step</u> definition to its implementation even after modifing the step text</u></li>
        </ul>
 
        <br/>
