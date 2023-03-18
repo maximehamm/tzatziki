@@ -27,8 +27,7 @@ fun Project.notification(
     function: ((event: String) -> Any?)? = null) {
 
     getNotificationGroup().createNotification(
-        TZATZIKI_NAME, "<html>$text</html>", notificationType) {
-            notification: Notification, event: HyperlinkEvent ->
+        TZATZIKI_NAME, "<html>$text</html>", notificationType) { notification: Notification, event: HyperlinkEvent ->
         if (function!=null)
             function(event.description)
         notification.expire();

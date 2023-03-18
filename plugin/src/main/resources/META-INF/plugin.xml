@@ -327,7 +327,7 @@
 
             <action class="io.nimbly.tzatziki.actions.TzExportAction"
                     id="io.nimbly.tzatziki.ExportToPdf"
-                    text="Export feature to PDF" icon="ActionIcons.EXPORT">
+                    text="Export feature to PDF" icon="ActionIcons.PDF">
             </action>
 
             <add-to-group group-id="FileMenu" anchor="after" relative-to-action="PrintExportGroup"/>

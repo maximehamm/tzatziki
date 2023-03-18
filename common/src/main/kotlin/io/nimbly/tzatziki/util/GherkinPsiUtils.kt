@@ -116,9 +116,18 @@ val GherkinStep.allTags: Set<GherkinTag>
     get() = this.stepHolder.feature.tags.toSet()
                 .union(this.stepHolder.tags.toSet())
 
-fun Module.getGherkinScope()
-    = GlobalSearchScope.getScopeRestrictedByFileTypes(
-        GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE)
+fun Module.getGherkinScope(recursive: Boolean = false): GlobalSearchScope {
+    if (recursive) {
+        var scope = this.getGherkinScope(false)
+        this.subModules().forEach { m ->
+            scope = scope.union(m.getGherkinScope(true))
+        }
+        return scope
+    }
+    return GlobalSearchScope.getScopeRestrictedByFileTypes(
+        GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE
+    )
+}
 
 
 fun Project.getGherkinScope(): GlobalSearchScope {

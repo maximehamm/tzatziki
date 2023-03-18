@@ -6,6 +6,7 @@ import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.parentOfTypeIs
+import io.nimbly.tzatziki.view.features.actions.ExportPdfAction
 import io.nimbly.tzatziki.view.features.actions.FilterTagAction
 import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
 import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
@@ -33,7 +34,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.ui.getTreePath
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -84,6 +84,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             it.add(FilterTagAction(this))
             it.addSeparator(" ")
             it.add(RunTestAction(this))
+            it.add(ExportPdfAction(this))
         }
 
         val toolbar = ActionManager.getInstance().createActionToolbar("CucumberPlusFeatureTree", group, false)
@@ -250,9 +251,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             }
         }
     }
-
-    fun Any.path(): TreePath? = tree.model.getTreePath(this)
-
 }
 
 class MouseListening(val tree: DnDAwareTree, private val project: Project) : MouseAdapter() {

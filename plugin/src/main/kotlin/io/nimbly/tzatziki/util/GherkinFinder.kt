@@ -30,8 +30,8 @@ fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
     return findAllGerkinsFiles(scope, project)
 }
 
-fun findAllGerkinsFiles(module: Module): Set<GherkinFile> {
-    val scope = module.getGherkinScope()
+fun findAllGerkinsFiles(module: Module, recursive: Boolean = false): Set<GherkinFile> {
+    val scope = module.getGherkinScope(recursive)
     return findAllGerkinsFiles(scope, module.project)
 }
 

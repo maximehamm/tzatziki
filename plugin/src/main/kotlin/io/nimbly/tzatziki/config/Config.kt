@@ -35,6 +35,7 @@ import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.io.path.Path
 
 
 const val CONFIG_FOLDER = ".cucumber+"
@@ -62,7 +63,19 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
 
     // Look for root config folder
     val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(path)
-        ?: throw TzatzikiException("Please select files from resources")
+    if (root == null) {
+
+        var relativePath: String
+        if (project.basePath != null)
+            relativePath = Path(project.basePath!!).relativize(Path(path.path)).toString()
+        else
+            relativePath = path.path.substringAfterLast(project.name)
+
+        if (relativePath.isBlank())
+            relativePath = project.name + "/"
+
+        throw TzatzikiException("Common parent path '${relativePath}' should be part of same ressource path...")
+    }
 
     PsiDocumentManager.getInstance(project).commitAllDocuments();
     FileDocumentManager.getInstance().saveAllDocuments();
@@ -139,7 +152,7 @@ fun loadConfig(files: List<VirtualFile>, project: Project): Config {
     }
 
     if (common == null)
-        throw TzatzikiException("Selected files does not belongs to same project ?")
+        throw TzatzikiException("Selected files does not belongs to same project... this is not supported !")
 
     return loadConfig(common, project)
 }

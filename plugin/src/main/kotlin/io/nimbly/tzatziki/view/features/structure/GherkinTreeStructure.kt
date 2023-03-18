@@ -1,13 +1,13 @@
 package io.nimbly.tzatziki.view.features.structure
 
 import io.cucumber.tagexpressions.Expression
+import io.nimbly.tzatziki.util.createModuleGroupTree
 import io.nimbly.tzatziki.util.getModule
 import io.nimbly.tzatziki.util.getModuleManager
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
-import io.nimbly.tzatziki.view.features.nodes.createModuleGroupTree
 import io.nimbly.tzatziki.view.features.nodes.createModuleNode
 import io.nimbly.tzatziki.view.features.nodes.parent
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
@@ -16,7 +16,6 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.ide.util.treeView.AbstractTreeStructure
 import com.intellij.ide.util.treeView.NodeDescriptor
-import com.intellij.openapi.module.ModuleManager
 
 /**
  * Some documentation :
