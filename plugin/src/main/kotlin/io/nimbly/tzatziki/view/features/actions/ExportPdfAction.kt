@@ -1,13 +1,8 @@
 package io.nimbly.tzatziki.view.features.actions
 
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.components.ServiceManager
 import icons.ActionIcons
-import io.nimbly.tzatziki.actions.TzExportAction
 import io.nimbly.tzatziki.pdf.ExportPdf
-import io.nimbly.tzatziki.services.TzPersistenceStateService
-import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.file
@@ -15,14 +10,11 @@ import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.AbstractTzPsiElementNode
-import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
@@ -67,7 +59,7 @@ class ExportPdfAction(val panel: FeaturePanel) : AnAction() {
         }
         if (paths.isNullOrEmpty() && vfiles.isEmpty()) {
             val editor = FileEditorManager.getInstance(project).selectedTextEditor
-            val editorFile = editor?.file?.virtualFile
+            val editorFile = (editor?.file as? GherkinFile)?.virtualFile
             if (editorFile != null) {
                 vfiles.add(editorFile)
             }
@@ -90,6 +82,21 @@ class ExportPdfAction(val panel: FeaturePanel) : AnAction() {
     }
 
     override fun update(event: AnActionEvent) {
+
+        val isEnabled: Boolean
+        val paths = panel.tree.selectionPaths
+        val project = panel.project
+        if (paths?.isNotEmpty() == true) {
+            isEnabled = true
+        }
+        else {
+            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            val editorFile = (editor?.file as? GherkinFile)
+            isEnabled = editorFile is GherkinFile
+        }
+
+        event.presentation.isEnabled = isEnabled
+
         super.update(event)
     }
 }

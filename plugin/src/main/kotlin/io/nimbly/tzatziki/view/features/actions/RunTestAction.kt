@@ -5,8 +5,12 @@ import com.intellij.execution.runners.ExecutionUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import icons.ActionIcons
+import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.view.features.FeaturePanel
+import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.TzRunnableNode
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import com.intellij.openapi.fileEditor.FileEditorManager
 import javax.swing.tree.DefaultMutableTreeNode
 
 private const val PRESENTATION_TEXT = "Run Cucumber..."
@@ -20,25 +24,47 @@ class RunTestAction(val panel: FeaturePanel) : AnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
+        if (!runFromTree())
+            runFromEditor()
+    }
+
+    private fun runFromEditor() {
+        val editor = FileEditorManager.getInstance(panel.project).selectedTextEditor
+        val file = (editor?.file as? GherkinFile)
+        if (file != null) {
+
+            runFromTreeNode(
+                GherkinFileNode(panel.project, file, null))
+        }
+    }
+
+    private fun runFromTree(): Boolean {
 
         val component = panel.tree.selectionPath?.lastPathComponent as? DefaultMutableTreeNode
-            ?: return
+            ?: return false
 
         val userObject = component.userObject
         if (userObject !is TzRunnableNode)
-            return
+            return false
+
+        return runFromTreeNode(userObject)
+    }
+
+    private fun runFromTreeNode(userObject: TzRunnableNode): Boolean {
 
         val configurationContext = userObject.getRunDataContext()
         val producer = userObject.getRunConfiguration()
-            ?: return
+            ?: return false
 
         val configurationFromContext = producer.createConfigurationFromContext(configurationContext)
-            ?: return
+            ?: return false
 
         val runnerAndConfigurationSettings = configurationFromContext.configurationSettings
         val executor = DefaultRunExecutor.getRunExecutorInstance()
 
         ExecutionUtil.runConfiguration(runnerAndConfigurationSettings, executor)
+
+        return true
     }
 
     override fun update(e: AnActionEvent) {
@@ -46,7 +72,17 @@ class RunTestAction(val panel: FeaturePanel) : AnAction() {
         val component: DefaultMutableTreeNode? = panel.tree.selectionPath?.lastPathComponent as? DefaultMutableTreeNode
         val userObject: Any? = component?.userObject
 
-        e.presentation.isEnabled = userObject is TzRunnableNode
+        val isEnabled : Boolean
+        if (userObject is TzRunnableNode) {
+            isEnabled = true
+        }
+        else {
+            val editor = FileEditorManager.getInstance(panel.project).selectedTextEditor
+            val editorFile = (editor?.file as? GherkinFile)
+            isEnabled = editorFile is GherkinFile
+        }
+
+        e.presentation.isEnabled = isEnabled
         e.presentation.text = (userObject as? TzRunnableNode)?.getRunActionText() ?: PRESENTATION_TEXT
     }
 }
