@@ -26,7 +26,7 @@
        <b><u>NEW!</u></b><br/>
          ✓ <b>15.0</b> - Display list of features, let group and filter them by tag names<br/>
          ✓ <b>14.1</b> - Kotlin : generate class and step functions<br/>
-         ✓ <b>13.1</b> - Java : remove accent from generated method<br/>
+         ✓ <b>13.1</b> - Java : remove accent from generated method names<br/>
          ✓ <b>13.0</b> - Java : fix gherkin plugin issue when using '*' as step keyword instead of 'when', 'then', etc.<br/>
          ✓ <b>10.0</b> - Gherkin @Tag completion (put cursor after the @).<br/>
          ✓ <b>&nbsp;9.0</b> - Line markers indicating the number of uses of step implementations (Java, Kotlin). Details bellow.<br/>

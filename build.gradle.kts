@@ -13,6 +13,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>15.2</b> Completion to suggest step parameter types (Java, Kotlin)</li>
          <li><b>15.1</b> Run Cucumber tests from Cucumber+ tool view</li>
          <li><b>15.0</b> Display list of features, let group and filter them by tag names</li>
          <li><b>14.1</b> Kotlin support : generate class and step functions</li>

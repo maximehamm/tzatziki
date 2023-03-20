@@ -33,22 +33,14 @@ class CucumberKotlinReferenceProvider : PsiReferenceProvider() {
         if (annotationEntry.resolveToDescriptorIfAny()?.fqName?.asString()?.startsWith("io.cucumber.java") != true)
             return EMPTY_ARRAY
 
+        val offset = literalTemplate.textRange.startOffset - element.textRange.startOffset
         val result = mutableListOf<PsiReference>()
         CucumberUtil.processParameterTypesInCucumberExpression(literalTemplate.text) {
 
-            result.add( CucumberJavaParameterTypeReference(literalTemplate, it));
+            val range = it.shiftRight(offset)
+            result.add( CucumberJavaParameterTypeReference(element, range));
         }
 
         return result.toTypedArray()
-
-//
-//        List<CucumberJavaParameterTypeReference> result = new ArrayList<>();
-//        CucumberUtil.processParameterTypesInCucumberExpression(literalExpression.getValue().toString(), range -> {
-//            // Skip " in the begin of the String Literal
-//            range = range.shiftRight(StringLiteralManipulator.getValueRange(literalExpression).getStartOffset());
-//            c
-//            return true;
-//        });
-//        return result.toArray(new CucumberJavaParameterTypeReference[0]);
     }
 }
