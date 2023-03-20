@@ -5,6 +5,9 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+
+        <completion.contributor language="JAVA" implementationClass="io.nimbly.tzatziki.JavaStepTypesCompletion"/>
+
         <codeInsight.lineMarkerProvider language="JAVA" implementationClass="io.nimbly.tzatziki.JavaTzatzikiUsagesMarker"/>
 
         <runConfigurationProducer implementation="io.nimbly.tzatziki.TzCucumberJavaRunConfigurationProducer" order="first"/>

@@ -5,7 +5,13 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+
+        <psi.referenceContributor language="kotlin" implementation="io.nimbly.tzatziki.reference.CucumberKotlinReferenceContributor"/>
+
+        <completion.contributor language="kotlin" implementationClass="io.nimbly.tzatziki.KotlinStepTypesCompletion"/>
+
         <codeInsight.lineMarkerProvider language="kotlin" implementationClass="io.nimbly.tzatziki.KotlinTzatzikiUsagesMarker"/>
+
     </extensions>
 
     <extensions defaultExtensionNs="org.jetbrains.plugins.cucumber">
