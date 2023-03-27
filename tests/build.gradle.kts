@@ -12,8 +12,7 @@ intellij {
         "java",
         "JUnit",
         "cucumber-java:213.5744.125",
-        "com.intellij.properties:213.6461.46",
-        "psiViewer:2022.3"
+        "com.intellij.properties:213.6461.46"
     ))
 }
 
