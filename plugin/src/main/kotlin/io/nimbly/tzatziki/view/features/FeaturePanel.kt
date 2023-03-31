@@ -4,6 +4,7 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.util.ModuleId
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.util.parentOfTypeIs
@@ -45,7 +46,6 @@ import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor.Action
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
-import com.intellij.workspaceModel.storage.bridgeEntities.ModuleId
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent

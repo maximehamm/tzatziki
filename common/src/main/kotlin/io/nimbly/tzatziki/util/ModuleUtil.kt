@@ -36,16 +36,16 @@ val Module.simpleName: String
 val Module.path: Path
     get() {
         val scope = this.moduleContentScope as? ModuleWithDependenciesScope
-            ?: return this.moduleNioFile
+            ?: return this.project.basePath?.toPath() ?: "".toPath()
 
         return scope.roots.firstOrNull()?.path?.toPath()
-            ?: return this.moduleNioFile
+            ?: return this.project.basePath?.toPath() ?: "".toPath()
     }
 
 fun Project.modulesTree(): Node<Module>? {
 
     val moduleMap = mutableMapOf<Path, Module>()
-    ModuleManager.getInstance(this).sortedModules.forEach { m ->
+    this.moduleManager.sortedModules.forEach { m ->
         val scope = m.moduleContentScope as? ModuleWithDependenciesScope
         scope?.roots?.forEach {
             moduleMap[it.path.toPath()] = m
@@ -55,15 +55,15 @@ fun Project.modulesTree(): Node<Module>? {
     return moduleMap.toTree()
 }
 
-fun Project.getModuleManager(): ModuleManager
-        = getService(ModuleManager::class.java)
+val Project.moduleManager: ModuleManager
+    get() = getService(ModuleManager::class.java)
 
 fun Project.findModuleForFile(file: PsiFile) : Module? {
 
     var path = file.virtualFile.path.toPath()
 
     val moduleMap = mutableMapOf<Path, Module>()
-    ModuleManager.getInstance(this).sortedModules.forEach { m ->
+    this.moduleManager.sortedModules.forEach { m ->
         val scope = m.moduleContentScope as? ModuleWithDependenciesScope
         scope?.roots?.forEach {
             moduleMap[it.path.toPath()] = m
@@ -71,13 +71,27 @@ fun Project.findModuleForFile(file: PsiFile) : Module? {
     }
 
     while (path.nameCount > 0) {
-        val module = moduleMap.get(path)
+        val module = moduleMap[path]
         if (module != null)
             return module
         path = path.parent
     }
 
     return null
+}
+
+data class ModuleId(val name: String) {
+
+    val presentableName: String
+        get() = name
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ModuleId) return false
+        return name == other.name
+    }
+
+    override fun hashCode(): Int  = name.hashCode()
 }
 
 
