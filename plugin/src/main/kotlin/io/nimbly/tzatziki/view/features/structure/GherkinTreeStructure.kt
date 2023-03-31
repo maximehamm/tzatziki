@@ -20,7 +20,6 @@ import com.intellij.ide.util.treeView.NodeDescriptor
 /**
  * Some documentation :
  * https://intellij-sdk-docs-cn.github.io/intellij/sdk/docs/user_interface_components/lists_and_trees.html?search=tree
- *
  */
 @Suppress("UnstableApiUsage")
 abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractTreeStructure() {

@@ -1,13 +1,11 @@
 package io.nimbly.tzatziki.view.features.structure
 
-import com.intellij.ide.util.treeView.AbstractTreeNode
-import io.nimbly.tzatziki.util.getModule
 import io.nimbly.tzatziki.view.features.FeaturePanel
-import io.nimbly.tzatziki.view.features.nodes.*
-import org.jetbrains.plugins.cucumber.psi.GherkinFeature
+import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
+import io.nimbly.tzatziki.view.features.nodes.ModuleNode
+import io.nimbly.tzatziki.view.features.nodes.createModuleNode
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
-import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
-import java.util.SortedMap
+import java.util.*
 
 class GherkinTreeTagStructure(panel: FeaturePanel) : GherkinTreeStructure(panel) {
 

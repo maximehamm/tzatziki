@@ -32,7 +32,6 @@ import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
-
 fun loadStepParams(step: GherkinStep): List<TextRange> {
     val references = step.references
     if (references.size != 1 || references[0] !is CucumberStepReference) {

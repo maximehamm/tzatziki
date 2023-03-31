@@ -3,7 +3,6 @@
 package io.nimbly.tzatziki.view.features.nodes
 
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.util.createModuleGroupTree
 import io.nimbly.tzatziki.util.rootModule
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.RunConfigurationProducer
@@ -40,8 +39,6 @@ fun createModuleNode(
     filterByTags: Expression?,
     fromModule: Module? = null
 ): ModuleNode {
-
-    val tree = createModuleGroupTree(project)
 
     val module: Module
     val path: List<String>

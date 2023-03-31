@@ -46,16 +46,6 @@ class ModuleNode(
             .map { GherkinFileNode(project, it, filterByTags) }
 
         return subModules.sortedBy { it.name } + subFiles.sortedBy { it.name }
-
-//        val allSubModules = tree.getModulesInGroup(ModuleGroup(path))
-//        if (allSubModules.isEmpty()) {
-//
-//            return findAllGerkinsFiles(project)
-//                .filter { it.checkExpression(filterByTags) }
-//                .map { GherkinFileNode(project, it, filterByTags) }
-//                .sortedBy { it.toString()}
-//                .toMutableList()
-//        }
     }
 
     override fun isAlwaysExpand() = true
