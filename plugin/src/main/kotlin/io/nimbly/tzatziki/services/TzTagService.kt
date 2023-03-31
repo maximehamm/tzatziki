@@ -88,10 +88,10 @@ class TzTagService(val project: Project) : Disposable {
     fun addTagsListener(listener: TagsEventListener) {
         this.tagsListeners.add(listener)
     }
-    private fun updateTags(tags: SortedMap<String, Tag>) {
+    private fun updateTags(tags: SortedMap<String, Tag>, tagsUpdated: Boolean) {
         this.tags = tags
         this.tagsListeners.forEach {
-            it.tagsUpdated(TagEvent(tags, this))
+            it.tagsUpdated(TagEvent(tags, tagsUpdated, this))
         }
     }
 
@@ -116,12 +116,11 @@ class TzTagService(val project: Project) : Disposable {
         val tags = findAllTags(project, project.getGherkinScope())
 
         // Check if tags are still the same
-        if (tags == this.tags)
-            return
+        val tagsUpdated = (tags == this.tags)
 
         // Update and inform listeners
         if (updateListeners)
-            updateTags(tags)
+            updateTags(tags, tagsUpdated)
         else
             this.tags = tags
     }
@@ -144,7 +143,10 @@ fun Project.tagService(): TzTagService
 interface TagsEventListener : EventListener {
     fun tagsUpdated(event: TagEvent) {}
 }
-class TagEvent(val tags: SortedMap<String, Tag>, source: Any) : EventObject(source)
+class TagEvent(
+    val tags: SortedMap<String, Tag>,
+    val tagsUpdated: Boolean,
+    source: Any) : EventObject(source)
 
 interface TagsFilterEventListener : EventListener {
     fun tagsFilterUpdated(event: TagFilterEvent) {}

@@ -1,9 +1,7 @@
 package io.nimbly.tzatziki.view.features.structure
 
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.util.createModuleGroupTree
-import io.nimbly.tzatziki.util.getModule
-import io.nimbly.tzatziki.util.getModuleManager
+import io.nimbly.tzatziki.util.findModuleForFile
 import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
@@ -21,7 +19,6 @@ import com.intellij.ide.util.treeView.NodeDescriptor
  * Some documentation :
  * https://intellij-sdk-docs-cn.github.io/intellij/sdk/docs/user_interface_components/lists_and_trees.html?search=tree
  */
-@Suppress("UnstableApiUsage")
 abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractTreeStructure() {
 
     var filterByTags: Expression? = null
@@ -43,25 +40,17 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
 
     // PROJECT < ... < FILE < FEATURE < SCENARIO
     override fun getParentElement(element: Any): Any? {
+        val project = panel.project
         when (element) {
             is ModuleNode -> {
                 val parentModule = element.value?.parent
                     ?: return null
-                return createModuleNode(panel.project, filterByTags, parentModule)
+                return createModuleNode(project, filterByTags, parentModule)
             }
 
             is GherkinFile -> {
-                val module = element.getModule()
-                    ?: return null
-
-                val tree = createModuleGroupTree(panel.project)
-                val grouper = tree.grouper
-                val path = grouper.getGroupPath(module)
-
-                val mainModule =  panel.project.getModuleManager().findModuleByName(path.joinToString("."))
-                    ?: return null
-
-                return createModuleNode(panel.project, filterByTags, mainModule)
+                val mainModule = project.findModuleForFile(element)
+                return createModuleNode(project, filterByTags, mainModule)
             }
 
             is GherkinFeature -> {

@@ -42,11 +42,11 @@ class Node<T>(val value: T, val path: Path) {
         children.add(child)
     }
 
-    fun find(value: T): Node<T>? {
+    fun findByValue(value: T): Node<T>? {
         if (this.value == value)
             return this
         children.forEach {  child ->
-            val found = child.find(value)
+            val found = child.findByValue(value)
             if (found != null)
                 return found
         }

@@ -46,8 +46,9 @@ class CucumberPlusFactory : ToolWindowFactory {
 
         tagService.addTagsListener(object : TagsEventListener {
             override fun tagsUpdated(event: TagEvent) {
-                filterTagsView.refresh(event.tags)
                 featuresView.refreshTags(event.tags)
+                if (event.tagsUpdated)
+                    filterTagsView.refresh(event.tags)
             }
         })
 

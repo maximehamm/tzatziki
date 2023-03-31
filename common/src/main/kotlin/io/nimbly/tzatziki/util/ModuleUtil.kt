@@ -1,25 +1,16 @@
-@file:Suppress("UnstableApiUsage")
-
 package io.nimbly.tzatziki.util
 
-import com.intellij.ide.projectView.impl.ModuleGroup
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleGrouper
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.ProjectRootManager
-import com.intellij.openapi.util.Key
-import com.intellij.psi.util.CachedValue
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.util.containers.MultiMap
+import com.intellij.psi.PsiFile
 import java.nio.file.Path
 
 val Module.parent: Module?
     get() {
         return this.project.modulesTree()
-            ?.find(this)
+            ?.findByValue(this)
             ?.parent
             ?.value
     }
@@ -27,7 +18,7 @@ val Module.parent: Module?
 val Module.subModules: List<Module>
     get() {
         return this.project.modulesTree()
-            ?.find(this)
+            ?.findByValue(this)
             ?.children
             ?.map { it.value }
             ?: emptyList()
@@ -40,6 +31,15 @@ val Module.simpleName: String
 
         return scope.roots.firstOrNull()?.presentableName
             ?: return this.name
+    }
+
+val Module.path: Path
+    get() {
+        val scope = this.moduleContentScope as? ModuleWithDependenciesScope
+            ?: return this.moduleNioFile
+
+        return scope.roots.firstOrNull()?.path?.toPath()
+            ?: return this.moduleNioFile
     }
 
 fun Project.modulesTree(): Node<Module>? {
@@ -58,46 +58,27 @@ fun Project.modulesTree(): Node<Module>? {
 fun Project.getModuleManager(): ModuleManager
         = getService(ModuleManager::class.java)
 
+fun Project.findModuleForFile(file: PsiFile) : Module? {
 
-fun createModuleGroupTree(project: Project): ModuleGroupsTree {
-    return CachedValuesManager.getManager(project).getCachedValue(project, key, {
-        val tree = ModuleGroupsTree(ModuleGrouper.instanceFor(project))
-        CachedValueProvider.Result.createSingleDependency(tree, ProjectRootManager.getInstance(project))
-    }, false)
-}
+    var path = file.virtualFile.path.toPath()
 
-class ModuleGroupsTree (val grouper: ModuleGrouper) {
-
-    private val childModules = MultiMap.create<ModuleGroup, Module>()
-
-    init {
-
-        val moduleAsGroupPaths = grouper.getAllModules().mapNotNullTo(HashSet()) { grouper.getModuleAsGroupPath(it) }
-        for (module in grouper.getAllModules()) {
-            val groupPath = grouper.getGroupPath(module)
-            if (groupPath.isNotEmpty()) {
-                val group = ModuleGroup(groupPath)
-                val moduleNamePrefixLen = (1 .. groupPath.size).firstOrNull { groupPath.subList(0, it) in moduleAsGroupPaths }
-                val parentGroupForModule: ModuleGroup = if (moduleNamePrefixLen != null && moduleNamePrefixLen > 1) {
-                    //if there are modules with names 'a.foo' and 'a.foo.bar.baz' the both should be shown as children of module group 'a' to avoid
-                    // nodes with same text in the tree
-                    ModuleGroup(groupPath.subList(0, moduleNamePrefixLen - 1))
-                }
-                else {
-                    group
-                }
-                childModules.putValue(parentGroupForModule, module)
-
-            }
+    val moduleMap = mutableMapOf<Path, Module>()
+    ModuleManager.getInstance(this).sortedModules.forEach { m ->
+        val scope = m.moduleContentScope as? ModuleWithDependenciesScope
+        scope?.roots?.forEach {
+            moduleMap[it.path.toPath()] = m
         }
     }
 
-    fun getModulesInGroup(group: ModuleGroup): Collection<Module> = childModules[group]
-    fun root(): Module? = grouper.getAllModules().firstOrNull()
+    while (path.nameCount > 0) {
+        val module = moduleMap.get(path)
+        if (module != null)
+            return module
+        path = path.parent
+    }
+
+    return null
 }
-
-private val key = Key.create<CachedValue<ModuleGroupsTree>>("TZ_MODULE_GROUPS_TREE")
-
 
 
 

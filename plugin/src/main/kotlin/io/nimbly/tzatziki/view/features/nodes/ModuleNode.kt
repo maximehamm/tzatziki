@@ -27,7 +27,6 @@ import com.intellij.openapi.util.UserDataHolder
 class ModuleNode(
     module: Module,
     val moduleName: String,
-    val path: List<String>,
     val exp: Expression?
 ) : AbstractTzNode<Module>(module.project, module, exp), TzRunnableNode {
 
@@ -39,7 +38,7 @@ class ModuleNode(
     override fun getChildren(): List<AbstractTzNode<out UserDataHolder>> {
 
         val subModules = value.subModules
-            .map {  ModuleNode(it, it.simpleName, path + it.simpleName, exp) }
+            .map {  ModuleNode(it, it.simpleName, exp) }
 
         val subFiles = findAllGerkinsFiles(value)
             .filter { it.checkExpression(filterByTags) }
