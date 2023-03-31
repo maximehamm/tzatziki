@@ -119,7 +119,7 @@ val GherkinStep.allTags: Set<GherkinTag>
 fun Module.getGherkinScope(recursive: Boolean = false): GlobalSearchScope {
     if (recursive) {
         var scope = this.getGherkinScope(false)
-        this.subModules().forEach { m ->
+        this.subModules.forEach { m ->
             scope = scope.union(m.getGherkinScope(true))
         }
         return scope

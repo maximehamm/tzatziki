@@ -6,6 +6,7 @@ import com.intellij.ide.projectView.impl.ModuleGroup
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleGrouper
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.Key
@@ -13,25 +14,50 @@ import com.intellij.psi.util.CachedValue
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.util.containers.MultiMap
+import java.nio.file.Path
+
+val Module.parent: Module?
+    get() {
+        return this.project.modulesTree()
+            ?.find(this)
+            ?.parent
+            ?.value
+    }
+
+val Module.subModules: List<Module>
+    get() {
+        return this.project.modulesTree()
+            ?.find(this)
+            ?.children
+            ?.map { it.value }
+            ?: emptyList()
+    }
+
+val Module.simpleName: String
+    get() {
+        val scope = this.moduleContentScope as? ModuleWithDependenciesScope
+            ?: return this.name
+
+        return scope.roots.firstOrNull()?.presentableName
+            ?: return this.name
+    }
+
+fun Project.modulesTree(): Node<Module>? {
+
+    val moduleMap = mutableMapOf<Path, Module>()
+    ModuleManager.getInstance(this).sortedModules.forEach { m ->
+        val scope = m.moduleContentScope as? ModuleWithDependenciesScope
+        scope?.roots?.forEach {
+            moduleMap[it.path.toPath()] = m
+        }
+    }
+
+    return moduleMap.toTree()
+}
 
 fun Project.getModuleManager(): ModuleManager
-    = getService(ModuleManager::class.java)
+        = getService(ModuleManager::class.java)
 
-fun Module.parent(): Module {
-
-    val tree = createModuleGroupTree(project)
-    val grouper = tree.grouper
-    val path = grouper.getGroupPath(this)
-
-    return project.getModuleManager().findModuleByName(path.joinToString("."))
-        ?: this
-}
-
-fun Module.subModules(): List<Module> {
-    val tree = createModuleGroupTree(project)
-    val path = tree.grouper.getModuleAsGroupPath(this) ?: return emptyList()
-    return tree.getModulesInGroup(ModuleGroup(path)).toList()
-}
 
 fun createModuleGroupTree(project: Project): ModuleGroupsTree {
     return CachedValuesManager.getManager(project).getCachedValue(project, key, {

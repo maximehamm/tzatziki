@@ -5,6 +5,7 @@ import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.util.file
+import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.util.parentOfTypeIs
 import io.nimbly.tzatziki.view.features.actions.ExportPdfAction
 import io.nimbly.tzatziki.view.features.actions.FilterTagAction
@@ -17,7 +18,6 @@ import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
-import io.nimbly.tzatziki.view.features.nodes.parent
 import io.nimbly.tzatziki.view.features.structure.GherkinTreeTagStructure
 import org.jetbrains.kotlin.idea.util.projectStructure.module
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
@@ -30,6 +30,7 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -42,7 +43,9 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor.Action
+import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
+import com.intellij.workspaceModel.storage.bridgeEntities.ModuleId
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -55,10 +58,13 @@ import javax.swing.tree.TreeSelectionModel
 // See com.intellij.ide.bookmark.ui.BookmarksView
 class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposable {
 
+    val LOG = Logger.getInstance(FeaturePanel::class.java);
+
     val structure: GherkinTreeTagStructure
     val model: StructureTreeModel<GherkinTreeTagStructure>
     val tree: DnDAwareTree
     val treeSearcher: TreeSpeedSearch
+
     init {
 
         val tagService = project.tagService()
@@ -181,19 +187,29 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     }
 
     fun selectFromEditor() {
+
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editor = fileEditorManager.selectedTextEditor
-            ?: return
+        if (editor == null) {
+            LOG.warn("No editor found")
+            return
+        }
         val file = editor.file as? GherkinFile
-            ?: return
+        if (file == null) {
+            LOG.warn("No Gherkin file found")
+            return
+        }
 
         val fileStack = mutableSetOf<Any>().apply {
             this.add(file)
             var m = file.module
             while (m != null) {
-                this.add(m)
-                m = m.parent()
+                this.add(ModuleId(m.name))
+                m = m.parent
             }
+        }
+        fileStack.forEachIndexed { index, any ->
+            LOG.info("Stack #$index = " + any + ", class is: ${any.javaClass}")
         }
 
         // Find target
@@ -205,48 +221,77 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             candidates.add(element.parentOfTypeIs<GherkinFeature>(true))
         }
         candidates.add(file)
+        LOG.info("${candidates.size} candidates found")
 
         // Expand nodes & select them
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
+                UIUtil.invokeAndWaitIfNeeded<Any> {
 
-                // Expand and collect
-                val allPaths = mutableListOf<TreePath>()
-                var treePath: TreePath? = null
-                TreeUtil.promiseExpand(tree) { tp: TreePath ->
-                    val userObject = (tp.lastPathComponent as? DefaultMutableTreeNode)?.userObject
-                    if (userObject != null) {
-                        if (userObject is ModuleNode && fileStack.contains(userObject.value)) {
-                            Action.CONTINUE
-                        } else if (userObject is GherkinScenarioNode && userObject.value.containingFile == file) {
-                            if (candidates.contains(userObject.value)) treePath = tp
-                            Action.CONTINUE
-                        } else if (userObject is GherkinFeatureNode && userObject.value.containingFile == file) {
-                            if (candidates.contains(userObject.value)) treePath = tp
-                            Action.CONTINUE
-                        } else if (userObject is GherkinFileNode && userObject.file == file) {
-                            treePath = tp
-                            Action.CONTINUE
-                        } else if (userObject is GherkinTagNode && userObject.children.contains(GherkinFileNode(project, file, null))) {
-                            if (treePath != null) {
-                                allPaths.add(treePath!!)
-                                treePath = null
+                    // Expand and collect
+                    val allPaths = mutableListOf<TreePath>()
+                    var treePath: TreePath? = null
+                    TreeUtil.promiseExpand(tree) { tp: TreePath ->
+                        LOG.info("Parsing path: ${tp.path}")
+                        val lastPathComponent = tp.lastPathComponent
+                        if (lastPathComponent == null) {
+                            LOG.info("lastPathComponent is null")
+                        }
+                        else {
+                            LOG.info("lastPathComponent class is: ${lastPathComponent.javaClass}")
+                        }
+                        val userObject = (lastPathComponent as? DefaultMutableTreeNode)?.userObject
+                        if (userObject == null) {
+                            LOG.info("userObject is null")
+                        }
+                        else {
+                            LOG.info("userObject is: $userObject, classc is ${userObject.javaClass}")
+                        }
+
+                        if (userObject != null) {
+                            if (userObject is ModuleNode && fileStack.contains(ModuleId(userObject.value.name))) {
+                                LOG.info("userObject continue 1")
+                                Action.CONTINUE
+                            } else if (userObject is GherkinScenarioNode && userObject.value.containingFile == file) {
+                                if (candidates.contains(userObject.value)) treePath = tp
+                                LOG.info("userObject continue 2")
+                                Action.CONTINUE
+                            } else if (userObject is GherkinFeatureNode && userObject.value.containingFile == file) {
+                                if (candidates.contains(userObject.value)) treePath = tp
+                                LOG.info("userObject continue 3")
+                                Action.CONTINUE
+                            } else if (userObject is GherkinFileNode && userObject.file == file) {
+                                treePath = tp
+                                LOG.info("userObject continue 4")
+                                Action.CONTINUE
+                            } else if (userObject is GherkinTagNode && userObject.children.contains(GherkinFileNode(project, file, null))) {
+                                if (treePath != null) {
+                                    allPaths.add(treePath!!)
+                                    treePath = null
+                                }
+                                LOG.info("userObject continue 5")
+                                Action.CONTINUE
+                            } else {
+                                LOG.info("userObject skip 1")
+                                Action.SKIP_CHILDREN
                             }
+                        }
+                        else {
+                            LOG.info("userObject continue 6")
                             Action.CONTINUE
-                        } else {
-                            Action.SKIP_CHILDREN
                         }
                     }
-                    else {
-                        Action.CONTINUE
+                    .onProcessed {
+
+                        if (treePath != null)
+                            allPaths.add(treePath!!)
+
+                        LOG.info("${allPaths.size} path to be selected")
+                        tree.selectionPaths = allPaths.toTypedArray()
                     }
-                }
-                .onProcessed {
-
-                    if (treePath != null)
-                        allPaths.add(treePath!!)
-
-                    tree.selectionPaths = allPaths.toTypedArray()
+                    .onError { err ->
+                        LOG.error("Some error occured", err)
+                    }
                 }
             }
         }

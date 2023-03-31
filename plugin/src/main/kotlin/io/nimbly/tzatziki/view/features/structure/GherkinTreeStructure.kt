@@ -4,12 +4,12 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.createModuleGroupTree
 import io.nimbly.tzatziki.util.getModule
 import io.nimbly.tzatziki.util.getModuleManager
+import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
 import io.nimbly.tzatziki.view.features.nodes.createModuleNode
-import io.nimbly.tzatziki.view.features.nodes.parent
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -46,7 +46,7 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
     override fun getParentElement(element: Any): Any? {
         when (element) {
             is ModuleNode -> {
-                val parentModule = element.value?.parent()
+                val parentModule = element.value?.parent
                     ?: return null
                 return createModuleNode(panel.project, filterByTags, parentModule)
             }

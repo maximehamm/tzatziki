@@ -7,7 +7,6 @@ import io.nimbly.tzatziki.util.createModuleGroupTree
 import io.nimbly.tzatziki.util.rootModule
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.RunConfigurationProducer
-import com.intellij.ide.projectView.impl.ModuleGroup
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleGrouper
@@ -36,24 +35,6 @@ abstract class AbstractTzNode<T: Any>(
     var filterByTags: Expression?
 ) : AbstractTreeNode<T>(p, value), Navigatable
 
-fun Module.parent(): Module? {
-
-    val tree = createModuleGroupTree(this.project)
-
-    val fullPath = ModuleGrouper.instanceFor(this.project).getGroupPath(this)
-    val path = fullPath.dropLast(1)
-    val parent: Module?
-    if (path.isEmpty()) {
-        val p = tree.root()
-        parent = if (p == this) null else p
-    } else {
-        val modulesInGroup = tree.getModulesInGroup(ModuleGroup(path))
-        parent = modulesInGroup.find { this.name.startsWith(it.name)}
-    }
-
-   return parent
-}
-
 fun createModuleNode(
     project: Project,
     filterByTags: Expression?,
@@ -74,5 +55,5 @@ fun createModuleNode(
     }
 
     val name = path.last()
-    return ModuleNode(module, name, tree, path, filterByTags)
+    return ModuleNode(module, name, path, filterByTags)
 }

@@ -4,10 +4,9 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "15.2.1"
+    version = "15.2.4"
 }
 
-//TODO : Completion for cucumber types inside steps parameters : https://github.com/cucumber/cucumber-expressions#readme
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
