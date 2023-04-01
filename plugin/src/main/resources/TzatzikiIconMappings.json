@@ -8,7 +8,8 @@
               "io/nimbly/tzatziki/icons/cucumber-plus.svg",
               "io/nimbly/tzatziki/icons/cucumber-plus.png",
               "io/nimbly/tzatziki/icons/cucumber-plus-16x16.png"
-            ]
+            ],
+            "groupByModuleNUI.svg": "io/nimbly/tzatziki/icons/groupByModule.svg"
           }
         }
       }

@@ -1,8 +1,8 @@
 package io.nimbly.tzatziki.view.features.actions
 
+import icons.ActionIcons
 import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.view.features.FeaturePanel
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 
@@ -10,7 +10,7 @@ import com.intellij.openapi.actionSystem.ToggleAction
 class GroupByModuleAction(val panel: FeaturePanel) : ToggleAction() {
     init {
         this.templatePresentation.text = "Group by modules"
-        this.templatePresentation.icon = AllIcons.Actions.GroupByModule
+        this.templatePresentation.icon = ActionIcons.GROUP_BY_MODULE
     }
     override fun isSelected(e: AnActionEvent): Boolean {
         return !panel.project.tagService().groupTag
