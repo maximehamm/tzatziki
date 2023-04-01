@@ -21,7 +21,7 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
-import icons.ActionIcons.CUCUMBER_PLUS_16
+import icons.ActionIcons.CUCUMBER_PLUS
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
 import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
@@ -82,6 +82,6 @@ class TzColorSettingsPage : ColorSettingsPage {
         = ColorDescriptor.EMPTY_ARRAY
 
     override fun getIcon()
-        = CUCUMBER_PLUS_16
+        = CUCUMBER_PLUS
 
 }

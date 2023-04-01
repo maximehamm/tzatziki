@@ -250,12 +250,15 @@
         <lang.foldingBuilder language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzFoldingContributor"/>
 
         // Cucumber tool window
-        <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="right" icon="ActionIcons.CUCUMBER_PLUS_16"/>
+        <toolWindow factoryClass="io.nimbly.tzatziki.view.CucumberPlusFactory"  id="Cucumber+" anchor="right"
+                    icon="ActionIcons.CUCUMBER_PLUS"/>
 
         // Project settings
         <projectService serviceImplementation="io.nimbly.tzatziki.services.TzPersistenceStateService"/>
         <projectService serviceImplementation="io.nimbly.tzatziki.services.TzTagService"/>
 
+        // New UI 2023 Icons mapping to "expUI" folder
+        <iconMapper mappingFile="TzatzikiIconMappings.json"/>
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>

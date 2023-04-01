@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "15.2.5"
+    version = "15.3.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>15.3</b> New UI supports</li>
          <li><b>15.2</b> Completion to suggest step parameter types (Java, Kotlin)</li>
          <li><b>15.1</b> Run Cucumber tests from Cucumber+ tool view</li>
          <li><b>15.0</b> Display list of features, let group and filter them by tag names</li>

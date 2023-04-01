@@ -15,38 +15,18 @@
 
 package io.nimbly.tzatziki.actions
 
-import com.github.rjeschke.txtmark.Processor
 import com.intellij.ide.projectView.impl.nodes.PsiFileNode
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.fileEditor.OpenFileDescriptor
-import com.intellij.openapi.progress.ProgressIndicatorProvider
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.IndexNotReadyException
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
-import com.intellij.openapi.ui.Messages.*
-import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.util.io.FileUtilRt
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.tree.LeafPsiElement
-import icons.ActionIcons.CUCUMBER_PLUS
-import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.config.loadConfig
-import io.nimbly.tzatziki.markdown.adaptPicturesPath
 import io.nimbly.tzatziki.pdf.*
-import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
-import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes.*
-import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
-import org.jetbrains.plugins.cucumber.psi.impl.*
-import java.io.ByteArrayOutputStream
 
 class TzExportAction : AnAction() {
 

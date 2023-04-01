@@ -57,6 +57,5 @@ class CucumberPlusFactory : ToolWindowFactory {
                 featuresView.refreshTags(event.tagsFilter)
             }
         })
-
     }
 }

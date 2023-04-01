@@ -94,7 +94,7 @@ class ExportPdf(private val paths: List<VirtualFile>, val project: Project) {
             project,
             if (files.size == 1) "Exporting one feature to PDF" else "Exporting ${files.size} features to PDF",
             TZATZIKI_NAME,
-            "&Cancel", "&Portrait", "&Lanscape", ActionIcons.CUCUMBER_PLUS
+            "&Cancel", "&Portrait", "&Lanscape", ActionIcons.CUCUMBER_PLUS_64
         )
         val orientation = when (selected) {
             Messages.NO -> "portrait"

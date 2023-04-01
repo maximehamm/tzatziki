@@ -1,18 +1,16 @@
 package io.nimbly.tzatziki.view.features.actions
 
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.components.ServiceManager
-import icons.ActionIcons
-import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.view.features.FeaturePanel
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.ToggleAction
 
 @Suppress("MissingActionUpdateThread")
 class GroupByModuleAction(val panel: FeaturePanel) : ToggleAction() {
     init {
         this.templatePresentation.text = "Group by modules"
-        this.templatePresentation.icon = ActionIcons.GROUP_BY_MODULE
+        this.templatePresentation.icon = AllIcons.Actions.GroupByModule
     }
     override fun isSelected(e: AnActionEvent): Boolean {
         return !panel.project.tagService().groupTag

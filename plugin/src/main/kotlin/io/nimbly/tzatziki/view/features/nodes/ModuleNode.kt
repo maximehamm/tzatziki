@@ -2,7 +2,6 @@
 
 package io.nimbly.tzatziki.view.features.nodes
 
-import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.checkExpression
@@ -21,6 +20,7 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.util.UserDataHolder
 
@@ -32,7 +32,7 @@ class ModuleNode(
 
     override fun update(presentation: PresentationData) {
         presentation.presentableText = moduleName
-        presentation.setIcon(ActionIcons.MODULE_DIRECTORY)
+        presentation.setIcon(ModuleType.get(value).icon)
     }
 
     override fun getChildren(): List<AbstractTzNode<out UserDataHolder>> {

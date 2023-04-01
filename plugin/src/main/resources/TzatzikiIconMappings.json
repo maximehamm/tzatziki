@@ -1,0 +1,13 @@
+{
+  "io": {
+    "nimbly": {
+      "tzatziki": {
+        "icons": {
+          "expUi": {
+            "cucumber-plusNUI.svg": "io/nimbly/tzatziki/icons/cucumber-plus.svg"
+          }
+        }
+      }
+    }
+  }
+}
