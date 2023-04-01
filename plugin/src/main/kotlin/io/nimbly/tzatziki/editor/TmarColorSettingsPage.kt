@@ -15,16 +15,16 @@
 
 package io.nimbly.tzatziki.editor
 
+import icons.ActionIcons.CUCUMBER_PLUS_16
+import io.nimbly.tzatziki.util.TZATZIKI_NAME
+import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
+import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
-import icons.ActionIcons.CUCUMBER_PLUS
-import io.nimbly.tzatziki.util.TZATZIKI_NAME
-import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
-import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 
 val TEST_KO = TextAttributesKey.createTextAttributesKey("CCP_TEST_KO", DefaultLanguageHighlighterColors.STRING)
 val TEST_OK = TextAttributesKey.createTextAttributesKey("CCP_TEST_OK", DefaultLanguageHighlighterColors.STRING)
@@ -82,6 +82,6 @@ class TzColorSettingsPage : ColorSettingsPage {
         = ColorDescriptor.EMPTY_ARRAY
 
     override fun getIcon()
-        = CUCUMBER_PLUS
+        = CUCUMBER_PLUS_16
 
 }
