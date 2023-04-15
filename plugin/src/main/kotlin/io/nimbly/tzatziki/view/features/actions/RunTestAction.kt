@@ -53,6 +53,9 @@ class RunTestAction(val panel: FeaturePanel) : AnAction() {
     private fun runFromTreeNode(userObject: TzRunnableNode): Boolean {
 
         val configurationContext = userObject.getRunDataContext()
+        configurationContext.location
+            ?: return false
+
         val producer = userObject.getRunConfiguration()
             ?: return false
 
