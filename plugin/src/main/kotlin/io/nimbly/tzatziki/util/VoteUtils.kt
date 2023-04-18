@@ -31,6 +31,33 @@ fun askToVote(project: Project) {
     val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
+    if (version != currentVersion) {
+
+        // Plugin was updated... 'looks like your ready to vote !
+        project.notification(
+            """Would you comment or like my <a href='LINKEDIN'>LinkedIn post</a> celebrating 100,000 downloads 😍?
+                    <br/>
+                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
+                       <td><a href='REVIEW'>Review</a></td>
+                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
+                       <td><a href='DISMISS'>Dismiss</a></td>
+                    </tr></table>""") {
+            when (it) {
+                "LINKEDIN" -> BrowserUtil.browse("https://www.linkedin.com/in/maxime-hamm/")
+                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
+                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
+            }
+        }
+
+        PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
+    }
+}
+
+fun askToVotesSAV(project: Project) {
+
+    val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
+    val version = "123" // PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
+
     if (version == null) {
 
         // First time used : do just save the revision number
