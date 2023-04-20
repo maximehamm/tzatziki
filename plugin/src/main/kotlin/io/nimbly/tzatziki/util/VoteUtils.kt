@@ -43,7 +43,7 @@ fun askToVote(project: Project) {
                        <td><a href='DISMISS'>Dismiss</a></td>
                     </tr></table>""") {
             when (it) {
-                "LINKEDIN" -> BrowserUtil.browse("https://www.linkedin.com/in/maxime-hamm/")
+                "LINKEDIN" -> BrowserUtil.browse("https://www.linkedin.com/pulse/wow-cucumber-passed-100000-downloads-mark-today-maxime-hamm/")
                 "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
                 "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
             }
@@ -56,7 +56,7 @@ fun askToVote(project: Project) {
 fun askToVotesSAV(project: Project) {
 
     val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
-    val version = "123" // PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
+    val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
     if (version == null) {
 
