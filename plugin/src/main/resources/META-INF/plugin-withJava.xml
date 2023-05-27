@@ -1,5 +1,8 @@
 <idea-plugin>
 
+    <depends>com.intellij.modules.java</depends>
+    <depends>cucumber-java</depends>
+
     <extensions defaultExtensionNs="io.nimbly.tzatziki">
         <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavaTzatzikiExtensionPoint"/>
     </extensions>

@@ -84,7 +84,7 @@ class Cocktail2 {
     fun theCucumberTableIsAutomaticallyUpdated() {
     }
 
-    @Given("Romeo who wants to buy a drink")
+    @Given("Romeo who wants to buy a drinx")
     fun romeoWhoWantsToBuyADrink() {
     }
 
