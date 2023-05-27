@@ -39,6 +39,7 @@ import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
+import com.intellij.openapi.project.IndexNotReadyException
 import javax.swing.Icon
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
@@ -153,7 +154,11 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                                 DumbService.getInstance(project).completeJustSubmittedTasks()
 
                                 // Restart code analyzer
-                                DaemonCodeAnalyzer.getInstance(project).restart(f)
+                                try {
+                                    DaemonCodeAnalyzer.getInstance(project).restart(f)
+                                } catch (ignored: IndexNotReadyException) {
+                                    // Ignored
+                                }
                             }
                         }
                         true

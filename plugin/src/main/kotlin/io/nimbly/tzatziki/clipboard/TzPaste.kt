@@ -176,7 +176,12 @@ private fun merge(
     fun feed(cells: List<List<String?>>, targetX: Int, targetY: Int) {
         cells.forEachIndexed { y, line ->
             line.forEachIndexed { x, cell ->
-                target[y + targetY][x + targetX] = cell
+                try {
+                    target[y + targetY][x + targetX] = cell
+                }
+                catch (ignored: ArrayIndexOutOfBoundsException) {
+                    // Table format was broken ?
+                }
             }
         }
     }
