@@ -26,7 +26,7 @@ import com.intellij.openapi.wm.ToolWindowManager
 
 const val TZATZIKI_PLUGIN = "io.nimbly.tzatziki"
 
-fun askToVote(project: Project) {
+fun askToVoteLinkedIn(project: Project) {
 
     val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
@@ -53,7 +53,7 @@ fun askToVote(project: Project) {
     }
 }
 
-fun askToVotesSAV(project: Project) {
+fun askToVote(project: Project) {
 
     val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
