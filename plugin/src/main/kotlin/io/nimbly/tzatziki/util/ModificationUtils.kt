@@ -188,8 +188,8 @@ fun Editor.stopBeforeDeletion(cleanCells: Boolean, cleanHeader: Boolean): Boolea
     val table = findTableAt(selectionModel.selectionStart)
     if (table != null) {
 
-//        if (table.isCorrupted())
-//            return false
+        if (table.isCorrupted())
+            return false
 
         if (selectionModel.selectionStart >= table.allRows.last().endOffset)
             return false
@@ -232,8 +232,8 @@ fun Editor.stopBeforeDeletion(actionId: String, offset: Int = caretModel.offset)
     if (table.textLength == 1)
         return false // Table is a single pipe !!
 
-//    if (table.isCorrupted())
-//        return false
+    if (table.isCorrupted())
+        return false
 
     if (selectionModel.hasSelection(true)) {
 
