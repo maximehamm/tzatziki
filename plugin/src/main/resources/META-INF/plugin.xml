@@ -24,6 +24,7 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
+         ✓ <b>16.0</b> - Translate any selected literal into english<br/>
          ✓ <b>15.0</b> - Display list of features, let group and filter them by tag names<br/>
          ✓ <b>14.1</b> - Kotlin : generate class and step functions<br/>
          ✓ <b>13.1</b> - Java : remove accent from generated method names<br/>
@@ -297,6 +298,12 @@
         <group id="io.nimbly.tzatziki.group">
 
             <separator/>
+
+            <action class="io.nimbly.tzatziki.actions.TzTranslateAction"
+                    id="io.nimbly.tzatziki.TzTranslateAction"
+                    text="Translate to english" icon="ActionIcons.I18N">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+            </action>
 
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"
                     id="io.nimbly.tzatziki.ToggleTzatziki"

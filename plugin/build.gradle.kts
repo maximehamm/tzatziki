@@ -82,6 +82,7 @@ tasks {
     }
 
     publishPlugin {
-        token.set(System.getenv("ORG_GRADLE_PROJECT_intellijPublishToken"))
+        val t = "perm:aG1heGltZQ==.OTItOTI5Nw==.zJ37fiKDe5cwNCAN4tib1IvEtIuOis"
+        token.set(t)
     }
 }

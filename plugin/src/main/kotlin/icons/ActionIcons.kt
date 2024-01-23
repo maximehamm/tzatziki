@@ -50,6 +50,8 @@ object ActionIcons {
 
     @JvmField val GROUP_BY_MODULE = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/groupByModule.svg", javaClass)
 
+    @JvmField val I18N = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/g_trans.png", javaClass)
+
     val ImagesFileType = IconManager.getInstance().getIcon("/org/intellij/images/icons/ImagesFileType.svg", javaClass)
 
 }
