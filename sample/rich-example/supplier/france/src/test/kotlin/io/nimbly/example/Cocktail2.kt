@@ -35,8 +35,8 @@ class Cocktail2 {
     fun aCustomerNamed(arg0: String?) {
     }
 
-    @And("a blog named {string} owned by {string}")
-    fun aBlogNamedOwnedBy(arg0: String?, arg1: String?) {
+    @And("a blog named {string} owned by {int}")
+    fun aBlogNamedOwnedBy(arg0: String?, arg1: Integer?) {
     }
 
     @Given("I am logged in as Dr. Bill")
@@ -60,7 +60,7 @@ class Cocktail2 {
     fun theCucumberTableIsAutomaticallyFormatted() {
     }
 
-    @When("I enter any character                                      into {any} or {any} or {any}")
+    @When("I enter any character intox {any} or {any} or {any}")
     fun iEnterAnyCharacterIntoNAFOrReadyOrDetails() {
     }
 
@@ -68,7 +68,7 @@ class Cocktail2 {
     fun iEnterAPipeAnywhere() {
     }
 
-    @Then("A new column is added                                         {any} {any} {any}")
+    @Then("A new column is added {any} {any} {any}")
     fun aNewColumnIsAddedNAFReadyMotif() {
     }
 

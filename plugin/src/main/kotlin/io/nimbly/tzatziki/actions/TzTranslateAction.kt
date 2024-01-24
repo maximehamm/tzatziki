@@ -67,7 +67,7 @@ class TzTranslateAction : AnAction() , DumbAware {
         val translation = googleTranslate("EN", "FR", text)
             ?: return
 
-        executeWriteCommand(file.project, "Translating", Runnable {
+        executeWriteCommand(file.project, "Translating with Cucumber+", Runnable {
             file.getDocument()?.replaceString(startOffset, endOffset, translation)
         })
     }
@@ -103,10 +103,17 @@ class TzTranslateAction : AnAction() , DumbAware {
 
     private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: String): String? {
 
-        val initialSpaces = sentence.split("\n").map { it.length - it.trimStart().length }
+        val newlineChar =
+            if (sentence.contains("\r\n")) "\r\n"
+            else if (sentence.contains("\r")) "\r"
+            else "\n"
+
+        val initialSpaces = sentence.split(newlineChar).map { it.length - it.trimStart().length }
         val containsQuotes = sentence.contains('"')
 
-        val sentence2 = sentence.replace("\n", "§§")
+        val tempsep = "(XXXXXXX)"
+        val sentence2 = sentence.replace(newlineChar, tempsep)
+
         val url = "https://translate.googleapis.com/translate_a/single?" +
                 "client=gtx&" +
                 "sl=" + URLEncoder.encode(langFrom, "UTF-8") +
@@ -126,14 +133,14 @@ class TzTranslateAction : AnAction() , DumbAware {
         }
         input.close()
 
-        val sentence3 = parseResult(response.toString().replace("§§", "\n"))
+        val sentence3 = parseResult(response.toString())
+            ?.replace(tempsep, newlineChar)
             ?: return null
 
-        var sentence4 =  sentence3.split('\n')
-            .mapIndexed { i: Int, line: String -> " ".repeat(initialSpaces[i]) + line.trimStart() }
-            .joinToString("\n")
+        var sentence4 =  sentence3.split(newlineChar)
+            .mapIndexed { i: Int, line: String -> " ".repeat(initialSpaces.getOrElse(i) { 0 }) + line.trimStart() }
+            .joinToString(newlineChar)
 
-        //[[["“I connect to Parcours PRO”","\"Je me connecte à Parcours PRO\"",null,null,3,null,null,[[]],[[["8735bd792ef0a942ca930eb98ea0a745","fr_en_2023q1.md"]]]]],null,"fr",null,null,null,null,[]]
         if (containsQuotes) {
             sentence4 = sentence4.replace("”", "\"").replace("“", "\"")
         }
@@ -166,7 +173,7 @@ class TzTranslateAction : AnAction() , DumbAware {
         return elt4.asString
     }
 
-    fun executeWriteCommand(project: Project?, text: String?, runnable: Runnable) {
+    fun executeWriteCommand(project: Project, text: String, runnable: Runnable) {
         CommandProcessor.getInstance().executeCommand(
             project, {
                 val application =

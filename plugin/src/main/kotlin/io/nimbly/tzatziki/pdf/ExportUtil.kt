@@ -81,7 +81,7 @@ class ExportPdf(private val paths: List<VirtualFile>, val project: Project) {
         }
 
         // Get project root
-        val tempDir = FileUtilRt.createTempDirectory("cucumber+", null, true)
+        val tempDir = FileUtilRt.createTempDirectory("Cucumber+", null, true)
         val outputDirectory = LocalFileSystem.getInstance().findFileByIoFile(tempDir)
             ?: throw TzatzikiException("Unable to create temporary file")
 

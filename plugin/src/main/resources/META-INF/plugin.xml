@@ -302,7 +302,7 @@
             <action class="io.nimbly.tzatziki.actions.TzTranslateAction"
                     id="io.nimbly.tzatziki.TzTranslateAction"
                     text="Translate to english" icon="ActionIcons.I18N">
-                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T" second-keystroke="T"/>
             </action>
 
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"

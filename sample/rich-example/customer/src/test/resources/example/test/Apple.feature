@@ -3,7 +3,7 @@ Feature: Some terse yet descriptive text of what is desired
   As an explicit system actor
   I want to gain some beneficial outcome which furthers the goal
 
-  @Advanced
+  @Advanced @Customer
   Scenario: Some determinable business situation
     Given some precondition
     And some other precondition

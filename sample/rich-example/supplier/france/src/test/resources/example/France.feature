@@ -10,14 +10,7 @@ Feature: Cocktail Ordering
 
   Ceci est plutot cool !
 
-  @Advanced @Chrome
-  Scenario: This is the scenario
-    Given Romeo who wants to buy a drink
-    * this is a test
-
-
-
-  @Production
+  @Production @Chrome
   Scenario: Creating an empty order
     Given Romeo who wants to buy a drink
     Then there is 0 cocktails in the order
@@ -27,3 +20,10 @@ Feature: Cocktail Ordering
       | Erik Larson | The Devil in the White City          |
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
       | Erik Larson | In the Garden of Beasts              |
+
+  @Advanced @Chrome
+  Scenario: This is the scenario
+    Given Romeo who wants to buy a drink
+    * this is a test
+
+
