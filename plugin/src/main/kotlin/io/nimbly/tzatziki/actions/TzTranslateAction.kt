@@ -64,7 +64,7 @@ class TzTranslateAction : AnAction() , DumbAware {
         if (text == null)
             return
 
-        val translation = googleTranslate("EN", "FR", text)
+        val translation = googleTranslate("EN", "auto", text)
             ?: return
 
         executeWriteCommand(file.project, "Translating with Cucumber+", Runnable {
@@ -124,7 +124,7 @@ class TzTranslateAction : AnAction() , DumbAware {
 
         con.setRequestProperty("User-Agent", "Mozilla/5.0")
 
-        val input = BufferedReader(InputStreamReader(con.getInputStream()))
+        val input = BufferedReader(InputStreamReader(con.getInputStream(), "UTF-8"))
         var inputLine: String?
         val response = StringBuffer()
 
