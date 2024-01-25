@@ -36,11 +36,6 @@ class TzTranslateAction : AnAction() , DumbAware {
 
         val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
 
-//        var out = output
-//        if (out.equals("en", true))
-//            out = "english"
-//        event.presentation.text = "Translate to ${out.uppercase()}"
-
         event.presentation.icon =  I18NIcons.getFlag(output.trim().lowercase())
             ?: I18N
         super.update(event)
