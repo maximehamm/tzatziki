@@ -1,7 +1,10 @@
 package io.nimbly.tzatziki.util
 
+import com.fasterxml.jackson.databind.json.JsonMapper
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
+import org.jetbrains.kotlin.lombok.utils.trimToNull
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -88,6 +91,8 @@ private fun parseResult(inputJson: String): String? {
     val elt = JsonParser.parseString(inputJson)
     if (elt == null || !elt.isJsonArray) return null
 
+    val pretty = GsonBuilder().setPrettyPrinting().create().toJson(elt)
+
     val jsonArray = elt.asJsonArray
     if (jsonArray.size() < 1) return null
 
@@ -97,14 +102,19 @@ private fun parseResult(inputJson: String): String? {
     val jsonArray2 = elt2.asJsonArray
     if (jsonArray2.size() < 1) return null
 
-    val elt3 = jsonArray2[0]
-    if (!elt3.isJsonArray) return null
+    val txt = StringBuilder()
+    jsonArray2.forEach { elt3 ->
 
-    val jsonArray3 = elt3.asJsonArray
-    if (jsonArray3.size() < 1) return null
+        if (!elt3.isJsonArray) return@forEach
 
-    val elt4 = jsonArray3[0]
-    if (!elt4.isJsonPrimitive) return null
+        val jsonArray3 = elt3.asJsonArray
+        if (jsonArray3.size() < 1) return@forEach
 
-    return elt4.asString
+        val elt4 = jsonArray3[0]
+        if (!elt4.isJsonPrimitive) return@forEach
+
+        txt.append(elt4.asJsonPrimitive.asString)
+    }
+
+    return txt.toString().trim().trimToNull();
 }
