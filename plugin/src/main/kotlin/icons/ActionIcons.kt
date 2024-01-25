@@ -17,6 +17,7 @@ package icons
 
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.IconManager
+import javax.swing.Icon
 
 // See Intellij Icons here : https://jetbrains.design/intellij/resources/icons_list/
 // New UI icon mapping : https://plugins.jetbrains.com/docs/intellij/work-with-icons-and-images.html#mapping-entries
@@ -53,5 +54,4 @@ object ActionIcons {
     @JvmField val I18N = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/g_trans.png", javaClass)
 
     val ImagesFileType = IconManager.getInstance().getIcon("/org/intellij/images/icons/ImagesFileType.svg", javaClass)
-
 }

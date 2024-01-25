@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "16.0.7"
+    version = "16.1.1"
 }
 
 val notes by extra {"""
@@ -12,7 +12,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
-         <li><b>16.0</b> Translate any literal into english</li>
+         <li><b>16.1</b>Translate selection using Google Translate (files of any kind, gherkin, java, etc.)<br/>
          <li><b>15.4</b> IntelliJ IDEA 2023.3.2 compatibility</li>
          <li><b>15.3</b> New UI supports</li>
          <li><b>15.2</b> Completion to suggest step parameter types (Java, Kotlin)</li>

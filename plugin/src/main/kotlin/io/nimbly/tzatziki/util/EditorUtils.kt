@@ -33,6 +33,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.elementType
 import com.intellij.util.DocumentUtil
@@ -107,6 +108,12 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
         row = element.nextSibling.firstChild as GherkinTableRow?
 
     return row
+}
+
+fun Editor.getLeafAtCursor(): LeafPsiElement? {
+    val file = file ?: return null
+    val element = file.findElementAt(caretModel.offset)
+    return element as? LeafPsiElement
 }
 
 fun Editor.getLineEndOffsetFromOffset(offset: Int = caretModel.offset): Int {

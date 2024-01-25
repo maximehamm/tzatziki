@@ -15,7 +15,10 @@
 
 package io.nimbly.tzatziki.util
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 
 fun Document.getLineStart(offset: Int)
@@ -52,4 +55,17 @@ fun Document.charAt(offset: Int): Char? {
     if (textLength <= offset)
         return null
     return getText(TextRange.create(offset, offset+1))[0]
+}
+
+fun executeWriteCommand(project: Project, text: String, runnable: Runnable) {
+    CommandProcessor.getInstance().executeCommand(
+        project, {
+            val application =
+                ApplicationManager.getApplication()
+            application.runWriteAction {
+                runnable.run()
+            }
+        },
+        text, "Cucumber+"
+    )
 }
