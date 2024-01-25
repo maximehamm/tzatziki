@@ -49,6 +49,12 @@ fun now(): LocalDate {
     return LocalDate.now()
 }
 
+fun <T, C : Collection<T>> C.nullIfEmpty(): C?
+        = this.ifEmpty { null }
+
+fun String?.nullIfEmpty(): String? =
+    if (isNullOrEmpty()) null else this
+
 val NOW: String
     get() = now().format(DATE_FORMAT)
 

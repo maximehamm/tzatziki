@@ -1,10 +1,8 @@
 package io.nimbly.tzatziki.util
 
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
-import org.jetbrains.kotlin.lombok.utils.trimToNull
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -116,5 +114,5 @@ private fun parseResult(inputJson: String): String? {
         txt.append(elt4.asJsonPrimitive.asString)
     }
 
-    return txt.toString().trim().trimToNull();
+    return txt.toString().trim().nullIfEmpty();
 }

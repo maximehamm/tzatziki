@@ -35,7 +35,9 @@ import icons.ActionIcons
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
+import java.awt.Insets
 import java.awt.event.ActionEvent
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
@@ -53,14 +55,18 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
     lateinit var tTranslation: JBTextArea
 
     val inputLanguage = JBTextField("auto")
-    val outputLanguage: JBTextField = JBTextField("EN")
-    var flag: Icon? = null
+    val outputLanguage = JBTextField("EN")
+
+    val inputFlag = JBLabel().apply { this.background = Color.BLUE }
+    val outputFlag = JBLabel()
+
+    var outputFlagIcon: Icon? = null
 
     var document: Document? = null
     var startOffset: Int? = null
     var endOffset: Int? = null
 
-    val translateAction = object : AbstractAction("Translate", flag) {
+    val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
             translate()
         }
@@ -86,26 +92,31 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
         val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
 
-        flag = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
-        translateAction.putValue(Action.SMALL_ICON, flag)
-
         inputLanguage.text = input
         outputLanguage.text = output
+
+        outputFlagIcon = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
+        outputFlag.icon = outputFlagIcon
+        translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
+
+        val inputFlagIcon = I18NIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
+        inputFlag.setIconWithAlignment(inputFlagIcon, SwingConstants.LEFT, SwingConstants.CENTER)
 
         inputLanguage.document.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, inputLanguage.text)
+                inputFlag.setIconWithAlignment(I18NIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N, SwingConstants.LEFT, SwingConstants.CENTER)
             }
         })
         outputLanguage.document.addDocumentListener(object : DocumentAdapter() {
 
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, outputLanguage.text)
+                this@CucumberPlusI18nView.outputFlagIcon = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
+                translateAction.putValue(Action.SMALL_ICON, this@CucumberPlusI18nView.outputFlagIcon)
+                translateAction.isEnabled = translateAction.isEnabled && (this@CucumberPlusI18nView.outputFlagIcon != null)
 
-                flag = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
-                translateAction.putValue(Action.SMALL_ICON, flag)
-
-                translateAction.isEnabled = translateAction.isEnabled && (flag != null)
+                outputFlag.icon = this@CucumberPlusI18nView.outputFlagIcon
             }
         })
     }
@@ -149,7 +160,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
                     startOffset = editor.selectionModel.selectionStart
                     endOffset = editor.selectionModel.selectionEnd
                     document = editor.document
-                    translateAction.isEnabled = flag != null
+                    translateAction.isEnabled = outputFlagIcon != null
                 }
                 else {
 
@@ -159,7 +170,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
                         startOffset = literal.startOffset
                         endOffset = literal.endOffset
                         document = editor.document
-                        translateAction.isEnabled = flag != null
+                        translateAction.isEnabled = outputFlagIcon != null
                     }
                     else {
                         translateAction.isEnabled = false
@@ -174,7 +185,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
 
     private fun initPanel(): JPanel {
 
-        val main = JBPanelWithEmptyText(GridLayoutManager(7, 2))
+        val main = JBPanelWithEmptyText(GridLayoutManager(6, 4))
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
         main.add(
@@ -183,51 +194,81 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
                  &nbsp; ✓ <b>Set the 'input' language as iso code or use "auto"</b><br/>
                  &nbsp; ✓ <b>Set the 'output' language as iso code</b><br/>
                  &nbsp; ✓ <b>Select some text in the editor</b> (<i>Gherkin, Java, etc.</i>)<br/>
-                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string literal to translate</b><br/>
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string literal to translate</b><br/>
                  <br/>
                 </html>""".trimMargin()
             ),
             GridConstraints(
-                0, 0, 1, 2,
+                0, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
-        main.add(
+
+        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 4, Insets(0, 0, 0, 0), 30 , 0))
+        main.add(languages,
+            GridConstraints(
+                1, 0, 1, 2,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
+
+        languages.add(
             JBLabel("Input language :"),
             GridConstraints(
-                1, 0, 1, 1,
+                0, 0, 1, 2,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
-        main.add(
+        languages.add(
             JBLabel("Output language :"),
             GridConstraints(
-                1, 1, 1, 1,
+                0, 2, 1, 2,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
-        main.add(
+
+        languages.add(
             inputLanguage,
             GridConstraints(
-                2, 0, 1, 1,
-                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
-                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
-                null, null, Dimension(60, 30)
+                1, 0, 1, 1,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
+                null, null, null
             )
         )
-        main.add(
+        languages.add(
+            inputFlag,
+            GridConstraints(
+                1, 1, 1, 1,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
+        languages.add(
             outputLanguage,
             GridConstraints(
-                2, 1, 1, 1,
-                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+                1, 2, 1, 1,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
+        languages.add(
+            outputFlag,
+            GridConstraints(
+                1, 3, 1, 1,
+                ANCHOR_WEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
-                null, null, Dimension(50, 30)
+                null, null, null
             )
         )
 
@@ -235,7 +276,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         main.add(
             JBLabel("Selection :"),
             GridConstraints(
-                3, 0, 1, 2,
+                2, 0, 1, 2,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_GROW, SIZEPOLICY_FIXED,
                 null, null, null
@@ -249,7 +290,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         )
         main.add(
             sSelection, GridConstraints(
-                4, 0, 1, 2,
+                3, 0, 1, 2,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -261,7 +302,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         main.add(
             JButton(translateAction),
             GridConstraints(
-                5, 0, 1, 1,
+                4, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
                 null, null, null
@@ -271,7 +312,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         main.add(
             JButton(replaceAction),
             GridConstraints(
-                5, 1, 1, 1,
+                4, 1, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_GROW, SIZEPOLICY_FIXED,
                 null, null, null
@@ -286,7 +327,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         )
         main.add(
             sTranslation, GridConstraints(
-                6, 0, 1, 2,
+                5, 0, 1, 2,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
