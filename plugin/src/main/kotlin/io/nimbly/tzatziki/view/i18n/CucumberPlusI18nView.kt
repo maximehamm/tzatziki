@@ -28,6 +28,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
+import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
 import icons.ActionIcons
@@ -37,6 +38,8 @@ import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import javax.swing.*
+import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.event.DocumentEvent
 
 const val SAVE_INPUT = "io.nimbly.tzatziki.translation.input"
@@ -171,7 +174,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
 
     private fun initPanel(): JPanel {
 
-        val main = JBPanelWithEmptyText(GridLayoutManager(10, 2))
+        val main = JBPanelWithEmptyText(GridLayoutManager(7, 2))
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
         main.add(
@@ -186,8 +189,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             ),
             GridConstraints(
                 0, 0, 1, 2,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_BOTH,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -195,8 +198,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             JBLabel("Input language :"),
             GridConstraints(
                 1, 0, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -204,8 +207,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             JBLabel("Output language :"),
             GridConstraints(
                 1, 1, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -213,8 +216,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             inputLanguage,
             GridConstraints(
                 2, 0, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, Dimension(60, 30)
             )
         )
@@ -222,8 +225,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             outputLanguage,
             GridConstraints(
                 2, 1, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, Dimension(50, 30)
             )
         )
@@ -233,22 +236,23 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             JBLabel("Selection :"),
             GridConstraints(
                 3, 0, 1, 2,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_GROW, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
         tSelection = JBTextArea(15, 10).apply {
             lineWrap = true; wrapStyleWord = true }
         val sSelection = JBScrollPane(tSelection,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            VERTICAL_SCROLLBAR_AS_NEEDED,
+            HORIZONTAL_SCROLLBAR_AS_NEEDED
         )
         main.add(
             sSelection, GridConstraints(
                 4, 0, 1, 2,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_WANT_GROW,
+                ANCHOR_NORTHWEST, FILL_BOTH,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 null, null, null
             )
         )
@@ -258,8 +262,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             JButton(translateAction),
             GridConstraints(
                 5, 0, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -268,8 +272,8 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
             JButton(replaceAction),
             GridConstraints(
                 5, 1, 1, 1,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE,
-                GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_GROW, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -277,14 +281,15 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         tTranslation = JBTextArea(15, 10).apply {
             lineWrap = true; wrapStyleWord = true }
         val sTranslation = JBScrollPane(tTranslation,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+            VERTICAL_SCROLLBAR_AS_NEEDED,
+            HORIZONTAL_SCROLLBAR_AS_NEEDED
         )
         main.add(
             sTranslation, GridConstraints(
                 6, 0, 1, 2,
-                GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_BOTH,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_WANT_GROW,
+                ANCHOR_NORTHWEST, FILL_BOTH,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 null, null, null
             )
         )
@@ -292,7 +297,7 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         panel.layout = BorderLayout(10, 10)
         panel.border = JBUI.Borders.empty(10)
         panel.withEmptyText("No literal selected yet found")
-        panel.add(main, BorderLayout.PAGE_START)
+        panel.add(main, BorderLayout.CENTER)
 
         return panel
     }
