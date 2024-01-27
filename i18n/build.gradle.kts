@@ -51,6 +51,7 @@ tasks {
     }
     jar {
         archiveBaseName.set(rootProject.name + "-" + project.name)
+        exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
     }
 
     patchPluginXml {
@@ -64,9 +65,9 @@ tasks {
         enabled = false
     }
 
-//    instrumentedJar {
-//        exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
-//    }
+    instrumentedJar {
+        exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
+    }
 
     runPluginVerifier {
         ideVersions.set(
