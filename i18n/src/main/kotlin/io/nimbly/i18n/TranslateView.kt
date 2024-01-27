@@ -286,7 +286,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
         )
         main.add(
             sSelection, GridConstraints(
-                3, 0, 1, 2,
+                3, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -323,7 +323,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
         )
         main.add(
             sTranslation, GridConstraints(
-                5, 0, 1, 2,
+                5, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,

@@ -22,9 +22,11 @@ import com.intellij.ui.content.ContentFactory
 class TranslationPlusFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+
+        val contentFactory = ContentFactory.SERVICE.getInstance()
         val translateView = TranslateView(project)
         toolWindow.contentManager.addContent(
-            ContentFactory.getInstance().createContent(translateView, "Translation", false)
+            contentFactory.createContent(translateView, "Translation", false)
         )
 
     }

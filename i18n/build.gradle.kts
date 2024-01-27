@@ -33,6 +33,7 @@ intellij {
 }
 
 dependencies {
+
 }
 
 tasks {
@@ -54,6 +55,8 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("203")
+        untilBuild.set("241.*")
+
         changeNotes.set(notes)
     }
 
@@ -61,13 +64,13 @@ tasks {
         enabled = false
     }
 
-    instrumentedJar {
+//    instrumentedJar {
 //        exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
-    }
+//    }
 
     runPluginVerifier {
         ideVersions.set(
-            listOf("IU-2022.3.1"))
+            listOf("IU-2023.3.5"))
     }
 
     publishPlugin {

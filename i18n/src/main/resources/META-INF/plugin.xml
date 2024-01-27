@@ -27,6 +27,9 @@
     <b> - Use Translation+ tool window to select input and ouput language</b><br/>
     <br/>
 
+    <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2afe7f63-0496-49b9-81ae-a91ac255e75a"
+         alt="Translation+" width="839" height="500"></p>
+
     Any suggestion ? Let me know !<br/>
     <br/>
 
@@ -34,7 +37,7 @@
     <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a><br/>
 
     <br/>
-    This plugin is a module of <a href="https://github.com/maximehamm/tzatziki">Cucumber +</a><br/>
+    This plugin is a module of <a href="https://plugins.jetbrains.com/plugin/16289-cucumber-">Cucumber +</a><br/>
 
     ]]></description>
 
@@ -47,6 +50,8 @@
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
     </extensions>
+
+    <depends>com.intellij.modules.platform</depends>
 
     <actions>
 
