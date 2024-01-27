@@ -110,12 +110,6 @@ fun Editor.getTableRowAt(offset: Int): GherkinTableRow? {
     return row
 }
 
-fun Editor.getLeafAtCursor(): LeafPsiElement? {
-    val file = file ?: return null
-    val element = file.findElementAt(caretModel.offset)
-    return element as? LeafPsiElement
-}
-
 fun Editor.getLineEndOffsetFromOffset(offset: Int = caretModel.offset): Int {
     return DocumentUtil.getLineEndOffset(offset, document)
 }

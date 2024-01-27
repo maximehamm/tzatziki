@@ -8,13 +8,14 @@ val notes: String by rootProject.extra
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":i18n"))
 
     implementation("com.openhtmltopdf:openhtmltopdf-core:1.0.8")
     implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.8")
     implementation("com.openhtmltopdf:openhtmltopdf-java2d:1.0.8")
     implementation("com.openhtmltopdf:openhtmltopdf-svg-support:1.0.8")
 
-    implementation("org.freemarker:freemarker:2.3.23")
+    implementation("org.freemarker:freemarker:2.3.30")
     implementation("com.github.rjeschke:txtmark:0.13")
     implementation("io.cucumber:tag-expressions:4.1.0")
 

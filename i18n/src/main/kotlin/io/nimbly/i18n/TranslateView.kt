@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.tzatziki.view.i18n
+package io.nimbly.i18n
 
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
@@ -25,18 +25,17 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
-import icons.ActionIcons
-import io.nimbly.tzatziki.util.*
-import org.jetbrains.kotlin.psi.psiUtil.endOffset
+import icons.ActionI18nIcons.I18N
+import io.nimbly.i18n.util.*
 import java.awt.BorderLayout
 import java.awt.Color
-import java.awt.Dimension
 import java.awt.Insets
 import java.awt.event.ActionEvent
 import javax.swing.*
@@ -44,10 +43,7 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.event.DocumentEvent
 
-const val SAVE_INPUT = "io.nimbly.tzatziki.translation.input"
-const val SAVE_OUTPUT = "io.nimbly.tzatziki.translation.output"
-
-class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, false) {
+class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
 
     val panel = JBPanelWithEmptyText()
 
@@ -95,28 +91,28 @@ class CucumberPlusI18nView(val project: Project) : SimpleToolWindowPanel(true, f
         inputLanguage.text = input
         outputLanguage.text = output
 
-        outputFlagIcon = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
+        outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
         outputFlag.icon = outputFlagIcon
         translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
 
-        val inputFlagIcon = I18NIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
+        val inputFlagIcon = TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N
         inputFlag.setIconWithAlignment(inputFlagIcon, SwingConstants.LEFT, SwingConstants.CENTER)
 
         inputLanguage.document.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, inputLanguage.text)
-                inputFlag.setIconWithAlignment(I18NIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N, SwingConstants.LEFT, SwingConstants.CENTER)
+                inputFlag.setIconWithAlignment(TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
             }
         })
         outputLanguage.document.addDocumentListener(object : DocumentAdapter() {
 
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, outputLanguage.text)
-                this@CucumberPlusI18nView.outputFlagIcon = I18NIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: ActionIcons.I18N
-                translateAction.putValue(Action.SMALL_ICON, this@CucumberPlusI18nView.outputFlagIcon)
-                translateAction.isEnabled = translateAction.isEnabled && (this@CucumberPlusI18nView.outputFlagIcon != null)
+                this@TranslateView.outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
+                translateAction.putValue(Action.SMALL_ICON, this@TranslateView.outputFlagIcon)
+                translateAction.isEnabled = translateAction.isEnabled && (this@TranslateView.outputFlagIcon != null)
 
-                outputFlag.icon = this@CucumberPlusI18nView.outputFlagIcon
+                outputFlag.icon = this@TranslateView.outputFlagIcon
             }
         })
     }

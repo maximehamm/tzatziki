@@ -1,14 +1,28 @@
-package io.nimbly.tzatziki.util
+/*
+ * I18N +
+ * Copyright (C) 2023  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ *
+ * This document is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This work is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+package io.nimbly.i18n.util
 
-import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
-import groovy.json.StringEscapeUtils
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.net.URLDecoder
 import java.net.URLEncoder
+
+const val SAVE_INPUT = "io.nimbly.tzatziki.translation.input"
+const val SAVE_OUTPUT = "io.nimbly.tzatziki.translation.output"
 
 /**
  * Google translate
@@ -121,3 +135,4 @@ private fun parseResult(inputJson: String): String? {
 
     return txt.toString().trim().nullIfEmpty();
 }
+

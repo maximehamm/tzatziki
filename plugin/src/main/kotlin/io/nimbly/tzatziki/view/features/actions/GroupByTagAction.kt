@@ -2,9 +2,7 @@ package io.nimbly.tzatziki.view.features.actions
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.components.ServiceManager
 import icons.ActionIcons
-import io.nimbly.tzatziki.services.TzPersistenceStateService
 import io.nimbly.tzatziki.services.tagService
 import io.nimbly.tzatziki.view.features.FeaturePanel
 

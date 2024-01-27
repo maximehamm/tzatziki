@@ -299,9 +299,9 @@
 
             <separator/>
 
-            <action class="io.nimbly.tzatziki.actions.TzTranslateAction"
+            <action class="io.nimbly.i18n.TranslateAction"
                     id="io.nimbly.tzatziki.TzTranslateAction"
-                    text="Translate" icon="ActionIcons.I18N">
+                    text="Translate" icon="ActionI18nIcons.I18N">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl T" second-keystroke="T"/>
             </action>
 

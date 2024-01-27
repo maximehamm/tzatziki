@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/extensions/java-cucumber" />
             <option value="$PROJECT_DIR$/extensions/kotlin" />
             <option value="$PROJECT_DIR$/extensions/scala" />
+            <option value="$PROJECT_DIR$/i18n" />
             <option value="$PROJECT_DIR$/plugin" />
             <option value="$PROJECT_DIR$/tests" />
           </set>

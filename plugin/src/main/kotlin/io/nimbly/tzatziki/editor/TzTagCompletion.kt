@@ -20,13 +20,10 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.codeInsight.lookup.LookupElementRenderer
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
 import io.nimbly.tzatziki.services.TzTagService
-import io.nimbly.tzatziki.util.description
 import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 

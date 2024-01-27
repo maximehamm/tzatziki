@@ -25,7 +25,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
-import io.nimbly.tzatziki.view.i18n.CucumberPlusI18nView
+import io.nimbly.i18n.TranslateView
 
 class CucumberPlusFactory : ToolWindowFactory {
 
@@ -43,9 +43,9 @@ class CucumberPlusFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(
             contentFactory.createContent(filterTagsView, "Filters", false))
 
-        val i18nView = CucumberPlusI18nView(project)
+        val translateView = TranslateView(project)
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(i18nView, "Translation", false))
+            contentFactory.createContent(translateView, "Translation", false))
 
         val tagService = project.getService(TzTagService::class.java)
 

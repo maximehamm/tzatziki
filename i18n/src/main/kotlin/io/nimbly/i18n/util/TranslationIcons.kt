@@ -1,6 +1,6 @@
 /*
- * I18N
- * Copyright (C) 2021  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * I18N +
+ * Copyright (C) 2023  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -12,13 +12,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.tzatziki.util
+package io.nimbly.i18n.util
 
 import com.intellij.openapi.util.IconLoader
 import com.intellij.util.IconUtil
 import javax.swing.Icon
 
-interface I18NIcons {
+interface TranslationIcons {
 
     companion object {
 
@@ -26,9 +26,9 @@ interface I18NIcons {
             var icon = FLAGS[country]
             if (icon != null) return icon
 
-            val path = "io/nimbly/tzatziki/icons/languages/$country.png"
+            val path = "io/nimbly/i18n/icons/languages/$country.png"
             try {
-                var ico = IconLoader.findIcon(path, javaClass)
+                var ico = IconLoader.findIcon(path, TranslationIcons::class.java)
                 if (ico != null)
                     ico = IconUtil.scale(ico, 0.8)
                 icon = ico

@@ -13,22 +13,17 @@
  * GNU General Public License for more details.
  */
 
-package io.nimbly.tzatziki.actions
+package io.nimbly.i18n
 
-import com.google.common.io.Resources
 import com.intellij.ide.util.PropertiesComponent
-import com.intellij.lang.properties.references.I18nUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.project.DumbAware
-import icons.ActionIcons.I18N
-import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.view.i18n.SAVE_OUTPUT
-import java.io.File
+import icons.ActionI18nIcons
+import io.nimbly.i18n.util.*
 
-
-class TzTranslateAction : AnAction() , DumbAware {
+class TranslateAction : AnAction() , DumbAware {
 
     override fun update(event: AnActionEvent) {
         val editor = event.getData(CommonDataKeys.EDITOR)
@@ -36,8 +31,8 @@ class TzTranslateAction : AnAction() , DumbAware {
 
         val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
 
-        event.presentation.icon =  I18NIcons.getFlag(output.trim().lowercase())
-            ?: I18N
+        event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase())
+            ?: ActionI18nIcons.I18N
         super.update(event)
     }
 
