@@ -72,9 +72,8 @@ tasks {
     jar {
         archiveBaseName.set(rootProject.name)
     }
-
     instrumentedJar {
-        exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
+         exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
     }
 
     runPluginVerifier {

@@ -17,7 +17,7 @@ intellij {
 }
 
 dependencies {
-    testImplementation(project(":plugin"))
+    testImplementation(project(":plugin-tzatziki"))
     testImplementation(project(":common"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")

@@ -7,7 +7,7 @@ val versions: Map<String, String> by rootProject.extra
 
 dependencies {
     implementation(project(":common"))
-    implementation(project(":plugin"))
+    implementation(project(":plugin-tzatziki"))
 }
 
 intellij {
