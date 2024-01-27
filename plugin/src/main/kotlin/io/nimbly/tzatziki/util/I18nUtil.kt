@@ -3,9 +3,11 @@ package io.nimbly.tzatziki.util
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
+import groovy.json.StringEscapeUtils
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.net.URLDecoder
 import java.net.URLEncoder
 
 /**
@@ -86,10 +88,11 @@ private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: St
 }
 
 private fun parseResult(inputJson: String): String? {
+
     val elt = JsonParser.parseString(inputJson)
     if (elt == null || !elt.isJsonArray) return null
 
-    val pretty = GsonBuilder().setPrettyPrinting().create().toJson(elt)
+    // val pretty = GsonBuilder().setPrettyPrinting().create().toJson(elt)
 
     val jsonArray = elt.asJsonArray
     if (jsonArray.size() < 1) return null
@@ -111,7 +114,9 @@ private fun parseResult(inputJson: String): String? {
         val elt4 = jsonArray3[0]
         if (!elt4.isJsonPrimitive) return@forEach
 
-        txt.append(elt4.asJsonPrimitive.asString)
+        val asString = elt4.asJsonPrimitive.asString
+        val fixUnicodeBlank = asString.replace(Regex("\\u200b"), "")
+        txt.append(fixUnicodeBlank)
     }
 
     return txt.toString().trim().nullIfEmpty();
