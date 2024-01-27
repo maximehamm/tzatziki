@@ -1,0 +1,70 @@
+<!--
+  ~ I18N +
+  ~ Copyright (C) 2024  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
+  ~
+  ~ This document is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This work is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  -->
+
+<idea-plugin>
+    <id>io.nimbly.i18n</id>
+    <name>Translation +</name>
+    <vendor email="Maxime.HAMM@nimbly-consulting.com"
+            url="https://github.com/maximehamm/tzatziki/issues">Maxime HAMM
+    </vendor>
+    <description><![CDATA[
+
+    <b>Translate anything using Google translate !</b><br/>
+    <br/>
+    <b> - Select some text inside editor et choose menu 'Edit > Translate'</b><br/>
+    <b> - Use Translation+ tool window to select input and ouput language</b><br/>
+    <br/>
+
+    Any suggestion ? Let me know !<br/>
+    <br/>
+
+    <i>@author Maxime HAMM</i><br/>
+    <a href="https://github.com/maximehamm/tzatziki">https://github.com/maximehamm/tzatziki</a><br/>
+
+    <br/>
+    This plugin is a module of <a href="https://github.com/maximehamm/tzatziki">Cucumber +</a><br/>
+
+    ]]></description>
+
+    <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
+                    icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
+
+    </extensions>
+
+    <actions>
+
+        <group id="io.nimbly.i18n.group">
+
+            <action class="io.nimbly.i18n.TranslateAction"
+                    id="io.nimbly.i18n.TranslateAction"
+                    text="Translate" icon="ActionI18nIcons.I18N">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+            </action>
+
+            <separator/>
+
+            <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
+
+        </group>
+    </actions>
+
+
+</idea-plugin>

@@ -1,6 +1,6 @@
 /*
  * I18N +
- * Copyright (C) 2023  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2024  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

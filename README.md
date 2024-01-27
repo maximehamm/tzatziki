@@ -1,7 +1,7 @@
 # Tzatziki y Cucumber
 
 Developped by Maxime HAMM
-_maxime.hamm.pro@gmail.com_
+_Maxime.HAMM@nimbly-consulting.com_
 
 This plugin is compatible with all Jetbrain products
 

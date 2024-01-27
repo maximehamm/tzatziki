@@ -12,22 +12,20 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+package io.nimbly.i18n
 
-package io.nimbly.tzatziki
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.content.ContentFactory
 
-import org.junit.Ignore
+class TranslationPlusFactory : ToolWindowFactory {
 
-@Ignore
-abstract class AbstractJavaTestCase : AbstractTestCase() {
+    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        val translateView = TranslateView(project)
+        toolWindow.contentManager.addContent(
+            ContentFactory.getInstance().createContent(translateView, "Translation", false)
+        )
 
-    fun configure(text: String)
-        = super.configure(EXT.java, text)
-
-    override fun setUp() {
-        super.setUp()
-        setupForJava()
     }
-
-    fun addClass(text: String)
-        = addClass(EXT.java, text)
 }

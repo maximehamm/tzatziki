@@ -1,6 +1,6 @@
 /*
  * CUCUMBER +
- * Copyright (C) 2023  Maxime HAMM - NIMBLY CONSULTING - maxime.hamm.pro@gmail.com
+ * Copyright (C) 2024  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
  *
  * This document is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ import com.intellij.ui.IconManager
 // New UI icon mapping : https://plugins.jetbrains.com/docs/intellij/work-with-icons-and-images.html#mapping-entries
 // New UI icons svg : https://www.jetbrains.com/intellij-repository/releases
 object ActionI18nIcons {
+
+    @JvmField val TRANSLATION_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/cucumber-plus-16x16.png", javaClass)
 
     @JvmField val I18N = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/g_trans.png", javaClass)
 }
