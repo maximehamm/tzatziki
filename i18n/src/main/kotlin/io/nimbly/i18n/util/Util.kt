@@ -18,8 +18,10 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -65,3 +67,48 @@ fun PsiElement.getDocument(): Document? {
     return if (file == null) null else
         FileDocumentManager.getInstance().getDocument(file)
 }
+
+fun String.trimIndentLenght(): Int {
+    return this.substringBefore("\n").length - this.trimIndent().substringBefore("\n").length
+}
+
+fun String.indentAs(model: String): String {
+
+    val indents = model
+        .split("\n")
+        .map { it.length - it.trimStart().length }
+
+    val maxIndent = indents.max()
+
+    val indented = this
+        .split("\n")
+        .mapIndexed { index, s ->
+
+            val i = indents.getOrNull(index) ?: maxIndent
+            val s = " ".repeat(i) + s.trimStart()
+            s
+        }
+        .joinToString("\n")
+
+    return indented
+}
+
+fun SelectionModel.getSelectedTextWithLeadingSpaces(): String? {
+
+    var text = this.getSelectedText(false)
+        ?: return null
+
+    var offset = this.selectionStart
+    val line = this.editor.document.getLineNumber(offset)
+    while (offset > 0 && this.editor.document.getLineNumber(offset) == line) {
+        offset --;
+        val c = this.editor.document.getText(TextRange(offset, offset+1))[0]
+        if (c == ' ')
+            text = " " + text
+        else
+            offset = -1
+    }
+
+    return text
+}
+

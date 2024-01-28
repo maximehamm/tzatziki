@@ -18,9 +18,10 @@ object TranslationManager {
 
 
         val translation = googleTranslate(targetLanguage, sourceLanguage, sourceTranslation)
-
-        val event = TranslationEvent(translation)
-        listeners.forEach { it.onTranslation(event) }
+        if (translation != null) {
+            val event = TranslationEvent(translation ?: "")
+            listeners.forEach { it.onTranslation(event) }
+        }
 
         return translation
     }
@@ -30,4 +31,4 @@ interface TranslationListener {
     fun onTranslation(event: TranslationEvent)
 }
 
-class TranslationEvent(val translation: String?)
+class TranslationEvent(val translation: String)

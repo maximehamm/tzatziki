@@ -20,11 +20,13 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.DocumentAdapter
@@ -46,23 +48,23 @@ import javax.swing.event.DocumentEvent
 
 class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), TranslationListener {
 
-    val panel = JBPanelWithEmptyText()
+    private val panel = JBPanelWithEmptyText()
 
-    lateinit var tSelection: JBTextArea
-    lateinit var tTranslation: JBTextArea
+    private lateinit var tSelection: JBTextArea
+    private lateinit var tTranslation: JBTextArea
 
-    val inputLanguage = JBTextField("auto")
-    val outputLanguage = JBTextField("EN")
+    private val inputLanguage = JBTextField("auto")
+    private val outputLanguage = JBTextField("EN")
 
-    val inputFlag = JBLabel().apply { this.background = Color.BLUE }
-    val outputFlag = JBLabel()
+    private val inputFlag = JBLabel().apply { this.background = Color.BLUE }
+    private val outputFlag = JBLabel()
 
-    var outputFlagIcon: Icon? = null
+    private var outputFlagIcon: Icon? = null
 
-    var editor: Editor? = null
-    var document: Document? = null
-    var startOffset: Int? = null
-    var endOffset: Int? = null
+    private var editor: Editor? = null
+    private var document: Document? = null
+    private var startOffset: Int? = null
+    private var endOffset: Int? = null
 
     val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
@@ -123,14 +125,19 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
     fun translate() {
 
+        val txt = tSelection.text
+          ?: return
+
         val translation = TranslationManager.translate(
             outputLanguage.text.lowercase(),
             inputLanguage.text.lowercase(),
-            tSelection.text)
-            ?: return
+            txt)
+          ?: return
 
-        tTranslation.text = translation
+        tTranslation.text = translation.trimIndent()
         replaceAction.isEnabled = true
+
+        editor?.clearInlays()
     }
 
     fun replace() {
@@ -140,8 +147,15 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             val start = startOffset ?: return@executeWriteCommand
             val end = endOffset ?: return@executeWriteCommand
             val translation = tTranslation.text ?: return@executeWriteCommand
+            val doc = document ?: return@executeWriteCommand
 
-            document?.replaceString(start, end, translation)
+            val text = doc.getText(TextRange(start, end))
+
+            var indented = translation.indentAs(text)
+            if (text.endsWith("\n"))
+                indented += "\n"
+
+            doc.replaceString(start, end, indented)
 
             replaceAction.isEnabled = false
 
@@ -156,9 +170,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
-                val text = editor.selectionModel.getSelectedText(false)
+                val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {
-                    this.tSelection.text = text
+
+                    this.tSelection.text = text.trimIndent()
                     this.startOffset = editor.selectionModel.selectionStart
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
@@ -169,7 +184,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
-                        this.tSelection.text = literal.text
+                        this.tSelection.text = literal.text.trimIndent()
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset
                         this.document = editor.document
@@ -287,7 +302,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
         tSelection = JBTextArea(15, 10).apply {
-            lineWrap = true; wrapStyleWord = true }
+            lineWrap = true;
+            wrapStyleWord = true
+            isEditable = false
+        }
         val sSelection = JBScrollPane(tSelection,
             VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_AS_NEEDED
@@ -352,6 +370,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         translateAction.isEnabled = true
         replaceAction.isEnabled = true
 
-        tTranslation.text = (event.translation ?: "");
+        tTranslation.text = event.translation.trimIndent()
     }
 }

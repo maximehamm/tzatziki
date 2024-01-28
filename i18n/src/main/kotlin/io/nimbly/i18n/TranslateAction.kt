@@ -12,7 +12,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
 package io.nimbly.i18n
 
 import com.intellij.codeInsight.daemon.impl.HintRenderer
@@ -27,6 +26,7 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.TextRange
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 import java.awt.Graphics
@@ -47,6 +47,20 @@ class TranslateAction : AnAction() , DumbAware {
 
         event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase())
             ?: ActionI18nIcons.I18N
+
+        var readyToApplyTranslation = false
+        editor?.let {
+            readyToApplyTranslation = it.inlayModel.getBlockElementsInRange(0, editor.document.textLength - 1)
+                .filter { it.renderer is TranslationHint }
+                .isNotEmpty()
+        }
+        if (readyToApplyTranslation) {
+            event.presentation.text = "Apply Translation"
+        }
+        else {
+            event.presentation.text = "Translate"
+        }
+
         super.update(event)
     }
 
@@ -92,8 +106,10 @@ class TranslateAction : AnAction() , DumbAware {
 
             val document = file.getDocument()
             if (document?.isWritable == true) {
-                executeWriteCommand(file.project, "Translating with Cucumber+", Runnable {
-                    document.replaceString(startOffset, endOffset, text)
+
+                val indented = text.indentAs(document.getText(TextRange(startOffset, endOffset)))
+                executeWriteCommand(file.project, "Translating with Translation+", Runnable {
+                    document.replaceString(startOffset, endOffset, indented)
                 })
                 editor.clearInlays()
             }
@@ -123,14 +139,15 @@ class TranslateAction : AnAction() , DumbAware {
                 translationLines.removeAt(0)
             }
 
+            val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
+
             translationLines
                 .forEachIndexed { index, translationLine ->
 
-                    val point2D = editor.offsetToPoint2D(startOffset)
                     val renderer = TranslationHint(
                         text = translationLine,
                         flag = if (index == translationLines.size - 1) flag else null,
-                        point2D = point2D
+                        indent = if (index == translationLines.size - 1) xindent else 0
                     )
 
                     val p = InlayProperties().apply {
@@ -149,12 +166,12 @@ class TranslateAction : AnAction() , DumbAware {
         = true
 }
 
-class TranslationHint(text: String, val flag: Icon?, val point2D: Point2D) : HintRenderer(text) {
+class TranslationHint(text: String, val flag: Icon?, val indent: Int) : HintRenderer(text) {
 
     val creationDate = LocalDateTime.now()
 
     override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
-        r.x = point2D.x.toInt() - 7
+        r.x = indent - 6
         super.paint(inlay, g, r, textAttributes)
     }
 
