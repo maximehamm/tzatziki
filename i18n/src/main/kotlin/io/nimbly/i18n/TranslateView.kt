@@ -152,8 +152,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             val text = doc.getText(TextRange(start, end))
 
             var indented = translation.indentAs(text)
-            if (text.endsWith("\n"))
-                indented += "\n"
+//            if (text.endsWith("\n"))
+//                indented += "\n"
 
             doc.replaceString(start, end, indented)
 

@@ -80,8 +80,9 @@ fun String.indentAs(model: String): String {
 
     val maxIndent = indents.max()
 
-    val indented = this
-        .split("\n")
+    val lines = this.split("\n")
+
+    var indented = lines
         .mapIndexed { index, s ->
 
             val i = indents.getOrNull(index) ?: maxIndent
@@ -89,6 +90,18 @@ fun String.indentAs(model: String): String {
             s
         }
         .joinToString("\n")
+
+    if (lines.size < indents.size) {
+        indents.subList(lines.size, indents.size)
+            .forEach { i ->
+                indented += "\n" + " ".repeat(i)
+            }
+    }
+
+    val lastLine = model.substringAfterLast("\n")
+    val trailingSpaces = lastLine.length - lastLine.trimEnd().length
+    if (trailingSpaces > 0)
+        indented += " ".repeat(trailingSpaces)
 
     return indented
 }
