@@ -74,34 +74,29 @@ fun String.trimIndentLenght(): Int {
 
 fun String.indentAs(model: String): String {
 
-    val indents = model
-        .split("\n")
+    val modelLines = model.split("\n")
+    val indents = modelLines
         .map { it.length - it.trimStart().length }
 
-    val maxIndent = indents.max()
+    val firstNonBlank = modelLines.indexOfFirst { it.isNotBlank() }
+    val lastNonBlank = modelLines.indexOfLast { it.isNotBlank() }
 
+    val maxIndent = indents.max()
     val lines = this.split("\n")
 
-    var indented = lines
-        .mapIndexed { index, s ->
+    var indented = modelLines
+        .mapIndexed { index, ml ->
 
-            val i = indents.getOrNull(index) ?: maxIndent
-            val s = " ".repeat(i) + s.trimStart()
-            s
+            val i = ml.length - ml.trimStart().length
+            var line = " ".repeat(i)
+
+            if (index in firstNonBlank..lastNonBlank) {
+                line += lines[index - firstNonBlank].trimStart()
+            }
+
+            line
         }
         .joinToString("\n")
-
-    if (lines.size < indents.size) {
-        indents.subList(lines.size, indents.size)
-            .forEach { i ->
-                indented += "\n" + " ".repeat(i)
-            }
-    }
-
-    val lastLine = model.substringAfterLast("\n")
-    val trailingSpaces = lastLine.length - lastLine.trimEnd().length
-    if (trailingSpaces > 0)
-        indented += " ".repeat(trailingSpaces)
 
     return indented
 }
