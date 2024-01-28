@@ -304,7 +304,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         tSelection = JBTextArea(15, 10).apply {
             lineWrap = true;
             wrapStyleWord = true
-            isEditable = false
         }
         val sSelection = JBScrollPane(tSelection,
             VERTICAL_SCROLLBAR_AS_NEEDED,

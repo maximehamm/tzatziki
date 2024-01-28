@@ -70,7 +70,6 @@ private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: St
             "&dt=t&q=" + URLEncoder.encode(sentence2, "UTF-8")
 
     val con = HttpConfigurable.getInstance().openConnection(url)
-
     con.setRequestProperty("User-Agent", "Mozilla/5.0")
 
     val input = BufferedReader(InputStreamReader(con.getInputStream(), "UTF-8"))
@@ -129,8 +128,10 @@ private fun parseResult(inputJson: String): String? {
         if (!elt4.isJsonPrimitive) return@forEach
 
         val asString = elt4.asJsonPrimitive.asString
+
         val fixUnicodeBlank = asString.replace(Regex("\\u200b"), "")
-        txt.append(fixUnicodeBlank)
+        val fixNonBreakableSpace = fixUnicodeBlank.replace(Regex("\\u00A0"), " ")
+        txt.append(fixNonBreakableSpace)
     }
 
     return txt.toString().trim().nullIfEmpty();
