@@ -21,6 +21,7 @@ import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import io.nimbly.i18n.clearInlays
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.allRows
 import io.nimbly.tzatziki.psi.cellAt
@@ -75,6 +76,11 @@ fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
 }
 
 object TZMouseAdapter : EditorMouseListener {
+
+    override fun mouseClicked(event: EditorMouseEvent) {
+        event.editor.clearInlays(5)
+    }
+
     override fun mouseReleased(e: EditorMouseEvent) {
 
         if (!e.gherkin)

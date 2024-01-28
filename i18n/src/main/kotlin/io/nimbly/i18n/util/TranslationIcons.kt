@@ -22,19 +22,19 @@ interface TranslationIcons {
 
     companion object {
 
-        fun getFlag(country: String): Icon? {
-            var icon = FLAGS[country]
+        fun getFlag(country: String, scaleRatio: Double = 0.8): Icon? {
+            var icon = FLAGS[country + scaleRatio]
             if (icon != null) return icon
 
             val path = "io/nimbly/i18n/icons/languages/$country.png"
             try {
                 var ico = IconLoader.findIcon(path, TranslationIcons::class.java)
                 if (ico != null)
-                    ico = IconUtil.scale(ico, 0.8)
+                    ico = IconUtil.scale(ico, scaleRatio)
                 icon = ico
             } catch (ignored: Throwable) {
             }
-            FLAGS[country] = icon
+            FLAGS[country + scaleRatio] = icon
 
             return icon
         }

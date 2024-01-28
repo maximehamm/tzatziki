@@ -40,7 +40,7 @@ fun executeWriteCommand(project: Project, text: String, runnable: Runnable) {
                 runnable.run()
             }
         },
-        text, "Cucumber+"
+        text, "Translation+"
     )
 }
 
