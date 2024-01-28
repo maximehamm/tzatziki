@@ -120,3 +120,15 @@ fun SelectionModel.getSelectedTextWithLeadingSpaces(): String? {
     return text
 }
 
+fun SelectionModel.findOffsetFirstNotNull(): Int {
+    var o = editor.selectionModel.selectionStart
+    while (o < this.editor.document.textLength) {
+        val c = this.editor.document.getText(TextRange(o, o + 1))
+        if (c.isNotBlank())
+            return o
+        o++
+    }
+    return editor.selectionModel.selectionStart // Not found
+}
+
+

@@ -31,7 +31,6 @@ import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 import java.awt.Graphics
 import java.awt.Rectangle
-import java.awt.geom.Point2D
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import javax.swing.Icon
@@ -74,6 +73,12 @@ class TranslateAction : AnAction() , DumbAware {
         val endOffset: Int
         val text: String?
         if (editor.selectionModel.hasSelection()) {
+
+            val offsetFirstNotEmpty = editor.selectionModel.findOffsetFirstNotNull()
+            if (offsetFirstNotEmpty != editor.selectionModel.selectionStart) {
+                editor.selectionModel.setSelection(offsetFirstNotEmpty, editor.selectionModel.selectionEnd)
+            }
+
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
