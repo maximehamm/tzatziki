@@ -104,7 +104,7 @@ class TranslateAction : AnAction() , DumbAware {
             //
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
-            val translation = googleTranslate(output, input, text)
+            val translation = TranslationManager.translate(output, input, text)
                 ?: return
 
             editor.clearInlays()

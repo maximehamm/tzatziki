@@ -18,6 +18,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
@@ -43,7 +44,7 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.event.DocumentEvent
 
-class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
+class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), TranslationListener {
 
     val panel = JBPanelWithEmptyText()
 
@@ -58,6 +59,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
 
     var outputFlagIcon: Icon? = null
 
+    var editor: Editor? = null
     var document: Document? = null
     var startOffset: Int? = null
     var endOffset: Int? = null
@@ -115,11 +117,13 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
                 outputFlag.icon = this@TranslateView.outputFlagIcon
             }
         })
+
+        TranslationManager.registerListener(this)
     }
 
     fun translate() {
 
-        val translation = googleTranslate(
+        val translation = TranslationManager.translate(
             outputLanguage.text.lowercase(),
             inputLanguage.text.lowercase(),
             tSelection.text)
@@ -140,6 +144,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
             document?.replaceString(start, end, translation)
 
             replaceAction.isEnabled = false
+
+            editor?.clearInlays()
         }
     }
 
@@ -152,21 +158,23 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
 
                 val text = editor.selectionModel.getSelectedText(false)
                 if (text != null && text.trim().isNotEmpty()) {
-                    tSelection.text = text
-                    startOffset = editor.selectionModel.selectionStart
-                    endOffset = editor.selectionModel.selectionEnd
-                    document = editor.document
-                    translateAction.isEnabled = outputFlagIcon != null
+                    this.tSelection.text = text
+                    this.startOffset = editor.selectionModel.selectionStart
+                    this.endOffset = editor.selectionModel.selectionEnd
+                    this.document = editor.document
+                    this.editor = editor
+                    this.translateAction.isEnabled = outputFlagIcon != null
                 }
                 else {
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
-                        tSelection.text = literal.text
-                        startOffset = literal.startOffset
-                        endOffset = literal.endOffset
-                        document = editor.document
-                        translateAction.isEnabled = outputFlagIcon != null
+                        this.tSelection.text = literal.text
+                        this.startOffset = literal.startOffset
+                        this.endOffset = literal.endOffset
+                        this.document = editor.document
+                        this.editor = editor
+                        this.translateAction.isEnabled = outputFlagIcon != null
                     }
                     else {
                         translateAction.isEnabled = false
@@ -337,5 +345,13 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false) {
         panel.add(main, BorderLayout.CENTER)
 
         return panel
+    }
+
+    override fun onTranslation(event: TranslationEvent) {
+
+        translateAction.isEnabled = true
+        replaceAction.isEnabled = true
+
+        tTranslation.text = (event.translation ?: "");
     }
 }
