@@ -83,17 +83,20 @@ class TranslateAction : AnAction() , DumbAware {
             //
             // Apply inlay's translation
             //
-            val text = activeInlays
+            val joinToString = activeInlays
                 .map { it.renderer as TranslationHint }
                 .map { it.text!! }
                 .reversed()
                 .joinToString("\n")
+            val text = joinToString
 
-            executeWriteCommand(file.project, "Translating with Cucumber+", Runnable {
-                file.getDocument()?.replaceString(startOffset, endOffset, text)
-            })
-
-            editor.clearInlays()
+            val document = file.getDocument()
+            if (document?.isWritable == true) {
+                executeWriteCommand(file.project, "Translating with Cucumber+", Runnable {
+                    document.replaceString(startOffset, endOffset, text)
+                })
+                editor.clearInlays()
+            }
 
             return
         }
