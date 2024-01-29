@@ -30,7 +30,7 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
 
     @Throws(ExecutionException::class)
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
-        configuration: T,
+        configuration: T & Any,
         params: JavaParameters,
         runnerSettings: RunnerSettings?) {
 
@@ -50,4 +50,12 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
         return configuration is CucumberJavaRunConfiguration
     }
+
+//    override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
+//        configuration: T & Any,
+//        params: JavaParameters,
+//        runnerSettings: RunnerSettings?
+//    ) {
+//        TODO("Not yet implemented")
+//    }
 }
