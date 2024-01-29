@@ -81,10 +81,9 @@ fun String.indentAs(model: String): String {
     val firstNonBlank = modelLines.indexOfFirst { it.isNotBlank() }
     val lastNonBlank = modelLines.indexOfLast { it.isNotBlank() }
 
-    val maxIndent = indents.max()
     val lines = this.split("\n")
 
-    var indented = modelLines
+    val indented = modelLines
         .mapIndexed { index, ml ->
 
             val i = ml.length - ml.trimStart().length
