@@ -77,10 +77,6 @@ fun manageTripleClicTableSelection(table: GherkinTable, editor: Editor, offset: 
 
 object TZMouseAdapter : EditorMouseListener {
 
-    override fun mouseClicked(event: EditorMouseEvent) {
-        event.editor.clearInlays(5)
-    }
-
     override fun mouseReleased(e: EditorMouseEvent) {
 
         if (!e.gherkin)

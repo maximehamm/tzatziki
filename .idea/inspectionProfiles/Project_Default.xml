@@ -6,6 +6,7 @@
         <language minSize="52" name="Kotlin" />
       </Languages>
     </inspection_tool>
+    <inspection_tool class="MarkedForRemoval" enabled="true" level="SERVER PROBLEM" enabled_by_default="true" editorAttributes="GENERIC_SERVER_ERROR_OR_WARNING" />
     <inspection_tool class="SpellCheckingInspection" enabled="true" level="INFORMATION" enabled_by_default="true">
       <option name="processCode" value="true" />
       <option name="processLiterals" value="true" />

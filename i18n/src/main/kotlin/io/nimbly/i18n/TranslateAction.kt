@@ -152,7 +152,7 @@ class TranslateAction : AnAction() , DumbAware {
                     val renderer = TranslationHint(
                         text = translationLine,
                         flag = if (index == translationLines.size - 1) flag else null,
-                        indent = if (index == translationLines.size - 1) xindent else 0
+                        indent = if (index == translationLines.size - 1) xindent else 4
                     )
 
                     val p = InlayProperties().apply {
@@ -176,7 +176,7 @@ class TranslationHint(text: String, val flag: Icon?, val indent: Int) : HintRend
     val creationDate = LocalDateTime.now()
 
     override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
-        r.x = indent - 6
+        r.x = indent - 5
         super.paint(inlay, g, r, textAttributes)
     }
 

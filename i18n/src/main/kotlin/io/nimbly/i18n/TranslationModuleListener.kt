@@ -15,22 +15,35 @@
 
 package io.nimbly.i18n
 
+import com.intellij.openapi.actionSystem.DataContext
+import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.editor.Caret
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.actionSystem.EditorActionManager
+import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.intellij.openapi.util.Disposer
 
 class TranslationModuleListener : ProjectManagerListener {
 
     override fun projectOpened(project: Project) {
         if (!handlerInitialized) {
 
+            initTypedHandler()
             initMouseListener(project)
 
             handlerInitialized = true
         }
+    }
+
+    private fun initTypedHandler() {
+
+        val actionManager = EditorActionManager.getInstance()
+
+        actionManager.replaceHandler(EscapeHandler())
     }
 
     private fun initMouseListener(project: Project) {
@@ -42,6 +55,32 @@ class TranslationModuleListener : ProjectManagerListener {
     companion object {
         private var handlerInitialized = false
     }
+}
+
+private class EscapeHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_ESCAPE) {
+    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
+        editor.clearInlays()
+        doDefault(editor, caret, dataContext)
+    }
+}
+
+@Suppress("DEPRECATION")
+abstract class AbstractWriteActionHandler(private val id: String) : EditorWriteActionHandler() {
+    private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
+    override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext)
+            = doDefault(editor, caret, dataContext)
+    open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
+            = orginHandler.execute(editor, caret, dataContext)
+
+    @Deprecated("Deprecated in Java")
+    override fun isEnabled(editor: Editor, dataContext: DataContext)
+            = orginHandler.isEnabled(editor, dataContext)
+    fun getActionId()
+            = id
+}
+
+private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandler) {
+    setActionHandler(handler.getActionId(), handler)
 }
 
 object TranslationMouseAdapter : EditorMouseListener {

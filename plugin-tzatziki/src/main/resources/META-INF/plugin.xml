@@ -291,6 +291,8 @@
         -->
         <listener class="io.nimbly.tzatziki.TzTModuleListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="io.nimbly.i18n.TranslationModuleListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 
     <actions>

@@ -51,11 +51,4 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
         return configuration is CucumberJavaRunConfiguration
     }
 
-//    override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
-//        configuration: T & Any,
-//        params: JavaParameters,
-//        runnerSettings: RunnerSettings?
-//    ) {
-//        TODO("Not yet implemented")
-//    }
 }
