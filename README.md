@@ -33,15 +33,18 @@ _Token is known by Maxime HAMM :)_
 - Clean and build all
   - Clean all `Taks > build > clean`
   - Build all `Taks > build > build`
-  - Build plugin `plugin > Tasks > intellij > buildplugin`
+  - Build plugin `plugin-tzatziki > Tasks > intellij > buildplugin`
+  - Build plugin `plugin-i18n > Tasks > intellij > buildplugin`
 - Run tests in `./test` module
 - Verify compatibility using task `runPluginVerifier` from `plugin` module
 
 ## Publishing a new release
 - Upgrade version in `./build.gradle`
-- Update change note in `./plugin/build.gradle`
+- Update change note in `./plugin-tzatziki/build.gradle`
+- Update change note in `./plugin-i18n/build.gradle`
 - Publish to marketplace 
-  - Using task `plugin > Tasks > intellij > publishPlugin`
+  - Using task `plugin-tzatziki > Tasks > intellij > publishPlugin`
+  - Using task `plugin-i18n > Tasks > intellij > publishPlugin`
 
 *Many thanks to Pierre-Michel BRET for his contribution, the great PDF generator, allowing to realize a complete layout with page numbers, summary, paragraphs management, etc.*
 
