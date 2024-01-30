@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n.util
 
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
 import java.io.BufferedReader
@@ -38,18 +39,18 @@ fun googleTranslate(
     targetLanguage: String,
     sourceLanguage: String,
     sourceTranslation: String
-): String? {
+): GTranslation? {
 
-    val translation = callUrlAndParseResult(sourceLanguage, targetLanguage, sourceTranslation)
+    val t = callUrlAndParseResult(sourceLanguage, targetLanguage, sourceTranslation)
+        ?: return null
 
-    // Update translation
-    if (translation.isNullOrEmpty())
+    if (t.translated.isEmpty())
         return null
 
-    return translation
+    return t
 }
 
-private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: String): String? {
+private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: String): GTranslation? {
 
     val newlineChar =
         if (sentence.contains("\r\n")) "\r\n"
@@ -81,7 +82,9 @@ private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: St
     }
     input.close()
 
-    val sentence3 = parseResult(response.toString())
+    val parsed = parseResult(response.toString(), langFrom)
+
+    val sentence3 = parsed?.translated
         ?.replace(Regex("\\(\\s?XXXXXXX\\s?\\)"), newlineChar)
         ?: return null
 
@@ -97,15 +100,15 @@ private fun callUrlAndParseResult(langFrom: String, langTo: String, sentence: St
         sentence4 += newlineChar
     }
 
-    return sentence4
+    return GTranslation(sentence4, parsed.sourceLanguageIndentified)
 }
 
-private fun parseResult(inputJson: String): String? {
+private fun parseResult(inputJson: String, langFrom: String): GTranslation? {
 
     val elt = JsonParser.parseString(inputJson)
     if (elt == null || !elt.isJsonArray) return null
 
-    // val pretty = GsonBuilder().setPrettyPrinting().create().toJson(elt)
+     val pretty = GsonBuilder().setPrettyPrinting().create().toJson(elt)
 
     val jsonArray = elt.asJsonArray
     if (jsonArray.size() < 1) return null
@@ -134,6 +137,20 @@ private fun parseResult(inputJson: String): String? {
         txt.append(fixNonBreakableSpace)
     }
 
-    return txt.toString().trim().nullIfEmpty();
+    val inputLanguage =
+        if (jsonArray.size() > 2 && jsonArray[2].isJsonPrimitive && jsonArray[2].asJsonPrimitive.asString.length == 2)
+            jsonArray[2].asJsonPrimitive.asString
+        else
+            langFrom
+
+    val translation = txt.toString().trim().nullIfEmpty()
+        ?: return null
+
+    return GTranslation(translation, inputLanguage)
 }
+
+data class GTranslation(
+    val translated: String,
+    val sourceLanguageIndentified: String
+)
 

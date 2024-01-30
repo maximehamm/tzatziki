@@ -1,5 +1,6 @@
 package io.nimbly.i18n
 
+import io.nimbly.i18n.util.GTranslation
 import io.nimbly.i18n.util.googleTranslate
 
 object TranslationManager {
@@ -14,12 +15,12 @@ object TranslationManager {
         targetLanguage: String,
         sourceLanguage: String,
         sourceTranslation: String
-    ): String? {
+    ): GTranslation? {
 
 
         val translation = googleTranslate(targetLanguage, sourceLanguage, sourceTranslation)
         if (translation != null) {
-            val event = TranslationEvent(translation ?: "")
+            val event = TranslationEvent(translation)
             listeners.forEach { it.onTranslation(event) }
         }
 
@@ -31,4 +32,4 @@ interface TranslationListener {
     fun onTranslation(event: TranslationEvent)
 }
 
-class TranslationEvent(val translation: String)
+class TranslationEvent(val translation: GTranslation)

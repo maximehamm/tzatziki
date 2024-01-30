@@ -19,9 +19,7 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.Inlay
-import com.intellij.openapi.editor.InlayProperties
+import com.intellij.openapi.editor.*
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
@@ -104,7 +102,7 @@ class TranslateAction : AnAction() , DumbAware {
             //
             val joinToString = activeInlays
                 .map { it.renderer as TranslationHint }
-                .map { it.text!! }
+                .map { it.translation!! }
                 .reversed()
                 .joinToString("\n")
             val text = joinToString
@@ -133,8 +131,7 @@ class TranslateAction : AnAction() , DumbAware {
 
             editor.clearInlays()
 
-            val flag = TranslationIcons.getFlag(output.trim().lowercase(), 0.6)
-            val translationLines = translation
+            val translationLines = translation.translated
                 .split('\n')
                 .reversed()
                 .toMutableList()
@@ -150,11 +147,11 @@ class TranslateAction : AnAction() , DumbAware {
                 .forEachIndexed { index, translationLine ->
 
                     val renderer = TranslationHint(
-                        text = translationLine,
-                        flag = if (index == translationLines.size - 1) flag else null,
+                        translation = translationLine,
+                        flagUTF8 = if (index == translationLines.size - 1) emojiFlag(output) + "\t" else "",
+                        flag = null, // if (index == translationLines.size - 1) flag else null,
                         indent = if (index == translationLines.size - 1) xindent else 4
                     )
-
                     val p = InlayProperties().apply {
                         showAbove(true)
                         relatesToPrecedingText(false)
@@ -165,21 +162,16 @@ class TranslateAction : AnAction() , DumbAware {
                     inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
                 }
 
-//            val flagIn = TranslationIcons.getFlag(output.trim().lowercase(), 0.6)
-//            val renderer = TranslationHint(
-//                text = "",
-//                flag = flagIn,
-//                indent = 0
-//            )
-//
-//            val p = InlayProperties().apply {
-//                showAbove(false)
-//                relatesToPrecedingText(true)
-//                priority(1000)
-//                disableSoftWrapping(false)
-//            }
-//
-//            inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
+            val renderer = TranslationHint(
+                flagUTF8 = emojiFlag(translation.sourceLanguageIndentified)
+            )
+            val p = InlayProperties().apply {
+                showAbove(false)
+                relatesToPrecedingText(false)
+                priority(1000)
+                disableSoftWrapping(false)
+            }
+            inlayModel.addInlineElement<HintRenderer>(startOffset, p, renderer)
         }
     }
 
@@ -187,12 +179,22 @@ class TranslateAction : AnAction() , DumbAware {
         = true
 }
 
-class TranslationHint(text: String, val flag: Icon?, val indent: Int) : HintRenderer(text) {
+class TranslationHint(
+    val translation: String = "",
+    val flagUTF8: String = "",
+    val flag: Icon? = null,
+    val indent: Int? = null
+) : HintRenderer(flagUTF8 + translation) {
 
     val creationDate = LocalDateTime.now()
 
     override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
-        r.x = indent - 5
+        if (indent != null) {
+            r.x = indent - 5
+        } else {
+            r.x += -4
+        }
+
         super.paint(inlay, g, r, textAttributes)
     }
 
@@ -221,6 +223,10 @@ class TranslationIndicatorRenderer(inlay: Inlay<*>, val flag: Icon) : GutterIcon
 
 fun Editor.clearInlays(delay: Int = -1) {
     inlayModel.getBlockElementsInRange(0, document.textLength)
+        .filter { it.renderer is TranslationHint }
+        .filter { delay < 0 || (it.renderer as TranslationHint).sinceSeconds() > 5 }
+        .forEach { Disposer.dispose(it) }
+    inlayModel.getInlineElementsInRange(0, document.textLength)
         .filter { it.renderer is TranslationHint }
         .filter { delay < 0 || (it.renderer as TranslationHint).sinceSeconds() > 5 }
         .forEach { Disposer.dispose(it) }

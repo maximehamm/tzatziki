@@ -20,7 +20,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.project.DumbService
@@ -35,6 +34,7 @@ import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
 import java.awt.BorderLayout
@@ -56,17 +56,15 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private val inputLanguage = JBTextField("auto")
     private val outputLanguage = JBTextField("EN")
 
-    private val inputFlag = JBLabel().apply { this.background = Color.BLUE }
+    private val inputFlag = JBLabel()
     private val outputFlag = JBLabel()
-
-    private var outputFlagIcon: Icon? = null
 
     private var editor: Editor? = null
     private var document: Document? = null
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
-    val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
+    val translateAction = object : AbstractAction("Translate", outputFlag.icon) {
         override fun actionPerformed(e: ActionEvent?) {
             translate()
         }
@@ -95,28 +93,27 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         inputLanguage.text = input
         outputLanguage.text = output
 
-        outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
-        outputFlag.icon = outputFlagIcon
-        translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
+        outputFlag.text = flagsMap.getOrDefault(outputLanguage.text.trim().lowercase(), "⛔")
+        translateAction.putValue(Action.NAME, outputFlag.text + " Translate")
 
-        val inputFlagIcon = TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N
-        inputFlag.setIconWithAlignment(inputFlagIcon, SwingConstants.LEFT, SwingConstants.CENTER)
+        inputFlag.text = flagsMap.getOrDefault(inputLanguage.text.trim().lowercase(), "")
+
 
         inputLanguage.document.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, inputLanguage.text)
-                inputFlag.setIconWithAlignment(TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
+                inputFlag.text = flagsMap.getOrDefault(inputLanguage.text.trim().lowercase(), "")
             }
         })
         outputLanguage.document.addDocumentListener(object : DocumentAdapter() {
 
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, outputLanguage.text)
-                this@TranslateView.outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
-                translateAction.putValue(Action.SMALL_ICON, this@TranslateView.outputFlagIcon)
-                translateAction.isEnabled = translateAction.isEnabled && (this@TranslateView.outputFlagIcon != null)
 
-                outputFlag.icon = this@TranslateView.outputFlagIcon
+                outputFlag.text = flagsMap.getOrDefault(outputLanguage.text.trim().lowercase(), "⛔")
+
+                translateAction.putValue(Action.NAME, outputFlag.text + " Translate")
+                translateAction.isEnabled = translateAction.isEnabled && (outputFlag.text != "⛔")
             }
         })
 
@@ -134,8 +131,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             txt)
           ?: return
 
-        tTranslation.text = translation.trimIndent()
+        tTranslation.text = translation.translated.trimIndent()
         replaceAction.isEnabled = true
+
+        inputFlag.text = flagsMap.getOrDefault(translation.sourceLanguageIndentified.lowercase(), "⛔")
 
         editor?.clearInlays()
     }
@@ -176,7 +175,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
                     this.editor = editor
-                    this.translateAction.isEnabled = outputFlagIcon != null
+                    this.translateAction.isEnabled = outputFlag.text != "⛔"
                 }
                 else {
 
@@ -187,7 +186,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                         this.endOffset = literal.endOffset
                         this.document = editor.document
                         this.editor = editor
-                        this.translateAction.isEnabled = outputFlagIcon != null
+                        this.translateAction.isEnabled = outputFlag.text != "⛔"
                     }
                     else {
                         translateAction.isEnabled = false
@@ -196,6 +195,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
                 tTranslation.text = ""
                 replaceAction.isEnabled = false
+
+                if (inputLanguage.text == "auto")
+                    inputFlag.text = ""
             }
         }
     }
@@ -367,6 +369,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         translateAction.isEnabled = true
         replaceAction.isEnabled = true
 
-        tTranslation.text = event.translation.trimIndent()
+        tTranslation.text = event.translation.translated.trimIndent()
+
+        if (inputLanguage.text == "auto")
+            inputFlag.text = flagsMap.getOrDefault(event.translation.sourceLanguageIndentified, "")
     }
 }

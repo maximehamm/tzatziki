@@ -130,4 +130,79 @@ fun SelectionModel.findOffsetFirstNotNull(): Int {
     return editor.selectionModel.selectionStart // Not found
 }
 
+//fun emojiFlag(countryCode: String): String {
+//    val cc = countryCode.uppercase()
+//    if (cc == "EN")
+//        return "\uD83C\uDDEC\uD83C\uDDE7"
+//    if (!cc.matches(Regex("\\A[A-Z]{2}\\z")))
+//        return ""
+//    return cc.codePoints()
+//    .toList()
+//    .map { c -> String(Character.toChars(c + 127397)) }
+//    .joinToString("")
+//}
+
+fun emojiFlag(languageCode: String): String {
+    return flagsMap.getOrDefault(languageCode.lowercase(), "⛔")
+}
+
+val flagsMap = mapOf(
+    "am" to "🇦🇲",
+    "ar" to "🇦🇪",
+    "eu" to "🇪🇺",
+    "bn" to "🇧🇩",
+    "en" to "🇬🇧",
+    "en-gb" to "🇬🇧",
+    "pt-br" to "🇧🇷",
+    "bg" to "🇧🇬",
+    "ca" to "🇦🇩",
+    "chr" to "🇺🇸",
+    "hr" to "🇭🇷",
+    "cs" to "🇨🇿",
+    "da" to "🇩🇰",
+    "nl" to "🇳🇱",
+    "et" to "🇪🇪",
+    "fil" to "🇵🇭",
+    "fi" to "🇫🇮",
+    "fr" to "🇫🇷",
+    "de" to "🇩🇪",
+    "el" to "🇬🇷",
+    "gu" to "🇮🇳",
+    "iw" to "🇮🇱",
+    "hi" to "🇮🇳",
+    "hu" to "🇭🇺",
+    "is" to "🇮🇸",
+    "id" to "🇮🇩",
+    "it" to "🇮🇹",
+    "ja" to "🇯🇵",
+    "kn" to "🇮🇳",
+    "ko" to "🇰🇷",
+    "lv" to "🇱🇻",
+    "lt" to "🇱🇹",
+    "ms" to "🇲🇾",
+    "ml" to "🇮🇳",
+    "mr" to "🇮🇳",
+    "no" to "🇳🇴",
+    "pl" to "🇵🇱",
+    "pt-pt" to "🇵🇹",
+    "ro" to "🇷🇴",
+    "ru" to "🇷🇺",
+    "sr" to "🇷🇸",
+    "zh-cn" to "🇨🇳",
+    "sk" to "🇸🇰",
+    "sl" to "🇸🇮",
+    "es" to "🇪🇸",
+    "sw" to "🇰🇪",
+    "sv" to "🇸🇪",
+    "ta" to "🇮🇳",
+    "te" to "🇮🇳",
+    "th" to "🇹🇭",
+    "zh-tw" to "🇹🇼",
+    "tr" to "🇹🇷",
+    "ur" to "🇵🇰",
+    "uk" to "🇺🇦",
+    "vi" to "🇻🇳",
+    "cy" to "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+)
+
 
