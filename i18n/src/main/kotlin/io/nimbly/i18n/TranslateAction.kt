@@ -164,6 +164,22 @@ class TranslateAction : AnAction() , DumbAware {
 
                     inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
                 }
+
+//            val flagIn = TranslationIcons.getFlag(output.trim().lowercase(), 0.6)
+//            val renderer = TranslationHint(
+//                text = "",
+//                flag = flagIn,
+//                indent = 0
+//            )
+//
+//            val p = InlayProperties().apply {
+//                showAbove(false)
+//                relatesToPrecedingText(true)
+//                priority(1000)
+//                disableSoftWrapping(false)
+//            }
+//
+//            inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
         }
     }
 
@@ -189,6 +205,7 @@ class TranslationHint(text: String, val flag: Icon?, val indent: Int) : HintRend
             return TranslationIndicatorRenderer(inlay, flag)
         return null
     }
+
     fun sinceSeconds() = ChronoUnit.SECONDS.between(creationDate, LocalDateTime.now())
 
 }

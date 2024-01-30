@@ -29,18 +29,19 @@
 
     <b>Editor translation : </b><br/><br/>
     <ul>
-       <p style="margin-bootom:-50px; padding-bottom:-50px"><img src="https://plugins.jetbrains.com/files/23656/screenshot_71243996-2f5c-48b6-95ba-60c55ca5c694"
-              alt="Translation+" width="690" height="388"></p>
+<!--       <p style="margin-bootom:-50px; padding-bottom:-50px"><img src="https://plugins.jetbrains.com/files/23656/screenshot_71243996-2f5c-48b6-95ba-60c55ca5c694"-->
+<!--              alt="Translation+" width="690" height="388"></p>-->
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to menu "Edit > Translate" or use shortcut CTRL+T</li>
        <li>Check translation</li>
        <li>Go to menu "Edit > Apply Translation" or use shortcut CTRL+T</li>
     </ul>
 
+    <br/><br/>
     <b>Translation+ view : </b><br/><br/>
     <ul>
-       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2afe7f63-0496-49b9-81ae-a91ac255e75a"
-              alt="Translation+" width="690" height="388"></p>
+<!--       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2afe7f63-0496-49b9-81ae-a91ac255e75a"-->
+<!--              alt="Translation+" width="690" height="388"></p>-->
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to "Translation+" view</li>
        <li>Select input and output language</li>
