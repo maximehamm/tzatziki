@@ -148,7 +148,7 @@ class TranslateAction : AnAction() , DumbAware {
 
                     val renderer = TranslationHint(
                         translation = translationLine,
-                        flagUTF8 = if (index == translationLines.size - 1) emojiFlag(output) + "\t" else "",
+                        flagUTF8 = if (index == translationLines.size - 1) emojiFlag(output) + " " else "",
                         flag = null, // if (index == translationLines.size - 1) flag else null,
                         indent = if (index == translationLines.size - 1) xindent else 4
                     )
