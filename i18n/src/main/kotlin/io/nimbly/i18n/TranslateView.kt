@@ -59,12 +59,14 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private val inputFlag = JBLabel()
     private val outputFlag = JBLabel()
 
+    private var outputFlagIcon: Icon? = null
+
     private var editor: Editor? = null
     private var document: Document? = null
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
-    val translateAction = object : AbstractAction("Translate", outputFlag.icon) {
+    val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
             translate()
         }
@@ -93,27 +95,28 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         inputLanguage.text = input
         outputLanguage.text = output
 
-        outputFlag.text = flagsMap.getOrDefault(outputLanguage.text.trim().lowercase(), "⛔")
-        translateAction.putValue(Action.NAME, outputFlag.text + " Translate")
+        outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
+        outputFlag.icon = outputFlagIcon
+        translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
 
-        inputFlag.text = flagsMap.getOrDefault(inputLanguage.text.trim().lowercase(), "")
-
+        val inputFlagIcon = TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N
+        inputFlag.setIconWithAlignment(inputFlagIcon, SwingConstants.LEFT, SwingConstants.CENTER)
 
         inputLanguage.document.addDocumentListener(object : DocumentAdapter() {
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, inputLanguage.text)
-                inputFlag.text = flagsMap.getOrDefault(inputLanguage.text.trim().lowercase(), "")
+                inputFlag.setIconWithAlignment(TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
             }
         })
         outputLanguage.document.addDocumentListener(object : DocumentAdapter() {
 
             override fun textChanged(e: DocumentEvent) {
                 PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, outputLanguage.text)
+                this@TranslateView.outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
+                translateAction.putValue(Action.SMALL_ICON, this@TranslateView.outputFlagIcon)
+                translateAction.isEnabled = translateAction.isEnabled && (this@TranslateView.outputFlagIcon != null)
 
-                outputFlag.text = flagsMap.getOrDefault(outputLanguage.text.trim().lowercase(), "⛔")
-
-                translateAction.putValue(Action.NAME, outputFlag.text + " Translate")
-                translateAction.isEnabled = translateAction.isEnabled && (outputFlag.text != "⛔")
+                outputFlag.icon = this@TranslateView.outputFlagIcon
             }
         })
 
@@ -133,8 +136,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         tTranslation.text = translation.translated.trimIndent()
         replaceAction.isEnabled = true
-
-        inputFlag.text = flagsMap.getOrDefault(translation.sourceLanguageIndentified.lowercase(), "⛔")
 
         editor?.clearInlays()
     }
@@ -197,7 +198,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 replaceAction.isEnabled = false
 
                 if (inputLanguage.text == "auto")
-                    inputFlag.text = ""
+                    inputFlag.icon = null
+
             }
         }
     }
@@ -372,6 +374,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         tTranslation.text = event.translation.translated.trimIndent()
 
         if (inputLanguage.text == "auto")
-            inputFlag.text = flagsMap.getOrDefault(event.translation.sourceLanguageIndentified, "")
+            inputFlag.setIconWithAlignment(TranslationIcons.getFlag(event.translation.sourceLanguageIndentified) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
     }
 }

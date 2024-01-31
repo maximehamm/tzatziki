@@ -20,7 +20,6 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.*
-import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Disposer
@@ -31,7 +30,6 @@ import java.awt.Graphics
 import java.awt.Rectangle
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import javax.swing.Icon
 
 @Suppress("MissingActionUpdateThread")
 class TranslateAction : AnAction() , DumbAware {
@@ -102,15 +100,14 @@ class TranslateAction : AnAction() , DumbAware {
             //
             val joinToString = activeInlays
                 .map { it.renderer as TranslationHint }
-                .map { it.translation!! }
+                .map { it.translation }
                 .reversed()
                 .joinToString("\n")
-            val text = joinToString
 
             val document = file.getDocument()
             if (document?.isWritable == true) {
 
-                val indented = text.indentAs(document.getText(TextRange(startOffset, endOffset)))
+                val indented = joinToString.indentAs(document.getText(TextRange(startOffset, endOffset)))
                 executeWriteCommand(file.project, "Translating with Translation+", Runnable {
                     document.replaceString(startOffset, endOffset, indented)
                 })
@@ -142,14 +139,14 @@ class TranslateAction : AnAction() , DumbAware {
             }
 
             val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
+            val flag = TranslationIcons.getFlag(output.trim().lowercase(), 1.2)
 
             translationLines
                 .forEachIndexed { index, translationLine ->
 
                     val renderer = TranslationHint(
                         translation = translationLine,
-                        flagUTF8 = if (index == translationLines.size - 1) emojiFlag(output) + " " else "",
-                        flag = null, // if (index == translationLines.size - 1) flag else null,
+                        flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
                         indent = if (index == translationLines.size - 1) xindent else 4
                     )
                     val p = InlayProperties().apply {
@@ -163,7 +160,8 @@ class TranslateAction : AnAction() , DumbAware {
                 }
 
             val renderer = TranslationHint(
-                flagUTF8 = emojiFlag(translation.sourceLanguageIndentified)
+                flag = translation.sourceLanguageIndentified.trim().lowercase(),
+                translation = " "
             )
             val p = InlayProperties().apply {
                 showAbove(false)
@@ -181,44 +179,61 @@ class TranslateAction : AnAction() , DumbAware {
 
 class TranslationHint(
     val translation: String = "",
-    val flagUTF8: String = "",
-    val flag: Icon? = null,
+    val flag: String?= null,
     val indent: Int? = null
-) : HintRenderer(flagUTF8 + translation) {
+) : HintRenderer(translation) {
 
     val creationDate = LocalDateTime.now()
 
     override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
         if (indent != null) {
-            r.x = indent - 5
-        } else {
-            r.x += -4
+            r.x = indent
         }
 
-        super.paint(inlay, g, r, textAttributes)
+        if (flag != null) {
+
+            println(r.height)
+            val spacing = if (r.height >=64) 10
+                else if (r.height >=48) 6
+                else if (r.height >=32) 4
+                else if (r.height >=24) 2
+                else 2
+
+            val ratio = if (r.height >=64)  1.6
+                else if (r.height >=48) 1.4
+                else if (r.height >=32) 1.1
+                else if (r.height >=24) 1.0
+                else 0.8
+
+            val icon = TranslationIcons.getFlag(flag, ratio)!!
+
+            val iconX = r.x
+            val iconY = r.y + (r.height - icon.iconHeight) / 2 + 1
+
+            // Draw the icon
+            icon.paintIcon(null, g, iconX, iconY)
+
+            // Call super.paint() to draw the text
+            if (translation.isNotBlank()) {
+                val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
+                super.paint(inlay, g, modifiedR, textAttributes)
+            }
+            else {
+                val modifiedR = Rectangle(r.x , r.y, 0, r.height)
+                super.paint(inlay, g, modifiedR, textAttributes)
+            }
+        }
+        else {
+            super.paint(inlay, g, r, textAttributes)
+        }
     }
 
     override fun useEditorFont(): Boolean {
         return true
     }
 
-    override fun calcGutterIconRenderer(inlay: Inlay<*>): GutterIconRenderer? {
-        if (flag != null)
-            return TranslationIndicatorRenderer(inlay, flag)
-        return null
-    }
-
     fun sinceSeconds() = ChronoUnit.SECONDS.between(creationDate, LocalDateTime.now())
 
-}
-
-class TranslationIndicatorRenderer(inlay: Inlay<*>, val flag: Icon) : GutterIconRenderer() {
-
-    override fun getIcon() = flag
-    override fun getTooltipText() = "Click to apply translation"
-
-    override fun hashCode() = icon.hashCode()
-    override fun equals(other: Any?) = icon == (other as? TranslationIndicatorRenderer)?.icon
 }
 
 fun Editor.clearInlays(delay: Int = -1) {
