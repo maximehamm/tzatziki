@@ -22,9 +22,10 @@
     <description><![CDATA[
 
     <b>Translate anything using Google translate !</b><br/>
+    <b>No proxy problem ! No API key ! Works with all Jetbrains products !</b><br/>
     <br/>
-    <b> - Select some text inside editor et choose menu 'Edit > Translate'</b><br/>
-    <b> - Use Translation+ tool window to select input and ouput language</b><br/>
+      - Select some text inside editor and choose menu 'Edit > Translate'<br/>
+      - Use Translation+ tool window to select input and ouput language<br/>
     <br/>
 
     <b>Editor translation : </b><br/><br/>

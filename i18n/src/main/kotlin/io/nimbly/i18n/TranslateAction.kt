@@ -20,6 +20,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.*
+import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Disposer
@@ -64,6 +65,9 @@ class TranslateAction : AnAction() , DumbAware {
         val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val editor =  CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
         val inlayModel = editor.inlayModel
+
+        val editorImpl = event.getData<Editor>(CommonDataKeys.EDITOR) as? EditorImpl
+        val zoom = editorImpl?.fontSize?.let { it / 13.0 } ?: 1.0
 
         val startOffset: Int
         val endOffset: Int
@@ -145,6 +149,7 @@ class TranslateAction : AnAction() , DumbAware {
                 .forEachIndexed { index, translationLine ->
 
                     val renderer = TranslationHint(
+                        zoom = zoom,
                         translation = translationLine,
                         flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
                         indent = if (index == translationLines.size - 1) xindent else 4
@@ -160,8 +165,9 @@ class TranslateAction : AnAction() , DumbAware {
                 }
 
             val renderer = TranslationHint(
+                zoom = zoom,
                 flag = translation.sourceLanguageIndentified.trim().lowercase(),
-                translation = " "
+                translation = "  "
             )
             val p = InlayProperties().apply {
                 showAbove(false)
@@ -178,6 +184,7 @@ class TranslateAction : AnAction() , DumbAware {
 }
 
 class TranslationHint(
+    val zoom: Double,
     val translation: String = "",
     val flag: String?= null,
     val indent: Int? = null
@@ -189,21 +196,12 @@ class TranslationHint(
         if (indent != null) {
             r.x = indent
         }
+        r.width = r.width + 10
 
         if (flag != null) {
 
-            println(r.height)
-            val spacing = if (r.height >=64) 10
-                else if (r.height >=48) 6
-                else if (r.height >=32) 4
-                else if (r.height >=24) 2
-                else 2
-
-            val ratio = if (r.height >=64)  1.6
-                else if (r.height >=48) 1.4
-                else if (r.height >=32) 1.1
-                else if (r.height >=24) 1.0
-                else 0.8
+            val ratio = zoom * 0.8
+            val spacing = (zoom * 5).toInt()
 
             val icon = TranslationIcons.getFlag(flag, ratio)!!
 
@@ -219,7 +217,7 @@ class TranslationHint(
                 super.paint(inlay, g, modifiedR, textAttributes)
             }
             else {
-                val modifiedR = Rectangle(r.x , r.y, 0, r.height)
+                val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, 0, r.height)
                 super.paint(inlay, g, modifiedR, textAttributes)
             }
         }
