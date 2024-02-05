@@ -150,7 +150,7 @@ private fun parseResult(inputJson: String, langFrom: String): GTranslation? {
 }
 
 data class GTranslation(
-    val translated: String,
+    var translated: String,
     val sourceLanguageIndentified: String
 )
 

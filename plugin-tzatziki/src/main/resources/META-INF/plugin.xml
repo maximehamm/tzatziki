@@ -301,8 +301,8 @@
 
             <separator/>
 
-            <action class="io.nimbly.i18n.TranslateAction"
-                    id="io.nimbly.i18n.TranslateAction"
+            <action class="io.nimbly.tzatziki.translation.TzTranslateAction"
+                    id="io.nimbly.tzatziki.TranslateAction"
                     text="Translate" icon="ActionI18nIcons.I18N">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
             </action>

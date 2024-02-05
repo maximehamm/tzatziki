@@ -20,6 +20,9 @@ object TranslationManager {
 
         val translation = googleTranslate(targetLanguage, sourceLanguage, sourceTranslation)
         if (translation != null) {
+
+            translation.translated = translation.translated.replace("„", "\"")
+
             val event = TranslationEvent(translation)
             listeners.forEach { it.onTranslation(event) }
         }

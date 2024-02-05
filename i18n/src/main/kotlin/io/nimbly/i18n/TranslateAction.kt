@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
 @Suppress("MissingActionUpdateThread")
-class TranslateAction : AnAction() , DumbAware {
+open class TranslateAction : AnAction() , DumbAware {
 
     override fun update(event: AnActionEvent) {
         val editor = event.getData(CommonDataKeys.EDITOR)
@@ -89,6 +89,8 @@ class TranslateAction : AnAction() , DumbAware {
             startOffset = l.textRange.startOffset
             endOffset = l.textRange.endOffset
             text = l.text
+
+            editor.selectionModel.setSelection(startOffset, endOffset)
         }
 
         if (text == null)
@@ -195,8 +197,9 @@ class TranslationHint(
     override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
         if (indent != null) {
             r.x = indent
+            r.height += 4
+            r.y += 2
         }
-        r.width = r.width + 10
 
         if (flag != null) {
 

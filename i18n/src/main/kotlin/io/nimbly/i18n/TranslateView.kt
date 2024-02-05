@@ -137,7 +137,16 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         tTranslation.text = translation.translated.trimIndent()
         replaceAction.isEnabled = true
 
-        editor?.clearInlays()
+        editor?.apply {
+
+            this.clearInlays()
+
+            val start = startOffset
+            val end = endOffset
+            if (start != null && end != null) {
+                this.selectionModel.setSelection(start, end)
+            }
+        }
     }
 
     fun replace() {
