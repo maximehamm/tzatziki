@@ -260,6 +260,9 @@
 
         // New UI 2023 Icons mapping to "expUI" folder
         <iconMapper mappingFile="TzatzikiIconMappings.json"/>
+
+        <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
+
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
@@ -282,18 +285,6 @@
     <extensionPoints>
         <extensionPoint name="io.nimbly.tzatziki.main" interface="io.nimbly.tzatziki.TzatzikiExtensionPoint"/>
     </extensionPoints>
-
-    <applicationListeners>
-        <!-- Depreacated !! Replace by :
-            <extensions>
-             <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
-            </extensions>
-        -->
-        <listener class="io.nimbly.tzatziki.TzTModuleListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener class="io.nimbly.i18n.TranslationModuleListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 
     <actions>
 

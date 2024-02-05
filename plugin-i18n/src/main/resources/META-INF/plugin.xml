@@ -70,19 +70,11 @@
 
         <editor.linePainter implementation="io.nimbly.i18n.TranslationLinePainter"/>
 
+        <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
+
     </extensions>
 
     <depends>com.intellij.modules.platform</depends>
-
-    <applicationListeners>
-        <!-- Depreacated !! Replace by :
-            <extensions>
-             <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
-            </extensions>
-        -->
-        <listener class="io.nimbly.i18n.TranslationModuleListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
 
     <actions>
 

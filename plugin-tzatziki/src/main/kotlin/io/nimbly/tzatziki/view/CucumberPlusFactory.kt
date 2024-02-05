@@ -14,26 +14,21 @@
  */
 package io.nimbly.tzatziki.view
 
-import io.nimbly.tzatziki.services.TagEvent
-import io.nimbly.tzatziki.services.TagFilterEvent
-import io.nimbly.tzatziki.services.TagsEventListener
-import io.nimbly.tzatziki.services.TagsFilterEventListener
-import io.nimbly.tzatziki.services.TzTagService
-import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
-import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 import io.nimbly.i18n.TranslateView
+import io.nimbly.tzatziki.services.*
+import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
+import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView
 
 class CucumberPlusFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
 
-        // Deprecated : replace by
-        //    val contentFactory = ContentFactory.getInstance()
-        val contentFactory = .getInstance()
+        val contentFactory = ApplicationManager.getApplication().getService(ContentFactory::class.java)
 
         val featuresView = CucumberPlusFeaturesView(project)
         toolWindow.contentManager.addContent(

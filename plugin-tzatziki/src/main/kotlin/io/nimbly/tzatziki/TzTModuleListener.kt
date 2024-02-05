@@ -24,9 +24,9 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManagerListener
+import com.intellij.openapi.startup.StartupActivity
 import com.intellij.psi.PsiDocumentManager
-import io.nimbly.tzatziki.TzTModuleListener.AbstractWriteActionHandler
+import io.nimbly.tzatziki.TzPostStartup.AbstractWriteActionHandler
 import io.nimbly.tzatziki.clipboard.smartCopy
 import io.nimbly.tzatziki.clipboard.smartCut
 import io.nimbly.tzatziki.clipboard.smartPaste
@@ -41,14 +41,12 @@ var TOGGLE_CUCUMBER_PL: Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
-class TzTModuleListener : ProjectManagerListener {
+class TzPostStartup : StartupActivity {
 
-    override fun projectOpened(project: Project) {
+    override fun runActivity(project: Project) {
         if (!handlerInitialized) {
-
             initTypedHandler()
             initMouseListener(project)
-
             handlerInitialized = true
             askToVote(project)
         }

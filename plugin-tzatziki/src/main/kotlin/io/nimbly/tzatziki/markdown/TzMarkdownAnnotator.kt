@@ -24,14 +24,14 @@ import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.editor.BOLD
 import io.nimbly.tzatziki.editor.ITALIC
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
-import org.apache.commons.lang.StringUtils
+import io.nimbly.tzatziki.util.countMatches
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinFeatureHeaderImpl
 import java.util.regex.Pattern
 
 private val BOLD_PATTERN = Pattern.compile("[^\\*]*(\\*\\*[^\\*]*\\*\\*)[^\\*]*", Pattern.MULTILINE)
 private val STAR_START_PATTERN = Pattern.compile("^[\\s]*(\\*.*$)", Pattern.MULTILINE)
 
-class TzMarkdownAnnotator : Annotator {
+class   TzMarkdownAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
 
@@ -64,7 +64,7 @@ class TzMarkdownAnnotator : Annotator {
         while (matcher.find()) {
             val group = matcher.group(1)
             if (group.startsWith("**")) continue
-            if (group.endsWith("*") && StringUtils.countMatches(group, "*") % 2 == 0) continue
+            if (group.endsWith("*") && countMatches(group, "*") % 2 == 0) continue
             bullets.add(matcher.start(1))
         }
 

@@ -25,16 +25,14 @@ import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManagerListener
+import com.intellij.openapi.startup.StartupActivity
 
-class TranslationModuleListener : ProjectManagerListener {
+class TranslationModuleListener : StartupActivity {
 
-    override fun projectOpened(project: Project) {
+    override fun runActivity(project: Project) {
         if (!handlerInitialized) {
-
             initTypedHandler()
             initMouseListener(project)
-
             handlerInitialized = true
         }
     }

@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -23,7 +24,7 @@ class TranslationPlusFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
 
-        val contentFactory = ContentFactory.SERVICE.getInstance()
+        val contentFactory = ApplicationManager.getApplication().getService(ContentFactory::class.java)
         val translateView = TranslateView(project)
         toolWindow.contentManager.addContent(
             contentFactory.createContent(translateView, "Translation", false)
