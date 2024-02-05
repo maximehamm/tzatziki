@@ -33,7 +33,7 @@ class CucumberPlusFactory : ToolWindowFactory {
 
         // Deprecated : replace by
         //    val contentFactory = ContentFactory.getInstance()
-        val contentFactory = ContentFactory.SERVICE.getInstance()
+        val contentFactory = .getInstance()
 
         val featuresView = CucumberPlusFeaturesView(project)
         toolWindow.contentManager.addContent(

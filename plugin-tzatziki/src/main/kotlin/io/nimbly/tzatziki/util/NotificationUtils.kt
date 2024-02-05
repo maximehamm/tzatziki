@@ -16,27 +16,38 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.notification.Notification
+import com.intellij.notification.NotificationListener
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.updateSettings.impl.UpdateChecker.getNotificationGroup
 import javax.swing.event.HyperlinkEvent
 
-fun Project.notification(
-    text: String,
-    notificationType: NotificationType = NotificationType.INFORMATION,
-    function: ((event: String) -> Any?)? = null) {
+//fun Project.notification(
+//    text: String,
+//    notificationType: NotificationType = NotificationType.INFORMATION,
+//    function: ((event: String) -> Any?)? = null) {
+//
+//    val notif = getNotificationGroup().createNotification("<html>$text</html>", notificationType)
+//    if (function != null) {
+//        notif.setListener(object : NotificationListener() {
+//            override fun hyperlinkUpdate(notification: Notification, event: HyperlinkEvent) {
+//                function(event.description)
+//            }
+//        })
+//    }
+//    notif.notify(this)
+//
+//    getNotificationGroup().createNotification(
+//        TZATZIKI_NAME, "<html>$text</html>", notificationType) { notification: Notification, event: HyperlinkEvent ->
+//        if (function!=null)
+//            function(event.description)
+//        notification.expire();
+//    }.notify(this)
+//}
 
-    getNotificationGroup().createNotification(
-        TZATZIKI_NAME, "<html>$text</html>", notificationType) { notification: Notification, event: HyperlinkEvent ->
-        if (function!=null)
-            function(event.description)
-        notification.expire();
-    }.notify(this)
-}
 
-/*
-
-COMPATIBILITY FIX
 
 fun Project.notification(
     text: String,
@@ -66,5 +77,3 @@ fun Project.notificationAction(
 
     notif.notify(this);
 }
-
-*/

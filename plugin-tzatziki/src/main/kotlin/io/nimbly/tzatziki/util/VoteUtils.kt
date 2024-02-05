@@ -21,8 +21,6 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
-import com.intellij.openapi.wm.ToolWindowManager
 
 const val TZATZIKI_PLUGIN = "io.nimbly.tzatziki"
 
@@ -31,26 +29,26 @@ fun askToVoteLinkedIn(project: Project) {
     val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
-    if (version != currentVersion) {
-
-        // Plugin was updated... 'looks like your ready to vote !
-        project.notification(
-            """Would you comment or like my <a href='LINKEDIN'>LinkedIn post</a> celebrating 100,000 downloads 😍?
-                    <br/>
-                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
-                       <td><a href='REVIEW'>Review</a></td>
-                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
-                       <td><a href='DISMISS'>Dismiss</a></td>
-                    </tr></table>""") {
-            when (it) {
-                "LINKEDIN" -> BrowserUtil.browse("https://www.linkedin.com/pulse/wow-cucumber-passed-100000-downloads-mark-today-maxime-hamm/")
-                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
-                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
-            }
-        }
-
-        PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
-    }
+//    if (version != currentVersion) {
+//
+//        // Plugin was updated... 'looks like your ready to vote !
+//        project.notification(
+//            """Would you comment or like my <a href='LINKEDIN'>LinkedIn post</a> celebrating 100,000 downloads 😍?
+//                    <br/>
+//                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
+//                       <td><a href='REVIEW'>Review</a></td>
+//                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
+//                       <td><a href='DISMISS'>Dismiss</a></td>
+//                    </tr></table>""") {
+//            when (it) {
+//                "LINKEDIN" -> BrowserUtil.browse("https://www.linkedin.com/pulse/wow-cucumber-passed-100000-downloads-mark-today-maxime-hamm/")
+//                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
+//                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
+//            }
+//        }
+//
+//        PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
+//    }
 }
 
 fun askToVote(project: Project) {
@@ -63,27 +61,28 @@ fun askToVote(project: Project) {
         // First time used : do just save the revision number
         PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
     }
-    else if (version != currentVersion) {
+    else { // if (version != currentVersion) {
 
-        // Plugin was updated... 'looks like your ready to vote !
-        project.notification(
-            """Thank you for using $TZATZIKI_NAME !<br/>
-                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
-                       <td><a href='REVIEW'>Review</a></td>
-                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
-                       <td><a href='DISMISS'>Dismiss</a></td>
-                    </tr></table>""") {
-            when (it) {
-                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
-                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
-            }
-        }
-//        project.notificationAction("Thank you for using $TZATZIKI_NAME !", NotificationType.INFORMATION,
-//            mapOf(
-//                "Review" to { BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-") },
-//                "Submit a bug or suggestion" to { BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues") },
-//            )
-//        )
+//        // Plugin was updated... 'looks like your ready to vote !
+//        project.notification(
+//            """Thank you for using $TZATZIKI_NAME !<br/>
+//                    <table width='100%' cellspacing='0' cellpadding='0'><tr>
+//                       <td><a href='REVIEW'>Review</a></td>
+//                       <td><a href='BUGTRACKER'>Submit a bug or suggestion</a></td>
+//                       <td><a href='DISMISS'>Dismiss</a></td>
+//                    </tr></table>""") {
+//            when (it) {
+//                "REVIEW" -> BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-")
+//                "BUGTRACKER" -> BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues")
+//            }
+//        }
+
+        project.notificationAction("Thank you for using $TZATZIKI_NAME !", NotificationType.INFORMATION,
+            mapOf(
+                "Review" to { BrowserUtil.browse("https://plugins.jetbrains.com/plugin/16289-cucumber-") },
+                "Submit a bug or suggestion" to { BrowserUtil.browse("https://github.com/maximehamm/tzatziki/issues") },
+            )
+        )
 
         PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
     }

@@ -84,19 +84,15 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
     if (rootConfig == null) {
 
         rootConfig = root.copyDefaultsToFolder(path, project)
-        project.notification("Configuration <a href='PROP'>files</a> were created") {
-            PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
-        }
-        /*
-
-        COMPATIBILITY FIX
+//        project.notification("Configuration <a href='PROP'>files</a> were created") {
+//            PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
+//        }
 
         project.notificationAction("Configuration were created", NotificationType.INFORMATION,
             mapOf("Open" to {
                 PsiManager.getInstance(project).findDirectory(rootConfig)?.navigate(true)
             })
         )
-        */
     }
 
     // Update default files
@@ -232,19 +228,16 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
             }
             PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-            project.notification("Configuration <a href='PROP'>file</a> added") {
-                PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-            }
-            /*
-
-            COMPATIBILITY FIX
+//            project.notification("Configuration <a href='PROP'>file</a> added") {
+//                PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+//            }
 
             project.notificationAction("Configuration file added", NotificationType.INFORMATION,
                 mapOf("Open file" to {
                     PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
                 })
             )
-            */
+
 
         } else if (fileName != PROPERTIES_FILENAME) {
 
@@ -258,19 +251,14 @@ private fun VirtualFile.updateDefaultFiles(project: Project) {
                 }
                 PsiDocumentManager.getInstance(project).commitAllDocuments()
 
-                project.notification("Configuration <a href='PROP'>file</a> upated") {
-                    PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
-                }
-                /*
-
-                COMPATIBILITY FIX
-
+//                project.notification("Configuration <a href='PROP'>file</a> upated") {
+//                    PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
+//                }
                 project.notificationAction("Configuration file upated", NotificationType.INFORMATION,
                     mapOf("Open file" to {
                         PsiManager.getInstance(project).findFile(currentFile!!)?.navigate(true)
                     })
                 )
-                */
             }
         }
     }
