@@ -61,7 +61,7 @@ fun askToVote(project: Project) {
         // First time used : do just save the revision number
         PropertiesComponent.getInstance().setValue(TZATZIKI_PLUGIN, currentVersion)
     }
-    else { // if (version != currentVersion) {
+    else if (version != currentVersion) {
 
 //        // Plugin was updated... 'looks like your ready to vote !
 //        project.notification(
