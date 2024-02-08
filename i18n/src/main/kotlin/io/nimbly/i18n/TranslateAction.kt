@@ -62,12 +62,12 @@ open class TranslateAction : AnAction() , DumbAware {
 
     override fun actionPerformed(event: AnActionEvent) {
 
-        val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val editor =  CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
         val inlayModel = editor.inlayModel
 
-        val editorImpl = event.getData<Editor>(CommonDataKeys.EDITOR) as? EditorImpl
+        val editorImpl = event.getData(CommonDataKeys.EDITOR) as? EditorImpl
         val zoom = editorImpl?.fontSize?.let { it / 13.0 } ?: 1.0
+        val file = event.getData(CommonDataKeys.PSI_FILE)
 
         val startOffset: Int
         val endOffset: Int
@@ -83,7 +83,8 @@ open class TranslateAction : AnAction() , DumbAware {
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
         }
-        else {
+        else if (file != null) {
+
             val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
             val l = file.findElementAt(offset) ?: return
             startOffset = l.textRange.startOffset
@@ -91,6 +92,9 @@ open class TranslateAction : AnAction() , DumbAware {
             text = l.text
 
             editor.selectionModel.setSelection(startOffset, endOffset)
+        }
+        else {
+            return
         }
 
         if (text == null)
@@ -110,7 +114,7 @@ open class TranslateAction : AnAction() , DumbAware {
                 .reversed()
                 .joinToString("\n")
 
-            val document = file.getDocument()
+            val document = file?.getDocument()
             if (document?.isWritable == true) {
 
                 val indented = joinToString.indentAs(document.getText(TextRange(startOffset, endOffset)))
