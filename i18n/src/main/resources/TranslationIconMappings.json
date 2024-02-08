@@ -1,0 +1,17 @@
+{
+  "io": {
+    "nimbly": {
+      "i18n": {
+        "icons": {
+          "expUi": {
+            "translation-plusNUI.svg": [
+              "io/nimbly/i18n/icons/translation-plus.svg",
+              "io/nimbly/i18n/icons/translation-plus.png",
+              "io/nimbly/i18n/icons/translation-plus-16x16.png"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

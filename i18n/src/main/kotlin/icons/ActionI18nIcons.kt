@@ -22,7 +22,7 @@ import com.intellij.ui.IconManager
 // New UI icons svg : https://www.jetbrains.com/intellij-repository/releases
 object ActionI18nIcons {
 
-    @JvmField val TRANSLATION_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/cucumber-plus-16x16.png", javaClass)
+    @JvmField val TRANSLATION_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/translation-plus-16x16.png", javaClass)
 
     @JvmField val I18N = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/g_trans.png", javaClass)
 }
