@@ -4,13 +4,15 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "1.1.3"
+version = "1.2.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>1.2.0</b> Add support of camel case</li>
+         <li><b>1.0.0</b> Display translation inlined in text</li>
          <li><b>1.0.0</b> Initial version</li>
        </ul>
       """

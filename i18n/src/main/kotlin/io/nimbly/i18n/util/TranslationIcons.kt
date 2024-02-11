@@ -16,6 +16,7 @@ package io.nimbly.i18n.util
 
 import com.intellij.openapi.util.IconLoader
 import com.intellij.util.IconUtil
+import java.awt.Color
 import javax.swing.Icon
 
 interface TranslationIcons {
@@ -29,16 +30,19 @@ interface TranslationIcons {
             val path = "io/nimbly/i18n/icons/languages/$country.png"
             try {
                 var ico = IconLoader.findIcon(path, TranslationIcons::class.java)
+                if ((ico?.iconWidth ?: 0) < 16)
+                    throw NullPointerException()
                 if (ico != null)
                     ico = IconUtil.scale(ico, scaleRatio)
                 icon = ico
             } catch (ignored: Throwable) {
+                icon = textToIcon(country.uppercase(), (scaleRatio * 12f).toFloat(), -1, Color.GRAY)
             }
             FLAGS[country + scaleRatio] = icon
 
             return icon
         }
 
-        val FLAGS: MutableMap<String, Icon?> = HashMap()
+        private val FLAGS: MutableMap<String, Icon?> = HashMap()
     }
 }

@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n.util
 
+import com.intellij.codeInsight.completion.CompletionUtilCore
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
@@ -26,6 +27,21 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.source.tree.LeafPsiElement
+import com.intellij.ui.JBColor
+import com.intellij.ui.LayeredIcon
+import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.GraphicsUtil
+import com.intellij.util.ui.JBFont
+import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
+import java.awt.Color
+import java.awt.Component
+import java.awt.Font
+import java.awt.Graphics
+import java.util.*
+import javax.swing.Icon
+import javax.swing.JLabel
+import javax.swing.SwingConstants
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
         = this.ifEmpty { null }
@@ -205,4 +221,63 @@ val flagsMap = mapOf(
     "cy" to "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
 )
 
+val String.safeText
+    get() = this.replace(CompletionUtilCore.DUMMY_IDENTIFIER, "", true)
+        .replace(CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED, "", true)
 
+fun String.fromCamelCase(): String {
+    val regex = Regex("(?<!^)(?=[A-Z])") // Lookahead assertion to split at capital letters
+    return this.split(regex).joinToString(" ")
+}
+
+fun String.toCamelCase(locale: Locale): String {
+    val words = this.split(" ")
+    val camelCased = StringBuilder(words[0].lowercase())
+
+    for (i in 1 until words.size) {
+        val word = words[i].lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+        camelCased.append(word)
+    }
+
+    return camelCased.toString()
+}
+
+fun textToIcon(text: String, size: Float, position: Int, foreground: Color): Icon {
+    val icon = LayeredIcon(2)
+    icon.setIcon(textToIcon(text, JLabel(), JBUIScale.scale(size), foreground, position), 1, 0)
+    return icon
+}
+
+fun textToIcon(text: String, component: Component, fontSize: Float, foreground: Color, position: Int): Icon {
+    val font: Font = JBFont.create(JBUI.Fonts.label().deriveFont(fontSize))
+    val metrics = component.getFontMetrics(font)
+    val width = metrics.stringWidth(text) + JBUI.scale(4)
+    val height = metrics.height
+    return object : Icon {
+        override fun paintIcon(c: Component?, graphics: Graphics, x: Int, y: Int) {
+            val g = graphics.create()
+            try {
+                GraphicsUtil.setupAntialiasing(g)
+                g.font = font
+                UIUtil.drawStringWithHighlighting(
+                    g,
+                    text,
+                    x + JBUI.scale(2),
+                    y + height - JBUI.scale(1) + position,
+                    foreground,
+                    JBColor.background()
+                )
+            } finally {
+                g.dispose()
+            }
+        }
+
+        override fun getIconWidth(): Int {
+            return width
+        }
+
+        override fun getIconHeight(): Int {
+            return height
+        }
+    }
+}

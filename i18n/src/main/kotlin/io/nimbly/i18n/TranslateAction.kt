@@ -68,10 +68,13 @@ open class TranslateAction : AnAction() , DumbAware {
         val editorImpl = event.getData(CommonDataKeys.EDITOR) as? EditorImpl
         val zoom = editorImpl?.fontSize?.let { it / 13.0 } ?: 1.0
         val file = event.getData(CommonDataKeys.PSI_FILE)
+        val caret = CommonDataKeys.CARET.getData(event.dataContext)?.offset
 
-        val startOffset: Int
-        val endOffset: Int
-        val text: String?
+        var startOffset: Int
+        var endOffset: Int
+        var text: String?
+        var camelCase: Boolean = false
+        var selectionEnd = false
         if (editor.selectionModel.hasSelection()) {
 
             val offsetFirstNotEmpty = editor.selectionModel.findOffsetFirstNotNull()
@@ -82,14 +85,31 @@ open class TranslateAction : AnAction() , DumbAware {
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
-        }
-        else if (file != null) {
 
-            val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
-            val l = file.findElementAt(offset) ?: return
+            selectionEnd = caret == endOffset
+        }
+        else if (file != null && caret != null) {
+
+            val l = file.findElementAt(caret) ?: return
             startOffset = l.textRange.startOffset
             endOffset = l.textRange.endOffset
             text = l.text
+
+            if (caret == startOffset
+                    && (text.isBlank() || text.replace("[\\p{L}\\p{N}\\p{M}]+".toRegex(), "").isNotBlank() && caret > 1)) {
+
+                val l = file.findElementAt(caret - 1) ?: return
+                startOffset = l.textRange.startOffset
+                endOffset = l.textRange.endOffset
+                text = l.text
+
+                if (text.isBlank()) {
+                    text = null
+                }
+            }
+
+            camelCase = text?.fromCamelCase() != text
+            selectionEnd = caret == endOffset
 
             editor.selectionModel.setSelection(startOffset, endOffset)
         }
@@ -122,6 +142,9 @@ open class TranslateAction : AnAction() , DumbAware {
                     document.replaceString(startOffset, endOffset, indented)
                 })
                 editor.clearInlays()
+
+                if (selectionEnd)
+                    editor.selectionModel.removeSelection()
             }
 
             return
@@ -133,7 +156,7 @@ open class TranslateAction : AnAction() , DumbAware {
             //
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
-            val translation = TranslationManager.translate(output, input, text)
+            val translation = TranslationManager.translate(output, input, text, camelCase = camelCase)
                 ?: return
 
             editor.clearInlays()
@@ -149,7 +172,6 @@ open class TranslateAction : AnAction() , DumbAware {
             }
 
             val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
-            val flag = TranslationIcons.getFlag(output.trim().lowercase(), 1.2)
 
             translationLines
                 .forEachIndexed { index, translationLine ->

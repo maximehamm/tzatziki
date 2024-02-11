@@ -24,10 +24,14 @@
     <b>Translate anything using Google translate !</b><br/>
     <b>No proxy problem ! No API key ! Works with all Jetbrains products !</b><br/>
     <br/>
-      - Select some text inside editor and choose menu 'Edit > Translate'<br/>
+      - Select some text inside editor and press "CTRL-T"<br/>
+      - Write a word and press "CTRL-T" !<br/>
       - Use Translation+ tool window to select input and ouput language<br/>
     <br/>
+    <b>Ask for translation using menu 'Edit > Translate' or CTRL-T</b><br/>
+    <b>TIPS: works also with 'CamelCase' notation !</b><br/>
 
+    <br/>
     <b>Editor translation : </b><br/><br/>
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
@@ -73,6 +77,8 @@
         <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
 
         <iconMapper mappingFile="TranslationIconMappings.json"/>
+
+<!--        <completion.contributor language="any" implementationClass="io.nimbly.i18n.TranslationCompletion" />-->
 
     </extensions>
 
