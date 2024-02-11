@@ -72,13 +72,9 @@
         <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
-        <editor.linePainter implementation="io.nimbly.i18n.TranslationLinePainter"/>
-
         <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
 
         <iconMapper mappingFile="TranslationIconMappings.json"/>
-
-<!--        <completion.contributor language="any" implementationClass="io.nimbly.i18n.TranslationCompletion" />-->
 
     </extensions>
 
@@ -88,10 +84,16 @@
 
         <group id="io.nimbly.i18n.group">
 
-            <action class="io.nimbly.i18n.TranslateAction"
-                    id="io.nimbly.i18n.TranslateAction"
+            <action class="io.nimbly.i18n.translation.TranslateAction"
+                    id="io.nimbly.i18n.translation.TranslateAction"
                     text="Translate" icon="ActionI18nIcons.I18N">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+            </action>
+
+            <action class="io.nimbly.i18n.dictionary.DictionaryAction"
+                    id="io.nimbly.i18n.dictionary.DictionaryAction"
+                    text="Search definition" icon="ActionI18nIcons.DICO">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt T"/>
             </action>
 
             <separator/>

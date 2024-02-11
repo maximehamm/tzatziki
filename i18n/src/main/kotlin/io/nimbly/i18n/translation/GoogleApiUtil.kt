@@ -12,11 +12,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.i18n.util
+package io.nimbly.i18n.translation
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.intellij.util.net.HttpConfigurable
+import io.nimbly.i18n.util.nullIfEmpty
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader

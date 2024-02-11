@@ -12,25 +12,19 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.i18n
+package io.nimbly.i18n.translation
 
 import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.editor.*
+import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.DumbAware
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
-import java.awt.Graphics
-import java.awt.Rectangle
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 @Suppress("MissingActionUpdateThread")
 open class TranslateAction : AnAction() , DumbAware {
@@ -45,9 +39,9 @@ open class TranslateAction : AnAction() , DumbAware {
             ?: ActionI18nIcons.I18N
 
         var readyToApplyTranslation = false
-        editor?.let {
-            readyToApplyTranslation = it.inlayModel.getBlockElementsInRange(0, editor.document.textLength - 1)
-                .filter { it.renderer is TranslationHint }
+        editor?.let { ed ->
+            readyToApplyTranslation = ed.inlayModel.getBlockElementsInRange(0, ed.document.textLength - 1)
+                .filter { (it.renderer as? EditorHint)?.type == EHint.TRANSLATION }
                 .isNotEmpty()
         }
         if (readyToApplyTranslation) {
@@ -108,7 +102,7 @@ open class TranslateAction : AnAction() , DumbAware {
                 }
             }
 
-            camelCase = text?.fromCamelCase() != text
+            camelCase = text!=null && !text.contains(" ") && text.fromCamelCase() != text
             selectionEnd = caret == endOffset
 
             editor.selectionModel.setSelection(startOffset, endOffset)
@@ -121,7 +115,7 @@ open class TranslateAction : AnAction() , DumbAware {
             return
 
         val activeInlays = inlayModel.getBlockElementsInRange(startOffset, startOffset)
-            .filter { it.renderer is TranslationHint }
+            .filter { (it.renderer as? EditorHint)?.type == EHint.TRANSLATION }
 
         if (activeInlays.isNotEmpty()) {
 
@@ -129,7 +123,7 @@ open class TranslateAction : AnAction() , DumbAware {
             // Apply inlay's translation
             //
             val joinToString = activeInlays
-                .map { it.renderer as TranslationHint }
+                .map { it.renderer as EditorHint }
                 .map { it.translation }
                 .reversed()
                 .joinToString("\n")
@@ -176,7 +170,8 @@ open class TranslateAction : AnAction() , DumbAware {
             translationLines
                 .forEachIndexed { index, translationLine ->
 
-                    val renderer = TranslationHint(
+                    val renderer = EditorHint(
+                        type = EHint.TRANSLATION,
                         zoom = zoom,
                         translation = translationLine,
                         flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
@@ -192,7 +187,8 @@ open class TranslateAction : AnAction() , DumbAware {
                     inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
                 }
 
-            val renderer = TranslationHint(
+            val renderer = EditorHint(
+                type = EHint.TRANSLATION,
                 zoom = zoom,
                 flag = translation.sourceLanguageIndentified.trim().lowercase(),
                 translation = "  "
@@ -209,67 +205,4 @@ open class TranslateAction : AnAction() , DumbAware {
 
     override fun isDumbAware()
         = true
-}
-
-class TranslationHint(
-    val zoom: Double,
-    val translation: String = "",
-    val flag: String?= null,
-    val indent: Int? = null
-) : HintRenderer(translation) {
-
-    val creationDate = LocalDateTime.now()
-
-    override fun paint(inlay: Inlay<*>, g: Graphics, r: Rectangle, textAttributes: TextAttributes) {
-        if (indent != null) {
-            r.x = indent
-            r.height += 4
-            r.y += 2
-        }
-
-        if (flag != null) {
-
-            val ratio = zoom * 0.8
-            val spacing = (zoom * 5).toInt()
-
-            val icon = TranslationIcons.getFlag(flag, ratio)!!
-
-            val iconX = r.x
-            val iconY = r.y + (r.height - icon.iconHeight) / 2 + 1
-
-            // Draw the icon
-            icon.paintIcon(null, g, iconX, iconY)
-
-            // Call super.paint() to draw the text
-            if (translation.isNotBlank()) {
-                val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
-                super.paint(inlay, g, modifiedR, textAttributes)
-            }
-            else {
-                val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, 0, r.height)
-                super.paint(inlay, g, modifiedR, textAttributes)
-            }
-        }
-        else {
-            super.paint(inlay, g, r, textAttributes)
-        }
-    }
-
-    override fun useEditorFont(): Boolean {
-        return true
-    }
-
-    fun sinceSeconds() = ChronoUnit.SECONDS.between(creationDate, LocalDateTime.now())
-
-}
-
-fun Editor.clearInlays(delay: Int = -1) {
-    inlayModel.getBlockElementsInRange(0, document.textLength)
-        .filter { it.renderer is TranslationHint }
-        .filter { delay < 0 || (it.renderer as TranslationHint).sinceSeconds() > 5 }
-        .forEach { Disposer.dispose(it) }
-    inlayModel.getInlineElementsInRange(0, document.textLength)
-        .filter { it.renderer is TranslationHint }
-        .filter { delay < 0 || (it.renderer as TranslationHint).sinceSeconds() > 5 }
-        .forEach { Disposer.dispose(it) }
 }

@@ -2,8 +2,7 @@ package io.nimbly.tzatziki.translation
 
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.ex.ActionManagerEx
-import io.nimbly.i18n.TranslateAction
+import io.nimbly.i18n.translation.TranslateAction
 
 class TzTranslateAction : TranslateAction() {
 

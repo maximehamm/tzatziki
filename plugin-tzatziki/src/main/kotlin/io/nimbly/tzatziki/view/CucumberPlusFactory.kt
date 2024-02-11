@@ -19,7 +19,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
-import io.nimbly.i18n.TranslateView
+import io.nimbly.i18n.translation.TranslateView
 import io.nimbly.tzatziki.services.*
 import io.nimbly.tzatziki.view.features.CucumberPlusFeaturesView
 import io.nimbly.tzatziki.view.filters.CucumberPlusFilterTagsView

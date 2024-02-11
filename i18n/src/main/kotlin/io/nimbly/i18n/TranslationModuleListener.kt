@@ -26,6 +26,7 @@ import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import io.nimbly.i18n.util.clearInlays
 
 class TranslationModuleListener : StartupActivity {
 

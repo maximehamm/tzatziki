@@ -12,7 +12,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.i18n
+package io.nimbly.i18n.translation
 
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
@@ -34,11 +34,9 @@ import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Insets
 import java.awt.event.ActionEvent
 import javax.swing.*
@@ -72,7 +70,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         }
     }.apply { isEnabled = false }
 
-    val replaceAction = object : AbstractAction("Replace selection", AllIcons.Actions.MenuPaste) {
+    private val replaceAction = object : AbstractAction("Replace selection", AllIcons.Actions.MenuPaste) {
         override fun actionPerformed(e: ActionEvent?) {
             replace()
         }
@@ -131,7 +129,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         val translation = TranslationManager.translate(
             outputLanguage.text.lowercase(),
             inputLanguage.text.lowercase(),
-            txt)
+            txt
+        )
           ?: return
 
         tTranslation.text = translation.translated.trimIndent()

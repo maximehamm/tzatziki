@@ -1,8 +1,6 @@
-package io.nimbly.i18n
+package io.nimbly.i18n.translation
 
-import io.nimbly.i18n.util.GTranslation
 import io.nimbly.i18n.util.fromCamelCase
-import io.nimbly.i18n.util.googleTranslate
 import io.nimbly.i18n.util.toCamelCase
 import java.util.*
 

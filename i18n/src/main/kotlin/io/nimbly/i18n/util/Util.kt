@@ -22,6 +22,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -280,4 +281,15 @@ fun textToIcon(text: String, component: Component, fontSize: Float, foreground: 
             return height
         }
     }
+}
+
+fun Editor.clearInlays(delay: Int = -1) {
+    inlayModel.getBlockElementsInRange(0, document.textLength)
+        .filter { it.renderer is EditorHint }
+        .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
+        .forEach { Disposer.dispose(it) }
+    inlayModel.getInlineElementsInRange(0, document.textLength)
+        .filter { it.renderer is EditorHint }
+        .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
+        .forEach { Disposer.dispose(it) }
 }
