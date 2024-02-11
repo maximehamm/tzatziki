@@ -32,32 +32,41 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
+import com.intellij.util.ui.HTMLEditorKitBuilder
 import com.intellij.util.ui.JBUI
+import icons.ActionI18nIcons
 import io.nimbly.i18n.util.clearInlays
 import io.nimbly.i18n.util.getLeafAtCursor
 import io.nimbly.i18n.util.getSelectedTextWithLeadingSpaces
+import io.nimbly.i18n.util.playAudio
 import java.awt.BorderLayout
+import java.awt.Cursor
+import java.awt.Cursor.HAND_CURSOR
+import java.awt.Point
+import java.awt.Rectangle
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.JButton
+import javax.swing.JEditorPane
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+import javax.swing.event.HyperlinkEvent
 
 class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false), DictionaryListener {
 
     private val panel = JBPanelWithEmptyText()
 
     private lateinit var tSelection: JBTextArea
-    private lateinit var tDefinition: JBTextArea
-
+    private lateinit var tDefinition: JEditorPane
+    private lateinit var sDefinition: JBScrollPane
 
     private var editor: Editor? = null
     private var document: Document? = null
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
-    private val searchDefinitionAction = object : AbstractAction("Search definition") {
+    private val searchDefinitionAction = object : AbstractAction("Search definition", ActionI18nIcons.DICO) {
         override fun actionPerformed(e: ActionEvent?) {
             searchDefinition()
         }
@@ -90,6 +99,8 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
             val html = generateHtml(definition.result!!)
             tDefinition.text = html
         }
+
+        tDefinition.caretPosition = 0
 
         editor?.apply {
 
@@ -203,14 +214,26 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
             )
         )
 
-        tDefinition = JBTextArea(15, 10).apply {
-            lineWrap = true; wrapStyleWord = true }
-        val sTranslation = JBScrollPane(tDefinition,
+        val htmlEditorKit = HTMLEditorKitBuilder.simple()
+
+        tDefinition = JEditorPane()
+        tDefinition.editorKit = htmlEditorKit
+        tDefinition.isEditable = false // Set the JEditorPane to be non-editable
+        tDefinition.contentType = "text/html" // Set the content type
+        tDefinition.cursor = Cursor(HAND_CURSOR)
+
+        tDefinition.addHyperlinkListener { e ->
+            if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+                playAudio(e.url)
+            }
+        }
+
+        sDefinition = JBScrollPane(tDefinition,
             VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_AS_NEEDED
         )
         main.add(
-            sTranslation, GridConstraints(
+            sDefinition, GridConstraints(
                 5, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -231,7 +254,13 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
 
         searchDefinitionAction.isEnabled = true
 
-        val html = generateHtml(event.definition.result!!)
+        val html =
+            if (event.definition.status == EStatut.FOUND)
+                generateHtml(event.definition.result!!)
+            else
+                "<h1>No definition found</h1>"
         tDefinition.text = html
+        tDefinition.caretPosition = 0
+
     }
 }

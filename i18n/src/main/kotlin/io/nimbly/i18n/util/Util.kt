@@ -35,14 +35,16 @@ import com.intellij.util.ui.GraphicsUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import javazoom.jl.player.Player
 import java.awt.Color
 import java.awt.Component
 import java.awt.Font
 import java.awt.Graphics
+import java.io.BufferedInputStream
+import java.net.URL
 import java.util.*
 import javax.swing.Icon
 import javax.swing.JLabel
-import javax.swing.SwingConstants
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
         = this.ifEmpty { null }
@@ -292,4 +294,10 @@ fun Editor.clearInlays(delay: Int = -1) {
         .filter { it.renderer is EditorHint }
         .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
         .forEach { Disposer.dispose(it) }
+}
+
+fun playAudio(audioUrl: URL) {
+    val inputStream = BufferedInputStream(audioUrl.openStream())
+    val player = Player(inputStream)
+    player.play()
 }

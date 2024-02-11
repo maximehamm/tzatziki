@@ -2,6 +2,7 @@ package io.nimbly.i18n.dictionary
 
 import com.google.gson.Gson
 import com.intellij.util.net.HttpConfigurable
+import io.nimbly.i18n.util.nullIfEmpty
 import java.io.BufferedReader
 import java.io.FileNotFoundException
 import java.io.InputStreamReader
@@ -16,6 +17,13 @@ fun searchDefinition(
     } catch (e: FileNotFoundException) {
         return DefinitionResult(EStatut.NOT_FOUND)
     }
+}
+
+private fun <E> List<E>.skipFirst(): List<E> {
+    if (this.size < 2)
+        return emptyList()
+
+    return this.subList(1, this.size - 1)
 }
 
 private fun callUrlAndParseResult(word: String): DefinitionResult {
@@ -43,6 +51,10 @@ private fun callUrlAndParseResult(word: String): DefinitionResult {
     val word = results.getOrNull(0)
         ?: return DefinitionResult(EStatut.NOT_FOUND)
 
+    results.skipFirst().forEach { w ->
+        word.meanings.addAll(w.meanings)
+    }
+
     val shortDefinition = word.meanings .firstOrNull()?.definitions?.firstOrNull()?.definition
         ?: return DefinitionResult(EStatut.NOT_FOUND)
 
@@ -64,36 +76,50 @@ fun generateHtml(word: Word): String {
     sb.append("</head>")
     sb.append("<body>")
     sb.append("<h1>${word.word}</h1>")
-    sb.append("<p>Phonetic: ${word.phonetic}</p>")
-    sb.append("<p>Origin: ${word.origin}</p>")
 
-    sb.append("<h2>Phonetics</h2>")
-    word.phonetics.forEach { phonetic ->
-        sb.append("<p>Text: ${phonetic.text}</p>")
-        sb.append("<p>Audio: ${phonetic.audio}</p>")
+    if (word.origin?.isNotBlank() == true)
+        sb.append("<p>Origin: ${word.origin}</p>")
+
+    word.phonetics.filter { it.text != null }.nullIfEmpty()?.let { phonetics ->
+        sb.append("<h2>Phonetics</h2>")
+
+        var hasSound = false
+        phonetics.filter { it.audio?.endsWith("mp3") == true }.forEach { p ->
+            hasSound = true
+            sb.append("<p><a href=\"${p.audio}\">${p.text}</a>&nbsp;\uD83D\uDD09</font>&nbsp;")
+            sb.append("<small>[").append(p.audio!!.substringAfterLast("/")).append("]</small>")
+            sb.append("</p>")
+        }
+        if (!hasSound) {
+            phonetics.forEach { p ->
+                sb.append("<p>${p.text}</p>")
+            }
+        }
     }
 
-    sb.append("<h2>Meanings</h2>")
     word.meanings.forEach { meaning ->
-        sb.append("<h3>Part of speech: ${meaning.partOfSpeech}</h3>")
+
+        sb.append("<h2>${meaning.partOfSpeech}</h2>")
 
         meaning.definitions.forEach { definition ->
-            sb.append("<p>Definition: ${definition.definition}</p>")
-            sb.append("<p>Example: ${definition.example}</p>")
 
-            sb.append("<p>Synonyms:</p>")
-            sb.append("<ul>")
-            definition.synonyms.forEach { synonym ->
-                sb.append("<li>$synonym</li>")
-            }
-            sb.append("</ul>")
+            sb.append("<div style=\"padding-left: 10px;\">")
 
-            sb.append("<p>Antonyms:</p>")
-            sb.append("<ul>")
-            definition.antonyms.forEach { antonym ->
-                sb.append("<li>$antonym</li>")
+            sb.append("<p><strong>• ${definition.definition}</strong></p>")
+
+            definition.example.nullIfEmpty()?.let {
+                sb.append("<p><i>Example: $it</i></p>")
             }
-            sb.append("</ul>")
+
+            definition.synonyms.filter { it.isNotBlank() }.nullIfEmpty()?.let {
+                sb.append("<p><i>&nbsp;&nbsp;Synonyms: ${it.joinToString(", ")}</i></p>")
+            }
+
+            definition.antonyms.filter { it.isNotBlank() }.nullIfEmpty()?.let {
+                sb.append("<p><i>&nbsp;&nbsp;Antonyms: ${it.joinToString( ", " )}</i></p>")
+            }
+
+            sb.append("</div>")
         }
     }
 
@@ -104,7 +130,7 @@ fun generateHtml(word: Word): String {
 }
 
 data class Phonetic(
-    val text: String,
+    val text: String? = null,
     val audio: String? = null
 )
 
@@ -125,7 +151,7 @@ data class Word(
     val phonetic: String? = null,
     val phonetics: List<Phonetic> = emptyList(),
     val origin: String? = null,
-    val meanings: List<Meaning> = emptyList(),
+    val meanings: MutableList<Meaning> = mutableListOf(),
 )
 
 data class DefinitionResult(
