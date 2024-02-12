@@ -42,6 +42,7 @@ import java.awt.event.ActionEvent
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 
 class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), TranslationListener {
@@ -311,10 +312,11 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 null, null, null
             )
         )
+
+        val marginBorder = EmptyBorder(Insets(5, 5, 5, 5))
+
         tSelection = JBTextArea(15, 10).apply {
-            lineWrap = true;
-            wrapStyleWord = true
-        }
+            lineWrap = true; wrapStyleWord = true; border = marginBorder }
         val sSelection = JBScrollPane(tSelection,
             VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_AS_NEEDED
@@ -351,7 +353,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         )
 
         tTranslation = JBTextArea(15, 10).apply {
-            lineWrap = true; wrapStyleWord = true }
+            lineWrap = true; wrapStyleWord = true; border= marginBorder }
         val sTranslation = JBScrollPane(tTranslation,
             VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_AS_NEEDED

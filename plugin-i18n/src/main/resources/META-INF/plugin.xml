@@ -21,21 +21,29 @@
     </vendor>
     <description><![CDATA[
 
-    <b>Translate anything using Google translate !</b><br/>
+    <b>Translate anything to any language !</b><br/>
+    <b>Search definition of selected word (english only) !</b><br/>
     <b>No proxy problem ! No API key ! Works with all Jetbrains products !</b><br/>
     <br/>
-      - Select some text inside editor and press "CTRL-T"<br/>
-      - Write a word and press "CTRL-T" !<br/>
-      - Use Translation+ tool window to select input and ouput language<br/>
+      • Select some text inside editor<br/>
+        &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
+      • Use 'Translation' view to select translation input and ouput language<br/>
+      • Use 'Dictionary' view to display full definition of selected word (english only)<br/>
     <br/>
-    <b>Ask for translation using menu 'Edit > Translate' or CTRL-T</b><br/>
-    <b>TIPS: works also with 'CamelCase' notation !</b><br/>
+    <b>&lt;CTRL-T&gt; : Ask for translation (or menu 'Edit > Translate')</b><br/>
+    <b>&lt;CTRL-ALT-T&gt; : Ask for word definition (or menu 'Edit > Search definition')</b><br/>
+
+    <br/>
+    <b>TIPS:</b><br/>
+    <b>&nbsp;• works also with 'CamelCase' notation !</b><br/>
+    <b>&nbsp;• works also with 'CamelCase' notation !</b><br/>
+    <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
     <b>Editor translation : </b><br/><br/>
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
-              alt="Translation+" width="690" height="388"></p>
+              alt="Translation editor" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to menu "Edit > Translate" or use shortcut CTRL+T</li>
        <li>Check translation</li>
@@ -43,14 +51,24 @@
     </ul>
 
     <br/><br/>
-    <b>Translation+ view : </b><br/><br/>
+    <b>Translation view : </b><br/><br/>
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_3fc62078-5f28-4ca0-a0c9-b4eb5fbab317"
-              alt="Translation+" width="690" height="388"></p>
+              alt="Translation view" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
-       <li>Go to "Translation+" view</li>
+       <li>Go to "Translation" view</li>
        <li>Select input and output language</li>
        <li>Click "Translate", check translation, then click "Replace selection"</li>
+    </ul>
+
+    <br/><br/>
+    <b>Dictionay view : </b><br/><br/>
+    <ul>
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_d6ab4fbc-7823-4f2f-b63b-14cac8b19ef4"
+              alt="Dictionary view" width="690" height="388"></p>
+       <li>Select anything in editor (javascript, gherki, text !)</li>
+       <li>Go to "Dictionary" view</li>
+       <li>Click "Search definition"</li>
     </ul>
 
     Any suggestion ? Let me know !<br/>

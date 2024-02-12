@@ -29,6 +29,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.JBTextField
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
@@ -39,11 +40,8 @@ import io.nimbly.i18n.util.clearInlays
 import io.nimbly.i18n.util.getLeafAtCursor
 import io.nimbly.i18n.util.getSelectedTextWithLeadingSpaces
 import io.nimbly.i18n.util.playAudio
-import java.awt.BorderLayout
-import java.awt.Cursor
+import java.awt.*
 import java.awt.Cursor.HAND_CURSOR
-import java.awt.Point
-import java.awt.Rectangle
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.JButton
@@ -51,13 +49,14 @@ import javax.swing.JEditorPane
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+import javax.swing.border.EmptyBorder
 import javax.swing.event.HyperlinkEvent
 
 class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false), DictionaryListener {
 
     private val panel = JBPanelWithEmptyText()
 
-    private lateinit var tSelection: JBTextArea
+    private lateinit var tSelection: JBTextField
     private lateinit var tDefinition: JEditorPane
     private lateinit var sDefinition: JBScrollPane
 
@@ -185,20 +184,13 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
                 null, null, null
             )
         )
-        tSelection = JBTextArea(1, 10).apply {
-            lineWrap = true;
-            wrapStyleWord = true
-        }
-        val sSelection = JBScrollPane(tSelection,
-            VERTICAL_SCROLLBAR_AS_NEEDED,
-            HORIZONTAL_SCROLLBAR_AS_NEEDED
-        )
+
+        tSelection = JBTextField()
         main.add(
-            sSelection, GridConstraints(
+            tSelection, GridConstraints(
                 3, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_HORIZONTAL,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
-                SIZEPOLICY_CAN_SHRINK,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK,
                 null, null, null
             )
         )

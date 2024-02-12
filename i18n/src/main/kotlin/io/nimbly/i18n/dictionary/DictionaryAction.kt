@@ -31,7 +31,6 @@ open class DictionaryAction : AnAction() , DumbAware {
     override fun update(event: AnActionEvent) {
         val editor = event.getData(CommonDataKeys.EDITOR)
         event.presentation.isEnabledAndVisible = editor!=null
-//        event.presentation.icon =  ActionI18nIcons.DICO
         event.presentation.text = "Search Definition"
         super.update(event)
     }
@@ -85,7 +84,6 @@ open class DictionaryAction : AnAction() , DumbAware {
             }
 
             camelCase = text!=null && !text.contains(" ") && text.fromCamelCase() != text
-            selectionEnd = caret == endOffset
 
             editor.selectionModel.setSelection(startOffset, endOffset)
         }
@@ -105,34 +103,40 @@ open class DictionaryAction : AnAction() , DumbAware {
 
         editor.clearInlays()
 
-        val definitionText: String
-        if (def.status == EStatut.NOT_FOUND) {
-            definitionText = "No definition found"
+        val translationLines =
+            if (def.status == EStatut.NOT_FOUND) {
+                listOf("No definition found").toMutableList()
+            }
+            else {
+                def.result!!.meanings
+                    .map { m ->
+                        m.definitions.map { d ->
+                            d.definition.removeSuffix(".").removeStartParenthesis().trim().ifBlank { null }
+                        }
+                    }
+                    .flatten()
+                    .filterNotNull()
+                    .toMutableList()
+            }
+
+        val startOfLine = editor.document.getLineTextStartOffset(startOffset)
+        val xindent = editor.offsetToPoint2D(startOfLine).x.toInt()
+
+        if (translationLines.size > 4) {
+            translationLines.retainAll(translationLines.subList(0, 4))
+            translationLines.add("...")
         }
-        else
-            definitionText = def.result!!.meanings.first().definitions.first().definition
-
-        val translationLines = definitionText
-            .split('\n')
-            .reversed()
-            .toMutableList()
-
-        if (translationLines.size > 1 && translationLines.first().isBlank()) {
-            translationLines[1] = translationLines[1] + '\n' + translationLines[0]
-            translationLines.removeAt(0)
-        }
-
-        val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
 
         translationLines
-            .forEachIndexed { index, translationLine ->
+            .reversed()
+            .forEach { translationLine ->
 
                 val renderer = EditorHint(
                     type = DEFINITION,
                     zoom = zoom,
                     translation = translationLine,
                     icon = ActionI18nIcons.DICO,
-                    indent = if (index == translationLines.size - 1) xindent else 4
+                    indent = xindent
                 )
                 val p = InlayProperties().apply {
                     showAbove(true)
@@ -148,7 +152,7 @@ open class DictionaryAction : AnAction() , DumbAware {
             type = DEFINITION,
             zoom = zoom,
             icon = ActionI18nIcons.DICO,
-            translation = "  "
+            translation = " "
         )
         val p = InlayProperties().apply {
             showAbove(false)
@@ -163,3 +167,11 @@ open class DictionaryAction : AnAction() , DumbAware {
         = true
 }
 
+private fun String.removeStartParenthesis(): String {
+    if (!this.startsWith("("))
+        return this
+    val i = this.indexOf(")")
+    if (i > 0 && i < this.length - 1)
+        return this.substring(i+1).trim()
+    return this
+}

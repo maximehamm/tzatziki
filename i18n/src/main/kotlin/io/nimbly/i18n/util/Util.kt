@@ -301,3 +301,9 @@ fun playAudio(audioUrl: URL) {
     val player = Player(inputStream)
     player.play()
 }
+
+fun Document.getLineTextStartOffset(offset: Int): Int {
+    val ls = this.getLineStartOffset(getLineNumber(offset))
+    val t = this.getText(TextRange(ls, offset))
+    return t.length - t.trimStart().length
+}

@@ -59,7 +59,7 @@ class EditorHint(
     }
 
     override fun useEditorFont(): Boolean {
-        return true
+        return type == EHint.TRANSLATION
     }
 
     fun sinceSeconds() = ChronoUnit.SECONDS.between(creationDate, LocalDateTime.now())

@@ -55,7 +55,7 @@ private fun callUrlAndParseResult(word: String): DefinitionResult {
         word.meanings.addAll(w.meanings)
     }
 
-    val shortDefinition = word.meanings .firstOrNull()?.definitions?.firstOrNull()?.definition
+    val shortDefinition = word.meanings.firstOrNull()?.definitions?.firstOrNull()?.definition
         ?: return DefinitionResult(EStatut.NOT_FOUND)
 
     if (word.meanings.isEmpty())
@@ -74,13 +74,15 @@ fun generateHtml(word: Word): String {
     sb.append("<head>")
     sb.append("<title>${word.word}</title>")
     sb.append("</head>")
-    sb.append("<body>")
-    sb.append("<h1>${word.word}</h1>")
+    sb.append("<body style='margin-left: 5px;'>")
+    sb.append("<h1 style='margin-top: 5px; margin-bottom: 5px;'>« ${word.word} »</h1>")
 
     if (word.origin?.isNotBlank() == true)
         sb.append("<p>Origin: ${word.origin}</p>")
 
-    word.phonetics.filter { it.text != null }.nullIfEmpty()?.let { phonetics ->
+    word.phonetics
+        .associateBy { ("" + it.text + it.audio) }.values
+        .filter { it.text != null }.nullIfEmpty()?.let { phonetics ->
         sb.append("<h2>Phonetics</h2>")
 
         var hasSound = false
@@ -99,7 +101,7 @@ fun generateHtml(word: Word): String {
 
     word.meanings.forEach { meaning ->
 
-        sb.append("<h2>${meaning.partOfSpeech}</h2>")
+        sb.append("<h2>${meaning.partOfSpeech.capitalize()}</h2>")
 
         meaning.definitions.forEach { definition ->
 
