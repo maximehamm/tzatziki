@@ -13,7 +13,7 @@ val notes by extra {"""
        <ul> 
          <li><b>2.0.0</b> Add dictionary definitions</li>
          <li><b>1.2.0</b> Add support of camel case</li>
-         <li><b>1.0.0</b> Display translation inlined in text</li>
+         <li><b>1.1.0</b> Display translation inlined in text</li>
          <li><b>1.0.0</b> Initial version</li>
        </ul>
       """
