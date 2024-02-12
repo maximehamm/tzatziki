@@ -11,18 +11,12 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
-         <li><b>2.0.0</b> Add dictionary definitions</li>
-         <li><b>1.2.0</b> Add support of camel case</li>
+         <li><b>2.0.0</b> Dictionary definitions</li>
+         <li><b>1.2.0</b> Support of camel case</li>
          <li><b>1.1.0</b> Display translation inlined in text</li>
          <li><b>1.0.0</b> Initial version</li>
        </ul>
       """
-
-    /**
-     * Supports of markdown
-     * - https://github.com/commonmark/commonmark-java
-     * - https://github.com/vsch/flexmark-java
-     */
 }
 
 val versions by extra {
