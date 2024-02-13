@@ -28,19 +28,19 @@ import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
-import com.intellij.util.ui.HTMLEditorKitBuilder
+import com.intellij.util.ui.JBHtmlEditorKit
 import com.intellij.util.ui.JBUI
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.clearInlays
 import io.nimbly.i18n.util.getLeafAtCursor
 import io.nimbly.i18n.util.getSelectedTextWithLeadingSpaces
 import io.nimbly.i18n.util.playAudio
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Cursor
 import java.awt.Cursor.HAND_CURSOR
 import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
@@ -49,7 +49,6 @@ import javax.swing.JEditorPane
 import javax.swing.JPanel
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
-import javax.swing.border.EmptyBorder
 import javax.swing.event.HyperlinkEvent
 
 class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false), DictionaryListener {
@@ -160,7 +159,8 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
         main.add(
-            JBLabel("""<html>
+            JBLabel(
+                """<html>
                 English dictionary 🇬🇧 :<br/>
                  &nbsp; ✓ <b>Select some text in the editor</b> (<i>Gherkin, Javascript...</i>)<br/>
                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string to use</b><br/>
@@ -206,10 +206,8 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
             )
         )
 
-        val htmlEditorKit = HTMLEditorKitBuilder.simple()
-
         tDefinition = JEditorPane()
-        tDefinition.editorKit = htmlEditorKit
+        tDefinition.editorKit = JBHtmlEditorKit() // HTMLEditorKitBuilder.simple()
         tDefinition.isEditable = false // Set the JEditorPane to be non-editable
         tDefinition.contentType = "text/html" // Set the content type
         tDefinition.cursor = Cursor(HAND_CURSOR)
@@ -220,7 +218,8 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
             }
         }
 
-        sDefinition = JBScrollPane(tDefinition,
+        sDefinition = JBScrollPane(
+            tDefinition,
             VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_AS_NEEDED
         )
