@@ -102,7 +102,7 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
 
         editor?.apply {
 
-            this.clearInlays()
+            EditorFactory.getInstance().clearInlays()
 
             val start = startOffset
             val end = endOffset

@@ -58,7 +58,7 @@ class TranslationModuleListener : StartupActivity {
 
 private class EscapeHandler : AbstractWriteActionHandler(IdeActions.ACTION_EDITOR_ESCAPE) {
     override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-        editor.clearInlays()
+        EditorFactory.getInstance().clearInlays()
         doDefault(editor, caret, dataContext)
     }
 }
@@ -84,6 +84,6 @@ private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandl
 
 object TranslationMouseAdapter : EditorMouseListener {
     override fun mouseClicked(event: EditorMouseEvent) {
-        event.editor.clearInlays(5)
+        EditorFactory.getInstance().clearInlays(5)
     }
 }

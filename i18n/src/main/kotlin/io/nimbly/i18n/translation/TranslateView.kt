@@ -139,7 +139,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         editor?.apply {
 
-            this.clearInlays()
+            EditorFactory.getInstance().clearInlays()
 
             val start = startOffset
             val end = endOffset
@@ -166,7 +166,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
             replaceAction.isEnabled = false
 
-            editor?.clearInlays()
+            EditorFactory.getInstance().clearInlays()
         }
     }
 

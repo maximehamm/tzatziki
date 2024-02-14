@@ -16,21 +16,28 @@ package io.nimbly.i18n.translation
 
 import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.ide.util.PropertiesComponent
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vcs.VcsDataKeys
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 
 @Suppress("MissingActionUpdateThread")
-open class TranslateAction : AnAction() , DumbAware {
+open class TranslateAction : DumbAwareAction()  {
 
     override fun update(event: AnActionEvent) {
-        val editor = event.getData(CommonDataKeys.EDITOR)
+        doUpdate(event, null)
+    }
+
+    fun doUpdate(event: AnActionEvent, editorRef: Editor?) {
+
+        val editor = editorRef ?: event.editor
         event.presentation.isEnabledAndVisible = editor!=null
 
         val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
@@ -55,8 +62,15 @@ open class TranslateAction : AnAction() , DumbAware {
     }
 
     override fun actionPerformed(event: AnActionEvent) {
+        doActionPerformed(event, null)
+    }
 
-        val editor =  CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
+    fun doActionPerformed(event: AnActionEvent, editorRef: Editor?) {
+
+        val editor = editorRef ?: event.editor ?: return
+
+        val isVCS = VcsDataKeys.COMMIT_MESSAGE_DOCUMENT.getData(event.dataContext) != null
+
         val inlayModel = editor.inlayModel
 
         val editorImpl = event.getData(CommonDataKeys.EDITOR) as? EditorImpl
@@ -64,6 +78,7 @@ open class TranslateAction : AnAction() , DumbAware {
         val file = event.getData(CommonDataKeys.PSI_FILE)
         val caret = CommonDataKeys.CARET.getData(event.dataContext)?.offset
 
+        val project = CommonDataKeys.PROJECT.getData(event.dataContext) ?: editor.project ?: file?.project ?: return
         var startOffset: Int
         var endOffset: Int
         var text: String?
@@ -79,6 +94,14 @@ open class TranslateAction : AnAction() , DumbAware {
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
+
+            selectionEnd = caret == endOffset
+        }
+        else if (isVCS) {
+
+            startOffset = 0
+            endOffset = editor.document.textLength
+            text = editor.document.text
 
             selectionEnd = caret == endOffset
         }
@@ -128,14 +151,14 @@ open class TranslateAction : AnAction() , DumbAware {
                 .reversed()
                 .joinToString("\n")
 
-            val document = file?.getDocument()
-            if (document?.isWritable == true) {
+            val document = editor.document
+            if (document.isWritable) {
 
                 val indented = joinToString.indentAs(document.getText(TextRange(startOffset, endOffset)))
-                executeWriteCommand(file.project, "Translating with Translation+", Runnable {
+                executeWriteCommand(project, "Translating with Translation+", Runnable {
                     document.replaceString(startOffset, endOffset, indented)
                 })
-                editor.clearInlays()
+                EditorFactory.getInstance().clearInlays()
 
                 if (selectionEnd)
                     editor.selectionModel.removeSelection()
@@ -153,7 +176,7 @@ open class TranslateAction : AnAction() , DumbAware {
             val translation = TranslationManager.translate(output, input, text, camelCase = camelCase)
                 ?: return
 
-            editor.clearInlays()
+            EditorFactory.getInstance().clearInlays()
 
             val translationLines = translation.translated
                 .split('\n')

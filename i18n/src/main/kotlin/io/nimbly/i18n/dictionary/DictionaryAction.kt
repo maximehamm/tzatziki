@@ -18,6 +18,7 @@ import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAware
@@ -94,14 +95,14 @@ open class DictionaryAction : AnAction() , DumbAware {
         if (text == null)
             return
 
-        editor.clearInlays()
+        EditorFactory.getInstance().clearInlays()
 
         //
         // Search definition
         //
         val def = DictionaryManager.searchDefinition(text, camelCase = camelCase)
 
-        editor.clearInlays()
+        EditorFactory.getInstance().clearInlays()
 
         val translationLines =
             if (def.status == EStatut.NOT_FOUND) {

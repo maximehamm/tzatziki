@@ -15,10 +15,15 @@
 package io.nimbly.i18n.util
 
 import com.intellij.codeInsight.completion.CompletionUtilCore
+import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -285,7 +290,14 @@ fun textToIcon(text: String, component: Component, fontSize: Float, foreground: 
     }
 }
 
-fun Editor.clearInlays(delay: Int = -1) {
+fun EditorFactory.clearInlays(delay: Int = -1) {
+    this.allEditors.forEach {
+        it.clearInlays(delay)
+    }
+}
+
+private fun Editor.clearInlays(delay: Int = -1) {
+
     inlayModel.getBlockElementsInRange(0, document.textLength)
         .filter { it.renderer is EditorHint }
         .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
@@ -307,3 +319,7 @@ fun Document.getLineTextStartOffset(offset: Int): Int {
     val t = this.getText(TextRange(ls, offset))
     return t.length - t.trimStart().length
 }
+
+val AnActionEvent.editor
+    get() = CommonDataKeys.EDITOR.getData(dataContext)
+        ?: DataManager.getInstance().dataContext.getData(PlatformDataKeys.EDITOR)

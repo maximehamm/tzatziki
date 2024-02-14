@@ -36,7 +36,6 @@
     <br/>
     <b>TIPS:</b><br/>
     <b>&nbsp;• works also with 'CamelCase' notation !</b><br/>
-    <b>&nbsp;• works also with 'CamelCase' notation !</b><br/>
     <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
@@ -48,6 +47,17 @@
        <li>Go to menu "Edit > Translate" or use shortcut CTRL+T</li>
        <li>Check translation</li>
        <li>Go to menu "Edit > Apply Translation" or use shortcut CTRL+T</li>
+    </ul>
+
+    <br/><br/>
+    <b>Commit dialog translation : </b><br/><br/>
+    <ul>
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2cdfe59e-792c-4a2b-96f5-ce44098d9242"
+              alt="Translation vcs" width="690" height="388"></p>
+       <li>Enter commit message in your native language</li>
+       <li>Click 'Translation' button</li>
+       <li>Check translation</li>
+       <li>Click 'Apply translation' !</li>
     </ul>
 
     <br/><br/>
@@ -119,6 +129,16 @@
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
 
+        </group>
+
+        <group>
+            <action class="io.nimbly.i18n.translation.TranslateVcsAction"
+                    id="io.nimbly.i18n.translation.vcs.TranslateVcsAction"
+                    text="Translate" icon="ActionI18nIcons.I18N">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+            </action>
+
+            <add-to-group group-id="Vcs.Commit.PrimaryCommitActions" anchor="first"/>
         </group>
     </actions>
 

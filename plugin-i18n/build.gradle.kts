@@ -4,13 +4,14 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "2.0.0"
+version = "3.0.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>3.0.0</b> Commit dialog translation </li>
          <li><b>2.0.0</b> Dictionary definitions</li>
          <li><b>1.2.0</b> Support of camel case</li>
          <li><b>1.1.0</b> Display translation inlined in text</li>
