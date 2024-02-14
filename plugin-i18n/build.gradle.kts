@@ -47,7 +47,7 @@ tasks {
     patchPluginXml {
 
         // Check build number here : https://www.jetbrains.com/idea/download/other.html
-        sinceBuild.set("212")    // 2021.2.4
+        sinceBuild.set("222.4554.10")    // 2021.2.4
         untilBuild.set("241.*")
 
         changeNotes.set(notes)
