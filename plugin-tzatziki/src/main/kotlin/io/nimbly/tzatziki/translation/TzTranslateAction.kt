@@ -9,7 +9,8 @@ class TzTranslateAction : TranslateAction() {
     override fun update(event: AnActionEvent) {
 
         val actionManager = ActionManager.getInstance()
-        val taction = actionManager.getAction("io.nimbly.i18n.TranslateAction")
+        //actionManager.getActionIds("io.nimbly.i18n")
+        val taction = actionManager.getAction("io.nimbly.i18n.translation.TranslateAction")
         if (taction != null) {
             event.presentation.isVisible = false
             event.presentation.isEnabledAndVisible = false
