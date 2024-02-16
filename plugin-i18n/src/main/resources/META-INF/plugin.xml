@@ -27,15 +27,15 @@
     <br/>
       • Select some text inside editor<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
-      • Use 'Translation' view to select translation input and ouput language<br/>
-      • Use 'Dictionary' view to display full definition of selected word (english only)<br/>
+      • Use “Translation” view to select translation input and ouput language<br/>
+      • Use “Dictionary” view to display full definition of selected word (english only)<br/>
     <br/>
-    <b>&lt;CTRL-T&gt; : Ask for translation (or menu 'Edit > Translate')</b><br/>
-    <b>&lt;CTRL-ALT-T&gt; : Ask for word definition (or menu 'Edit > Search definition')</b><br/>
+    <b>&lt;CTRL+T&gt; : Ask for translation (or menu “Edit > Translate”)</b><br/>
+    <b>&lt;CTRL+ALT+T&gt; : Ask for word definition (or menu “Edit > Search definition”)</b><br/>
 
     <br/>
     <b>TIPS:</b><br/>
-    <b>&nbsp;• works also with 'CamelCase' notation !</b><br/>
+    <b>&nbsp;• works also with “CamelCase” notation !</b><br/>
     <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
@@ -44,9 +44,9 @@
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
               alt="Translation editor" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
-       <li>Go to menu "Edit > Translate" or use shortcut CTRL+T</li>
+       <li>Go to menu “Edit > Translate” or use shortcut CTRL+T</li>
        <li>Check translation</li>
-       <li>Go to menu "Edit > Apply Translation" or use shortcut CTRL+T</li>
+       <li>Go to menu “Edit > Apply Translation” or use shortcut CTRL+T</li>
     </ul>
 
     <br/><br/>
@@ -55,9 +55,9 @@
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2cdfe59e-792c-4a2b-96f5-ce44098d9242"
               alt="Translation vcs" width="690" height="388"></p>
        <li>Enter commit message in your native language</li>
-       <li>Click 'Translation' button</li>
+       <li>Click “Translation” button</li>
        <li>Check translation</li>
-       <li>Click 'Apply translation' !</li>
+       <li>Click “Apply translation” !</li>
     </ul>
 
     <br/><br/>
@@ -66,9 +66,9 @@
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_3fc62078-5f28-4ca0-a0c9-b4eb5fbab317"
               alt="Translation view" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
-       <li>Go to "Translation" view</li>
+       <li>Go to “Translation” view</li>
        <li>Select input and output language</li>
-       <li>Click "Translate", check translation, then click "Replace selection"</li>
+       <li>Click “Translate”, check translation, then click “Replace selection”</li>
     </ul>
 
     <br/><br/>
@@ -77,10 +77,22 @@
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_d6ab4fbc-7823-4f2f-b63b-14cac8b19ef4"
               alt="Dictionary view" width="690" height="388"></p>
        <li>Select anything in editor (javascript, gherki, text !)</li>
-       <li>Go to "Dictionary" view</li>
-       <li>Click "Search definition"</li>
+       <li>Go to “Dictionary” view</li>
+       <li>Click “Search definition”</li>
     </ul>
 
+    <br/><br/>
+    <b>All supported languages :</b><br/><br/>
+    Afrikaans, Irish, Albanian, Italian, Arabic, Japanese, Azerbaijani, Kannada,
+    Basque, Korean, Bengali, Latin, Belarusian, Latvian, Bulgarian, Lithuanian,
+    Catalan, Macedonian, Chinese Simplified, Malay, Chinese Traditional, Maltese,
+    Croatian, Norwegian, Czech, Persian, Danish, Polish, Dutch, Portuguese,
+    English, Romanian, Esperanto, Russian, Estonian, Serbian, Filipino, Slovak,
+    Finnish, Slovenian, French, Spanish, Galician, Swahili, Georgian, Swedish,
+    German, Tamil, Greek, Telugu, Gujarati, Thai, Haitian Creole, Turkish, Hebrew,
+    Ukrainian, Hindi, Urdu, Hungarian, Vietnamese, Icelandic, Welsh, Indonesian, Yiddish.
+
+    <br/><br/>
     Any suggestion ? Let me know !<br/>
     <br/>
 
