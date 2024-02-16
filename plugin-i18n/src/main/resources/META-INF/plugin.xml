@@ -30,8 +30,8 @@
       • Use “Translation” view to select translation input and ouput language<br/>
       • Use “Dictionary” view to display full definition of selected word (english only)<br/>
     <br/>
-    <b>&lt;CTRL+T&gt; : Ask for translation (or menu “Edit > Translate”)</b><br/>
-    <b>&lt;CTRL+ALT+T&gt; : Ask for word definition (or menu “Edit > Search definition”)</b><br/>
+    <b>CTRL+T : Ask for translation (or menu “Edit > Translate”)</b><br/>
+    <b>CTRL+ALT : Ask for word definition (or menu “Edit > Search definition”)</b><br/>
 
     <br/>
     <b>TIPS:</b><br/>
@@ -76,24 +76,25 @@
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_d6ab4fbc-7823-4f2f-b63b-14cac8b19ef4"
               alt="Dictionary view" width="690" height="388"></p>
-       <li>Select anything in editor (javascript, gherki, text !)</li>
+       <li>Select anything in editor (javascript, gherki, text...)</li>
        <li>Go to “Dictionary” view</li>
        <li>Click “Search definition”</li>
     </ul>
 
     <br/><br/>
-    <b>All supported languages :</b><br/><br/>
-    Afrikaans, Irish, Albanian, Italian, Arabic, Japanese, Azerbaijani, Kannada,
-    Basque, Korean, Bengali, Latin, Belarusian, Latvian, Bulgarian, Lithuanian,
-    Catalan, Macedonian, Chinese Simplified, Malay, Chinese Traditional, Maltese,
-    Croatian, Norwegian, Czech, Persian, Danish, Polish, Dutch, Portuguese,
-    English, Romanian, Esperanto, Russian, Estonian, Serbian, Filipino, Slovak,
-    Finnish, Slovenian, French, Spanish, Galician, Swahili, Georgian, Swedish,
-    German, Tamil, Greek, Telugu, Gujarati, Thai, Haitian Creole, Turkish, Hebrew,
-    Ukrainian, Hindi, Urdu, Hungarian, Vietnamese, Icelandic, Welsh, Indonesian, Yiddish.
+    <b>All supported languages/localization :</b><br/><br/>
+    Afrikaans, Irish, Albanian, Italian, Arabic, Japanese, Azerbaijani, Kannada,<br/>
+    Basque, Korean, Bengali, Latin, Belarusian, Latvian, Bulgarian, Lithuanian,<br/>
+    Catalan, Macedonian, Chinese Simplified, Malay, Chinese Traditional, Maltese,<br/>
+    Croatian, Norwegian, Czech, Persian, Danish, Polish, Dutch, Portuguese,<br/>
+    English, Romanian, Esperanto, Russian, Estonian, Serbian, Filipino, Slovak,<br/>
+    Finnish, Slovenian, French, Spanish, Galician, Swahili, Georgian, Swedish,<br/>
+    German, Tamil, Greek, Telugu, Gujarati, Thai, Haitian Creole, Turkish, Hebrew,<br/>
+    Ukrainian, Hindi, Urdu, Hungarian, Vietnamese, Icelandic, Welsh, Indonesian,<br/>
+    Yiddish.<br/>
 
-    <br/><br/>
-    Any suggestion ? Let me know !<br/>
+    <br/>
+    <b>Any suggestion ? Let me know !</b><br/>
     <br/>
 
     <i>@author Maxime HAMM</i><br/>
