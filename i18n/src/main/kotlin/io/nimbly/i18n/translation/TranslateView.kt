@@ -24,26 +24,40 @@ import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.refactoring.suggested.endOffset
-import com.intellij.ui.DocumentAdapter
-import com.intellij.ui.components.*
+import com.intellij.ui.CollectionComboBoxModel
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBPanelWithEmptyText
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
+import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
 import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Font
 import java.awt.Insets
 import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.ItemEvent.SELECTED
+import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
-import javax.swing.event.DocumentEvent
+import javax.swing.plaf.basic.BasicComboBoxEditor
+
+private val ComboBox<Lang>.lang: Lang
+    get() = this.selectedItem as Lang
 
 class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), TranslationListener {
 
@@ -52,11 +66,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private lateinit var tSelection: JBTextArea
     private lateinit var tTranslation: JBTextArea
 
-    private val inputLanguage = JBTextField("auto")
-    private val outputLanguage = JBTextField("EN")
-
-    private val inputFlag = JBLabel()
-    private val outputFlag = JBLabel()
+    private val inputLanguage = ComboBox(CollectionComboBoxModel<Lang>())
+    private val outputLanguage = ComboBox(CollectionComboBoxModel<Lang>())
 
     private var outputFlagIcon: Icon? = null
 
@@ -65,7 +76,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
-    val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
+    private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
             translate()
         }
@@ -88,36 +99,53 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 }
             }, ApplicationManager.getApplication())
 
+        val isoCodes = languagesMap.map { Lang(it.key, it.value) }.sortedBy { it.name }
+
         val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
+        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "en")
 
-        inputLanguage.text = input
-        outputLanguage.text = output
+        inputLanguage.apply {
+            val model = this.model as CollectionComboBoxModel<Lang>
+            model.add(Lang("auto", "Automatic"))
+            isoCodes.forEach {
+                model.add(isoCodes)
+            }
+            this.setRenderer(IsoCodesRenderer(inputLanguage.editor))
+            this.editor = IsoCodesComboBoxEditor()
 
-        outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
-        outputFlag.icon = outputFlagIcon
+            model.selectedItem = model.items.find { it.code == input }
+        }
+
+        outputLanguage.apply {
+            val model = this.model as CollectionComboBoxModel<Lang>
+            isoCodes.forEach {
+                model.add(isoCodes)
+            }
+            this.setRenderer(IsoCodesRenderer(outputLanguage.editor))
+            this.editor = IsoCodesComboBoxEditor()
+
+            model.selectedItem = model.items.find { it.code == output }
+        }
+
+
+        outputFlagIcon = TranslationIcons.getFlag(output.lowercase()) ?: I18N
+
         translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
 
-        val inputFlagIcon = TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N
-        inputFlag.setIconWithAlignment(inputFlagIcon, SwingConstants.LEFT, SwingConstants.CENTER)
-
-        inputLanguage.document.addDocumentListener(object : DocumentAdapter() {
-            override fun textChanged(e: DocumentEvent) {
-                PropertiesComponent.getInstance().setValue(SAVE_INPUT, inputLanguage.text)
-                inputFlag.setIconWithAlignment(TranslationIcons.getFlag(inputLanguage.text.trim().lowercase()) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
+        inputLanguage.addItemListener { e ->
+            if (e.stateChange == SELECTED) {
+                val lang = e.item as Lang
+                PropertiesComponent.getInstance().setValue(SAVE_INPUT, lang.code)
             }
-        })
-        outputLanguage.document.addDocumentListener(object : DocumentAdapter() {
-
-            override fun textChanged(e: DocumentEvent) {
-                PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, outputLanguage.text)
-                this@TranslateView.outputFlagIcon = TranslationIcons.getFlag(outputLanguage.text.trim().lowercase()) ?: I18N
-                translateAction.putValue(Action.SMALL_ICON, this@TranslateView.outputFlagIcon)
-                translateAction.isEnabled = translateAction.isEnabled && (this@TranslateView.outputFlagIcon != null)
-
-                outputFlag.icon = this@TranslateView.outputFlagIcon
+        }
+        outputLanguage.addItemListener { e ->
+            if (e.stateChange == SELECTED) {
+                val lang = e.item as Lang
+                PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, lang.code)
+                outputFlagIcon = TranslationIcons.getFlag(lang.code)
+                translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
             }
-        })
+        }
 
         TranslationManager.registerListener(this)
     }
@@ -128,10 +156,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
           ?: return
 
         val translation = TranslationManager.translate(
-            outputLanguage.text.lowercase(),
-            inputLanguage.text.lowercase(),
-            txt
-        )
+            (outputLanguage.selectedItem as Lang).code,
+            (inputLanguage.selectedItem as Lang).code,
+            txt)
           ?: return
 
         tTranslation.text = translation.translated.trimIndent()
@@ -185,7 +212,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
                     this.editor = editor
-                    this.translateAction.isEnabled = outputFlag.text != "⛔"
+                    this.translateAction.isEnabled = true
                 }
                 else {
 
@@ -196,19 +223,13 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                         this.endOffset = literal.endOffset
                         this.document = editor.document
                         this.editor = editor
-                        this.translateAction.isEnabled = outputFlag.text != "⛔"
+                        this.translateAction.isEnabled = true
                     }
                     else {
+                        this.tSelection.text = ""
                         translateAction.isEnabled = false
                     }
                 }
-
-                tTranslation.text = ""
-                replaceAction.isEnabled = false
-
-                if (inputLanguage.text == "auto")
-                    inputFlag.icon = null
-
             }
         }
     }
@@ -236,7 +257,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
 
-        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 4, Insets(0, 0, 0, 0), 30 , 0))
+        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 2, Insets(0, 0, 0, 0), 30 , 0))
         main.add(languages,
             GridConstraints(
                 1, 0, 1, 2,
@@ -249,7 +270,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         languages.add(
             JBLabel("Input language :"),
             GridConstraints(
-                0, 0, 1, 2,
+                0, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
@@ -258,7 +279,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         languages.add(
             JBLabel("Output language :"),
             GridConstraints(
-                0, 2, 1, 2,
+                0, 1, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
@@ -275,29 +296,11 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
         languages.add(
-            inputFlag,
+            outputLanguage,
             GridConstraints(
                 1, 1, 1, 1,
                 ANCHOR_WEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
-                null, null, null
-            )
-        )
-        languages.add(
-            outputLanguage,
-            GridConstraints(
-                1, 2, 1, 1,
-                ANCHOR_WEST, FILL_NONE,
                 SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
-                null, null, null
-            )
-        )
-        languages.add(
-            outputFlag,
-            GridConstraints(
-                1, 3, 1, 1,
-                ANCHOR_WEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
             )
         )
@@ -313,16 +316,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
 
-        val marginBorder = EmptyBorder(Insets(5, 5, 5, 5))
-
-        tSelection = JBTextArea(15, 10).apply {
-            lineWrap = true; wrapStyleWord = true; border = marginBorder }
-        val sSelection = JBScrollPane(tSelection,
-            VERTICAL_SCROLLBAR_AS_NEEDED,
-            HORIZONTAL_SCROLLBAR_AS_NEEDED
-        )
+        tSelection = TextArea()
         main.add(
-            sSelection, GridConstraints(
+            JBScrollPane(tSelection, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED),
+            GridConstraints(
                 3, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -352,14 +349,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
 
-        tTranslation = JBTextArea(15, 10).apply {
-            lineWrap = true; wrapStyleWord = true; border= marginBorder }
-        val sTranslation = JBScrollPane(tTranslation,
-            VERTICAL_SCROLLBAR_AS_NEEDED,
-            HORIZONTAL_SCROLLBAR_AS_NEEDED
-        )
+        tTranslation = TextArea()
         main.add(
-            sTranslation, GridConstraints(
+            JBScrollPane(tTranslation, VERTICAL_SCROLLBAR_AS_NEEDED, HORIZONTAL_SCROLLBAR_AS_NEEDED),
+            GridConstraints(
                 5, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -383,7 +376,110 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         tTranslation.text = event.translation.translated.trimIndent()
 
-        if (inputLanguage.text == "auto")
-            inputFlag.setIconWithAlignment(TranslationIcons.getFlag(event.translation.sourceLanguageIndentified) ?: I18N, SwingConstants.LEFT, SwingConstants.CENTER)
+        if (inputLanguage.lang.code == "auto") {
+            val model = inputLanguage.model as CollectionComboBoxModel<Lang>
+            val find = model.items.find { it.code == event.translation.sourceLanguageIndentified }
+            if (find != null) {
+                inputLanguage.selectedItem = find
+            }
+        }
+    }
+}
+
+class IsoCodesRenderer(editor: ComboBoxEditor) : DefaultListCellRenderer() {
+
+    override fun getListCellRendererComponent(
+        list: JList<*>?,
+        value: Any?,
+        index: Int,
+        isSelected: Boolean,
+        cellHasFocus: Boolean,
+    ): Component {
+
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+
+        if (value is Lang) {
+
+            val originalIcon: Icon
+            text = value.name
+
+            if (value.code == "auto") {
+                originalIcon =  TranslationIcons.getFlag(" ")!!
+                font = font.deriveFont(Font.BOLD)
+            } else {
+                originalIcon =  TranslationIcons.getFlag(value.code)!!
+                font = font.deriveFont(Font.PLAIN)
+            }
+
+            val img = BufferedImage(18, originalIcon.iconHeight, BufferedImage.TYPE_INT_ARGB)
+            val g2d = img.createGraphics()
+            originalIcon.paintIcon(this, g2d, 0, 0)
+            g2d.dispose()
+
+            icon = ImageIcon(img)
+        }
+
+        border = BorderFactory.createEmptyBorder(0, 0, 0, UIUtil.getListCellHPadding())
+
+        return this
+    }
+}
+
+class IsoCodesComboBoxEditor : BasicComboBoxEditor() {
+
+    private val label = JBLabel()
+    private val panel = JBPanelWithEmptyText(BorderLayout())
+
+    init {
+        panel.add(label, BorderLayout.CENTER)
+        panel.isOpaque = true
+        panel.background = UIUtil.getListBackground()
+    }
+
+    override fun getEditorComponent(): Component {
+        return panel
+    }
+
+    override fun getItem(): Any? {
+        return label.text
+    }
+
+    override fun setItem(anObject: Any?) {
+        if (anObject is Lang) {
+            label.text = anObject.name
+            val originalIcon = TranslationIcons.getFlag(anObject.code)!!
+            val image = BufferedImage(18, originalIcon.iconHeight, BufferedImage.TYPE_INT_ARGB)
+            val g2d = image.createGraphics()
+            originalIcon.paintIcon(this.panel, g2d, 0, 0)
+            g2d.dispose()
+            label.icon = ImageIcon(image)
+        }
+    }
+
+    override fun selectAll() {
+        // Do nothing or implement text selection if needed
+    }
+
+    override fun addActionListener(l: ActionListener) {
+        // This might not be needed depending on your requirements
+    }
+
+    override fun removeActionListener(l: ActionListener) {
+        // This might not be needed depending on your requirements
+    }
+}
+
+data class Lang(val code: String, val name: String) {
+    override fun toString(): String {
+        return name
+    }
+}
+
+class TextArea : JBTextArea(15, 10) {
+    init {
+        lineWrap = true;
+        wrapStyleWord = true;
+        border = EmptyBorder(Insets(5, 5, 5, 5))
+        font = JBFont.create(JBUI.Fonts.label().deriveFont(12))
     }
 }

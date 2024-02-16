@@ -36,7 +36,7 @@ interface TranslationIcons {
                     ico = IconUtil.scale(ico, scaleRatio)
                 icon = ico
             } catch (ignored: Throwable) {
-                icon = textToIcon(country.uppercase(), (scaleRatio * 12f).toFloat(), -1, Color.GRAY)
+                icon = textToIcon(country.uppercase(), (scaleRatio * 11f).toFloat(), -1, Color.GRAY)
             }
             FLAGS[country + scaleRatio] = icon
 
