@@ -50,6 +50,17 @@
     </ul>
 
     <br/><br/>
+    <b>Coding and translating as you go  : </b><br/><br/>
+    <ul>
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_f7c795d2-a3f5-479a-941c-ec6048348a0c"
+              alt="Translation as you go" width="690" height="388"></p>
+       <li>Start coding, write in your native language</li>
+       <li>Click CTRL+T</li>
+       <li>Check translation</li>
+       <li>Click CTRL+T to appply translation !</li>
+    </ul>
+
+    <br/><br/>
     <b>Commit dialog translation : </b><br/><br/>
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_2cdfe59e-792c-4a2b-96f5-ce44098d9242"
@@ -147,12 +158,30 @@
         <group>
             <action class="io.nimbly.i18n.translation.TranslateVcsAction"
                     id="io.nimbly.i18n.translation.vcs.TranslateVcsAction"
-                    text="Translate" icon="ActionI18nIcons.I18N">
+                    text="Translate VCS" icon="ActionI18nIcons.I18N">
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
             </action>
 
-            <add-to-group group-id="Vcs.Commit.PrimaryCommitActions" anchor="first"/>
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </group>
+
+        <group>
+            <action class="io.nimbly.i18n.translation.TranslateErrorToInputAction"
+                    id="io.nimbly.i18n.translation.problem.TranslateErrorInputAction"
+                    text="Translate Error to input language" icon="ActionI18nIcons.I18N">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
+            </action>
+
+            <action class="io.nimbly.i18n.translation.TranslateErrorToOutputAction"
+                    id="io.nimbly.i18n.translation.problem.TranslateErrorToOutputAction"
+                    text="Translate Error to output language" icon="ActionI18nIcons.I18N">
+            </action>
+
+            <add-to-group group-id="ProblemsView.ToolWindow.Toolbar" anchor="last"/>
+            <add-to-group group-id="ProblemsView.ToolWindow.TreePopup" anchor="first"/>
+        </group>
+
+
     </actions>
 
 

@@ -45,10 +45,14 @@ import java.awt.Color
 import java.awt.Component
 import java.awt.Font
 import java.awt.Graphics
+import java.awt.image.BufferedImage
 import java.io.BufferedInputStream
+import java.io.ByteArrayOutputStream
 import java.net.URL
 import java.util.*
+import javax.imageio.ImageIO
 import javax.swing.Icon
+import javax.swing.ImageIcon
 import javax.swing.JLabel
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
@@ -154,22 +158,6 @@ fun SelectionModel.findOffsetFirstNotNull(): Int {
     return editor.selectionModel.selectionStart // Not found
 }
 
-//fun emojiFlag(countryCode: String): String {
-//    val cc = countryCode.uppercase()
-//    if (cc == "EN")
-//        return "\uD83C\uDDEC\uD83C\uDDE7"
-//    if (!cc.matches(Regex("\\A[A-Z]{2}\\z")))
-//        return ""
-//    return cc.codePoints()
-//    .toList()
-//    .map { c -> String(Character.toChars(c + 127397)) }
-//    .joinToString("")
-//}
-
-fun emojiFlag(languageCode: String): String {
-    return flagsMap.getOrDefault(languageCode.lowercase(), "⛔")
-}
-
 val languagesMap = mapOf(
     "af" to "Afrikaans",
     "ga" to "Irish",
@@ -235,64 +223,6 @@ val languagesMap = mapOf(
     "cy" to "Welsh",
     "id" to "Indonesian",
     "yi" to "Yiddish"
-)
-val flagsMap = mapOf(
-    "am" to "🇦🇲",
-    "ar" to "🇦🇪",
-    "eu" to "🇪🇺",
-    "bn" to "🇧🇩",
-    "en" to "🇬🇧",
-    "en-gb" to "🇬🇧",
-    "pt-br" to "🇧🇷",
-    "bg" to "🇧🇬",
-    "ca" to "🇦🇩",
-    "chr" to "🇺🇸",
-    "hr" to "🇭🇷",
-    "cs" to "🇨🇿",
-    "da" to "🇩🇰",
-    "nl" to "🇳🇱",
-    "et" to "🇪🇪",
-    "fil" to "🇵🇭",
-    "fi" to "🇫🇮",
-    "fr" to "🇫🇷",
-    "de" to "🇩🇪",
-    "el" to "🇬🇷",
-    "gu" to "🇮🇳",
-    "iw" to "🇮🇱",
-    "hi" to "🇮🇳",
-    "hu" to "🇭🇺",
-    "is" to "🇮🇸",
-    "id" to "🇮🇩",
-    "it" to "🇮🇹",
-    "ja" to "🇯🇵",
-    "kn" to "🇮🇳",
-    "ko" to "🇰🇷",
-    "lv" to "🇱🇻",
-    "lt" to "🇱🇹",
-    "ms" to "🇲🇾",
-    "ml" to "🇮🇳",
-    "mr" to "🇮🇳",
-    "no" to "🇳🇴",
-    "pl" to "🇵🇱",
-    "pt-pt" to "🇵🇹",
-    "ro" to "🇷🇴",
-    "ru" to "🇷🇺",
-    "sr" to "🇷🇸",
-    "zh-cn" to "🇨🇳",
-    "sk" to "🇸🇰",
-    "sl" to "🇸🇮",
-    "es" to "🇪🇸",
-    "sw" to "🇰🇪",
-    "sv" to "🇸🇪",
-    "ta" to "🇮🇳",
-    "te" to "🇮🇳",
-    "th" to "🇹🇭",
-    "zh-tw" to "🇹🇼",
-    "tr" to "🇹🇷",
-    "ur" to "🇵🇰",
-    "uk" to "🇺🇦",
-    "vi" to "🇻🇳",
-    "cy" to "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
 )
 
 val String.safeText
@@ -389,3 +319,46 @@ fun Document.getLineTextStartOffset(offset: Int): Int {
 val AnActionEvent.editor
     get() = CommonDataKeys.EDITOR.getData(dataContext)
         ?: DataManager.getInstance().dataContext.getData(PlatformDataKeys.EDITOR)
+
+fun Icon.toBase64(): String {
+    val bufferedImage = BufferedImage(iconWidth, iconHeight, BufferedImage.TYPE_INT_ARGB)
+
+    // Create a graphics context and paint the icon on the buffered image
+    val graphics = bufferedImage.createGraphics()
+    paintIcon(null, graphics, 0, 0)
+    graphics.dispose()
+
+    // Write the buffered image to a byte array
+    val byteArrayOutputStream = ByteArrayOutputStream()
+
+    // Determine the image format based on the icon data type
+    val imageFormat = if (this is ImageIcon) "jpg" else "png"
+
+    // Write the image data to the byte array
+    ImageIO.write(bufferedImage, imageFormat, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+
+    // Encode the byte array to a base64 string
+    val base64String = Base64.getEncoder().encodeToString(byteArray)
+
+    return base64String
+}
+
+fun Icon.xxxx(): String {
+    val bufferedImage = BufferedImage(this.iconWidth, this.iconHeight, BufferedImage.TYPE_INT_RGB)
+
+    // Create a graphics context and paint the icon on the buffered image
+    val graphics = bufferedImage.createGraphics()
+    this.paintIcon(null, graphics, 0, 0)
+    graphics.dispose()
+
+    // Write the buffered image to a byte array
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    ImageIO.write(bufferedImage, "png", byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+
+    // Encode the byte array to a base64 string
+    val base64String = Base64.getEncoder().encodeToString(byteArray)
+
+    return base64String
+}
