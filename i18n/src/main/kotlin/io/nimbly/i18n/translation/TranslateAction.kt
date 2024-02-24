@@ -82,8 +82,8 @@ open class TranslateAction : DumbAwareAction()  {
         var startOffset: Int
         var endOffset: Int
         var text: String?
-        var camelCase: Boolean = false
-        var selectionEnd = false
+        var camelCase = false
+        val selectionEnd: Boolean
         if (editor.selectionModel.hasSelection()) {
 
             val offsetFirstNotEmpty = editor.selectionModel.findOffsetFirstNotNull()
@@ -115,10 +115,10 @@ open class TranslateAction : DumbAwareAction()  {
             if (caret == startOffset
                     && (text.isBlank() || text.replace("[\\p{L}\\p{N}\\p{M}]+".toRegex(), "").isNotBlank() && caret > 1)) {
 
-                val l = file.findElementAt(caret - 1) ?: return
-                startOffset = l.textRange.startOffset
-                endOffset = l.textRange.endOffset
-                text = l.text
+                val ll = file.findElementAt(caret - 1) ?: return
+                startOffset = ll.textRange.startOffset
+                endOffset = ll.textRange.endOffset
+                text = ll.text
 
                 if (text.isBlank()) {
                     text = null
@@ -155,9 +155,9 @@ open class TranslateAction : DumbAwareAction()  {
             if (document.isWritable) {
 
                 val indented = joinToString.indentAs(document.getText(TextRange(startOffset, endOffset)))
-                executeWriteCommand(project, "Translating with Translation+", Runnable {
+                executeWriteCommand(project, "Translating with Translation+") {
                     document.replaceString(startOffset, endOffset, indented)
-                })
+                }
                 EditorFactory.getInstance().clearInlays()
 
                 if (selectionEnd)

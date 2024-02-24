@@ -5,19 +5,15 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.vcs.VcsDataKeys
-import com.intellij.util.ui.JButtonAction
 
-class TranslateVcsAction : JButtonAction("Translate") {
-
-    private val action = TranslateAction()
+class TranslateVcsAction : TranslateAction() {
 
     override fun update(event: AnActionEvent) {
-        action.doUpdate(event, editor(event))
-        super.update(event)
+        super.doUpdate(event, editor(event))
     }
 
     override fun actionPerformed(event: AnActionEvent) {
-        action.doActionPerformed(event, editor(event))
+        super.doActionPerformed(event, editor(event))
     }
 
     private fun editor(event: AnActionEvent): Editor? {

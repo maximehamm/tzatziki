@@ -151,7 +151,7 @@
                 <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
             </action>
 
-            <add-to-group group-id="Vcs.Commit.PrimaryCommitActions" anchor="first"/>
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
         </group>
     </actions>
 
