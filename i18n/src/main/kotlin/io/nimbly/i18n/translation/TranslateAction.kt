@@ -82,6 +82,7 @@ open class TranslateAction : DumbAwareAction()  {
         var startOffset: Int
         var endOffset: Int
         var text: String?
+        val format: EFormat
         var camelCase = false
         val selectionEnd: Boolean
         if (editor.selectionModel.hasSelection()) {
@@ -94,6 +95,7 @@ open class TranslateAction : DumbAwareAction()  {
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
+            format = editor.detectFormat()
 
             selectionEnd = caret == endOffset
         }
@@ -102,6 +104,7 @@ open class TranslateAction : DumbAwareAction()  {
             startOffset = 0
             endOffset = editor.document.textLength
             text = editor.document.text
+            format = EFormat.SIMPLE
 
             selectionEnd = caret == endOffset
         }
@@ -111,6 +114,7 @@ open class TranslateAction : DumbAwareAction()  {
             startOffset = l.textRange.startOffset
             endOffset = l.textRange.endOffset
             text = l.text
+            format = file.detectFormat()
 
             if (caret == startOffset
                     && (text.isBlank() || text.replace("[\\p{L}\\p{N}\\p{M}]+".toRegex(), "").isNotBlank() && caret > 1)) {
@@ -149,12 +153,15 @@ open class TranslateAction : DumbAwareAction()  {
                 .map { it.renderer as EditorHint }
                 .map { it.translation }
                 .reversed()
+                .map { it.trim().escapeFormat(format) }
                 .joinToString("\n")
 
             val document = editor.document
             if (document.isWritable) {
 
-                val indented = joinToString.indentAs(document.getText(TextRange(startOffset, endOffset)))
+                val t = document.getText(TextRange(startOffset, endOffset))
+                val indented = joinToString.indentAs(t)
+
                 executeWriteCommand(project, "Translating with Translation+") {
                     document.replaceString(startOffset, endOffset, indented)
                 }
@@ -173,7 +180,8 @@ open class TranslateAction : DumbAwareAction()  {
             //
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
-            val translation = TranslationManager.translate(output, input, text, camelCase = camelCase)
+
+            val translation = TranslationManager.translate(output, input, text.unescapeFormat(format), camelCase = camelCase)
                 ?: return
 
             EditorFactory.getInstance().clearInlays()

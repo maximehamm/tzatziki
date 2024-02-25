@@ -76,6 +76,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
+    private var format: EFormat = EFormat.SIMPLE
+
     private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
             translate()
@@ -182,7 +184,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
             val start = startOffset ?: return@executeWriteCommand
             val end = endOffset ?: return@executeWriteCommand
-            val translation = tTranslation.text ?: return@executeWriteCommand
+            val translation = tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
             val doc = document ?: return@executeWriteCommand
 
             val text = doc.getText(TextRange(start, end))
@@ -207,18 +209,21 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {
 
-                    this.tSelection.text = text.trimIndent()
+                    this.format = editor.detectFormat()
+                    this.tSelection.text = text.trimIndent().unescapeFormat(format)
                     this.startOffset = editor.selectionModel.selectionStart
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
                     this.editor = editor
+
                     this.translateAction.isEnabled = true
                 }
                 else {
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
-                        this.tSelection.text = literal.text.trimIndent()
+                        this.format = editor.detectFormat()
+                        this.tSelection.text = literal.text.trimIndent().unescapeFormat(format)
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset
                         this.document = editor.document
@@ -226,6 +231,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                         this.translateAction.isEnabled = true
                     }
                     else {
+                        this.format = EFormat.SIMPLE
                         this.tSelection.text = ""
                         translateAction.isEnabled = false
                     }
@@ -482,4 +488,13 @@ class TextArea : JBTextArea(15, 10) {
         border = EmptyBorder(Insets(5, 5, 5, 5))
         font = JBFont.create(JBUI.Fonts.label().deriveFont(12))
     }
+}
+
+enum class EFormat {
+    SIMPLE,
+    HTML,
+    CSV,
+    XML,
+    JSON,
+    PROPERTIES,
 }
