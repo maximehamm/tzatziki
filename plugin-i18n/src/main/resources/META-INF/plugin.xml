@@ -35,7 +35,8 @@
 
     <br/>
     <b>TIPS:</b><br/>
-    <b>&nbsp;• works also with “CamelCase” notation !</b><br/>
+    <b>&nbsp;• Supports file encoding for: HTML, JSON, CSV, XML, PROPERTIES</b><br/>
+    <b>&nbsp;• Supports styles : “CamelCase”, “SNAKE_CASE”, “snake_case” !</b><br/>
     <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
@@ -74,7 +75,7 @@
     <br/><br/>
     <b>Translation view : </b><br/><br/>
     <ul>
-       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_3fc62078-5f28-4ca0-a0c9-b4eb5fbab317"
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_557eac9e-bebf-4631-b787-781a7dc047c4"
               alt="Translation view" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to “Translation” view</li>

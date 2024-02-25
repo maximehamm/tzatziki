@@ -5,6 +5,7 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.project.DumbAwareAction
+import io.nimbly.i18n.util.EStyle
 import io.nimbly.i18n.util.TranslationIcons
 import io.nimbly.i18n.util.languagesMap
 
@@ -27,8 +28,11 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
     override fun update(event: AnActionEvent) {
 
         val lang = getLanguage()
+        val node = event.getData(PlatformCoreDataKeys.SELECTED_ITEM) as? ProblemNode
 
-        event.presentation.isEnabledAndVisible = lang != "auto"
+        event.presentation.isVisible = lang != "auto"
+        event.presentation.isEnabled = node != null
+
         event.presentation.icon = TranslationIcons.getFlag(lang)
         event.presentation.text = "Add ${languagesMap[lang] + " tooltip"}"
     }
@@ -39,7 +43,7 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
             ?: return
 
         val output = getLanguage()
-        val translation = TranslationManager.translate(output, "auto", node.text, EFormat.TEXT, camelCase = false)
+        val translation = TranslationManager.translate(output, "auto", node.text, EFormat.TEXT, EStyle.NORMAL)
 
         val url = javaClass.getResource("/io/nimbly/i18n/icons/languages/${output}.png")
 

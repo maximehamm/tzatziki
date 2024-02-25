@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n.util
 
+import ai.grazie.utils.isUppercase
 import com.intellij.codeInsight.completion.CompletionUtilCore
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -228,23 +229,6 @@ val languagesMap = mapOf(
 val String.safeText
     get() = this.replace(CompletionUtilCore.DUMMY_IDENTIFIER, "", true)
         .replace(CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED, "", true)
-
-fun String.fromCamelCase(): String {
-    val regex = Regex("(?<!^)(?=[A-Z])") // Lookahead assertion to split at capital letters
-    return this.split(regex).joinToString(" ")
-}
-
-fun String.toCamelCase(locale: Locale): String {
-    val words = this.split(" ")
-    val camelCased = StringBuilder(words[0].lowercase())
-
-    for (i in 1 until words.size) {
-        val word = words[i].lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-        camelCased.append(word)
-    }
-
-    return camelCased.toString()
-}
 
 fun textToIcon(text: String, size: Float, position: Int, foreground: Color): Icon {
     val icon = LayeredIcon(2)

@@ -13,6 +13,7 @@ dependencies {
     implementation("javazoom:jlayer:1.0.1")
     implementation("org.apache.commons:commons-text:1.11.0")
     implementation("org.unbescape:unbescape:1.1.6.RELEASE")
+    implementation("org.apache.commons:commons-csv:1.10.0")
 }
 
 tasks {

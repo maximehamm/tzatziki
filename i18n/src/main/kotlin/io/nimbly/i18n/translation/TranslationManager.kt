@@ -16,11 +16,11 @@ object TranslationManager {
         sourceLanguage: String,
         text: String,
         format: EFormat,
-        camelCase: Boolean = false,
+        style: EStyle,
     ): GTranslation? {
 
-        val t = if (camelCase) text.fromCamelCase() else text
-        val translationText = t.unescapeFormat(format)
+        val t = text.unescapeStyle(style)
+        val translationText = t.unescapeFormat(format, false)
 
         val translation =
             if (format.preserveQuotes && translationText.surroundedWith("\n"))
@@ -32,14 +32,12 @@ object TranslationManager {
 
         if (translation != null) {
 
-            translation.translated = translation.translated.replace("„", "\"")
+            translation.translated =
 
-            if (camelCase) {
-                translation.translated = translation.translated
-                    .replace("'", " ")
-                    .replace("-", " ")
-                    .toCamelCase(locale = Locale(sourceLanguage))
-            }
+                translation.translated
+                    .replace("„", "\"")
+                    .postTranslation(format)
+                    .escapeStyle(style, Locale(sourceLanguage))
 
             val event = TranslationEvent(translation)
             listeners.forEach { it.onTranslation(event) }

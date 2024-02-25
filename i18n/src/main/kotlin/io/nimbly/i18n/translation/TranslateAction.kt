@@ -83,7 +83,7 @@ open class TranslateAction : DumbAwareAction()  {
         var endOffset: Int
         var text: String?
         val format: EFormat
-        var camelCase = false
+        val style: EStyle
         val selectionEnd: Boolean
         if (editor.selectionModel.hasSelection()) {
 
@@ -96,6 +96,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
             format = editor.detectFormat()
+            style = text?.detectStyle() ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -105,6 +106,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.document.textLength
             text = editor.document.text
             format = EFormat.TEXT
+            style = EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -113,8 +115,21 @@ open class TranslateAction : DumbAwareAction()  {
             val l = file.findElementAt(caret) ?: return
             startOffset = l.textRange.startOffset
             endOffset = l.textRange.endOffset
-            text = l.text
-            format = file.detectFormat()
+
+            // Do not select multiple line
+            val lineStart = editor.document.getLineNumber(startOffset)
+            val lineEnd = editor.document.getLineNumber(endOffset)
+            if (lineStart != lineEnd) {
+
+                val ln = editor.document.getLineNumber(caret)
+                startOffset = editor.document.getLineStartOffset(ln) + editor.document.getLineTextStartOffset(caret)
+                endOffset = editor.document.getLineEndOffset(ln)
+
+                text = editor.document.getText(TextRange(startOffset, endOffset))
+            }
+            else {
+                text = l.text ?: ""
+            }
 
             if (caret == startOffset
                     && (text.isBlank() || text.replace("[\\p{L}\\p{N}\\p{M}]+".toRegex(), "").isNotBlank() && caret > 1)) {
@@ -129,7 +144,9 @@ open class TranslateAction : DumbAwareAction()  {
                 }
             }
 
-            camelCase = text!=null && !text.contains(" ") && text.fromCamelCase() != text
+            format = file.detectFormat()
+            style = text?.detectStyle() ?: EStyle.NORMAL
+
             selectionEnd = caret == endOffset
 
             editor.selectionModel.setSelection(startOffset, endOffset)
@@ -181,7 +198,7 @@ open class TranslateAction : DumbAwareAction()  {
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
 
-            val translation = TranslationManager.translate(output, input, text, format, camelCase = camelCase)
+            val translation = TranslationManager.translate(output, input, text, format, style)
                 ?: return
 
             EditorFactory.getInstance().clearInlays()

@@ -22,6 +22,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.openapi.editor.event.SelectionEvent
+import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
@@ -77,6 +79,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private var endOffset: Int? = null
 
     private var format: EFormat = EFormat.TEXT
+    private var style: EStyle = EStyle.NORMAL
 
     private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
@@ -97,7 +100,15 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             .eventMulticaster
             .addCaretListener(object : CaretListener {
                 override fun caretPositionChanged(event: CaretEvent) {
-                    refresh(event);
+                    refresh(event.editor)
+                }
+            }, ApplicationManager.getApplication())
+
+        EditorFactory.getInstance()
+            .eventMulticaster
+            .addSelectionListener(object : SelectionListener {
+                override fun selectionChanged(event: SelectionEvent) {
+                    refresh(event.editor)
                 }
             }, ApplicationManager.getApplication())
 
@@ -161,7 +172,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             (outputLanguage.selectedItem as Lang).code,
             (inputLanguage.selectedItem as Lang).code,
             txt,
-            format)
+            format,
+            style)
           ?: return
 
         tTranslation.text = translation.translated.trimIndent()
@@ -185,17 +197,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
             val start = startOffset ?: return@executeWriteCommand
             val end = endOffset ?: return@executeWriteCommand
-            val translation =
-                if (format.preserveQuotes && tTranslation.text?.surroundedWith("\"") == true) {
-                    tTranslation.text!!.removeSurrounding("\"").escapeFormat(format).surround("\"")
-                }
-                else {
-                    tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
-                }
+            val translation = tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
             val doc = document ?: return@executeWriteCommand
-
             val text = doc.getText(TextRange(start, end))
-
             val indented = translation.indentAs(text)
 
             doc.replaceString(start, end, indented)
@@ -214,9 +218,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             function(this)
         }
 
-    fun refresh(event: CaretEvent) {
-
-        val editor = event.editor
+    fun refresh(editor: Editor) {
 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
@@ -225,7 +227,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 if (text != null && text.trim().isNotEmpty()) {
 
                     this.format = editor.detectFormat()
-                    this.tSelection.text = text.trimIndent().unescapeFormat(format)
+                    this.style = text.trim().detectStyle()
+
+                    this.tSelection.text = text.trimIndent().unescapeFormat(format, true)
                     this.startOffset = editor.selectionModel.selectionStart
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
@@ -238,7 +242,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
                         this.format = editor.detectFormat()
-                        this.tSelection.text = literal.text.trimIndent().unescapeFormat(format)
+                        this.style = literal.text.detectStyle()
+                        this.tSelection.text = literal.text.trimIndent().unescapeFormat(format, true)
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset
                         this.document = editor.document
@@ -247,6 +252,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     }
                     else {
                         this.format = EFormat.TEXT
+                        this.style = EStyle.NORMAL
                         this.tSelection.text = ""
                         translateAction.isEnabled = false
                     }
