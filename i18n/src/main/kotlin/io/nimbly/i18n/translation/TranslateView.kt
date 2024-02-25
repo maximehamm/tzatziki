@@ -76,7 +76,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
-    private var format: EFormat = EFormat.SIMPLE
+    private var format: EFormat = EFormat.TEXT
 
     private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent?) {
@@ -160,7 +160,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         val translation = TranslationManager.translate(
             (outputLanguage.selectedItem as Lang).code,
             (inputLanguage.selectedItem as Lang).code,
-            txt)
+            txt,
+            format)
           ?: return
 
         tTranslation.text = translation.translated.trimIndent()
@@ -184,12 +185,18 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
             val start = startOffset ?: return@executeWriteCommand
             val end = endOffset ?: return@executeWriteCommand
-            val translation = tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
+            val translation =
+                if (format.preserveQuotes && tTranslation.text?.surroundedWith("\"") == true) {
+                    tTranslation.text!!.removeSurrounding("\"").escapeFormat(format).surround("\"")
+                }
+                else {
+                    tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
+                }
             val doc = document ?: return@executeWriteCommand
 
             val text = doc.getText(TextRange(start, end))
 
-            var indented = translation.indentAs(text)
+            val indented = translation.indentAs(text)
 
             doc.replaceString(start, end, indented)
 
@@ -198,6 +205,14 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             EditorFactory.getInstance().clearInlays()
         }
     }
+
+    fun String.preserveQuotes(format: EFormat, function: (s: String) -> String) =
+        if (format.preserveQuotes && this.startsWith("\"") && this.endsWith("\"")) {
+            "\"" + function(this.substring(1, this.length - 1)) + "\""
+        }
+        else {
+            function(this)
+        }
 
     fun refresh(event: CaretEvent) {
 
@@ -231,7 +246,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                         this.translateAction.isEnabled = true
                     }
                     else {
-                        this.format = EFormat.SIMPLE
+                        this.format = EFormat.TEXT
                         this.tSelection.text = ""
                         translateAction.isEnabled = false
                     }
@@ -490,11 +505,11 @@ class TextArea : JBTextArea(15, 10) {
     }
 }
 
-enum class EFormat {
-    SIMPLE,
-    HTML,
-    CSV,
-    XML,
-    JSON,
-    PROPERTIES,
+enum class EFormat(val preserveQuotes: Boolean) {
+    TEXT(false),
+    HTML(false),
+    CSV(true),
+    XML(false),
+    JSON(true),
+    PROPERTIES(false)
 }

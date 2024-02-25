@@ -1,7 +1,6 @@
 package io.nimbly.i18n.translation
 
-import io.nimbly.i18n.util.fromCamelCase
-import io.nimbly.i18n.util.toCamelCase
+import io.nimbly.i18n.util.*
 import java.util.*
 
 object TranslationManager {
@@ -16,12 +15,21 @@ object TranslationManager {
         targetLanguage: String,
         sourceLanguage: String,
         text: String,
+        format: EFormat,
         camelCase: Boolean = false,
     ): GTranslation? {
 
-        val translationText = if (camelCase) text.fromCamelCase() else text
+        val t = if (camelCase) text.fromCamelCase() else text
+        val translationText = t.unescapeFormat(format)
 
-        val translation = googleTranslate(targetLanguage, sourceLanguage, translationText)
+        val translation =
+            if (format.preserveQuotes && translationText.surroundedWith("\n"))
+                googleTranslate(targetLanguage, sourceLanguage, translationText.removeSurrounding("\""))
+                    ?.apply { this.translated = this.translated.surround("\"")}
+            else
+                googleTranslate(targetLanguage, sourceLanguage, translationText)
+
+
         if (translation != null) {
 
             translation.translated = translation.translated.replace("„", "\"")

@@ -39,7 +39,7 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
             ?: return
 
         val output = getLanguage()
-        val translation = TranslationManager.translate(output, "auto", node.text, camelCase = false)
+        val translation = TranslationManager.translate(output, "auto", node.text, EFormat.TEXT, camelCase = false)
 
         val url = javaClass.getResource("/io/nimbly/i18n/icons/languages/${output}.png")
 

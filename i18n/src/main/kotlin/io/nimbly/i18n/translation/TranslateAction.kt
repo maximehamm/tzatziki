@@ -104,7 +104,7 @@ open class TranslateAction : DumbAwareAction()  {
             startOffset = 0
             endOffset = editor.document.textLength
             text = editor.document.text
-            format = EFormat.SIMPLE
+            format = EFormat.TEXT
 
             selectionEnd = caret == endOffset
         }
@@ -181,7 +181,7 @@ open class TranslateAction : DumbAwareAction()  {
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
 
-            val translation = TranslationManager.translate(output, input, text.unescapeFormat(format), camelCase = camelCase)
+            val translation = TranslationManager.translate(output, input, text, format, camelCase = camelCase)
                 ?: return
 
             EditorFactory.getInstance().clearInlays()
