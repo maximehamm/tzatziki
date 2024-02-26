@@ -14,7 +14,6 @@
  */
 package io.nimbly.i18n.util
 
-import ai.grazie.utils.isUppercase
 import com.intellij.codeInsight.completion.CompletionUtilCore
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.AnActionEvent

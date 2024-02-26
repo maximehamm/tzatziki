@@ -1,6 +1,5 @@
 package io.nimbly.i18n.util
 
-import ai.grazie.utils.isUppercase
 import java.text.Normalizer
 import java.util.*
 
@@ -77,7 +76,7 @@ fun String.toCamelCase(locale: Locale): String {
 
     for (i in 1 until words.size) {
         val word =
-            if (words[i].isUppercase())
+            if (words[i].isUpperCase())
                 words[i]
             else
                 words[i].lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
@@ -85,6 +84,10 @@ fun String.toCamelCase(locale: Locale): String {
     }
 
     return camelCased.toString()
+}
+
+private fun String.isUpperCase(): Boolean {
+    return this.isNotBlank() && this.find { !it.isUpperCase() } == null
 }
 
 fun String.removeAccents(): String {
