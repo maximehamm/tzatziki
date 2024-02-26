@@ -16,6 +16,10 @@ package io.nimbly.i18n.translation
 
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
@@ -42,14 +46,11 @@ import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
-import java.awt.BorderLayout
-import java.awt.Component
-import java.awt.Font
-import java.awt.Insets
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
+import java.awt.*
+import java.awt.event.*
 import java.awt.event.ItemEvent.SELECTED
 import java.awt.image.BufferedImage
 import javax.swing.*
@@ -70,6 +71,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
     private val inputLanguage = ComboBox(CollectionComboBoxModel<Lang>())
     private val outputLanguage = ComboBox(CollectionComboBoxModel<Lang>())
+
+    private var inputLanguageAutoPrefered = false
+    private var inputLanguageProgramaticSelection = false;
 
     private var outputFlagIcon: Icon? = null
 
@@ -93,6 +97,12 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         }
     }.apply { isEnabled = false }
 
+    private val switchAction = object : AbstractAction("Switch", outputFlagIcon) {
+        override fun actionPerformed(e: ActionEvent?) {
+            // translate()
+        }
+    }
+
     init {
         setContent(initPanel())
 
@@ -114,12 +124,12 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         val isoCodes = languagesMap.map { Lang(it.key, it.value) }.sortedBy { it.name }
 
-        val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "en")
+        val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
+        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
         inputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
-            model.add(Lang("auto", "Automatic"))
+            model.add(Lang.AUTO)
             isoCodes.forEach {
                 model.add(isoCodes)
             }
@@ -128,6 +138,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
             model.selectedItem = model.items.find { it.code == input }
         }
+
+        inputLanguageAutoPrefered = (input == Lang.AUTO.code)
 
         outputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
@@ -140,7 +152,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             model.selectedItem = model.items.find { it.code == output }
         }
 
-
         outputFlagIcon = TranslationIcons.getFlag(output.lowercase()) ?: I18N
 
         translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
@@ -149,6 +160,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             if (e.stateChange == SELECTED) {
                 val lang = e.item as Lang
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, lang.code)
+                if (!inputLanguageProgramaticSelection)
+                    inputLanguageAutoPrefered = (Lang.AUTO == lang)
             }
         }
         outputLanguage.addItemListener { e ->
@@ -218,7 +231,17 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             function(this)
         }
 
+    fun swapLanguages() {
+        val input = if (this.inputLanguage.lang.isAuto()) Lang.DEFAULT else this.inputLanguage.lang
+        val output = this.outputLanguage.lang
+
+        this.inputLanguage.selectedItem = output
+        this.outputLanguage.selectedItem = input
+    }
+
     fun refresh(editor: Editor) {
+
+        restoreAutomatic()
 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
@@ -261,6 +284,22 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         }
     }
 
+    private fun restoreAutomatic() {
+        if (this.inputLanguageAutoPrefered && this.inputLanguage.selectedItem != Lang.AUTO) {
+            setInputLanguage(Lang.AUTO)
+        }
+    }
+
+    private fun setInputLanguage(lang: Lang) {
+        try {
+            this.inputLanguageProgramaticSelection = true
+            this.inputLanguage.selectedItem = lang
+        }
+        finally {
+            this.inputLanguageProgramaticSelection = false
+        }
+    }
+
     private fun initPanel(): JPanel {
 
         val main = JBPanelWithEmptyText(GridLayoutManager(6, 4))
@@ -284,7 +323,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
 
-        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 2, Insets(0, 0, 0, 0), 30 , 0))
+        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 3, Insets(0, 0, 0, 0), 5 , 0))
         main.add(languages,
             GridConstraints(
                 1, 0, 1, 2,
@@ -306,7 +345,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         languages.add(
             JBLabel("Output language :"),
             GridConstraints(
-                0, 1, 1, 1,
+                0, 2, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_FIXED,
                 null, null, null
@@ -322,10 +361,26 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 null, null, null
             )
         )
+
+        languages.add(
+            ActionButton(object : AnAction(ActionI18nIcons.SWAP) {
+                override fun actionPerformed(e: AnActionEvent) {
+                    swapLanguages()
+                }
+            }, Presentation("Swap Languages")
+                .apply { icon = ActionI18nIcons.SWAP }, "s", Dimension(16,16)),
+            GridConstraints(
+                1, 1, 1, 1,
+                ANCHOR_CENTER, FILL_NONE,
+                SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
+                null, null, null
+            )
+        )
+
         languages.add(
             outputLanguage,
             GridConstraints(
-                1, 1, 1, 1,
+                1, 2, 1, 1,
                 ANCHOR_WEST, FILL_NONE,
                 SIZEPOLICY_FIXED, SIZEPOLICY_FIXED,
                 null, null, null
@@ -403,11 +458,11 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         tTranslation.text = event.translation.translated.trimIndent()
 
-        if (inputLanguage.lang.code == "auto") {
+        if (inputLanguage.lang == Lang.AUTO) {
             val model = inputLanguage.model as CollectionComboBoxModel<Lang>
             val find = model.items.find { it.code == event.translation.sourceLanguageIndentified }
             if (find != null) {
-                inputLanguage.selectedItem = find
+                setInputLanguage(find)
             }
         }
     }
@@ -430,7 +485,7 @@ class IsoCodesRenderer(editor: ComboBoxEditor) : DefaultListCellRenderer() {
             val originalIcon: Icon
             text = value.name
 
-            if (value.code == "auto") {
+            if (value == Lang.AUTO) {
                 originalIcon =  TranslationIcons.getFlag(" ")!!
                 font = font.deriveFont(Font.BOLD)
             } else {
@@ -499,6 +554,13 @@ class IsoCodesComboBoxEditor : BasicComboBoxEditor() {
 data class Lang(val code: String, val name: String) {
     override fun toString(): String {
         return name
+    }
+
+    fun isAuto() = code == "auto"
+
+    companion object {
+        val DEFAULT = Lang("en", languagesMap["en"]!!)
+        val AUTO = Lang("auto", "Automatic")
     }
 }
 

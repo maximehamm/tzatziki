@@ -26,6 +26,7 @@ object ActionI18nIcons {
     @JvmField val TRANSLATION_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/translation-plus-16x16.png", javaClass)
 
     @JvmField val I18N = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/g_trans.png", javaClass)
+    @JvmField val SWAP = IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/swap.svg", javaClass)
     @JvmField val DICO = AddToDictionary
         //IconManager.getInstance().getIcon("/io/nimbly/i18n/icons/dictionary2.svg", javaClass)
 }

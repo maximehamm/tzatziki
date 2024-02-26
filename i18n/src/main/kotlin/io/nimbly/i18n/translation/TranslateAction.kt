@@ -195,8 +195,8 @@ open class TranslateAction : DumbAwareAction()  {
             //
             // Translate and show inlay
             //
-            val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
-            val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
+            val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
+            val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
             val translation = TranslationManager.translate(output, input, text, format, style)
                 ?: return

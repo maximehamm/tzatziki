@@ -11,13 +11,13 @@ import io.nimbly.i18n.util.languagesMap
 
 class TranslateErrorToInputAction : TranslateErrorAction() {
     override fun getLanguage(): String {
-        return PropertiesComponent.getInstance().getValue(SAVE_INPUT, "auto")
+        return PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
     }
 }
 
 class TranslateErrorToOutputAction : TranslateErrorAction() {
     override fun getLanguage(): String {
-        return PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
+        return PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
     }
 }
 
@@ -30,7 +30,7 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
         val lang = getLanguage()
         val node = event.getData(PlatformCoreDataKeys.SELECTED_ITEM) as? ProblemNode
 
-        event.presentation.isVisible = lang != "auto"
+        event.presentation.isVisible = lang != Lang.AUTO.code
         event.presentation.isEnabled = node != null
 
         event.presentation.icon = TranslationIcons.getFlag(lang)
@@ -43,7 +43,7 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
             ?: return
 
         val output = getLanguage()
-        val translation = TranslationManager.translate(output, "auto", node.text, EFormat.TEXT, EStyle.NORMAL)
+        val translation = TranslationManager.translate(output, Lang.AUTO.code, node.text, EFormat.TEXT, EStyle.NORMAL)
 
         val url = javaClass.getResource("/io/nimbly/i18n/icons/languages/${output}.png")
 
