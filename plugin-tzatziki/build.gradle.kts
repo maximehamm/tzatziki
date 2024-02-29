@@ -10,10 +10,12 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":i18n"))
 
-    implementation("com.openhtmltopdf:openhtmltopdf-core:1.0.8")
-    implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.8")
-    implementation("com.openhtmltopdf:openhtmltopdf-java2d:1.0.8")
-    implementation("com.openhtmltopdf:openhtmltopdf-svg-support:1.0.8")
+    implementation("com.openhtmltopdf:openhtmltopdf-core:1.0.10")
+    implementation("com.openhtmltopdf:openhtmltopdf-pdfbox:1.0.10")
+    implementation("com.openhtmltopdf:openhtmltopdf-java2d:1.0.10")
+    implementation("com.openhtmltopdf:openhtmltopdf-svg-support:1.0.10")
+
+
 
     implementation("org.freemarker:freemarker:2.3.30")
     implementation("com.github.rjeschke:txtmark:0.13")
@@ -84,5 +86,28 @@ tasks {
     publishPlugin {
         val t = "perm:aG1heGltZQ==.OTItOTI5Nw==.zJ37fiKDe5cwNCAN4tib1IvEtIuOis"
         token.set(t)
+    }
+}
+
+configurations.all {
+
+    resolutionStrategy {
+
+        // Fix for CVE-2020-11987, CVE-2019-17566, CVE-2022-41704, CVE-2022-42890
+        force("org.apache.xmlgraphics:batik-parser:1.16")
+        force("org.apache.xmlgraphics:batik-anim:1.16")
+        force("org.apache.xmlgraphics:batik-awt-util:1.16")
+        force("org.apache.xmlgraphics:batik-bridge:1.16")
+        force("org.apache.xmlgraphics:batik-codec:1.16")
+        force("org.apache.xmlgraphics:batik-constants:1.16")
+        force("org.apache.xmlgraphics:batik-css:1.16")
+        force("org.apache.xmlgraphics:batik-dom:1.16")
+        force("org.apache.xmlgraphics:batik-ext:1.16")
+        force("org.apache.xmlgraphics:batik-gvt:1.16")
+        force("org.apache.xmlgraphics:batik-parser:1.16")
+        force("org.apache.xmlgraphics:batik-script:1.16")
+        force("org.apache.xmlgraphics:batik-svg-dom:1.16")
+        force("org.apache.xmlgraphics:batik-transcoder:1.16")
+        force("org.apache.xmlgraphics:batik-util:1.16")
     }
 }
