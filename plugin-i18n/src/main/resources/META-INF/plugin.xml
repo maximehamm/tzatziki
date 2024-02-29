@@ -30,8 +30,8 @@
       • Use “Translation” view to select translation input and ouput language<br/>
       • Use “Dictionary” view to display full definition of selected word (english only)<br/>
     <br/>
-    <b>CTRL+T : Ask for translation (or menu “Edit > Translate”)</b><br/>
-    <b>CTRL+ALT : Ask for word definition (or menu “Edit > Search definition”)</b><br/>
+    <b>CTRL+T : Ask for translation (or menu “Edit &gt; Translate”)</b><br/>
+    <b>CTRL+ALT : Ask for word definition (or menu “Edit &gt; Search definition”)</b><br/>
 
     <br/>
     <b>TIPS:</b><br/>
@@ -45,9 +45,9 @@
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
               alt="Translation editor" width="690" height="388"></p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
-       <li>Go to menu “Edit > Translate” or use shortcut CTRL+T</li>
+       <li>Go to menu “Modifier &gt; Traduire” or use shortcut CTRL+T</li>
        <li>Check translation</li>
-       <li>Go to menu “Edit > Apply Translation” or use shortcut CTRL+T</li>
+       <li>Go to menu “Edit &gt; Apply Translation” or use shortcut CTRL+T</li>
     </ul>
 
     <br/><br/>
