@@ -327,21 +327,3 @@ fun Icon.toBase64(): String {
     return base64String
 }
 
-fun Icon.xxxx(): String {
-    val bufferedImage = BufferedImage(this.iconWidth, this.iconHeight, BufferedImage.TYPE_INT_RGB)
-
-    // Create a graphics context and paint the icon on the buffered image
-    val graphics = bufferedImage.createGraphics()
-    this.paintIcon(null, graphics, 0, 0)
-    graphics.dispose()
-
-    // Write the buffered image to a byte array
-    val byteArrayOutputStream = ByteArrayOutputStream()
-    ImageIO.write(bufferedImage, "png", byteArrayOutputStream)
-    val byteArray = byteArrayOutputStream.toByteArray()
-
-    // Encode the byte array to a base64 string
-    val base64String = Base64.getEncoder().encodeToString(byteArray)
-
-    return base64String
-}

@@ -96,7 +96,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
             format = editor.detectFormat()
-            style = text?.detectStyle() ?: EStyle.NORMAL
+            style = text?.removeQuotes()?.detectStyle() ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -145,7 +145,7 @@ open class TranslateAction : DumbAwareAction()  {
             }
 
             format = file.detectFormat()
-            style = text?.detectStyle() ?: EStyle.NORMAL
+            style = text?.removeQuotes()?.detectStyle() ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
 

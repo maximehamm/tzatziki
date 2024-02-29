@@ -250,7 +250,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 if (text != null && text.trim().isNotEmpty()) {
 
                     this.format = editor.detectFormat()
-                    this.style = text.trim().detectStyle()
+                    this.style = text.trim().removeQuotes().detectStyle()
 
                     this.tSelection.text = text.trimIndent().unescapeFormat(format, true)
                     this.startOffset = editor.selectionModel.selectionStart
@@ -265,7 +265,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
                         this.format = editor.detectFormat()
-                        this.style = literal.text.detectStyle()
+                        this.style = literal.text.removeQuotes().detectStyle()
                         this.tSelection.text = literal.text.trimIndent().unescapeFormat(format, true)
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset

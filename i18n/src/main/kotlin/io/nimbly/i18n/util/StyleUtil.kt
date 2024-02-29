@@ -49,11 +49,17 @@ fun String.escapeStyle(style: EStyle, locale: Locale): String {
             EStyle.CAMEL_CASE ->
                 this.toCamelCase(locale)
                     .removeAccents()
-                    .replace("[^a-zA-Z_]".toRegex(), "")
-            EStyle.SNAKE_CASE_LOWER, EStyle.SNAKE_CASE_UPPER ->
+                    .preserveQuotes { replace("[^a-zA-Z_]".toRegex(), "") }
+            EStyle.SNAKE_CASE_LOWER ->
                 this.replace(" ", "_")
                     .removeAccents()
-                    .replace("[^a-zA-Z_]".toRegex(), "")
+                    .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
+                    .lowercase(locale)
+            EStyle.SNAKE_CASE_UPPER ->
+                this.replace(" ", "_")
+                    .removeAccents()
+                    .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
+                    .uppercase(locale)
             else ->
                 this
         }
@@ -72,14 +78,14 @@ fun String.toCamelCase(locale: Locale): String {
         .replace("'", " ")
         .replace("-", " ")
         .split(" ")
-    val camelCased = StringBuilder(words[0].lowercase())
+    val camelCased = StringBuilder(words[0].lowercase(locale))
 
     for (i in 1 until words.size) {
         val word =
             if (words[i].isUpperCase())
                 words[i]
             else
-                words[i].lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+                words[i].lowercase(locale).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
         camelCased.append(word)
     }
 

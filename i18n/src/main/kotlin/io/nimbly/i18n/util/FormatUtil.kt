@@ -150,8 +150,11 @@ fun String.surroundedWith(s: String)
 fun String.surround(s: String)
         = s + this + s
 
-private fun String.preserveQuotes(format: EFormat, function: (s: String) -> String) =
-    if (format.preserveQuotes && this.startsWith("\"") && this.endsWith("\"")) {
+fun String.removeQuotes()
+        = this.removeSurrounding("\"").removeSurrounding("'")
+
+fun String.preserveQuotes(format: EFormat? = null, function: (s: String) -> String) =
+    if ((format == null || format.preserveQuotes) && this.startsWith("\"") && this.endsWith("\"")) {
         function(this.removeSurrounding("\"")).surround("\"")
     }
     else {
