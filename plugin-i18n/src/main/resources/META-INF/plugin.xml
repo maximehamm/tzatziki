@@ -125,6 +125,9 @@
         <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
+<!--        <renamerFactory implementation="com.intellij.refactoring.rename.impl.SymbolRenameTargetRenamerFactory"/>-->
+        <nameSuggestionProvider implementation="io.nimbly.i18n.translation.TranslationRenamerFactory"/>
+
         <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
 
         <iconMapper mappingFile="TranslationIconMappings.json"/>

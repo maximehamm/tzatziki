@@ -198,7 +198,7 @@ open class TranslateAction : DumbAwareAction()  {
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
-            val translation = TranslationManager.translate(output, input, text, format, style)
+            val translation = TranslationManager.translate(output, input, text, format, style, project)
                 ?: return
 
             EditorFactory.getInstance().clearInlays()

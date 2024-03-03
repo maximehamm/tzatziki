@@ -58,8 +58,6 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 import javax.swing.plaf.basic.BasicComboBoxEditor
-import javax.swing.text.BadLocationException
-import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter
 
 
 private val ComboBox<Lang>.lang: Lang
@@ -197,7 +195,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             (inputLanguage.selectedItem as Lang).code,
             txt,
             format,
-            style
+            style,
+            project
         )
             ?: return
 

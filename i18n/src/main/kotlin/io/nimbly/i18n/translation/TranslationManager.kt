@@ -1,5 +1,7 @@
 package io.nimbly.i18n.translation
 
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.Project
 import io.nimbly.i18n.util.*
 import java.util.*
 
@@ -17,6 +19,7 @@ object TranslationManager {
         text: String,
         format: EFormat,
         style: EStyle,
+        project: Project
     ): GTranslation? {
 
         val t = text.unescapeStyle(style)
@@ -40,7 +43,10 @@ object TranslationManager {
                     .escapeStyle(style, Locale(sourceLanguage))
 
             val event = TranslationEvent(translation)
-            listeners.forEach { it.onTranslation(event) }
+
+            DumbService.getInstance(project).smartInvokeLater {
+                listeners.forEach { it.onTranslation(event) }
+            }
         }
 
         return translation

@@ -5,6 +5,9 @@ import java.util.*
 
 enum class EStyle {
     NORMAL,
+    NORMAL_LOWER,
+    NORMAL_UPPER,
+    NORMAL_TITLED,
     CAMEL_CASE,
     SNAKE_CASE_LOWER,
     SNAKE_CASE_UPPER
@@ -24,6 +27,15 @@ fun String.detectStyle(): EStyle {
 
     if (this.fromCamelCase() != this)
         return EStyle.CAMEL_CASE
+
+    if (this.isLowerCase())
+        return EStyle.NORMAL_LOWER
+
+    if (this.isUpperCase())
+        return EStyle.NORMAL_UPPER
+
+    if (this.isTitleCase())
+        return EStyle.NORMAL_TITLED
 
     return EStyle.NORMAL
 }
@@ -49,7 +61,7 @@ fun String.escapeStyle(style: EStyle, locale: Locale): String {
             EStyle.CAMEL_CASE ->
                 this.toCamelCase(locale)
                     .removeAccents()
-                    .preserveQuotes { replace("[^a-zA-Z_]".toRegex(), "") }
+                    .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
             EStyle.SNAKE_CASE_LOWER ->
                 this.replace(" ", "_")
                     .removeAccents()
@@ -60,6 +72,13 @@ fun String.escapeStyle(style: EStyle, locale: Locale): String {
                     .removeAccents()
                     .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
                     .uppercase(locale)
+            EStyle.NORMAL_TITLED ->
+                this.toTitleCase(locale)
+            EStyle.NORMAL_UPPER ->
+                this.uppercase(locale)
+            EStyle.NORMAL_LOWER ->
+                this.lowercase(locale)
+            
             else ->
                 this
         }
@@ -85,16 +104,33 @@ fun String.toCamelCase(locale: Locale): String {
             if (words[i].isUpperCase())
                 words[i]
             else
-                words[i].lowercase(locale).replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+                words[i].lowercase(locale)
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
         camelCased.append(word)
     }
 
     return camelCased.toString()
 }
 
-private fun String.isUpperCase(): Boolean {
-    return this.isNotBlank() && this.find { !it.isUpperCase() } == null
+fun String.toTitleCase(locale: Locale): String {
+    if (this.length < 2)
+        return this
+    return this[0].uppercase(locale) + this.substring(1)
 }
+
+fun String.isUpperCase(): Boolean {
+    return this.isNotBlank() && this.all { it.isUpperCase() }
+}
+
+fun String.isLowerCase(): Boolean {
+    return this.isNotBlank() && this.all { it.isLowerCase() }
+}
+
+fun String.isTitleCase(): Boolean {
+    return this.isNotBlank() && this.length > 2
+        && this[0].isUpperCase() && this.substring(1).isLowerCase()
+}
+
 
 fun String.removeAccents(): String {
     val normalizedString = Normalizer.normalize(this, Normalizer.Form.NFD)

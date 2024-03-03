@@ -3,6 +3,7 @@ package io.nimbly.i18n.translation
 import com.intellij.analysis.problemsView.toolWindow.ProblemNode
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.project.DumbAwareAction
 import io.nimbly.i18n.util.EStyle
@@ -42,8 +43,11 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
         val node = event.getData(PlatformCoreDataKeys.SELECTED_ITEM) as? ProblemNode
             ?: return
 
+        val project = CommonDataKeys.PROJECT.getData(event.dataContext)
+            ?: return
+
         val output = getLanguage()
-        val translation = TranslationManager.translate(output, Lang.AUTO.code, node.text, EFormat.TEXT, EStyle.NORMAL)
+        val translation = TranslationManager.translate(output, Lang.AUTO.code, node.text, EFormat.TEXT, EStyle.NORMAL, project)
 
         val url = javaClass.getResource("/io/nimbly/i18n/icons/languages/${output}.png")
 
