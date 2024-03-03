@@ -50,17 +50,17 @@ import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
 import java.awt.*
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
+import java.awt.event.*
 import java.awt.event.ItemEvent.SELECTED
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
 import javax.swing.plaf.basic.BasicComboBoxEditor
+import javax.swing.text.BadLocationException
+import javax.swing.text.DefaultHighlighter.DefaultHighlightPainter
+
 
 private val ComboBox<Lang>.lang: Lang
     get() = this.selectedItem as Lang
@@ -100,12 +100,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         }
     }.apply { isEnabled = false }
 
-    private val switchAction = object : AbstractAction("Switch", outputFlagIcon) {
-        override fun actionPerformed(e: ActionEvent?) {
-            // translate()
-        }
-    }
-
     init {
         setContent(initPanel())
 
@@ -132,6 +126,12 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 startOffset = 0
                 endOffset = 0
                 restoreAutomatic()
+            }
+        })
+
+        tSelection.addFocusListener(object : FocusAdapter() {
+            override fun focusGained(e: FocusEvent?) {
+                tSelection.highlighter.removeAllHighlights()
             }
         })
 
@@ -295,16 +295,6 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             }
         }
     }
-
-    private var JBTextArea.textAndSelect
-        get() = this.text
-        set(s) {
-            this.text = s
-            if (s.isNotEmpty()) {
-                this.requestFocus()
-                this.selectAll()
-            }
-        }
 
     private fun restoreAutomatic() {
         if (this.inputLanguageAutoPrefered && this.inputLanguage.selectedItem != Lang.AUTO) {

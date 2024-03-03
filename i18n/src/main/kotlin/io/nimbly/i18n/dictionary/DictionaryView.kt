@@ -35,17 +35,11 @@ import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBHtmlEditorKit
 import com.intellij.util.ui.JBUI
 import icons.ActionI18nIcons
-import io.nimbly.i18n.util.clearInlays
-import io.nimbly.i18n.util.getLeafAtCursor
-import io.nimbly.i18n.util.getSelectedTextWithLeadingSpaces
-import io.nimbly.i18n.util.playAudio
+import io.nimbly.i18n.util.*
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Cursor.HAND_CURSOR
-import java.awt.event.ActionEvent
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
-import java.awt.event.KeyListener
+import java.awt.event.*
 import javax.swing.AbstractAction
 import javax.swing.JButton
 import javax.swing.JEditorPane
@@ -71,7 +65,9 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
         override fun actionPerformed(e: ActionEvent?) {
             searchDefinition()
         }
-    }.apply { isEnabled = false }
+    }.apply {
+        isEnabled = false
+    }
 
     init {
         setContent(initPanel())
@@ -89,6 +85,12 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
         tSelection.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent?) {
                 searchDefinitionAction.isEnabled = true
+            }
+        })
+
+        tSelection.addFocusListener(object : FocusAdapter() {
+            override fun focusGained(e: FocusEvent?) {
+                tSelection.highlighter.removeAllHighlights()
             }
         })
     }
@@ -132,7 +134,7 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
                 val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {
 
-                    this.tSelection.text = text.trimIndent()
+                    this.tSelection.textAndSelect = text.trimIndent()
                     this.startOffset = editor.selectionModel.selectionStart
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
@@ -144,7 +146,7 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
-                        this.tSelection.text = literal.text.trimIndent()
+                        this.tSelection.textAndSelect = literal.text.trimIndent()
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset
                         this.document = editor.document
@@ -206,8 +208,9 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
         )
 
         // Definition
+        val searchButton = JButton(searchDefinitionAction)
         main.add(
-            JButton(searchDefinitionAction),
+            searchButton,
             GridConstraints(
                 4, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
@@ -242,6 +245,9 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
                 null, null, null
             )
         )
+
+        main.focusTraversalPolicy = CustomTraversalPolicy(sDefinition, searchButton)
+        main.isFocusCycleRoot = true
 
         panel.layout = BorderLayout(10, 10)
         panel.border = JBUI.Borders.empty(10)

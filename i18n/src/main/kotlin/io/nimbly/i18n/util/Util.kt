@@ -41,10 +41,7 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import javazoom.jl.player.Player
-import java.awt.Color
-import java.awt.Component
-import java.awt.Font
-import java.awt.Graphics
+import java.awt.*
 import java.awt.image.BufferedImage
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -54,6 +51,9 @@ import javax.imageio.ImageIO
 import javax.swing.Icon
 import javax.swing.ImageIcon
 import javax.swing.JLabel
+import javax.swing.text.BadLocationException
+import javax.swing.text.DefaultHighlighter
+import javax.swing.text.JTextComponent
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
         = this.ifEmpty { null }
@@ -327,3 +327,42 @@ fun Icon.toBase64(): String {
     return base64String
 }
 
+var JTextComponent.textAndSelect
+    get() = this.text
+    set(s) {
+        this.text = s
+        if (s.isNotEmpty()) {
+
+            this.selectAll()
+
+            try {
+                this.highlighter.addHighlight(0, this.selectionEnd,
+                    DefaultHighlighter.DefaultHighlightPainter(selectionColor)
+                )
+            } catch (e: BadLocationException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+class CustomTraversalPolicy(private vararg val order: Component) : FocusTraversalPolicy() {
+
+    override fun getComponentAfter(focusCycleRoot: Container, aComponent: Component): Component {
+        val index = (order.indexOf(aComponent) + 1) % order.size
+        return order[index]
+    }
+
+    override fun getComponentBefore(focusCycleRoot: Container, aComponent: Component): Component {
+        var index = order.indexOf(aComponent) - 1
+        if (index < 0) {
+            index = order.size - 1
+        }
+        return order[index]
+    }
+
+    override fun getFirstComponent(focusCycleRoot: Container): Component = order[0]
+
+    override fun getLastComponent(focusCycleRoot: Container): Component = order.last()
+
+    override fun getDefaultComponent(focusCycleRoot: Container): Component = order[0]
+}

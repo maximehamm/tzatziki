@@ -63,5 +63,4 @@ class EditorHint(
     }
 
     fun sinceSeconds() = ChronoUnit.SECONDS.between(creationDate, LocalDateTime.now())
-
 }
