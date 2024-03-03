@@ -50,8 +50,11 @@ import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.util.*
 import java.awt.*
-import java.awt.event.*
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 import java.awt.event.ItemEvent.SELECTED
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
 import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
@@ -122,6 +125,16 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                 }
             }, ApplicationManager.getApplication())
 
+        tSelection.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent?) {
+                translateAction.isEnabled = true
+                replaceAction.isEnabled = false
+                startOffset = 0
+                endOffset = 0
+                restoreAutomatic()
+            }
+        })
+
         val isoCodes = languagesMap.map { Lang(it.key, it.value) }.sortedBy { it.name }
 
         val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
@@ -130,9 +143,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         inputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
             model.add(Lang.AUTO)
-            isoCodes.forEach {
-                model.add(isoCodes)
-            }
+            model.add(isoCodes)
             this.setRenderer(IsoCodesRenderer(inputLanguage.editor))
             this.editor = IsoCodesComboBoxEditor()
 
@@ -143,9 +154,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
         outputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
-            isoCodes.forEach {
-                model.add(isoCodes)
-            }
+            model.add(isoCodes)
             this.setRenderer(IsoCodesRenderer(outputLanguage.editor))
             this.editor = IsoCodesComboBoxEditor()
 
@@ -160,8 +169,10 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             if (e.stateChange == SELECTED) {
                 val lang = e.item as Lang
                 PropertiesComponent.getInstance().setValue(SAVE_INPUT, lang.code)
-                if (!inputLanguageProgramaticSelection)
+                if (!inputLanguageProgramaticSelection) {
                     inputLanguageAutoPrefered = (Lang.AUTO == lang)
+                    this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.PLAIN)
+                }
             }
         }
         outputLanguage.addItemListener { e ->
@@ -179,18 +190,20 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     fun translate() {
 
         val txt = tSelection.text
-          ?: return
+            ?: return
 
         val translation = TranslationManager.translate(
             (outputLanguage.selectedItem as Lang).code,
             (inputLanguage.selectedItem as Lang).code,
             txt,
             format,
-            style)
-          ?: return
+            style
+        )
+            ?: return
 
         tTranslation.text = translation.translated.trimIndent()
-        replaceAction.isEnabled = true
+
+        replaceAction.isEnabled = this.hasSelection()
 
         editor?.apply {
 
@@ -226,8 +239,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     fun String.preserveQuotes(format: EFormat, function: (s: String) -> String) =
         if (format.preserveQuotes && this.startsWith("\"") && this.endsWith("\"")) {
             "\"" + function(this.substring(1, this.length - 1)) + "\""
-        }
-        else {
+        } else {
             function(this)
         }
 
@@ -252,41 +264,52 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     this.format = editor.detectFormat()
                     this.style = text.trim().removeQuotes().detectStyle()
 
-                    this.tSelection.text = text.trimIndent().unescapeFormat(format, true)
+                    this.tSelection.textAndSelect = text.trimIndent().unescapeFormat(format, true)
                     this.startOffset = editor.selectionModel.selectionStart
                     this.endOffset = editor.selectionModel.selectionEnd
                     this.document = editor.document
                     this.editor = editor
 
                     this.translateAction.isEnabled = true
-                }
-                else {
+                } else {
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
                         this.format = editor.detectFormat()
                         this.style = literal.text.removeQuotes().detectStyle()
-                        this.tSelection.text = literal.text.trimIndent().unescapeFormat(format, true)
+                        this.tSelection.textAndSelect = literal.text.trimIndent().unescapeFormat(format, true)
                         this.startOffset = literal.startOffset
                         this.endOffset = literal.endOffset
                         this.document = editor.document
                         this.editor = editor
                         this.translateAction.isEnabled = true
-                    }
-                    else {
+                    } else {
                         this.format = EFormat.TEXT
                         this.style = EStyle.NORMAL
-                        this.tSelection.text = ""
-                        translateAction.isEnabled = false
+                        if (tSelection.text.isEmpty()) {
+                            this.tSelection.text = ""
+                            translateAction.isEnabled = false
+                        }
                     }
                 }
             }
         }
     }
 
+    private var JBTextArea.textAndSelect
+        get() = this.text
+        set(s) {
+            this.text = s
+            if (s.isNotEmpty()) {
+                this.requestFocus()
+                this.selectAll()
+            }
+        }
+
     private fun restoreAutomatic() {
         if (this.inputLanguageAutoPrefered && this.inputLanguage.selectedItem != Lang.AUTO) {
             setInputLanguage(Lang.AUTO)
+            this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.PLAIN)
         }
     }
 
@@ -294,8 +317,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         try {
             this.inputLanguageProgramaticSelection = true
             this.inputLanguage.selectedItem = lang
-        }
-        finally {
+        } finally {
             this.inputLanguageProgramaticSelection = false
         }
     }
@@ -306,7 +328,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
         main.add(
-            JBLabel("""<html>
+            JBLabel(
+                """<html>
                 Translating text :<br/>
                  &nbsp; ✓ <b>Set the 'input' language as iso code or use "auto"</b><br/>
                  &nbsp; ✓ <b>Set the 'output' language as iso code</b><br/>
@@ -323,8 +346,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             )
         )
 
-        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 3, Insets(0, 0, 0, 0), 5 , 0))
-        main.add(languages,
+        val languages = JBPanelWithEmptyText(GridLayoutManager(2, 3, Insets(0, 0, 0, 0), 5, 0))
+        main.add(
+            languages,
             GridConstraints(
                 1, 0, 1, 2,
                 ANCHOR_WEST, FILL_NONE,
@@ -368,7 +392,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     swapLanguages()
                 }
             }, Presentation("Swap Languages")
-                .apply { icon = ActionI18nIcons.SWAP }, "s", Dimension(16,16)),
+                .apply { icon = ActionI18nIcons.SWAP }, "s", Dimension(16, 16)
+            ),
             GridConstraints(
                 1, 1, 1, 1,
                 ANCHOR_CENTER, FILL_NONE,
@@ -454,7 +479,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     override fun onTranslation(event: TranslationEvent) {
 
         translateAction.isEnabled = true
-        replaceAction.isEnabled = true
+        replaceAction.isEnabled = this.hasSelection()
 
         tTranslation.text = event.translation.translated.trimIndent()
 
@@ -463,8 +488,17 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             val find = model.items.find { it.code == event.translation.sourceLanguageIndentified }
             if (find != null) {
                 setInputLanguage(find)
+                this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.ITALIC)
             }
         }
+    }
+
+    fun hasSelection(): Boolean {
+        val s = this.startOffset
+        val e = this.endOffset
+        if (s == null || e == null)
+            return false
+        return e - s > 0
     }
 }
 
@@ -486,10 +520,10 @@ class IsoCodesRenderer(editor: ComboBoxEditor) : DefaultListCellRenderer() {
             text = value.name
 
             if (value == Lang.AUTO) {
-                originalIcon =  TranslationIcons.getFlag(" ")!!
+                originalIcon = TranslationIcons.getFlag(" ")!!
                 font = font.deriveFont(Font.BOLD)
             } else {
-                originalIcon =  TranslationIcons.getFlag(value.code)!!
+                originalIcon = TranslationIcons.getFlag(value.code)!!
                 font = font.deriveFont(Font.PLAIN)
             }
 
@@ -560,7 +594,7 @@ data class Lang(val code: String, val name: String) {
 
     companion object {
         val DEFAULT = Lang("en", languagesMap["en"]!!)
-        val AUTO = Lang("auto", "Automatic")
+        val AUTO = Lang("auto", "Auto")
     }
 }
 

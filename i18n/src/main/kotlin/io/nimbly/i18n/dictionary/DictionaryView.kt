@@ -43,6 +43,9 @@ import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Cursor.HAND_CURSOR
 import java.awt.event.ActionEvent
+import java.awt.event.KeyAdapter
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import javax.swing.AbstractAction
 import javax.swing.JButton
 import javax.swing.JEditorPane
@@ -82,6 +85,12 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
             }, ApplicationManager.getApplication())
 
         DictionaryManager.registerListener(this)
+
+        tSelection.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent?) {
+                searchDefinitionAction.isEnabled = true
+            }
+        })
     }
 
     fun searchDefinition() {
@@ -144,11 +153,12 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
                         searchDefinitionAction.isEnabled = true
                     }
                     else {
-                        searchDefinitionAction.isEnabled = false
+                        searchDefinitionAction.isEnabled = !tSelection.text.isEmpty()
                     }
                 }
 
-                tDefinition.text = ""
+                if (tSelection.text.isEmpty())
+                    tDefinition.text = ""
             }
         }
     }

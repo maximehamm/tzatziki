@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.intellij.util.net.HttpConfigurable
 import io.nimbly.i18n.util.nullIfEmpty
 import java.io.BufferedReader
-import java.io.FileNotFoundException
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.URLEncoder
 
@@ -14,7 +14,7 @@ fun searchDefinition(
 
     try {
         return callUrlAndParseResult(source)
-    } catch (e: FileNotFoundException) {
+    } catch (e: IOException) {
         return DefinitionResult(EStatut.NOT_FOUND)
     }
 }
