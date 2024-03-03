@@ -331,8 +331,8 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             JBLabel(
                 """<html>
                 Translating text :<br/>
-                 &nbsp; ✓ <b>Set the 'input' language as iso code or use "auto"</b><br/>
-                 &nbsp; ✓ <b>Set the 'output' language as iso code</b><br/>
+                 &nbsp; ✓ <b>Select the “input” language or use “auto”</b><br/>
+                 &nbsp; ✓ <b>Select the “output” language</b><br/>
                  &nbsp; ✓ <b>Select some text in the editor</b> (<i>Gherkin, Java, etc.</i>)<br/>
                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string literal to translate</b><br/>
                  <br/>
