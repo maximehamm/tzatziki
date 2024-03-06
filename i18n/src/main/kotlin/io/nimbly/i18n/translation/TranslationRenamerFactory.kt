@@ -40,14 +40,6 @@ class TranslationRenamerFactory : NameSuggestionProvider {
                     result.add(gTranslation.translated)
 
             }
-
-//            DumbService.getInstance(element.project).runWhenSmart {
-//                ApplicationManager.getApplication().invokeLater {
-//                    Thread.sleep(3000)
-//                    result.add(translation.translated);
-//                }
-//            }
-
         }
 
         return null
