@@ -4,13 +4,14 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "4.0.2"
+version = "5.0.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>5.0.0</b> Smart replacement everywhere using refactoring !</li>
          <li><b>4.0.0</b> Escaping text depending on format : HTML, JSON, CSV, XML, PROPERTIES</li>
          <li><b>3.0.0</b> Commit dialog translation </li>
          <li><b>2.0.0</b> Dictionary definitions</li>

@@ -37,13 +37,19 @@
     <b>TIPS:</b><br/>
     <b>&nbsp;• Supports file encoding for: HTML, JSON, CSV, XML, PROPERTIES</b><br/>
     <b>&nbsp;• Supports styles: “CamelCase”, “SNAKE_CASE”, “snake_case” !</b><br/>
+    <b>&nbsp;• Smart replacement everywhere using refactoring :) </b><br/>
     <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
     <b>Editor translation : </b><br/><br/>
     <ul>
-       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
-              alt="Translation editor" width="690" height="388"></p>
+       <p>
+          <img src="https://plugins.jetbrains.com/files/23656/screenshot_666335c3-7146-4f1f-bf9d-55e552e6d528"
+              alt="Translation editor" width="690" height="388">
+          <img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
+              alt="Translation editor" width="690" height="388">
+       </p>
+
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to menu “Modifier &gt; Traduire” or use shortcut CTRL+T</li>
        <li>Check translation</li>
@@ -125,7 +131,6 @@
         <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
-<!--        <renamerFactory implementation="com.intellij.refactoring.rename.impl.SymbolRenameTargetRenamerFactory"/>-->
         <nameSuggestionProvider implementation="io.nimbly.i18n.translation.TranslationRenamerFactory"/>
 
         <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>

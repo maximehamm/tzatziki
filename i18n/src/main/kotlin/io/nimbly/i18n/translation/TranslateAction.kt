@@ -25,8 +25,17 @@ import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vcs.VcsDataKeys
+import com.intellij.psi.PsiNamedElement
+import com.intellij.psi.PsiReference
+import com.intellij.refactoring.InplaceRefactoringContinuation
+import com.intellij.refactoring.RefactoringFactory
+import com.intellij.refactoring.RefactoringUiService
+import com.intellij.refactoring.rename.inplace.InplaceRefactoring
+import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
+import java.util.LinkedHashSet
 
 @Suppress("MissingActionUpdateThread")
 open class TranslateAction : DumbAwareAction()  {
@@ -174,21 +183,44 @@ open class TranslateAction : DumbAwareAction()  {
                 .joinToString("\n")
 
             val document = editor.document
-            if (document.isWritable) {
+            if (!document.isWritable) return
 
-                val t = document.getText(TextRange(startOffset, endOffset))
-                val indented = joinToString.indentAs(t)
+            val t = document.getText(TextRange(startOffset, endOffset))
+            val indented = joinToString.indentAs(t)
 
+            var doRename = false
+            var elt = file?.findElementAt(startOffset)
+            if (elt != null && elt.startOffset == startOffset && elt.endOffset == endOffset) {
+                if (elt !is PsiNamedElement) {
+                    elt = elt.parent
+                }
+                if (elt is PsiReference) {
+                    elt = elt.resolve()
+                }
+                if (elt != null && canRename(project, elt))
+                    doRename = true
+            }
+
+            if (doRename) {
+
+                val rename = RefactoringFactory.getInstance(project).createRename(elt!!, indented, false, true)
+                val usages = rename.findUsages()
+                rename.doRefactoring(usages)
+
+//                val d = RefactoringUiService.getInstance().createRenameRefactoringDialog(
+//                    project, elt, elt, editor)
+//                d.performRename(indented)
+            }
+            else {
                 executeWriteCommand(project, "Translating with Translation+") {
                     document.replaceString(startOffset, endOffset, indented)
                 }
-                EditorFactory.getInstance().clearInlays()
-
-                if (selectionEnd)
-                    editor.selectionModel.removeSelection()
             }
 
-            return
+            EditorFactory.getInstance().clearInlays()
+            if (selectionEnd)
+                editor.selectionModel.removeSelection()
+
         }
         else {
 
