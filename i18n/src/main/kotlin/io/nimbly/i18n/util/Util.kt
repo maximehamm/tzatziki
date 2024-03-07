@@ -335,13 +335,13 @@ var JTextComponent.textAndSelect
 
             this.selectAll()
 
-            try {
-                this.highlighter.addHighlight(0, this.selectionEnd,
-                    DefaultHighlighter.DefaultHighlightPainter(selectionColor)
-                )
-            } catch (e: BadLocationException) {
-                e.printStackTrace()
-            }
+            // try {
+            //     this.highlighter.addHighlight(0, this.selectionEnd,
+            //         DefaultHighlighter.DefaultHighlightPainter(selectionColor)
+            //     )
+            // } catch (e: BadLocationException) {
+            //     e.printStackTrace()
+            // }
         }
     }
 
