@@ -207,9 +207,9 @@ open class TranslateAction : DumbAwareAction()  {
                 val usages = rename.findUsages()
                 rename.doRefactoring(usages)
 
-//                val d = RefactoringUiService.getInstance().createRenameRefactoringDialog(
-//                    project, elt, elt, editor)
-//                d.performRename(indented)
+                // val d = RefactoringUiService.getInstance().createRenameRefactoringDialog(
+                //     project, elt, elt, editor)
+                // d.performRename(indented)
             }
             else {
                 executeWriteCommand(project, "Translating with Translation+") {

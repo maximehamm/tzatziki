@@ -48,7 +48,7 @@ import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.event.HyperlinkEvent
 
-class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false), DictionaryListener {
+class DictionaryView : SimpleToolWindowPanel(true, false), DictionaryListener {
 
     private val panel = JBPanelWithEmptyText()
 
@@ -127,9 +127,13 @@ class DictionaryView(val project: Project) : SimpleToolWindowPanel(true, false),
     fun refresh(event: CaretEvent) {
 
         val editor = event.editor
+        val project = editor.project ?: return
 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
+
+                if (project.isDisposed)
+                    return@performWhenAllCommitted
 
                 val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {

@@ -34,6 +34,10 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
+import com.intellij.psi.PsiReference
+import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.components.JBLabel
@@ -63,7 +67,7 @@ import javax.swing.plaf.basic.BasicComboBoxEditor
 private val ComboBox<Lang>.lang: Lang
     get() = this.selectedItem as Lang
 
-class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), TranslationListener {
+class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     private val panel = JBPanelWithEmptyText()
 
@@ -80,6 +84,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
     private var editor: Editor? = null
     private var document: Document? = null
+    private var selectedElement: PsiElement?= null
     private var startOffset: Int? = null
     private var endOffset: Int? = null
 
@@ -87,13 +92,13 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     private var style: EStyle = EStyle.NORMAL
 
     private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
-        override fun actionPerformed(e: ActionEvent?) {
+        override fun actionPerformed(e: ActionEvent) {
             translate()
         }
     }.apply { isEnabled = false }
 
     private val replaceAction = object : AbstractAction("Replace selection", AllIcons.Actions.MenuPaste) {
-        override fun actionPerformed(e: ActionEvent?) {
+        override fun actionPerformed(e: ActionEvent) {
             replace()
         }
     }.apply { isEnabled = false }
@@ -121,6 +126,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             override fun keyPressed(e: KeyEvent?) {
                 translateAction.isEnabled = true
                 replaceAction.isEnabled = false
+                selectedElement = null
                 startOffset = 0
                 endOffset = 0
                 restoreAutomatic()
@@ -196,7 +202,7 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
             txt,
             format,
             style,
-            project
+            editor?.project
         )
             ?: return
 
@@ -218,20 +224,50 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
 
     fun replace() {
 
-        executeWriteCommand(project, "Translating with Cucumber+") {
+        val translation = tTranslation.text?.escapeFormat(format) ?: return
 
-            val start = startOffset ?: return@executeWriteCommand
-            val end = endOffset ?: return@executeWriteCommand
-            val translation = tTranslation.text?.escapeFormat(format) ?: return@executeWriteCommand
-            val doc = document ?: return@executeWriteCommand
-            val text = doc.getText(TextRange(start, end))
-            val indented = translation.indentAs(text)
+        if (selectedElement != null && this.editor!=null) {
 
-            doc.replaceString(start, end, indented)
+            var elt: PsiElement? = selectedElement
+            if (elt !is PsiNamedElement) {
+                elt = selectedElement!!.parent
+            }
+            if (elt is PsiReference) {
+                elt = elt.resolve()
+            }
 
-            replaceAction.isEnabled = false
+            if (elt != null && canRename(elt.project, elt)) {
 
-            EditorFactory.getInstance().clearInlays()
+                editor!!.caretModel.moveToOffset(startOffset!! + 1)
+
+                val rename = RefactoringFactory.getInstance(elt.project).createRename(elt, translation, false, true)
+                val usages = rename.findUsages()
+                rename.doRefactoring(usages)
+
+                // val d = RefactoringUiService.getInstance().createRenameRefactoringDialog(
+                //         project, elt, elt, editor)
+                // d.performRename(translation)
+
+                return
+            }
+        }
+
+        val  project = editor?.project
+        if (project != null) {
+            executeWriteCommand(project, "Translation+") {
+
+                val start = startOffset ?: return@executeWriteCommand
+                val end = endOffset ?: return@executeWriteCommand
+                val doc = document ?: return@executeWriteCommand
+                val text = doc.getText(TextRange(start, end))
+                val indented = translation.indentAs(text)
+
+                doc.replaceString(start, end, indented)
+
+                replaceAction.isEnabled = false
+
+                EditorFactory.getInstance().clearInlays()
+            }
         }
     }
 
@@ -253,12 +289,21 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
     fun refresh(editor: Editor) {
 
         restoreAutomatic()
+        val project = editor.project ?: return
 
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
+                if (project.isDisposed)
+                    return@performWhenAllCommitted
+
                 val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {
+
+                    val literal = editor.getLeafAtCursor()
+                    if (literal == null || literal.startOffset != startOffset || literal.endOffset != endOffset) {
+                        this.selectedElement = null
+                    }
 
                     this.format = editor.detectFormat()
                     this.style = text.trim().removeQuotes().detectStyle()
@@ -270,10 +315,12 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                     this.editor = editor
 
                     this.translateAction.isEnabled = true
-                } else {
+                }
+                else {
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
+                        this.selectedElement = literal
                         this.format = editor.detectFormat()
                         this.style = literal.text.removeQuotes().detectStyle()
                         this.tSelection.textAndSelect = literal.text.trimIndent().unescapeFormat(format, true)
@@ -282,7 +329,9 @@ class TranslateView(val project: Project) : SimpleToolWindowPanel(true, false), 
                         this.document = editor.document
                         this.editor = editor
                         this.translateAction.isEnabled = true
-                    } else {
+                    }
+                    else {
+                        this.selectedElement = null
                         this.format = EFormat.TEXT
                         this.style = EStyle.NORMAL
                         if (tSelection.text.isEmpty()) {

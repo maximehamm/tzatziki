@@ -29,11 +29,11 @@ class TranslationPlusFactory : ToolWindowFactory {
         val contentFactory = ApplicationManager.getApplication().getService(ContentFactory::class.java)
 
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(TranslateView(project), "Translation", false)
+            contentFactory.createContent(TranslateView(), "Translation", false)
         )
 
         toolWindow.contentManager.addContent(
-            contentFactory.createContent(DictionaryView(project), "Dictionary", false)
+            contentFactory.createContent(DictionaryView(), "Dictionary", false)
         )
 
     }

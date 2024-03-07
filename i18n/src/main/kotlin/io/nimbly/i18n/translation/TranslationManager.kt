@@ -19,7 +19,7 @@ object TranslationManager {
         text: String,
         format: EFormat,
         style: EStyle,
-        project: Project
+        project: Project?
     ): GTranslation? {
 
         val t = text.unescapeStyle(style)
@@ -44,7 +44,12 @@ object TranslationManager {
 
             val event = TranslationEvent(translation)
 
-            DumbService.getInstance(project).smartInvokeLater {
+            if (project != null) {
+                DumbService.getInstance(project).smartInvokeLater {
+                    listeners.forEach { it.onTranslation(event) }
+                }
+            }
+            else {
                 listeners.forEach { it.onTranslation(event) }
             }
         }
