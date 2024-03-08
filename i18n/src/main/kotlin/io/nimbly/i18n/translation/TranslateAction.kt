@@ -80,18 +80,33 @@ open class TranslateAction : DumbAwareAction()  {
 
     fun doActionPerformed(event: AnActionEvent, editorRef: Editor?) {
 
-        val editor = editorRef ?: event.editor ?: return
+        val file = event.getData(CommonDataKeys.PSI_FILE)
+        val editor = editorRef ?: event.editor
+            ?: return
+        val project = CommonDataKeys.PROJECT.getData(event.dataContext) ?: editor.project ?: file?.project
+            ?: return
 
+        val editorImpl = event.getData(CommonDataKeys.EDITOR) as? EditorImpl
         val isVCS = VcsDataKeys.COMMIT_MESSAGE_DOCUMENT.getData(event.dataContext) != null
+        val caret = CommonDataKeys.CARET.getData(event.dataContext)?.offset
+
+        doActionPerformed(project, editor, file, editorImpl, caret, isVCS)
+    }
+
+    fun doActionPerformed(
+        project: Project,
+        editor: Editor,
+        file: PsiFile?,
+        editorImpl: EditorImpl?,
+        caret: Int?,
+        isVCS: Boolean,
+        withInlineTranslation: Boolean = true)
+    {
 
         val inlayModel = editor.inlayModel
 
-        val editorImpl = event.getData(CommonDataKeys.EDITOR) as? EditorImpl
         val zoom = editorImpl?.fontSize?.let { it / 13.0 } ?: 1.0
-        val file = event.getData(CommonDataKeys.PSI_FILE)
-        val caret = CommonDataKeys.CARET.getData(event.dataContext)?.offset
 
-        val project = CommonDataKeys.PROJECT.getData(event.dataContext) ?: editor.project ?: file?.project ?: return
         var startOffset: Int
         var endOffset: Int
         var text: String?
@@ -194,7 +209,7 @@ open class TranslateAction : DumbAwareAction()  {
 
             //
             // Translate and show inlay
-            displayInlays(translation, editor, startOffset, zoom, false)
+            displayInlays(translation, editor, startOffset, zoom, !withInlineTranslation)
 
             //
             // Display inlays for references also
@@ -344,15 +359,18 @@ open class TranslateAction : DumbAwareAction()  {
             if (canRename(elt))
                 doRename = true
         }
+        elt ?: return
 
         if (doRename && refactoringSetup.useRefactoring && refactoringSetup.preview) {
 
+            elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
             val d = RefactoringUiService.getInstance()
                 .createRenameRefactoringDialog(project, elt, elt, editor)
             d.performRename(indented)
         }
         else if (doRename && refactoringSetup.useRefactoring && !refactoringSetup.preview) {
 
+            elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
             val rename = RefactoringFactory.getInstance(project)
                 .createRename(elt!!, indented, refactoringSetup.searchInComments, true)
             val usages = rename.findUsages()

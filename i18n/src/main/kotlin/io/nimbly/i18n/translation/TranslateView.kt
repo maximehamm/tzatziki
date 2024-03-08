@@ -28,6 +28,7 @@ import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
+import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -36,6 +37,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
+import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.components.*
@@ -196,35 +198,41 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             ctxt.style,
             ctxt.project
         )
-            ?: return
+        ?: return
 
         tTranslation.text = translation.translated.trimIndent()
 
         replaceAction.isEnabled = ctxt.hasSelection()
 
-        ctxt.editor?.apply {
-
-            EditorFactory.getInstance().clearInlays()
-
-            val start = ctxt.startOffset
-            val end = ctxt.endOffset
-            if (start != null && end != null) {
-                this.selectionModel.setSelection(start, end)
-            }
+        val project = ctxt.project
+        val editor = ctxt.editor
+        if (project != null && editor != null) {
+            TranslateAction().doActionPerformed(
+                project = project,
+                editor = editor,
+                file = ctxt.selectedElement?.containingFile,
+                editorImpl = ctxt.editor as? EditorImpl,
+                caret = ctxt.startOffset,
+                isVCS = false,
+                withInlineTranslation = false
+            )
         }
     }
 
     fun replace() {
 
+        EditorFactory.getInstance().clearInlays()
+
         val translation = tTranslation.text?.escapeFormat(ctxt.format) ?: return
 
         if (ctxt.selectedElement != null && ctxt.editor!=null) {
 
-            val elt = ctxt.selectedElement.findRenamable()
+            var elt = ctxt.selectedElement.findRenamable()
             if (refactoringModel.useRefactoring && elt != null && canRename(elt)) {
 
                 ctxt.editor!!.caretModel.moveToOffset(ctxt.startOffset!! + 1)
 
+                elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, ctxt.editor)?.findRenamable()  ?: elt
                 if (refactoringModel.preview) {
                      val d = RefactoringUiService.getInstance()
                          .createRenameRefactoringDialog(elt.project, elt, elt, ctxt.editor)
