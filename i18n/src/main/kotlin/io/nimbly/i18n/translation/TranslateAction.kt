@@ -38,6 +38,7 @@ import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.refactoring.util.NonCodeUsageInfo
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 
@@ -245,13 +246,20 @@ open class TranslateAction : DumbAwareAction()  {
                         }
                     }
 
-                    usages.forEach { ref ->
-                        val r = ref.reference?.element // ?.findRenamable()
-                        if (r != null && r.containingFile == file) {
-                            PsiTreeUtil.collectElements(r) {
-                                if (it is PsiReference && it.resolve() == elt)
-                                    targets.add(it.startOffset + it.rangeInElement.startOffset)
-                                false
+                    usages.forEach { usage ->
+                        if (usage is NonCodeUsageInfo) {
+                            val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
+                            if (o >= 0)
+                                targets.add(o)
+                        }
+                        else {
+                            val r = usage.reference?.element // ?.findRenamable()
+                            if (r != null && r.containingFile == file) {
+                                PsiTreeUtil.collectElements(r) {
+                                    if (it is PsiReference && it.resolve() == elt)
+                                        targets.add(it.startOffset + it.rangeInElement.startOffset)
+                                    false
+                                }
                             }
                         }
                     }
