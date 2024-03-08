@@ -26,6 +26,10 @@ import java.net.URLEncoder
 const val SAVE_INPUT = "io.nimbly.tzatziki.translation.input"
 const val SAVE_OUTPUT = "io.nimbly.tzatziki.translation.output"
 
+const val REFACTORING = "io.nimbly.tzatziki.translation.refactoring"
+const val REFACTORING_PREVIEW = "io.nimbly.tzatziki.translation.refactoring.preview"
+const val REFACTORING_SEARCH_IN_COMMENT = "io.nimbly.tzatziki.translation.refactoring.search_in_comment"
+
 /**
  * Google translate
  *

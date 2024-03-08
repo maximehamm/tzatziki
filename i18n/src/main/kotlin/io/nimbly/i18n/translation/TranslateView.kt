@@ -29,7 +29,6 @@ import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.project.DumbService
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.TextRange
@@ -38,8 +37,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiReference
 import com.intellij.refactoring.RefactoringFactory
+import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.CollectionComboBoxModel
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.ui.components.JBScrollPane
@@ -69,6 +70,9 @@ private val ComboBox<Lang>.lang: Lang
 
 class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
+    private var ctxt = Context()
+    private val refactoringModel = RefactoringSetup()
+
     private val panel = JBPanelWithEmptyText()
 
     private lateinit var tSelection: JBTextArea
@@ -79,17 +83,11 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     private var inputLanguageAutoPrefered = false
     private var inputLanguageProgramaticSelection = false;
-
     private var outputFlagIcon: Icon? = null
 
-    private var editor: Editor? = null
-    private var document: Document? = null
-    private var selectedElement: PsiElement?= null
-    private var startOffset: Int? = null
-    private var endOffset: Int? = null
-
-    private var format: EFormat = EFormat.TEXT
-    private var style: EStyle = EStyle.NORMAL
+    private val refactoring = JBCheckBox("Replace using refactoring")
+    private val refactoringPreview = JBCheckBox("Show preview")
+    private val refactoringSearchInComments = JBCheckBox("Search in comments")
 
     private val translateAction = object : AbstractAction("Translate", outputFlagIcon) {
         override fun actionPerformed(e: ActionEvent) {
@@ -126,9 +124,9 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             override fun keyPressed(e: KeyEvent?) {
                 translateAction.isEnabled = true
                 replaceAction.isEnabled = false
-                selectedElement = null
-                startOffset = 0
-                endOffset = 0
+                ctxt.selectedElement = null
+                ctxt.startOffset = 0
+                ctxt.endOffset = 0
                 restoreAutomatic()
             }
         })
@@ -200,22 +198,22 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             (outputLanguage.selectedItem as Lang).code,
             (inputLanguage.selectedItem as Lang).code,
             txt,
-            format,
-            style,
-            editor?.project
+            ctxt.format,
+            ctxt.style,
+            ctxt.project
         )
             ?: return
 
         tTranslation.text = translation.translated.trimIndent()
 
-        replaceAction.isEnabled = this.hasSelection()
+        replaceAction.isEnabled = ctxt.hasSelection()
 
-        editor?.apply {
+        ctxt.editor?.apply {
 
             EditorFactory.getInstance().clearInlays()
 
-            val start = startOffset
-            val end = endOffset
+            val start = ctxt.startOffset
+            val end = ctxt.endOffset
             if (start != null && end != null) {
                 this.selectionModel.setSelection(start, end)
             }
@@ -224,41 +222,47 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     fun replace() {
 
-        val translation = tTranslation.text?.escapeFormat(format) ?: return
+        val translation = tTranslation.text?.escapeFormat(ctxt.format) ?: return
 
-        if (selectedElement != null && this.editor!=null) {
+        if (ctxt.selectedElement != null && ctxt.editor!=null) {
 
-            var elt: PsiElement? = selectedElement
+            var elt: PsiElement? = ctxt.selectedElement
             if (elt !is PsiNamedElement) {
-                elt = selectedElement!!.parent
+                elt = ctxt.selectedElement!!.parent
             }
             if (elt is PsiReference) {
                 elt = elt.resolve()
             }
 
-            if (elt != null && canRename(elt.project, elt)) {
+            if (refactoringModel.useRefactoring && elt != null && canRename(elt.project, elt)) {
 
-                editor!!.caretModel.moveToOffset(startOffset!! + 1)
+                ctxt.editor!!.caretModel.moveToOffset(ctxt.startOffset!! + 1)
 
-                val rename = RefactoringFactory.getInstance(elt.project).createRename(elt, translation, false, true)
-                val usages = rename.findUsages()
-                rename.doRefactoring(usages)
-
-                // val d = RefactoringUiService.getInstance().createRenameRefactoringDialog(
-                //         project, elt, elt, editor)
-                // d.performRename(translation)
+                if (refactoringModel.preview) {
+                     val d = RefactoringUiService.getInstance()
+                         .createRenameRefactoringDialog(elt.project, elt, elt, ctxt.editor)
+                     d.performRename(translation)
+                }
+                else {
+                    val rename = RefactoringFactory.getInstance(elt.project)
+                        .createRename(elt, translation,
+                            refactoringModel.searchInComments,
+                            refactoringModel.useRefactoring)
+                    val usages = rename.findUsages()
+                    rename.doRefactoring(usages)
+                }
 
                 return
             }
         }
 
-        val  project = editor?.project
+        val  project = ctxt.project
         if (project != null) {
             executeWriteCommand(project, "Translation+") {
 
-                val start = startOffset ?: return@executeWriteCommand
-                val end = endOffset ?: return@executeWriteCommand
-                val doc = document ?: return@executeWriteCommand
+                val start = ctxt.startOffset ?: return@executeWriteCommand
+                val end = ctxt.endOffset ?: return@executeWriteCommand
+                val doc = ctxt.document ?: return@executeWriteCommand
                 val text = doc.getText(TextRange(start, end))
                 val indented = translation.indentAs(text)
 
@@ -301,18 +305,18 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 if (text != null && text.trim().isNotEmpty()) {
 
                     val literal = editor.getLeafAtCursor()
-                    if (literal == null || literal.startOffset != startOffset || literal.endOffset != endOffset) {
-                        this.selectedElement = null
+                    if (literal == null || literal.startOffset != ctxt.startOffset || literal.endOffset != ctxt.endOffset) {
+                        ctxt.selectedElement = null
                     }
 
-                    this.format = editor.detectFormat()
-                    this.style = text.trim().removeQuotes().detectStyle()
+                    ctxt.format = editor.detectFormat()
+                    ctxt.style = text.trim().removeQuotes().detectStyle()
 
-                    this.tSelection.textAndSelect = text.trimIndent().unescapeFormat(format, true)
-                    this.startOffset = editor.selectionModel.selectionStart
-                    this.endOffset = editor.selectionModel.selectionEnd
-                    this.document = editor.document
-                    this.editor = editor
+                    this.tSelection.textAndSelect = text.trimIndent().unescapeFormat(ctxt.format, true)
+                    ctxt.startOffset = editor.selectionModel.selectionStart
+                    ctxt.endOffset = editor.selectionModel.selectionEnd
+                    ctxt.document = editor.document
+                    ctxt.editor = editor
 
                     this.translateAction.isEnabled = true
                 }
@@ -320,20 +324,20 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
                     val literal = editor.getLeafAtCursor()
                     if (literal != null && literal.text.trim().isNotEmpty()) {
-                        this.selectedElement = literal
-                        this.format = editor.detectFormat()
-                        this.style = literal.text.removeQuotes().detectStyle()
-                        this.tSelection.textAndSelect = literal.text.trimIndent().unescapeFormat(format, true)
-                        this.startOffset = literal.startOffset
-                        this.endOffset = literal.endOffset
-                        this.document = editor.document
-                        this.editor = editor
+                        ctxt.selectedElement = literal
+                        ctxt.format = editor.detectFormat()
+                        ctxt.style = literal.text.removeQuotes().detectStyle()
+                        this.tSelection.textAndSelect = literal.text.trimIndent().unescapeFormat(ctxt.format, true)
+                        ctxt.startOffset = literal.startOffset
+                        ctxt.endOffset = literal.endOffset
+                        ctxt.document = editor.document
+                        ctxt.editor = editor
                         this.translateAction.isEnabled = true
                     }
                     else {
-                        this.selectedElement = null
-                        this.format = EFormat.TEXT
-                        this.style = EStyle.NORMAL
+                        ctxt.selectedElement = null
+                        ctxt.format = EFormat.TEXT
+                        ctxt.style = EStyle.NORMAL
                         if (tSelection.text.isEmpty()) {
                             this.tSelection.text = ""
                             translateAction.isEnabled = false
@@ -362,7 +366,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     private fun initPanel(): JPanel {
 
-        val main = JBPanelWithEmptyText(GridLayoutManager(6, 4))
+        val main = JBPanelWithEmptyText(GridLayoutManager(7, 4))
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
         main.add(
@@ -506,6 +510,20 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             )
         )
 
+        val refactoringPanel = initRefactoringSetupPanel(refactoringModel)
+
+        tTranslation = TextArea()
+        main.add(
+            refactoringPanel,
+            GridConstraints(
+                6, 0, 1, 4,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK,
+                SIZEPOLICY_CAN_SHRINK,
+                null, null, null
+            )
+        )
+
         panel.layout = BorderLayout(10, 10)
         panel.border = JBUI.Borders.empty(10)
         panel.withEmptyText("No literal selected yet found")
@@ -514,10 +532,44 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         return panel
     }
 
+    private fun initRefactoringSetupPanel(refactoringModel: RefactoringSetup): JBPanelWithEmptyText {
+
+        refactoring.addActionListener {
+            val selected = refactoring.isSelected
+            refactoringPreview.isVisible = selected
+            refactoringSearchInComments.isVisible = selected && !refactoringPreview.isSelected
+            refactoringModel.useRefactoring = selected
+        }
+
+        refactoringPreview.addActionListener {
+            val selected = refactoringPreview.isSelected
+            refactoringModel.preview = selected
+            refactoringSearchInComments.isVisible = refactoring.isSelected && !selected
+        }
+
+        refactoringSearchInComments.addActionListener {
+            refactoringModel.searchInComments = refactoringSearchInComments.isSelected
+        }
+
+        refactoring.isSelected = refactoringModel.useRefactoring
+        refactoringPreview.isSelected = refactoringModel.preview
+        refactoringSearchInComments.isSelected = refactoringModel.searchInComments
+
+        refactoringPreview.isVisible = refactoring.isSelected
+        refactoringSearchInComments.isVisible = refactoring.isSelected && !refactoringPreview.isSelected
+
+        val refactoringPanel = JBPanelWithEmptyText(FlowLayout())
+        refactoringPanel.add(refactoring)
+        refactoringPanel.add(refactoringPreview)
+        refactoringPanel.add(refactoringSearchInComments)
+
+        return refactoringPanel
+    }
+
     override fun onTranslation(event: TranslationEvent) {
 
         translateAction.isEnabled = true
-        replaceAction.isEnabled = this.hasSelection()
+        replaceAction.isEnabled = ctxt.hasSelection()
 
         tTranslation.text = event.translation.translated.trimIndent()
 
@@ -529,14 +581,6 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.ITALIC)
             }
         }
-    }
-
-    fun hasSelection(): Boolean {
-        val s = this.startOffset
-        val e = this.endOffset
-        if (s == null || e == null)
-            return false
-        return e - s > 0
     }
 }
 
@@ -653,3 +697,42 @@ enum class EFormat(val preserveQuotes: Boolean) {
     JSON(true),
     PROPERTIES(false)
 }
+
+class Context {
+    var editor: Editor? = null
+    var document: Document? = null
+    var selectedElement: PsiElement?= null
+    var startOffset: Int? = null
+    var endOffset: Int? = null
+    var format: EFormat = EFormat.TEXT
+    var style: EStyle = EStyle.NORMAL
+
+    fun hasSelection(): Boolean {
+        val s = this.startOffset
+        val e = this.endOffset
+        if (s == null || e == null)
+            return false
+        return e - s > 0
+    }
+
+    val project get() = editor?.project
+}
+
+class RefactoringSetup() {
+    var useRefactoring = PropertiesComponent.getInstance().getValue(REFACTORING) == "true"
+        set(value) {
+            field = value
+            PropertiesComponent.getInstance().setValue(REFACTORING, value.toString())
+        }
+    var preview = PropertiesComponent.getInstance().getValue(REFACTORING_PREVIEW) == "true"
+        set(value) {
+            field = value
+            PropertiesComponent.getInstance().setValue(REFACTORING_PREVIEW, value)
+        }
+    var searchInComments: Boolean = PropertiesComponent.getInstance().getValue(REFACTORING_SEARCH_IN_COMMENT) == "true"
+        set(value) {
+            field = value
+            PropertiesComponent.getInstance().setValue(REFACTORING_SEARCH_IN_COMMENT, value)
+        }
+}
+

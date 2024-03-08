@@ -38,7 +38,7 @@ class CucumberPlusFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(
             contentFactory.createContent(filterTagsView, "Filters", false))
 
-        val translateView = TranslateView(project)
+        val translateView = TranslateView()
         toolWindow.contentManager.addContent(
             contentFactory.createContent(translateView, "Translation", false))
 
