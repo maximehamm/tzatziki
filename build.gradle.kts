@@ -5,7 +5,7 @@ import java.net.URI
 allprojects {
     group = "io." +
             ".tzatziki"
-    version = "16.4.10"
+    version = "16.4.11"
 }
 
 val notes by extra {"""

@@ -29,9 +29,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.ui.JBColor
 import com.intellij.ui.LayeredIcon
@@ -51,8 +49,6 @@ import javax.imageio.ImageIO
 import javax.swing.Icon
 import javax.swing.ImageIcon
 import javax.swing.JLabel
-import javax.swing.text.BadLocationException
-import javax.swing.text.DefaultHighlighter
 import javax.swing.text.JTextComponent
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
@@ -365,4 +361,15 @@ class CustomTraversalPolicy(private vararg val order: Component) : FocusTraversa
     override fun getLastComponent(focusCycleRoot: Container): Component = order.last()
 
     override fun getDefaultComponent(focusCycleRoot: Container): Component = order[0]
+}
+
+fun PsiElement?.findRenamable(): PsiElement? {
+    var elt = this
+    if (elt !is PsiNamedElement) {
+        elt = elt?.parent
+    }
+    if (elt is PsiReference) {
+        elt = elt.resolve()
+    }
+    return elt
 }

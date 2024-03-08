@@ -34,17 +34,11 @@ import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
-import com.intellij.psi.PsiReference
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.ui.CollectionComboBoxModel
-import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBPanelWithEmptyText
-import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
@@ -226,15 +220,8 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         if (ctxt.selectedElement != null && ctxt.editor!=null) {
 
-            var elt: PsiElement? = ctxt.selectedElement
-            if (elt !is PsiNamedElement) {
-                elt = ctxt.selectedElement!!.parent
-            }
-            if (elt is PsiReference) {
-                elt = elt.resolve()
-            }
-
-            if (refactoringModel.useRefactoring && elt != null && canRename(elt.project, elt)) {
+            val elt = ctxt.selectedElement.findRenamable()
+            if (refactoringModel.useRefactoring && elt != null && canRename(elt)) {
 
                 ctxt.editor!!.caretModel.moveToOffset(ctxt.startOffset!! + 1)
 
@@ -344,6 +331,17 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                         }
                     }
                 }
+
+                val refactoringAvailable = canRename(ctxt.selectedElement.findRenamable())
+                refactoring.isEnabled = refactoringAvailable
+                refactoringPreview.isEnabled = refactoringAvailable
+                refactoringSearchInComments.isEnabled = refactoringAvailable
+
+                val tooltip = if (refactoringAvailable) null else "Select an element that can be renamed !"
+                refactoring.toolTipText = tooltip
+                refactoringPreview.toolTipText = tooltip
+                refactoringSearchInComments.toolTipText = tooltip
+
             }
         }
     }
@@ -511,8 +509,6 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         )
 
         val refactoringPanel = initRefactoringSetupPanel(refactoringModel)
-
-        tTranslation = TextArea()
         main.add(
             refactoringPanel,
             GridConstraints(
@@ -717,22 +713,3 @@ class Context {
 
     val project get() = editor?.project
 }
-
-class RefactoringSetup() {
-    var useRefactoring = PropertiesComponent.getInstance().getValue(REFACTORING) == "true"
-        set(value) {
-            field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING, value.toString())
-        }
-    var preview = PropertiesComponent.getInstance().getValue(REFACTORING_PREVIEW) == "true"
-        set(value) {
-            field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING_PREVIEW, value)
-        }
-    var searchInComments: Boolean = PropertiesComponent.getInstance().getValue(REFACTORING_SEARCH_IN_COMMENT) == "true"
-        set(value) {
-            field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING_SEARCH_IN_COMMENT, value)
-        }
-}
-
