@@ -222,9 +222,8 @@ open class TranslateAction : DumbAwareAction()  {
 
                     elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
 
-                    val projectScope = GlobalSearchScope.allScope(project)
                     val rename = RefactoringFactory.getInstance(project)
-                        .createRename(elt, text, projectScope, refactoringSetup.searchInComments, true)
+                        .createRename(elt, text, file.useScope, refactoringSetup.searchInComments, true)
                     val usages = rename.findUsages()
 
                     val allRenames = mutableMapOf<PsiElement, String>()
@@ -247,7 +246,7 @@ open class TranslateAction : DumbAwareAction()  {
                     }
 
                     usages.forEach { usage ->
-                        if (usage is NonCodeUsageInfo) {
+                        if (usage is NonCodeUsageInfo && usage.element?.containingFile == file) {
                             val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
                             if (o >= 0)
                                 targets.add(o)
