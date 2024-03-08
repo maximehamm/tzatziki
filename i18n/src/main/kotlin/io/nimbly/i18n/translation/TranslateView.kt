@@ -297,7 +297,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                     }
 
                     ctxt.format = editor.detectFormat()
-                    ctxt.style = text.trim().removeQuotes().detectStyle()
+                    ctxt.style = text.trim().removeQuotes().detectStyle(ctxt.selectedElement != null)
 
                     this.tSelection.textAndSelect = text.trimIndent().unescapeFormat(ctxt.format, true)
                     ctxt.startOffset = editor.selectionModel.selectionStart
@@ -313,7 +313,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                     if (literal != null && literal.text.trim().isNotEmpty()) {
                         ctxt.selectedElement = literal
                         ctxt.format = editor.detectFormat()
-                        ctxt.style = literal.text.removeQuotes().detectStyle()
+                        ctxt.style = literal.text.removeQuotes().detectStyle(true)
                         this.tSelection.textAndSelect = literal.text.trimIndent().unescapeFormat(ctxt.format, true)
                         ctxt.startOffset = literal.startOffset
                         ctxt.endOffset = literal.endOffset

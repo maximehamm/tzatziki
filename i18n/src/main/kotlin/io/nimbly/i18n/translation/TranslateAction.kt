@@ -20,13 +20,22 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vcs.VcsDataKeys
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiReference
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
+import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import icons.ActionI18nIcons
@@ -100,7 +109,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
             format = editor.detectFormat()
-            style = text?.removeQuotes()?.detectStyle() ?: EStyle.NORMAL
+            style = text?.removeQuotes()?.detectStyle(false) ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -149,7 +158,7 @@ open class TranslateAction : DumbAwareAction()  {
             }
 
             format = file.detectFormat()
-            style = text?.removeQuotes()?.detectStyle() ?: EStyle.NORMAL
+            style = text?.removeQuotes()?.detectStyle(true) ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
 
@@ -169,58 +178,12 @@ open class TranslateAction : DumbAwareAction()  {
 
             //
             // Apply inlay's translation
-            //
-            val joinToString = activeInlays
-                .map { it.renderer as EditorHint }
-                .map { it.translation }
-                .reversed()
-                .map { it.trim().escapeFormat(format) }
-                .joinToString("\n")
-
-            val document = editor.document
-            if (!document.isWritable) return
-
-            val t = document.getText(TextRange(startOffset, endOffset))
-            val indented = joinToString.indentAs(t)
-
-            val refactoringSetup = RefactoringSetup()
-            var doRename = false
-            var elt = file?.findElementAt(startOffset)
-            if (refactoringSetup.useRefactoring && elt != null && elt.startOffset == startOffset && elt.endOffset == endOffset) {
-                elt = elt.findRenamable()
-                if (canRename(elt))
-                    doRename = true
-            }
-
-            if (doRename && refactoringSetup.useRefactoring && refactoringSetup.preview) {
-
-                 val d = RefactoringUiService.getInstance()
-                     .createRenameRefactoringDialog( project, elt, elt, editor)
-                 d.performRename(indented)
-            }
-            else if (doRename && refactoringSetup.useRefactoring && !refactoringSetup.preview) {
-
-                val rename = RefactoringFactory.getInstance(project)
-                    .createRename(elt!!, indented, refactoringSetup.searchInComments, true)
-                val usages = rename.findUsages()
-                rename.doRefactoring(usages)
-            }
-            else {
-                executeWriteCommand(project, "Translating with Translation+") {
-                    document.replaceString(startOffset, endOffset, indented)
-                }
-            }
-
-            EditorFactory.getInstance().clearInlays()
-            if (selectionEnd)
-                editor.selectionModel.removeSelection()
-
+            applyTranslation(activeInlays, editor, file, selectionEnd, startOffset, endOffset, format, project)
         }
         else {
 
             //
-            // Translate and show inlay
-            //
+            // Translate
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
@@ -229,52 +192,181 @@ open class TranslateAction : DumbAwareAction()  {
 
             EditorFactory.getInstance().clearInlays()
 
-            val translationLines = translation.translated
-                .split('\n')
-                .reversed()
-                .toMutableList()
+            //
+            // Translate and show inlay
+            displayInlays(translation, editor, startOffset, zoom, false)
 
-            if (translationLines.size > 1 && translationLines.first().isBlank()) {
-                translationLines[1] = translationLines[1] + '\n' + translationLines[0]
-                translationLines.removeAt(0)
-            }
+            //
+            // Display inlays for references also
+            val refactoringSetup = RefactoringSetup()
+            if (file!=null && refactoringSetup.useRefactoring) {
 
-            val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
+                var elt = file.findElementAt(startOffset).findRenamable()
+                if (elt != null && canRename(elt)) {
 
-            translationLines
-                .forEachIndexed { index, translationLine ->
+                    elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
 
-                    val renderer = EditorHint(
-                        type = EHint.TRANSLATION,
-                        zoom = zoom,
-                        translation = translationLine,
-                        flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
-                        indent = if (index == translationLines.size - 1) xindent else 4
-                    )
-                    val p = InlayProperties().apply {
-                        showAbove(true)
-                        relatesToPrecedingText(false)
-                        priority(1000)
-                        disableSoftWrapping(false)
+                    val projectScope = GlobalSearchScope.allScope(project)
+                    val rename = RefactoringFactory.getInstance(project)
+                        .createRename(elt, text, projectScope, refactoringSetup.searchInComments, true)
+                    val usages = rename.findUsages()
+
+                    val allRenames = mutableMapOf<PsiElement, String>()
+                    allRenames[elt] = translation.translated
+
+                    val processors = RenamePsiElementProcessor.allForElement(elt)
+                    for (processor in processors) {
+                        if (processor.canProcessElement(elt)) {
+                            processor.prepareRenaming(elt, translation.translated, allRenames)
+                        }
                     }
 
-                    inlayModel.addBlockElement<HintRenderer>(startOffset, p, renderer)
+                    val targets = mutableSetOf<Int>()
+                    allRenames.forEach { (resolved, renamed) ->
+                        if (resolved is PsiNameIdentifierOwner) {
+                            val o = resolved.identifyingElement?.startOffset
+                            if (o != null && o != startOffset)
+                                targets.add(o)
+                        }
+                    }
+
+                    usages.forEach { ref ->
+                        val r = ref.reference?.element // ?.findRenamable()
+                        if (r != null && r.containingFile == file) {
+                            PsiTreeUtil.collectElements(r) {
+                                if (it is PsiReference && it.resolve() == elt)
+                                    targets.add(it.startOffset + it.rangeInElement.startOffset)
+                                false
+                            }
+                        }
+                    }
+
+                    targets.remove(startOffset)
+                    targets.forEach {
+                        displayInlays(translation, editor, it, zoom, true)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun displayInlays(
+        translation: GTranslation,
+        editor: Editor,
+        startOffset: Int,
+        zoom: Double,
+        inputOnly: Boolean
+    ) {
+
+        //
+        // Input icon
+        val inlayModel = editor.inlayModel
+        val renderer = EditorHint(
+            type = EHint.TRANSLATION,
+            zoom = zoom,
+            flag = translation.sourceLanguageIndentified.trim().lowercase(),
+            translation = if (inputOnly) " " else "  "
+        )
+        val p = InlayProperties().apply {
+            showAbove(false)
+            relatesToPrecedingText(false)
+            priority(1000)
+            disableSoftWrapping(false)
+        }
+        inlayModel.addInlineElement<HintRenderer>(startOffset, p, renderer)
+        if (inputOnly)
+            return
+
+        //
+        // Output icon + translation
+        val translationLines: MutableList<String> = translation.translated
+            .split('\n')
+            .reversed()
+            .toMutableList()
+
+        if (translationLines.size > 1 && translationLines.first().isBlank()) {
+            translationLines[1] = translationLines[1] + '\n' + translationLines[0]
+            translationLines.removeAt(0)
+        }
+
+        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+        val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
+
+        translationLines
+            .forEachIndexed { index, translationLine ->
+
+                val ren = EditorHint(
+                    type = EHint.TRANSLATION,
+                    zoom = zoom,
+                    translation = translationLine,
+                    flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
+                    indent = if (index == translationLines.size - 1) xindent else 4
+                )
+                val ip = InlayProperties().apply {
+                    showAbove(true)
+                    relatesToPrecedingText(false)
+                    priority(1000)
+                    disableSoftWrapping(false)
                 }
 
-            val renderer = EditorHint(
-                type = EHint.TRANSLATION,
-                zoom = zoom,
-                flag = translation.sourceLanguageIndentified.trim().lowercase(),
-                translation = "  "
-            )
-            val p = InlayProperties().apply {
-                showAbove(false)
-                relatesToPrecedingText(false)
-                priority(1000)
-                disableSoftWrapping(false)
+                inlayModel.addBlockElement<HintRenderer>(startOffset, ip, ren)
             }
-            inlayModel.addInlineElement<HintRenderer>(startOffset, p, renderer)
+    }
+
+    private fun applyTranslation(
+        activeInlays: List<Inlay<*>>,
+        editor: Editor,
+        file: PsiFile?,
+        selectionEnd: Boolean,
+        startOffset: Int,
+        endOffset: Int,
+        format: EFormat,
+        project: Project
+    ) {
+        val joinToString = activeInlays
+            .map { it.renderer as EditorHint }
+            .map { it.translation }
+            .reversed()
+            .map { it.trim().escapeFormat(format) }
+            .joinToString("\n")
+
+        val document = editor.document
+        if (!document.isWritable) return
+
+        val t = document.getText(TextRange(startOffset, endOffset))
+        val indented = joinToString.indentAs(t)
+
+        val refactoringSetup = RefactoringSetup()
+        var doRename = false
+        var elt = file?.findElementAt(startOffset)
+        if (refactoringSetup.useRefactoring && elt != null && elt.startOffset == startOffset && elt.endOffset == endOffset) {
+            elt = elt.findRenamable()
+            if (canRename(elt))
+                doRename = true
         }
+
+        if (doRename && refactoringSetup.useRefactoring && refactoringSetup.preview) {
+
+            val d = RefactoringUiService.getInstance()
+                .createRenameRefactoringDialog(project, elt, elt, editor)
+            d.performRename(indented)
+        }
+        else if (doRename && refactoringSetup.useRefactoring && !refactoringSetup.preview) {
+
+            val rename = RefactoringFactory.getInstance(project)
+                .createRename(elt!!, indented, refactoringSetup.searchInComments, true)
+            val usages = rename.findUsages()
+            rename.doRefactoring(usages)
+        }
+        else {
+            executeWriteCommand(project, "Translating with Translation+") {
+                document.replaceString(startOffset, endOffset, indented)
+            }
+        }
+
+        EditorFactory.getInstance().clearInlays()
+        if (selectionEnd)
+            editor.selectionModel.removeSelection()
     }
 
     override fun isDumbAware()

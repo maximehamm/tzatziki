@@ -8,12 +8,13 @@ enum class EStyle {
     NORMAL_LOWER,
     NORMAL_UPPER,
     NORMAL_TITLED,
-    CAMEL_CASE,
+    CAMEL_CASE_LOWER,
+    CAMEL_CASE_UPPER,
     SNAKE_CASE_LOWER,
     SNAKE_CASE_UPPER
 }
 
-fun String.detectStyle(): EStyle {
+fun String.detectStyle(psiElementSelected: Boolean): EStyle {
     if (this.contains(" ") || this.contains("\n"))
         return EStyle.NORMAL
 
@@ -25,8 +26,21 @@ fun String.detectStyle(): EStyle {
             return EStyle.SNAKE_CASE_UPPER
     }
 
-    if (this.fromCamelCase() != this)
-        return EStyle.CAMEL_CASE
+    if (this.fromCamelCase() != this) {
+        if (this.first().isUpperCase())
+            return EStyle.CAMEL_CASE_UPPER
+        else
+            return EStyle.CAMEL_CASE_LOWER
+    }
+
+    // If current selected item is a PsiElement, let's prefer caml
+    if (psiElementSelected) {
+        if (this.isUpperCase())
+            return EStyle.SNAKE_CASE_UPPER
+        if (this.isLowerCase())
+            return EStyle.CAMEL_CASE_LOWER
+        return EStyle.CAMEL_CASE_UPPER
+    }
 
     if (this.isLowerCase())
         return EStyle.NORMAL_LOWER
@@ -43,7 +57,7 @@ fun String.detectStyle(): EStyle {
 fun String.unescapeStyle(style: EStyle): String {
     return try {
         when (style) {
-            EStyle.CAMEL_CASE ->
+            EStyle.CAMEL_CASE_UPPER, EStyle.CAMEL_CASE_LOWER ->
                 this.fromCamelCase()
             EStyle.SNAKE_CASE_LOWER, EStyle.SNAKE_CASE_UPPER ->
                 this.replace("_", " ")
@@ -58,7 +72,12 @@ fun String.unescapeStyle(style: EStyle): String {
 fun String.escapeStyle(style: EStyle, locale: Locale): String {
     return try {
         when (style) {
-            EStyle.CAMEL_CASE ->
+            EStyle.CAMEL_CASE_UPPER ->
+                this.toCamelCase(locale)
+                    .removeAccents()
+                    .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
+                    .toTitleCase(locale)
+            EStyle.CAMEL_CASE_LOWER ->
                 this.toCamelCase(locale)
                     .removeAccents()
                     .preserveQuotes { it.replace("[^a-zA-Z_]".toRegex(), "") }
