@@ -22,8 +22,8 @@
     <description><![CDATA[
 
     <b>Translate anything to any language !</b><br/>
-    <b>Search definition of selected word (english only) !</b><br/>
-    <b>No proxy problem ! No API key ! Works with all Jetbrains products !</b><br/>
+    <b>No proxy problem, no API key ! Works with all Jetbrains products !</b><br/>
+    <b>83 supported languages</b><br/>
     <br/>
       • Select some text inside editor<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
@@ -46,10 +46,11 @@
        <p>
           <img src="https://plugins.jetbrains.com/files/23656/screenshot_b52b8a66-326e-4f3e-9a1a-08401b722d72"
               alt="Translation editor1" width="690" height="388">
+       </p>
+        <p>
           <img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
               alt="Translation editor2" width="690" height="388">
        </p>
-
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to menu “Modifier &gt; Traduire” or use shortcut CTRL+T</li>
        <li>Check translation</li>
