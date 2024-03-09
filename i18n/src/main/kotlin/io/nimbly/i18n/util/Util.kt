@@ -31,24 +31,12 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import com.intellij.ui.JBColor
-import com.intellij.ui.LayeredIcon
-import com.intellij.ui.scale.JBUIScale
-import com.intellij.util.ui.GraphicsUtil
-import com.intellij.util.ui.JBFont
-import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
 import javazoom.jl.player.Player
-import java.awt.*
-import java.awt.image.BufferedImage
+import java.awt.Component
+import java.awt.Container
+import java.awt.FocusTraversalPolicy
 import java.io.BufferedInputStream
-import java.io.ByteArrayOutputStream
 import java.net.URL
-import java.util.*
-import javax.imageio.ImageIO
-import javax.swing.Icon
-import javax.swing.ImageIcon
-import javax.swing.JLabel
 import javax.swing.text.JTextComponent
 
 fun <T, C : Collection<T>> C.nullIfEmpty(): C?
@@ -225,46 +213,6 @@ val String.safeText
     get() = this.replace(CompletionUtilCore.DUMMY_IDENTIFIER, "", true)
         .replace(CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED, "", true)
 
-fun textToIcon(text: String, size: Float, position: Int, foreground: Color): Icon {
-    val icon = LayeredIcon(2)
-    icon.setIcon(textToIcon(text, JLabel(), JBUIScale.scale(size), foreground, position), 1, 0)
-    return icon
-}
-
-fun textToIcon(text: String, component: Component, fontSize: Float, foreground: Color, position: Int): Icon {
-    val font: Font = JBFont.create(JBUI.Fonts.label().deriveFont(fontSize))
-    val metrics = component.getFontMetrics(font)
-    val width = metrics.stringWidth(text) + JBUI.scale(4)
-    val height = metrics.height
-    return object : Icon {
-        override fun paintIcon(c: Component?, graphics: Graphics, x: Int, y: Int) {
-            val g = graphics.create()
-            try {
-                GraphicsUtil.setupAntialiasing(g)
-                g.font = font
-                UIUtil.drawStringWithHighlighting(
-                    g,
-                    text,
-                    x + JBUI.scale(2),
-                    y + height - JBUI.scale(1) + position,
-                    foreground,
-                    JBColor.background()
-                )
-            } finally {
-                g.dispose()
-            }
-        }
-
-        override fun getIconWidth(): Int {
-            return width
-        }
-
-        override fun getIconHeight(): Int {
-            return height
-        }
-    }
-}
-
 fun EditorFactory.clearInlays(delay: Int = -1) {
     this.allEditors.forEach {
         it.clearInlays(delay)
@@ -298,30 +246,6 @@ fun Document.getLineTextStartOffset(offset: Int): Int {
 val AnActionEvent.editor
     get() = CommonDataKeys.EDITOR.getData(dataContext)
         ?: DataManager.getInstance().dataContext.getData(PlatformDataKeys.EDITOR)
-
-fun Icon.toBase64(): String {
-    val bufferedImage = BufferedImage(iconWidth, iconHeight, BufferedImage.TYPE_INT_ARGB)
-
-    // Create a graphics context and paint the icon on the buffered image
-    val graphics = bufferedImage.createGraphics()
-    paintIcon(null, graphics, 0, 0)
-    graphics.dispose()
-
-    // Write the buffered image to a byte array
-    val byteArrayOutputStream = ByteArrayOutputStream()
-
-    // Determine the image format based on the icon data type
-    val imageFormat = if (this is ImageIcon) "jpg" else "png"
-
-    // Write the image data to the byte array
-    ImageIO.write(bufferedImage, imageFormat, byteArrayOutputStream)
-    val byteArray = byteArrayOutputStream.toByteArray()
-
-    // Encode the byte array to a base64 string
-    val base64String = Base64.getEncoder().encodeToString(byteArray)
-
-    return base64String
-}
 
 var JTextComponent.textAndSelect
     get() = this.text

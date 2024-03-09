@@ -101,7 +101,8 @@ open class TranslateAction : DumbAwareAction()  {
         editorImpl: EditorImpl?,
         caret: Int?,
         isVCS: Boolean,
-        withInlineTranslation: Boolean = true)
+        withInlineTranslation: Boolean = true,
+        forcedStyle: EStyle? = null)
     {
 
         val inlayModel = editor.inlayModel
@@ -125,7 +126,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
             format = editor.detectFormat()
-            style = text?.removeQuotes()?.detectStyle(false) ?: EStyle.NORMAL
+            style = forcedStyle ?: text?.removeQuotes()?.detectStyle(false) ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -135,7 +136,7 @@ open class TranslateAction : DumbAwareAction()  {
             endOffset = editor.document.textLength
             text = editor.document.text
             format = EFormat.TEXT
-            style = EStyle.NORMAL
+            style = forcedStyle ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -174,7 +175,7 @@ open class TranslateAction : DumbAwareAction()  {
             }
 
             format = file.detectFormat()
-            style = text?.removeQuotes()?.detectStyle(true) ?: EStyle.NORMAL
+            style = forcedStyle ?: text?.removeQuotes()?.detectStyle(true) ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
 
@@ -204,6 +205,22 @@ open class TranslateAction : DumbAwareAction()  {
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
             val translation = TranslationManager.translate(output, input, text, format, style, project)
+
+            if (forcedStyle == null && translation?.translated?.isEmpty() == true) {
+
+                // If the language is not latin at all, lets move to normal style otherwise translation is empty !
+                return doActionPerformed(
+                    project = project,
+                    editor = editor,
+                    file = file,
+                    editorImpl = editorImpl,
+                    caret = caret,
+                    isVCS = isVCS,
+                    withInlineTranslation = withInlineTranslation,
+                    forcedStyle = EStyle.NORMAL)
+            }
+
+            translation
                 ?: return
 
             EditorFactory.getInstance().clearInlays()
@@ -265,7 +282,7 @@ open class TranslateAction : DumbAwareAction()  {
 
                     targets.remove(startOffset)
                     targets.forEach {
-                        displayInlays(translation, editor, it, zoom, true)
+                        displayInlays(translation, editor, it, zoom, true, true)
                     }
                 }
             }
@@ -277,7 +294,8 @@ open class TranslateAction : DumbAwareAction()  {
         editor: Editor,
         startOffset: Int,
         zoom: Double,
-        inputOnly: Boolean
+        inputOnly: Boolean,
+        secondaryIcon: Boolean = false
     ) {
 
         //
@@ -287,7 +305,8 @@ open class TranslateAction : DumbAwareAction()  {
             type = EHint.TRANSLATION,
             zoom = zoom,
             flag = translation.sourceLanguageIndentified.trim().lowercase(),
-            translation = if (inputOnly) " " else "  "
+            translation = if (inputOnly) " " else "  ",
+            secondaryIcon = secondaryIcon
         )
         val p = InlayProperties().apply {
             showAbove(false)

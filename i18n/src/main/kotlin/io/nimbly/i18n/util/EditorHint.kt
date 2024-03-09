@@ -17,7 +17,8 @@ class EditorHint(
     val translation: String = "",
     val flag: String? = null,
     val icon: Icon? = null,
-    val indent: Int? = null
+    val indent: Int? = null,
+    val secondaryIcon: Boolean = false
 ) : HintRenderer(translation) {
 
     private val creationDate = LocalDateTime.now()
@@ -34,8 +35,11 @@ class EditorHint(
             val ratio = zoom * 0.8
             val spacing = (zoom * 5).toInt()
 
-            val icon =
+            var icon =
                 this.icon ?: TranslationIcons.getFlag(flag!!, ratio)!!
+
+            if (secondaryIcon)
+                icon = icon.addVeilToIcon()
 
             val iconX = r.x
             val iconY = r.y + (r.height - icon.iconHeight) / 2 + 1

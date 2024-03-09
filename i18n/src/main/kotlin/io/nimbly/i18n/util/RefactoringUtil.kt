@@ -20,6 +20,7 @@ import io.nimbly.i18n.translation.REFACTORING_SEARCH_IN_COMMENT
 fun canRename(element: PsiElement?): Boolean {
 
     element ?: return false
+    element.parent ?: return false
 
     val hasRenameProcessor = RenamePsiElementProcessorBase.forPsiElement(element) !is DefaultRenamePsiElementProcessor
     val hasWritableMetaData = element is PsiMetaOwner && (element as PsiMetaOwner).metaData is PsiWritableMetaData
