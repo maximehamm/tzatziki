@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n.translation
 
+import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
@@ -21,17 +22,13 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.event.CaretEvent
-import com.intellij.openapi.editor.event.CaretListener
-import com.intellij.openapi.editor.event.SelectionEvent
-import com.intellij.openapi.editor.event.SelectionListener
+import com.intellij.openapi.editor.*
+import com.intellij.openapi.editor.event.*
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -39,6 +36,7 @@ import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
+import com.intellij.refactoring.suggested.startOffset
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
@@ -299,9 +297,14 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 val text = editor.selectionModel.getSelectedTextWithLeadingSpaces()
                 if (text != null && text.trim().isNotEmpty()) {
 
-                    val literal = editor.getLeafAtCursor()
-                    if (literal == null || literal.startOffset != ctxt.startOffset || literal.endOffset != ctxt.endOffset) {
-                        ctxt.selectedElement = null
+                    val literal = editor.getLeafAtSelection()
+                    if (literal != null && literal.startOffset == editor.selectionModel.selectionStart && literal.endOffset == editor.selectionModel.selectionEnd) {
+                        ctxt.selectedElement = literal
+                    }
+                    else {
+                        val literal2 = editor.getLeafAtCursor()
+                        if (literal2 == null || literal2.startOffset != ctxt.startOffset || literal2.endOffset != ctxt.endOffset)
+                            ctxt.selectedElement = null
                     }
 
                     ctxt.format = editor.detectFormat()
@@ -703,7 +706,13 @@ enum class EFormat(val preserveQuotes: Boolean) {
 }
 
 class Context {
+
     var editor: Editor? = null
+        set(editor) {
+            initListener(editor)
+            field = editor
+        }
+
     var document: Document? = null
     var selectedElement: PsiElement?= null
     var startOffset: Int? = null
@@ -720,4 +729,95 @@ class Context {
     }
 
     val project get() = editor?.project
+
+    private var mouseListener: TranslationMouseMotionListener? = null
+
+    private fun initListener(editor: Editor?) {
+
+        if (this.editor != editor) {
+
+            if (mouseListener != null) {
+                this.editor?.removeEditorMouseMotionListener(mouseListener!!)
+                mouseListener = null
+            }
+
+            if (editor != null) {
+                mouseListener = TranslationMouseMotionListener()
+                editor.addEditorMouseMotionListener(mouseListener!!)
+                editor.addEditorMouseListener(mouseListener!!)
+            }
+        }
+
+
+    }
+
+    class TranslationMouseMotionListener : EditorMouseMotionListener, EditorMouseListener {
+
+        override fun mouseMoved(e: EditorMouseEvent) {
+
+            val p1 = e.mouseEvent.point
+            val p2 = e.editor.visualPositionToXY(e.visualPosition)
+            val elt =
+                if (p2.y - p1.y >= 0)
+                    e.editor.file?.findElementAt(e.offset)
+                else
+                    null
+
+            val focusInlays = e.editor.inlayModel.getBlockElementsInRange(elt?.startOffset ?: 0, elt?.endOffset ?:0)
+                .map { it.renderer }
+                .filterIsInstance<EditorHint>()
+                .filter { it.translation.isNotBlank() }
+
+            if (focusInlays.isNotEmpty()) {
+                val customCursor = Cursor(Cursor.HAND_CURSOR)
+                e.editor.contentComponent.cursor = customCursor
+            }
+            else {
+                e.editor.contentComponent.cursor = Cursor(Cursor.DEFAULT_CURSOR)
+            }
+
+            val toReplace = mutableListOf<Inlay<EditorHint>>()
+            e.editor.getTranslationInlays().forEach {
+                if (focusInlays.contains(it.renderer)) {
+                    if (it.renderer.mouseEnter())
+                        toReplace.add(it)
+                } else {
+                    if (it.renderer.mouseExit())
+                        toReplace.add(it)
+                }
+            }
+
+            if (toReplace.isEmpty())
+                return
+
+            val ip = InlayProperties().apply {
+                showAbove(true)
+                relatesToPrecedingText(false)
+                priority(1000)
+                disableSoftWrapping(false)
+            }
+            toReplace.forEach {
+                Disposer.dispose(it)
+                e.editor.inlayModel.addBlockElement<HintRenderer>(it.offset, ip, it.renderer)
+            }
+        }
+
+        override fun mouseClicked(e: EditorMouseEvent) {
+
+            val elt = e.editor.file?.findElementAt(e.offset)
+                ?: return
+
+            val inlay = e.editor.inlayModel.getBlockElementsInRange(elt?.startOffset ?: 0, elt?.endOffset ?: 0)
+                .map { it.renderer }
+                .filterIsInstance<EditorHint>()
+                .firstOrNull { it.translation.isNotBlank() }
+                ?: return
+
+            e.editor.selectionModel.setSelection(elt.startOffset, elt.endOffset)
+            TranslateAction().doActionPerformed(
+                project = elt.project,
+                editor = e.editor,
+                file = elt.containingFile)
+        }
+    }
 }

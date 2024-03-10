@@ -97,10 +97,10 @@ open class TranslateAction : DumbAwareAction()  {
     fun doActionPerformed(
         project: Project,
         editor: Editor,
-        file: PsiFile?,
-        editorImpl: EditorImpl?,
-        caret: Int?,
-        isVCS: Boolean,
+        file: PsiFile? = null,
+        editorImpl: EditorImpl? = null,
+        caret: Int? = null,
+        isVCS: Boolean = false,
         withInlineTranslation: Boolean = true,
         forcedStyle: EStyle? = null)
     {
@@ -122,11 +122,14 @@ open class TranslateAction : DumbAwareAction()  {
                 editor.selectionModel.setSelection(offsetFirstNotEmpty, editor.selectionModel.selectionEnd)
             }
 
+            val literal = editor.getLeafAtSelection()
+            val isLiteralSelected = literal != null && literal.startOffset == editor.selectionModel.selectionStart && literal.endOffset == editor.selectionModel.selectionEnd
+
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
             format = editor.detectFormat()
-            style = forcedStyle ?: text?.removeQuotes()?.detectStyle(false) ?: EStyle.NORMAL
+            style = forcedStyle ?: text?.removeQuotes()?.detectStyle(isLiteralSelected) ?: EStyle.NORMAL
 
             selectionEnd = caret == endOffset
         }
@@ -379,7 +382,7 @@ open class TranslateAction : DumbAwareAction()  {
 
         val refactoringSetup = RefactoringSetup()
         var doRename = false
-        var elt = file?.findElementAt(startOffset)
+        var elt = file?.findElementAt(startOffset + 1)
         if (refactoringSetup.useRefactoring && elt != null && elt.startOffset == startOffset && elt.endOffset == endOffset) {
             elt = elt.findRenamable()
             if (canRename(elt))

@@ -21,10 +21,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
-import com.intellij.openapi.editor.Document
-import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.SelectionModel
+import com.intellij.openapi.editor.*
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -61,6 +58,12 @@ fun executeWriteCommand(project: Project, text: String, runnable: Runnable) {
 fun Editor.getLeafAtCursor(): LeafPsiElement? {
     val file = this.file ?: return null
     val element = file.findElementAt(caretModel.offset)
+    return element as? LeafPsiElement
+}
+
+fun Editor.getLeafAtSelection(): LeafPsiElement? {
+    val file = this.file ?: return null
+    val element = file.findElementAt(selectionModel.selectionStart)
     return element as? LeafPsiElement
 }
 
@@ -219,16 +222,21 @@ fun EditorFactory.clearInlays(delay: Int = -1) {
     }
 }
 
-private fun Editor.clearInlays(delay: Int = -1) {
+fun Editor.clearInlays(delay: Int = -1) {
+    getTranslationInlays(delay)
+        .forEach { Disposer.dispose(it) }
+}
 
-    inlayModel.getBlockElementsInRange(0, document.textLength)
+fun Editor.getTranslationInlays(delay: Int = -1): List<Inlay<EditorHint>> {
+    val inlays = (inlayModel.getBlockElementsInRange(0, document.textLength)
         .filter { it.renderer is EditorHint }
         .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
-        .forEach { Disposer.dispose(it) }
-    inlayModel.getInlineElementsInRange(0, document.textLength)
-        .filter { it.renderer is EditorHint }
-        .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 }
-        .forEach { Disposer.dispose(it) }
+        +
+        inlayModel.getInlineElementsInRange(0, document.textLength)
+            .filter { it.renderer is EditorHint }
+            .filter { delay < 0 || (it.renderer as EditorHint).sinceSeconds() > 5 })
+        @Suppress("UNCHECKED_CAST")
+        return inlays as List<Inlay<EditorHint>>
 }
 
 fun playAudio(audioUrl: URL) {
