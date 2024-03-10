@@ -46,14 +46,14 @@
           <img src="https://plugins.jetbrains.com/files/23656/screenshot_b52b8a66-326e-4f3e-9a1a-08401b722d72"
               alt="Translation editor1" width="690" height="388">
        </p>
-        <p>
+       <p>
           <img src="https://plugins.jetbrains.com/files/23656/screenshot_ed969a88-419f-4ca4-b1b0-77d20e937c10"
               alt="Translation editor2" width="690" height="388">
        </p>
        <li>Select anything in editor (java, scala, kotlin, whatever !)</li>
        <li>Go to menu “Modifier &gt; Traduire” or use shortcut CTRL+T</li>
        <li>Check translation</li>
-       <li>Go to menu “Edit &gt; Apply Translation” or use shortcut CTRL+T</li>
+       <li>Go to menu “Edit &gt; Apply Translation” or use shortcut CTRL+T or click on translation</li>
     </ul>
 
     <br/><br/>

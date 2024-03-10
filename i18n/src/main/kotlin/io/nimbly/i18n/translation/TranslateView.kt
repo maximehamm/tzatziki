@@ -813,6 +813,7 @@ class Context {
         }
 
         private fun findTranslationInlays(e: EditorMouseEvent, fullLine: Boolean = false): List<Inlay<EditorHint>> {
+
             val p1 = e.mouseEvent.point
             val p2 = e.editor.visualPositionToXY(e.visualPosition)
             val aboveLine = (p2.y - p1.y >= 0)
@@ -820,8 +821,8 @@ class Context {
             val focusInlay = if (!aboveLine) emptyList() else
                 e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
                     .filter { (it.renderer as EditorHint).translation.isNotBlank() }
-//                    .filter { fullLine || it.visualPosition.column < e.visualPosition.column }
-//                    .filter { fullLine || it.visualPosition.column + (it.renderer as EditorHint).translation.length + 2 > e.visualPosition.column }
+                    //.filter { fullLine || it.visualPosition.column < e.visualPosition.column }
+                    //.filter { fullLine || it.visualPosition.column + (it.renderer as EditorHint).translation.length + 2 > e.visualPosition.column }
                     as List<Inlay<EditorHint>>
             return focusInlay
         }
