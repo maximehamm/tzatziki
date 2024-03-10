@@ -763,12 +763,14 @@ class Context {
                 else
                     null
 
-            val focusInlays = e.editor.inlayModel.getBlockElementsInRange(elt?.startOffset ?: 0, elt?.endOffset ?:0)
-                .map { it.renderer }
-                .filterIsInstance<EditorHint>()
-                .filter { it.translation.isNotBlank() }
+            val focusInlay = if (elt == null) emptyList<Inlay<EditorHint>>() else
+                e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
+                    .filter { (it.renderer as EditorHint).translation.isNotBlank() }
+                    .filter { it.visualPosition.column < e.visualPosition.column }
+                    .filter { it.visualPosition.column + (it.renderer as EditorHint).translation.length +2  > e.visualPosition.column }
+                    as List<Inlay<EditorHint>>
 
-            if (focusInlays.isNotEmpty()) {
+            if (focusInlay.isNotEmpty()) {
                 val customCursor = Cursor(Cursor.HAND_CURSOR)
                 e.editor.contentComponent.cursor = customCursor
             }
@@ -777,13 +779,14 @@ class Context {
             }
 
             val toReplace = mutableListOf<Inlay<EditorHint>>()
-            e.editor.getTranslationInlays().forEach {
-                if (focusInlays.contains(it.renderer)) {
-                    if (it.renderer.mouseEnter())
-                        toReplace.add(it)
+            e.editor.getTranslationInlays().forEach { inlay ->
+                if (focusInlay.find { it.renderer == inlay.renderer } != null) {
+                //if (focusInlay.map { it.renderer }.contains(inlay.renderer)) {
+                    if (inlay.renderer.mouseEnter())
+                        toReplace.add(inlay)
                 } else {
-                    if (it.renderer.mouseExit())
-                        toReplace.add(it)
+                    if (inlay.renderer.mouseExit())
+                        toReplace.add(inlay)
                 }
             }
 
