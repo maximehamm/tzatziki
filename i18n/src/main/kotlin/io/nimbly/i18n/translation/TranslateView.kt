@@ -755,22 +755,12 @@ class Context {
 
         override fun mouseMoved(e: EditorMouseEvent) {
 
-            val p1 = e.mouseEvent.point
-            val p2 = e.editor.visualPositionToXY(e.visualPosition)
-            val elt =
-                if (p2.y - p1.y >= 0)
-                    e.editor.file?.findElementAt(e.offset)
-                else
-                    null
+            val focusInlays = findTranslationInlays(e, true)
+            val maxLength = focusInlays.maxOfOrNull { it.renderer.translation.length }
 
-            val focusInlay = if (elt == null) emptyList<Inlay<EditorHint>>() else
-                e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
-                    .filter { (it.renderer as EditorHint).translation.isNotBlank() }
-                    .filter { it.visualPosition.column < e.visualPosition.column }
-                    .filter { it.visualPosition.column + (it.renderer as EditorHint).translation.length +2  > e.visualPosition.column }
-                    as List<Inlay<EditorHint>>
-
-            if (focusInlay.isNotEmpty()) {
+            if (focusInlays.isNotEmpty()
+                && focusInlays.first().visualPosition.column < e.visualPosition.column
+                && focusInlays.first().visualPosition.column + maxLength!! + 2 > e.visualPosition.column) {
                 val customCursor = Cursor(Cursor.HAND_CURSOR)
                 e.editor.contentComponent.cursor = customCursor
             }
@@ -780,8 +770,7 @@ class Context {
 
             val toReplace = mutableListOf<Inlay<EditorHint>>()
             e.editor.getTranslationInlays().forEach { inlay ->
-                if (focusInlay.find { it.renderer == inlay.renderer } != null) {
-                //if (focusInlay.map { it.renderer }.contains(inlay.renderer)) {
+                if (focusInlays.find { it.renderer == inlay.renderer } != null) {
                     if (inlay.renderer.mouseEnter())
                         toReplace.add(inlay)
                 } else {
@@ -793,6 +782,10 @@ class Context {
             if (toReplace.isEmpty())
                 return
 
+            toReplace.forEach {
+                Disposer.dispose(it)
+            }
+
             val ip = InlayProperties().apply {
                 showAbove(true)
                 relatesToPrecedingText(false)
@@ -800,27 +793,37 @@ class Context {
                 disableSoftWrapping(false)
             }
             toReplace.forEach {
-                Disposer.dispose(it)
                 e.editor.inlayModel.addBlockElement<HintRenderer>(it.offset, ip, it.renderer)
             }
         }
 
-        override fun mouseClicked(e: EditorMouseEvent) {
+        override fun mousePressed(e: EditorMouseEvent) {
+
+            findTranslationInlays(e)
+                .firstOrNull()
+                ?: return
 
             val elt = e.editor.file?.findElementAt(e.offset)
                 ?: return
 
-            val inlay = e.editor.inlayModel.getBlockElementsInRange(elt?.startOffset ?: 0, elt?.endOffset ?: 0)
-                .map { it.renderer }
-                .filterIsInstance<EditorHint>()
-                .firstOrNull { it.translation.isNotBlank() }
-                ?: return
-
-            e.editor.selectionModel.setSelection(elt.startOffset, elt.endOffset)
             TranslateAction().doActionPerformed(
                 project = elt.project,
                 editor = e.editor,
                 file = elt.containingFile)
+        }
+
+        private fun findTranslationInlays(e: EditorMouseEvent, fullLine: Boolean = false): List<Inlay<EditorHint>> {
+            val p1 = e.mouseEvent.point
+            val p2 = e.editor.visualPositionToXY(e.visualPosition)
+            val aboveLine = (p2.y - p1.y >= 0)
+
+            val focusInlay = if (!aboveLine) emptyList() else
+                e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
+                    .filter { (it.renderer as EditorHint).translation.isNotBlank() }
+//                    .filter { fullLine || it.visualPosition.column < e.visualPosition.column }
+//                    .filter { fullLine || it.visualPosition.column + (it.renderer as EditorHint).translation.length + 2 > e.visualPosition.column }
+                    as List<Inlay<EditorHint>>
+            return focusInlay
         }
     }
 }

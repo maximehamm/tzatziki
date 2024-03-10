@@ -37,6 +37,16 @@ class EditorHint(
             r.y += 2
         }
 
+        var att = getTextAttributes(editor) ?: attributes
+        if (focus) {
+            att = att.clone()
+            att.foregroundColor =
+                if (UIUtil.isUnderDarcula())
+                    att.foregroundColor.brighter()
+                else
+                    att.foregroundColor.darker()
+        }
+
         if (flag != null || icon != null) {
 
             val ratio = zoom * 0.8
@@ -54,22 +64,10 @@ class EditorHint(
             // Draw the icon
             icon.paintIcon(null, g, iconX, iconY)
 
-            // Call super.paint() to draw the text
             if (translation.isNotBlank()) {
 
                 val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
-
-                var att = getTextAttributes(editor) ?: attributes
-                if (focus) {
-                    att = att.clone()
-                    att.foregroundColor =
-                        if (UIUtil.isUnderDarcula())
-                            att.foregroundColor.brighter()
-                        else
-                            att.foregroundColor.darker()
-                }
                 paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
-                editor.inlayModel.validateState()
             }
             else {
                 val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, 0, r.height)
@@ -77,7 +75,7 @@ class EditorHint(
             }
         }
         else {
-            super.paint(inlay, g, r, attributes)
+            paintHint(g, editor, r, text, att, att, widthAdjustment, useEditorFont())
         }
     }
 
