@@ -44,7 +44,7 @@ class EditorHint(
                 if (UIUtil.isUnderDarcula())
                     att.foregroundColor.brighter()
                 else
-                    att.foregroundColor.darker()
+                    att.foregroundColor.darker().darker()
         }
 
         if (flag != null || icon != null) {
