@@ -15,6 +15,7 @@
 package io.nimbly.i18n.util
 
 import com.intellij.codeInsight.completion.CompletionUtilCore
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -216,15 +217,19 @@ val String.safeText
     get() = this.replace(CompletionUtilCore.DUMMY_IDENTIFIER, "", true)
         .replace(CompletionUtilCore.DUMMY_IDENTIFIER_TRIMMED, "", true)
 
-fun EditorFactory.clearInlays(delay: Int = -1) {
+fun EditorFactory.clearInlays(project: Project?, delay: Int = -1) {
+    var count = 0
     this.allEditors.forEach {
-        it.clearInlays(delay)
+        count += it.clearInlays(delay)
     }
+    if (count > 0 && project!=null)
+        DaemonCodeAnalyzer.getInstance(project).restart()
 }
 
-fun Editor.clearInlays(delay: Int = -1) {
-    getTranslationInlays(delay)
-        .forEach { Disposer.dispose(it) }
+fun Editor.clearInlays(delay: Int = -1): Int {
+    val inlays = getTranslationInlays(delay)
+    inlays.forEach { Disposer.dispose(it) }
+    return inlays.size
 }
 
 fun Editor.getTranslationInlays(delay: Int = -1): List<Inlay<EditorHint>> {

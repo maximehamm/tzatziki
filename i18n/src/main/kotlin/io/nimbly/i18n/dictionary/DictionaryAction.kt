@@ -22,6 +22,8 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAware
+import com.intellij.psi.PsiElement
+import com.intellij.psi.SmartPointerManager
 import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 import io.nimbly.i18n.util.EHint.DEFINITION
@@ -49,27 +51,26 @@ open class DictionaryAction : AnAction() , DumbAware {
         var startOffset: Int
         var endOffset: Int
         var text: String?
-        var camelCase: Boolean = false
-        var selectionEnd = false
+        var camelCase = false
+        val element: PsiElement?
+
         if (editor.selectionModel.hasSelection()) {
 
+            element = null
             val offsetFirstNotEmpty = editor.selectionModel.findOffsetFirstNotNull()
             if (offsetFirstNotEmpty != editor.selectionModel.selectionStart) {
                 editor.selectionModel.setSelection(offsetFirstNotEmpty, editor.selectionModel.selectionEnd)
             }
 
             startOffset = editor.selectionModel.selectionStart
-            endOffset = editor.selectionModel.selectionEnd
             text = editor.selectionModel.getSelectedText(false)
-
-            selectionEnd = caret == endOffset
         }
         else if (file != null && caret != null) {
 
-            val l = file.findElementAt(caret) ?: return
-            startOffset = l.textRange.startOffset
-            endOffset = l.textRange.endOffset
-            text = l.text
+            element = file.findElementAt(caret) ?: return
+            startOffset = element.textRange.startOffset
+            endOffset = element.textRange.endOffset
+            text = element.text
 
             if (caret == startOffset
                     && (text.isBlank() || text.replace("[\\p{L}\\p{N}\\p{M}]+".toRegex(), "").isNotBlank() && caret > 1)) {
@@ -95,14 +96,14 @@ open class DictionaryAction : AnAction() , DumbAware {
         if (text == null)
             return
 
-        EditorFactory.getInstance().clearInlays()
+        EditorFactory.getInstance().clearInlays(editor.project)
 
         //
         // Search definition
         //
         val def = DictionaryManager.searchDefinition(text, camelCase = camelCase)
 
-        EditorFactory.getInstance().clearInlays()
+        EditorFactory.getInstance().clearInlays(editor.project)
 
         val translationLines =
             if (def.status == EStatut.NOT_FOUND) {
@@ -136,6 +137,7 @@ open class DictionaryAction : AnAction() , DumbAware {
                     type = DEFINITION,
                     zoom = zoom,
                     translation = translationLine,
+                    element = element?.let { SmartPointerManager.getInstance(it.project).createSmartPsiElementPointer(it, element.containingFile) },
                     icon = ActionI18nIcons.DICO,
                     indent = xindent
                 )
@@ -153,8 +155,9 @@ open class DictionaryAction : AnAction() , DumbAware {
             type = DEFINITION,
             zoom = zoom,
             icon = ActionI18nIcons.DICO,
-            translation = " "
-        )
+            translation = " ",
+            element = element?.let { SmartPointerManager.getInstance(it.project).createSmartPsiElementPointer(it, element.containingFile) },
+            )
         val p = InlayProperties().apply {
             showAbove(false)
             relatesToPrecedingText(false)

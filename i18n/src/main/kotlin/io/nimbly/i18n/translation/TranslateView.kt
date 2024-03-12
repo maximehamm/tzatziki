@@ -36,7 +36,6 @@ import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
-import com.intellij.refactoring.suggested.startOffset
 import com.intellij.ui.CollectionComboBoxModel
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
@@ -140,7 +139,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             val model = this.model as CollectionComboBoxModel<Lang>
             model.add(Lang.AUTO)
             model.add(isoCodes)
-            this.setRenderer(IsoCodesRenderer(inputLanguage.editor))
+            this.setRenderer(IsoCodesRenderer())
             this.editor = IsoCodesComboBoxEditor()
 
             model.selectedItem = model.items.find { it.code == input }
@@ -151,7 +150,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         outputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
             model.add(isoCodes)
-            this.setRenderer(IsoCodesRenderer(outputLanguage.editor))
+            this.setRenderer(IsoCodesRenderer())
             this.editor = IsoCodesComboBoxEditor()
 
             model.selectedItem = model.items.find { it.code == output }
@@ -219,7 +218,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     fun replace() {
 
-        EditorFactory.getInstance().clearInlays()
+        EditorFactory.getInstance().clearInlays(ctxt.project)
 
         val translation = tTranslation.text?.escapeFormat(ctxt.format) ?: return
 
@@ -263,7 +262,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
                 replaceAction.isEnabled = false
 
-                EditorFactory.getInstance().clearInlays()
+                EditorFactory.getInstance().clearInlays(ctxt.project)
             }
         }
     }
@@ -591,10 +590,10 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     }
 }
 
-class IsoCodesRenderer(editor: ComboBoxEditor) : DefaultListCellRenderer() {
+class IsoCodesRenderer : DefaultListCellRenderer() {
 
     override fun getListCellRendererComponent(
-        list: JList<*>?,
+        list: JList<*>,
         value: Any?,
         index: Int,
         isSelected: Boolean,

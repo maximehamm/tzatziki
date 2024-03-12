@@ -14,6 +14,7 @@
  */
 package io.nimbly.i18n.translation
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -27,11 +28,8 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vcs.VcsDataKeys
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.psi.PsiReference
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.*
+import com.intellij.psi.search.SearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
@@ -109,6 +107,7 @@ open class TranslateAction : DumbAwareAction()  {
 
         val zoom = editorImpl?.fontSize?.let { it / 13.0 } ?: 1.0
 
+        val element: PsiElement?
         var startOffset: Int
         var endOffset: Int
         var text: String?
@@ -124,6 +123,7 @@ open class TranslateAction : DumbAwareAction()  {
 
             val literal = editor.getLeafAtSelection()
             val isLiteralSelected = literal != null && literal.startOffset == editor.selectionModel.selectionStart && literal.endOffset == editor.selectionModel.selectionEnd
+            element = if (isLiteralSelected) literal else null
 
             startOffset = editor.selectionModel.selectionStart
             endOffset = editor.selectionModel.selectionEnd
@@ -135,6 +135,7 @@ open class TranslateAction : DumbAwareAction()  {
         }
         else if (isVCS) {
 
+            element = null
             startOffset = 0
             endOffset = editor.document.textLength
             text = editor.document.text
@@ -145,9 +146,9 @@ open class TranslateAction : DumbAwareAction()  {
         }
         else if (file != null && caret != null) {
 
-            val l = file.findElementAt(caret) ?: return
-            startOffset = l.textRange.startOffset
-            endOffset = l.textRange.endOffset
+            element = file.findElementAt(caret) ?: return
+            startOffset = element.textRange.startOffset
+            endOffset = element.textRange.endOffset
 
             // Do not select multiple line
             val lineStart = editor.document.getLineNumber(startOffset)
@@ -161,7 +162,7 @@ open class TranslateAction : DumbAwareAction()  {
                 text = editor.document.getText(TextRange(startOffset, endOffset))
             }
             else {
-                text = l.text ?: ""
+                text = element.text ?: ""
             }
 
             if (caret == startOffset
@@ -226,73 +227,25 @@ open class TranslateAction : DumbAwareAction()  {
             translation
                 ?: return
 
-            EditorFactory.getInstance().clearInlays()
+            EditorFactory.getInstance().clearInlays(editor.project)
 
             //
             // Translate and show inlay
-            displayInlays(translation, editor, startOffset, zoom, !withInlineTranslation)
+            displayInlays(element, translation, editor, startOffset, zoom, !withInlineTranslation)
 
             //
             // Display inlays for references also
-            val refactoringSetup = RefactoringSetup()
-            if (file!=null && refactoringSetup.useRefactoring) {
-
-                var elt = file.findElementAt(startOffset).findRenamable()
-                if (elt != null && canRename(elt)) {
-
-                    elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
-
-                    val rename = RefactoringFactory.getInstance(project)
-                        .createRename(elt, text, file.useScope, refactoringSetup.searchInComments, true)
-                    val usages = rename.findUsages()
-
-                    val allRenames = mutableMapOf<PsiElement, String>()
-                    allRenames[elt] = translation.translated
-
-                    val processors = RenamePsiElementProcessor.allForElement(elt)
-                    for (processor in processors) {
-                        if (processor.canProcessElement(elt)) {
-                            processor.prepareRenaming(elt, translation.translated, allRenames)
-                        }
-                    }
-
-                    val targets = mutableSetOf<Int>()
-                    allRenames.forEach { (resolved, renamed) ->
-                        if (resolved is PsiNameIdentifierOwner) {
-                            val o = resolved.identifyingElement?.startOffset
-                            if (o != null && o != startOffset)
-                                targets.add(o)
-                        }
-                    }
-
-                    usages.forEach { usage ->
-                        if (usage is NonCodeUsageInfo && usage.element?.containingFile == file) {
-                            val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
-                            if (o >= 0)
-                                targets.add(o)
-                        }
-                        else {
-                            val r = usage.reference?.element // ?.findRenamable()
-                            if (r != null && r.containingFile == file) {
-                                PsiTreeUtil.collectElements(r) {
-                                    if (it is PsiReference && it.resolve() == elt)
-                                        targets.add(it.startOffset + it.rangeInElement.startOffset)
-                                    false
-                                }
-                            }
-                        }
-                    }
-
-                    targets.remove(startOffset)
-                    targets.forEach {
-                        displayInlays(translation, editor, it, zoom, true, true)
-                    }
+            if (file != null) {
+                val targets = findUsages(file, startOffset, editor, file.useScope)
+                targets.forEach {
+                    displayInlays(element, translation, editor, it.second, zoom, true, true)
                 }
             }
         }
     }
 
     private fun displayInlays(
+        element: PsiElement?,
         translation: GTranslation,
         editor: Editor,
         startOffset: Int,
@@ -309,6 +262,7 @@ open class TranslateAction : DumbAwareAction()  {
             zoom = zoom,
             flag = translation.sourceLanguageIndentified.trim().lowercase(),
             translation = if (inputOnly) " " else "  ",
+            element = element?.let { SmartPointerManager.getInstance(it.project).createSmartPsiElementPointer(it, element.containingFile) },
             secondaryIcon = secondaryIcon
         )
         val p = InlayProperties().apply {
@@ -343,6 +297,7 @@ open class TranslateAction : DumbAwareAction()  {
                     type = EHint.TRANSLATION,
                     zoom = zoom,
                     translation = translationLine,
+                    element = element?.let { SmartPointerManager.getInstance(it.project).createSmartPsiElementPointer(it, element.containingFile) },
                     flag = if (index == translationLines.size - 1) output.trim().lowercase() else null,
                     indent = if (index == translationLines.size - 1) xindent else 4
                 )
@@ -355,6 +310,8 @@ open class TranslateAction : DumbAwareAction()  {
 
                 inlayModel.addBlockElement<HintRenderer>(startOffset, ip, ren)
             }
+
+        DaemonCodeAnalyzer.getInstance(editor.project).restart()
     }
 
     private fun applyTranslation(
@@ -411,11 +368,88 @@ open class TranslateAction : DumbAwareAction()  {
             }
         }
 
-        EditorFactory.getInstance().clearInlays()
+        EditorFactory.getInstance().clearInlays(editor.project)
         if (selectionEnd)
             editor.selectionModel.removeSelection()
     }
 
     override fun isDumbAware()
         = true
+}
+
+fun findUsages(
+    file: PsiFile,
+    startOffset: Int,
+    editor: Editor,
+    scope: SearchScope
+): Set<Pair<PsiElement, Int>> {
+    val elt = file.findElementAt(startOffset)
+        ?: return emptySet()
+    return findUsages(elt, editor, scope)
+}
+
+fun findUsages(
+    origin: PsiElement,
+    editor: Editor,
+    scope: SearchScope
+): Set<Pair<PsiElement, Int>> {
+
+    val element = origin.findRenamable()
+    if (element == null  || !canRename(element))
+        return emptySet()
+
+    val targets = mutableSetOf<Pair<PsiElement, Int>>()
+
+    val refactoringSetup = RefactoringSetup()
+    if (!refactoringSetup.useRefactoring)
+        return targets
+
+    val elt = RenamePsiElementProcessor.forElement(element).substituteElementToRename(element, editor)?.findRenamable() ?: element
+    val file = element.containingFile
+
+elt.startOffset
+element.startOffset
+
+    val rename = RefactoringFactory.getInstance(elt.project)
+        .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
+    val usages = rename.findUsages()
+
+    val allRenames = mutableMapOf<PsiElement, String>()
+    allRenames[elt] = "xxx"
+
+    val processors = RenamePsiElementProcessor.allForElement(elt)
+    for (processor in processors) {
+        if (processor.canProcessElement(elt)) {
+            processor.prepareRenaming(elt, "xxx", allRenames)
+        }
+    }
+
+    allRenames.forEach { (resolved, renamed) ->
+        if (resolved is PsiNameIdentifierOwner) {
+            val o = resolved.identifyingElement?.startOffset
+            if (o != null && o != elt.startOffset)
+                targets.add(resolved.identifyingElement!! to o)
+        }
+    }
+
+    usages.forEach { usage ->
+        if (usage is NonCodeUsageInfo && usage.element?.containingFile == file) {
+            val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
+            if (o >= 0)
+                targets.add(usage.element!! to o)
+        } else {
+            val r = usage.reference?.element // ?.findRenamable()
+            if (r != null && r.containingFile == file) {
+                PsiTreeUtil.collectElements(r) {
+                    if (it is PsiReference && it.resolve() == elt)
+                        targets.add( it to it.startOffset + it.rangeInElement.startOffset)
+                    false
+                }
+            }
+        }
+    }
+
+    targets.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
+
+    return targets
 }

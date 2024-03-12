@@ -13,10 +13,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
-import javax.swing.Icon
-import javax.swing.ImageIcon
-import javax.swing.JLabel
-import javax.swing.UIManager
+import javax.swing.*
 
 fun textToIcon(text: String, size: Float, position: Int, foreground: Color): Icon {
     val icon = LayeredIcon(2)
@@ -115,3 +112,27 @@ fun Icon.addVeilToIcon(): Icon {
             }
         }
     }
+
+//private var numberIcons: MutableMap<String, Icon> = HashMap()
+//fun getNumberIcon(index: Int, foreground: Color): Icon {
+//    val key = "$index/$foreground"
+//    var icon = numberIcons[key]
+//    if (icon == null) {
+//        icon = addText(
+//            if (index == 0) CommonIcons.COUNT_BASE_ZERO else CommonIcons.COUNT_BASE,
+//            if (index == 0) "-" else ("" + index),
+//            10f,
+//            SwingConstants.CENTER,
+//            foreground
+//        )
+//        numberIcons[key] = icon
+//    }
+//    return icon
+//}
+//
+//fun addText(base: Icon, text: String, size: Float, position: Int, foreground: Color): Icon {
+//    val icon = LayeredIcon(2)
+//    icon.setIcon(base, 0)
+//    icon.setIcon(textToIcon(text, JLabel(), JBUIScale.scale(size), foreground), 1, position)
+//    return icon
+//}

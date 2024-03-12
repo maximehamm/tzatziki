@@ -4,6 +4,9 @@ import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.psi.PsiElement
+import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.util.ui.UIUtil
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -17,10 +20,12 @@ class EditorHint(
     val type: EHint,
     val zoom: Double,
     val translation: String = "",
+    val element: SmartPsiElementPointer<PsiElement>?,
     val flag: String? = null,
     val icon: Icon? = null,
     val indent: Int? = null,
-    val secondaryIcon: Boolean = false
+    val secondaryIcon: Boolean = false,
+
 ) : HintRenderer(translation) {
 
     private val creationDate = LocalDateTime.now()
