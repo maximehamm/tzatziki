@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.util.ui.UIUtil
+import java.awt.Font
 import java.awt.Graphics
 import java.awt.Rectangle
 import java.time.LocalDateTime
@@ -71,8 +72,31 @@ class EditorHint(
 
             if (translation.isNotBlank()) {
 
-                val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
-                paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
+                if (focus) {
+
+                    val fontMetrics = Companion.getFontMetrics(editor, false)
+                    val suffixFont = fontMetrics.font.deriveFont(Font.ITALIC, fontMetrics.font.size2D * 0.9f)
+                    val gap = if (r.height < fontMetrics.lineHeight + 2) 1 else 2
+
+                    val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
+                    paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
+
+                    val suffixText =
+                        if (RefactoringSetup().useRefactoring)
+                            "Click to refactor"
+                        else
+                            "Click to apply"
+                    val suffixTextX = modifiedR.x + modifiedR.width + spacing
+                    val suffixTextY = (modifiedR.y + modifiedR.height) - fontMetrics.lineHeight + gap
+
+                    g.font = suffixFont
+                    g.color = (getTextAttributes(editor) ?: attributes).foregroundColor
+                    g.drawString(suffixText, suffixTextX, suffixTextY)
+                }
+                else {
+                    val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
+                    paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
+                }
             }
             else {
                 val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, 0, r.height)

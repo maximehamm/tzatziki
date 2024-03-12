@@ -137,8 +137,9 @@
 
         <iconMapper mappingFile="TranslationIconMappings.json"/>
 
-        <annotator language=""
-                   implementationClass="io.nimbly.i18n.translation.TranslationAnnotator"/>
+        <!--
+        <annotator language="" implementationClass="io.nimbly.i18n.translation.TranslationAnnotator"/>
+        -->
 
     </extensions>
 
