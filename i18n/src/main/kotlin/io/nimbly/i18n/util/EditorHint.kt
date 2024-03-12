@@ -82,14 +82,19 @@ class EditorHint(
                     val modifiedR = Rectangle(r.x + icon.iconWidth + spacing, r.y, r.width, r.height)
                     paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
 
+                    val r = RefactoringSetup()
                     val suffixText =
-                        if (RefactoringSetup().useRefactoring) {
-                            val usages = TranslationManager.getUsages()
-                            if (usages!=null) {
-                                "Click to refactor ${usages.size} usages"
+                        if (r.useRefactoring) {
+                            if (r.preview) {
+                                "Click to preview refactoring"
                             }
-                            else
-                                "Click to refactor"
+                            else {
+                                val usages = TranslationManager.getUsages()
+                                if (usages.isNotEmpty()) {
+                                    "Click to refactor ${usages.size} usage${usages.size.plural}"
+                                } else
+                                    "Click to refactor"
+                            }
                         } else {
                             "Click to apply"
                         }

@@ -109,11 +109,8 @@ fun findUsages(
     val targets = mutableSetOf<Pair<PsiElement, Int>>()
 
     val refactoringSetup = RefactoringSetup()
-    if (!refactoringSetup.useRefactoring)
-        return targets
 
     val elt = RenamePsiElementProcessor.forElement(element).substituteElementToRename(element, editor)?.findRenamable() ?: element
-    val file = element.containingFile
 
     val rename = RefactoringFactory.getInstance(elt.project)
         .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
@@ -138,13 +135,13 @@ fun findUsages(
     }
 
     usages.forEach { usage ->
-        if (usage is NonCodeUsageInfo &&  usage.element?.containingFile == file) {
+        if (usage is NonCodeUsageInfo && scope.contains(usage.element?.containingFile)) {
             val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
             if (o >= 0)
                 targets.add(usage.element!! to o)
         } else {
-            val r = usage.reference?.element // ?.findRenamable()
-            if (r != null && r.containingFile == file) {
+            val r = usage.reference?.element
+            if (r != null && scope.contains(r.containingFile)) {
                 PsiTreeUtil.collectElements(r) {
                     if (it is PsiReference && it.resolve() == elt)
                         targets.add( it to it.startOffset + it.rangeInElement.startOffset)
@@ -157,4 +154,11 @@ fun findUsages(
     targets.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
 
     return targets
+}
+
+private fun SearchScope.contains(file: PsiFile?): Boolean {
+    if (file == null)
+        return false
+
+    return this.contains(file.virtualFile)
 }

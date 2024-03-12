@@ -300,13 +300,5 @@ class CustomTraversalPolicy(private vararg val order: Component) : FocusTraversa
     override fun getDefaultComponent(focusCycleRoot: Container): Component = order[0]
 }
 
-fun PsiElement?.findRenamable(): PsiElement? {
-    var elt = this
-    if (elt !is PsiNamedElement) {
-        elt = elt?.parent
-    }
-    if (elt is PsiReference) {
-        elt = elt.resolve()
-    }
-    return elt
-}
+val Number?.plural: String
+    get() = if ((this?.toInt() ?: 0) > 1) "s" else ""

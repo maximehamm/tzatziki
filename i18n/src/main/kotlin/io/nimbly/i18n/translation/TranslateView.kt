@@ -78,6 +78,44 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     private var inputLanguageProgramaticSelection = false;
     private var outputFlagIcon: Icon? = null
 
+    private val refactoringText = object : JBLabel("") {
+
+        private var count: Int? = null
+        private var fileCount: Int? = null
+        private var singleFileName: String? = null
+
+        fun refresh(usages: Set<PsiElement>? = null) {
+
+            if (usages != null) {
+                count = usages.count()
+                fileCount = usages.distinctBy { it.containingFile }.size
+                singleFileName = usages.distinctBy { it.containingFile }.singleOrNull()?.containingFile?.name
+            }
+
+            if (count == null || count == 0) {
+                this.text = ""
+                return
+            }
+
+            var t =  " "
+            if ((count ?: 0) > 1 && !RefactoringSetup().useRefactoring) {
+                t += "⚠ "
+                this.foreground = Color.RED
+            }
+            else {
+                this.foreground = JBLabel().foreground
+            }
+
+            t += "Found ${count} usage${count.plural}"
+
+            if ((fileCount ?: 0) == 1)
+                t += " in file \"$singleFileName\""
+            else if ((fileCount ?: 0) > 1)
+                t += " in $fileCount file${fileCount.plural}"
+
+            this.text = t
+        }
+    }
     private val refactoring = JBCheckBox("Replace using refactoring")
     private val refactoringPreview = JBCheckBox("Show preview")
     private val refactoringSearchInComments = JBCheckBox("Search in comments")
@@ -88,9 +126,19 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         }
     }.apply { isEnabled = false }
 
-    private val replaceAction = object : AbstractAction("Replace selection", AllIcons.Actions.MenuPaste) {
+    private val replaceAction = object : AbstractAction("Replace", AllIcons.Actions.MenuPaste) {
         override fun actionPerformed(e: ActionEvent) {
             replace()
+        }
+        fun refresh() {
+            val text =
+                if (!refactoringModel.useRefactoring)
+                    "Replace"
+                else if (refactoringModel.preview)
+                    "Preview refactoring"
+                else
+                    "Replace and refactor"
+            putValue(Action.NAME, text)
         }
     }.apply { isEnabled = false }
 
@@ -178,6 +226,9 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
             }
         }
+
+
+        replaceAction.refresh()
 
         TranslationManager.registerListener(this)
     }
@@ -352,7 +403,6 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 refactoring.toolTipText = tooltip
                 refactoringPreview.toolTipText = tooltip
                 refactoringSearchInComments.toolTipText = tooltip
-
             }
         }
     }
@@ -525,13 +575,12 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             GridConstraints(
                 6, 0, 1, 4,
                 ANCHOR_WEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK,
-                SIZEPOLICY_CAN_SHRINK,
+                SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK,
                 null, null, null
             )
         )
 
-        panel.layout = BorderLayout(10, 10)
+        panel.layout = BorderLayout(10, 30)
         panel.border = JBUI.Borders.empty(10)
         panel.withEmptyText("No literal selected yet found")
         panel.add(main, BorderLayout.CENTER)
@@ -546,12 +595,15 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             refactoringPreview.isVisible = selected
             refactoringSearchInComments.isVisible = selected && !refactoringPreview.isSelected
             refactoringModel.useRefactoring = selected
+            replaceAction.refresh()
+            refactoringText.refresh()
         }
 
         refactoringPreview.addActionListener {
             val selected = refactoringPreview.isSelected
             refactoringModel.preview = selected
             refactoringSearchInComments.isVisible = refactoring.isSelected && !selected
+            replaceAction.refresh()
         }
 
         refactoringSearchInComments.addActionListener {
@@ -565,10 +617,30 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         refactoringPreview.isVisible = refactoring.isSelected
         refactoringSearchInComments.isVisible = refactoring.isSelected && !refactoringPreview.isSelected
 
-        val refactoringPanel = JBPanelWithEmptyText(FlowLayout())
-        refactoringPanel.add(refactoring)
-        refactoringPanel.add(refactoringPreview)
-        refactoringPanel.add(refactoringSearchInComments)
+        val refactoringPanel = JBPanelWithEmptyText(GridLayoutManager(2, 3))
+        refactoringPanel.add(refactoringText, GridConstraints(
+            0, 0, 1, 3,
+            ANCHOR_SOUTHWEST, FILL_HORIZONTAL, SIZEPOLICY_CAN_SHRINK, SIZEPOLICY_CAN_SHRINK,null, null, null
+        ))
+
+        refactoringPanel.add(refactoring, GridConstraints(
+            1, 0, 1, 1,
+            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            SIZEPOLICY_FIXED,
+            SIZEPOLICY_CAN_SHRINK,null, null, null
+        ))
+        refactoringPanel.add(refactoringPreview, GridConstraints(
+            1, 1, 1, 1,
+            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            SIZEPOLICY_FIXED,
+            SIZEPOLICY_CAN_SHRINK,null, null, null
+        ))
+        refactoringPanel.add(refactoringSearchInComments, GridConstraints(
+            1, 2, 1, 1,
+            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            SIZEPOLICY_FIXED,
+            SIZEPOLICY_CAN_SHRINK,null, null, null
+        ))
 
         return refactoringPanel
     }
@@ -588,6 +660,10 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                 this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.ITALIC)
             }
         }
+    }
+
+    override fun onUsagesCollected(usages: Set<PsiElement>) {
+        refactoringText.refresh(usages)
     }
 }
 

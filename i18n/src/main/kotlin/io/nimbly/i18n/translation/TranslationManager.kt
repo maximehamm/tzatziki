@@ -48,27 +48,49 @@ object TranslationManager {
                     .postTranslation(format)
                     .escapeStyle(style, Locale(sourceLanguage))
 
-            val event = TranslationEvent(translation, origin)
+            val event = TranslationEvent(translation)
 
-            if (project != null) {
-                DumbService.getInstance(project).smartInvokeLater {
-                    listeners.forEach { it.onTranslation(event) }
-                }
-            }
-            else {
-                listeners.forEach { it.onTranslation(event) }
-            }
+            updateListenersAfterTranslation(project, event)
         }
 
-        findUsages = null
         if (origin?.element != null && origin.editor != null) {
+            findUsages = null
+            updateListenersAfterUsagesCollected(project)
             SwingUtilities.invokeLater {
-                findUsages =
-                    findUsages(origin.element, origin.editor, GlobalSearchScope.allScope(origin.element.project))
+                findUsages = findUsages(origin.element, origin.editor, GlobalSearchScope.allScope(origin.element.project))
+                updateListenersAfterUsagesCollected(project)
             }
         }
+        else {
+            findUsages = null
+            updateListenersAfterUsagesCollected(project)
+        }
+
 
         return translation
+    }
+
+    private fun updateListenersAfterTranslation(project: Project?, event: TranslationEvent) {
+
+        if (project != null) {
+            DumbService.getInstance(project).smartInvokeLater {
+                listeners.forEach { it.onTranslation(event) }
+            }
+        } else {
+            listeners.forEach { it.onTranslation(event) }
+        }
+    }
+
+    private fun updateListenersAfterUsagesCollected(project: Project?) {
+
+        val usages = getUsages()
+        if (project != null) {
+            DumbService.getInstance(project).smartInvokeLater {
+                listeners.forEach { it.onUsagesCollected(usages) }
+            }
+        } else {
+            listeners.forEach { it.onUsagesCollected(usages) }
+        }
     }
 
     fun getUsages(): Set<PsiElement> {
@@ -78,11 +100,11 @@ object TranslationManager {
 
 interface TranslationListener {
     fun onTranslation(event: TranslationEvent)
+    fun onUsagesCollected(usages: Set<PsiElement>)
 }
 
 class TranslationEvent(
-    val translation: GTranslation,
-    val origin: Any?
+    val translation: GTranslation
 )
 
 class Origin(

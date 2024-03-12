@@ -24,12 +24,16 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vcs.VcsDataKeys
 import com.intellij.psi.*
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
+import com.intellij.psi.util.PsiEditorUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
@@ -236,10 +240,19 @@ open class TranslateAction : DumbAwareAction()  {
             //
             // Display inlays for references also
             if (file != null) {
-                val targets = findUsages(file, startOffset, editor, file.useScope)
-                targets.forEach {
-                    displayInlays(element, translation, editor, it.second, zoom, true, true)
-                }
+                val targets = findUsages(file, startOffset, editor, GlobalSearchScope.projectScope(file.project))
+                targets
+                    .forEach {
+                        if (element !=null) {
+                            val editors = FileEditorManager.getInstance(project).getAllEditors(it.first.containingFile.virtualFile)
+                            editors
+                                .filterIsInstance<TextEditor>()
+                                .map { it.editor }
+                                .forEach { ed ->
+                                    displayInlays(element, translation, ed, it.second, zoom, true, true)
+                                }
+                            }
+                    }
             }
         }
     }
