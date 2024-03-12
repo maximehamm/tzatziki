@@ -13,10 +13,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import io.nimbly.i18n.util.EditorHint
-import io.nimbly.i18n.util.RefactoringSetup
-import io.nimbly.i18n.util.getDocument
-import io.nimbly.i18n.util.textToIcon
+import io.nimbly.i18n.util.*
 import java.awt.Color
 import javax.swing.SwingUtilities
 

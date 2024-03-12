@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.util.ui.UIUtil
+import io.nimbly.i18n.translation.TranslationManager
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -82,10 +83,16 @@ class EditorHint(
                     paintHint(g, editor, modifiedR, text, att, att, widthAdjustment, useEditorFont())
 
                     val suffixText =
-                        if (RefactoringSetup().useRefactoring)
-                            "Click to refactor"
-                        else
+                        if (RefactoringSetup().useRefactoring) {
+                            val usages = TranslationManager.getUsages()
+                            if (usages!=null) {
+                                "Click to refactor ${usages.size} usages"
+                            }
+                            else
+                                "Click to refactor"
+                        } else {
                             "Click to apply"
+                        }
                     val suffixTextX = modifiedR.x + modifiedR.width + spacing
                     val suffixTextY = (modifiedR.y + modifiedR.height) - fontMetrics.lineHeight + gap
 

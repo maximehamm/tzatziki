@@ -208,7 +208,7 @@ open class TranslateAction : DumbAwareAction()  {
             val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
             val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
 
-            val translation = TranslationManager.translate(output, input, text, format, style, project)
+            val translation = TranslationManager.translate(output, input, text, format, style, Origin.from(element, editor), project)
 
             if (forcedStyle == null && translation?.translated?.isEmpty() == true) {
 
@@ -375,81 +375,4 @@ open class TranslateAction : DumbAwareAction()  {
 
     override fun isDumbAware()
         = true
-}
-
-fun findUsages(
-    file: PsiFile,
-    startOffset: Int,
-    editor: Editor,
-    scope: SearchScope
-): Set<Pair<PsiElement, Int>> {
-    val elt = file.findElementAt(startOffset)
-        ?: return emptySet()
-    return findUsages(elt, editor, scope)
-}
-
-fun findUsages(
-    origin: PsiElement,
-    editor: Editor,
-    scope: SearchScope
-): Set<Pair<PsiElement, Int>> {
-
-    val element = origin.findRenamable()
-    if (element == null  || !canRename(element))
-        return emptySet()
-
-    val targets = mutableSetOf<Pair<PsiElement, Int>>()
-
-    val refactoringSetup = RefactoringSetup()
-    if (!refactoringSetup.useRefactoring)
-        return targets
-
-    val elt = RenamePsiElementProcessor.forElement(element).substituteElementToRename(element, editor)?.findRenamable() ?: element
-    val file = element.containingFile
-
-elt.startOffset
-element.startOffset
-
-    val rename = RefactoringFactory.getInstance(elt.project)
-        .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
-    val usages = rename.findUsages()
-
-    val allRenames = mutableMapOf<PsiElement, String>()
-    allRenames[elt] = "xxx"
-
-    val processors = RenamePsiElementProcessor.allForElement(elt)
-    for (processor in processors) {
-        if (processor.canProcessElement(elt)) {
-            processor.prepareRenaming(elt, "xxx", allRenames)
-        }
-    }
-
-    allRenames.forEach { (resolved, renamed) ->
-        if (resolved is PsiNameIdentifierOwner) {
-            val o = resolved.identifyingElement?.startOffset
-            if (o != null && o != elt.startOffset)
-                targets.add(resolved.identifyingElement!! to o)
-        }
-    }
-
-    usages.forEach { usage ->
-        if (usage is NonCodeUsageInfo && usage.element?.containingFile == file) {
-            val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
-            if (o >= 0)
-                targets.add(usage.element!! to o)
-        } else {
-            val r = usage.reference?.element // ?.findRenamable()
-            if (r != null && r.containingFile == file) {
-                PsiTreeUtil.collectElements(r) {
-                    if (it is PsiReference && it.resolve() == elt)
-                        targets.add( it to it.startOffset + it.rangeInElement.startOffset)
-                    false
-                }
-            }
-        }
-    }
-
-    targets.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
-
-    return targets
 }

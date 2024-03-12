@@ -193,6 +193,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             txt,
             ctxt.format,
             ctxt.style,
+            Origin.from(ctxt.selectedElement, ctxt.editor),
             ctxt.project
         )
         ?: return

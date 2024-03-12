@@ -26,7 +26,7 @@ class TranslationRenamerFactory : NameSuggestionProvider {
                 ?: return null
 
             val deferred: Deferred<GTranslation?> = GlobalScope.async(Dispatchers.Default) {
-                val translation = TranslationManager.translate(output, input, name, EFormat.TEXT, name.detectStyle(true), element.project)
+                val translation = TranslationManager.translate(output, input, name, EFormat.TEXT, name.detectStyle(true), null, element.project)
                 translation;
             }
 

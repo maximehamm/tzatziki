@@ -16,6 +16,7 @@ package io.nimbly.i18n.translation
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
+import com.intellij.psi.PsiElement
 import com.intellij.util.net.HttpConfigurable
 import io.nimbly.i18n.util.nullIfEmpty
 import java.io.BufferedReader
