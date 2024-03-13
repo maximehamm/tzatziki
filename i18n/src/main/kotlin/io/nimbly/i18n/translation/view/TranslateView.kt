@@ -12,9 +12,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-package io.nimbly.i18n.translation
+package io.nimbly.i18n.translation.view
 
-import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
@@ -22,13 +21,16 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.actionSystem.impl.ActionButton
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.editor.*
-import com.intellij.openapi.editor.event.*
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.event.CaretEvent
+import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.openapi.editor.event.SelectionEvent
+import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -43,19 +45,17 @@ import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
 import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
+import io.nimbly.i18n.translation.*
 import io.nimbly.i18n.util.*
 import java.awt.*
 import java.awt.event.*
 import java.awt.event.ItemEvent.SELECTED
-import java.awt.image.BufferedImage
 import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
-import javax.swing.plaf.basic.BasicComboBoxEditor
 
 
 private val ComboBox<Lang>.lang: Lang
@@ -84,12 +84,19 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         private var fileCount: Int? = null
         private var singleFileName: String? = null
 
-        fun refresh(usages: Set<PsiElement>? = null) {
+        fun refresh(usages: Set<PsiElement>? = null, origin: PsiElement? = null) {
 
             if (usages != null) {
                 count = usages.count()
                 fileCount = usages.distinctBy { it.containingFile }.size
-                singleFileName = usages.distinctBy { it.containingFile }.singleOrNull()?.containingFile?.name
+
+                val f = usages.distinctBy { it.containingFile }.singleOrNull()?.containingFile
+                singleFileName =
+                    when (f) {
+                        null -> null
+                        ctxt.selectedElement?.containingFile -> " in this file"
+                        else -> " in file “${f.name}”"
+                    } 
             }
 
             if (count == null || count == 0) {
@@ -108,9 +115,9 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
             t += "Found ${count} usage${count.plural}"
 
-            if ((fileCount ?: 0) == 1)
-                t += " in file \"$singleFileName\""
-            else if ((fileCount ?: 0) > 1)
+            if (singleFileName != null)
+                t += singleFileName
+            else
                 t += " in $fileCount file${fileCount.plural}"
 
             this.text = t
@@ -318,13 +325,6 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             }
         }
     }
-
-    fun String.preserveQuotes(format: EFormat, function: (s: String) -> String) =
-        if (format.preserveQuotes && this.startsWith("\"") && this.endsWith("\"")) {
-            "\"" + function(this.substring(1, this.length - 1)) + "\""
-        } else {
-            function(this)
-        }
 
     fun swapLanguages() {
         val input = if (this.inputLanguage.lang.isAuto()) Lang.DEFAULT else this.inputLanguage.lang
@@ -662,108 +662,12 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         }
     }
 
-    override fun onUsagesCollected(usages: Set<PsiElement>) {
-        refactoringText.refresh(usages)
+    override fun onUsagesCollected(origin: PsiElement?, usages: Set<PsiElement>) {
+        refactoringText.refresh(usages, origin)
     }
 }
 
-class IsoCodesRenderer : DefaultListCellRenderer() {
-
-    override fun getListCellRendererComponent(
-        list: JList<*>,
-        value: Any?,
-        index: Int,
-        isSelected: Boolean,
-        cellHasFocus: Boolean,
-    ): Component {
-
-        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-
-        if (value is Lang) {
-
-            val originalIcon: Icon
-            text = value.name
-
-            if (value == Lang.AUTO) {
-                originalIcon = TranslationIcons.getFlag(" ")!!
-                font = font.deriveFont(Font.BOLD)
-            } else {
-                originalIcon = TranslationIcons.getFlag(value.code)!!
-                font = font.deriveFont(Font.PLAIN)
-            }
-
-            val img = BufferedImage(18, originalIcon.iconHeight, BufferedImage.TYPE_INT_ARGB)
-            val g2d = img.createGraphics()
-            originalIcon.paintIcon(this, g2d, 0, 0)
-            g2d.dispose()
-
-            icon = ImageIcon(img)
-        }
-
-        border = BorderFactory.createEmptyBorder(0, 0, 0, UIUtil.getListCellHPadding())
-
-        return this
-    }
-}
-
-class IsoCodesComboBoxEditor : BasicComboBoxEditor() {
-
-    private val label = JBLabel()
-    private val panel = JBPanelWithEmptyText(BorderLayout())
-
-    init {
-        panel.add(label, BorderLayout.CENTER)
-        panel.isOpaque = true
-        panel.background = UIUtil.getListBackground()
-    }
-
-    override fun getEditorComponent(): Component {
-        return panel
-    }
-
-    override fun getItem(): Any? {
-        return label.text
-    }
-
-    override fun setItem(anObject: Any?) {
-        if (anObject is Lang) {
-            label.text = anObject.name
-            val originalIcon = TranslationIcons.getFlag(anObject.code)!!
-            val image = BufferedImage(18, originalIcon.iconHeight, BufferedImage.TYPE_INT_ARGB)
-            val g2d = image.createGraphics()
-            originalIcon.paintIcon(this.panel, g2d, 0, 0)
-            g2d.dispose()
-            label.icon = ImageIcon(image)
-        }
-    }
-
-    override fun selectAll() {
-        // Do nothing or implement text selection if needed
-    }
-
-    override fun addActionListener(l: ActionListener) {
-        // This might not be needed depending on your requirements
-    }
-
-    override fun removeActionListener(l: ActionListener) {
-        // This might not be needed depending on your requirements
-    }
-}
-
-data class Lang(val code: String, val name: String) {
-    override fun toString(): String {
-        return name
-    }
-
-    fun isAuto() = code == "auto"
-
-    companion object {
-        val DEFAULT = Lang("en", languagesMap["en"]!!)
-        val AUTO = Lang("auto", "Auto")
-    }
-}
-
-class TextArea : JBTextArea(15, 10) {
+private class TextArea : JBTextArea(15, 10) {
     init {
         lineWrap = true;
         wrapStyleWord = true;
@@ -772,135 +676,3 @@ class TextArea : JBTextArea(15, 10) {
     }
 }
 
-enum class EFormat(val preserveQuotes: Boolean) {
-    TEXT(false),
-    HTML(false),
-    CSV(true),
-    XML(false),
-    JSON(true),
-    PROPERTIES(false)
-}
-
-class Context {
-
-    var editor: Editor? = null
-        set(editor) {
-            initListener(editor)
-            field = editor
-        }
-
-    var document: Document? = null
-    var selectedElement: PsiElement?= null
-    var startOffset: Int? = null
-    var endOffset: Int? = null
-    var format: EFormat = EFormat.TEXT
-    var style: EStyle = EStyle.NORMAL
-
-    fun hasSelection(): Boolean {
-        val s = this.startOffset
-        val e = this.endOffset
-        if (s == null || e == null)
-            return false
-        return e - s > 0
-    }
-
-    val project get() = editor?.project
-
-    private var mouseListener: TranslationMouseMotionListener? = null
-
-    private fun initListener(editor: Editor?) {
-
-        if (this.editor != editor) {
-
-            if (mouseListener != null) {
-                this.editor?.removeEditorMouseMotionListener(mouseListener!!)
-                mouseListener = null
-            }
-
-            if (editor != null) {
-                mouseListener = TranslationMouseMotionListener()
-                editor.addEditorMouseMotionListener(mouseListener!!)
-                editor.addEditorMouseListener(mouseListener!!)
-            }
-        }
-
-
-    }
-
-    class TranslationMouseMotionListener : EditorMouseMotionListener, EditorMouseListener {
-
-        override fun mouseMoved(e: EditorMouseEvent) {
-
-            val focusInlays = findTranslationInlays(e, true)
-            val maxLength = focusInlays.maxOfOrNull { it.renderer.translation.length }
-
-            if (focusInlays.isNotEmpty()
-                && focusInlays.first().visualPosition.column < e.visualPosition.column
-                && focusInlays.first().visualPosition.column + maxLength!! + 2 > e.visualPosition.column) {
-                val customCursor = Cursor(Cursor.HAND_CURSOR)
-                e.editor.contentComponent.cursor = customCursor
-            }
-            else {
-                e.editor.contentComponent.cursor = Cursor(Cursor.DEFAULT_CURSOR)
-            }
-
-            val toReplace = mutableListOf<Inlay<EditorHint>>()
-            e.editor.getTranslationInlays().forEach { inlay ->
-                if (focusInlays.find { it.renderer == inlay.renderer } != null) {
-                    if (inlay.renderer.mouseEnter())
-                        toReplace.add(inlay)
-                } else {
-                    if (inlay.renderer.mouseExit())
-                        toReplace.add(inlay)
-                }
-            }
-
-            if (toReplace.isEmpty())
-                return
-
-            toReplace.forEach {
-                Disposer.dispose(it)
-            }
-
-            val ip = InlayProperties().apply {
-                showAbove(true)
-                relatesToPrecedingText(false)
-                priority(1000)
-                disableSoftWrapping(false)
-            }
-            toReplace.forEach {
-                e.editor.inlayModel.addBlockElement<HintRenderer>(it.offset, ip, it.renderer)
-            }
-        }
-
-        override fun mousePressed(e: EditorMouseEvent) {
-
-            findTranslationInlays(e)
-                .firstOrNull()
-                ?: return
-
-            val elt = e.editor.file?.findElementAt(e.offset)
-                ?: return
-
-            TranslateAction().doActionPerformed(
-                project = elt.project,
-                editor = e.editor,
-                file = elt.containingFile)
-        }
-
-        private fun findTranslationInlays(e: EditorMouseEvent, fullLine: Boolean = false): List<Inlay<EditorHint>> {
-
-            val p1 = e.mouseEvent.point
-            val p2 = e.editor.visualPositionToXY(e.visualPosition)
-            val aboveLine = (p2.y - p1.y >= 0)
-
-            val focusInlay = if (!aboveLine) emptyList() else
-                e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
-                    .filter { (it.renderer as EditorHint).translation.isNotBlank() }
-                    //.filter { fullLine || it.visualPosition.column < e.visualPosition.column }
-                    //.filter { fullLine || it.visualPosition.column + (it.renderer as EditorHint).translation.length + 2 > e.visualPosition.column }
-                    as List<Inlay<EditorHint>>
-            return focusInlay
-        }
-    }
-}

@@ -30,18 +30,17 @@ import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vcs.VcsDataKeys
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.psi.search.SearchScope
-import com.intellij.psi.util.PsiEditorUtil
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
-import com.intellij.refactoring.util.NonCodeUsageInfo
 import icons.ActionI18nIcons
+import io.nimbly.i18n.translation.view.Lang
 import io.nimbly.i18n.util.*
 
 @Suppress("MissingActionUpdateThread")

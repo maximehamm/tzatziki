@@ -6,6 +6,8 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.project.DumbAwareAction
+import io.nimbly.i18n.translation.view.Lang
+import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.EStyle
 import io.nimbly.i18n.util.TranslationIcons
 import io.nimbly.i18n.util.languagesMap

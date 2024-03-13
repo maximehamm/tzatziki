@@ -3,6 +3,15 @@ package io.nimbly.i18n.util
 import java.text.Normalizer
 import java.util.*
 
+enum class EFormat(val preserveQuotes: Boolean) {
+    TEXT(false),
+    HTML(false),
+    CSV(true),
+    XML(false),
+    JSON(true),
+    PROPERTIES(false)
+}
+
 enum class EStyle {
     NORMAL,
     NORMAL_LOWER,

@@ -5,6 +5,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.codeStyle.SuggestedNameInfo
 import com.intellij.refactoring.rename.NameSuggestionProvider
+import io.nimbly.i18n.translation.view.Lang
+import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.detectStyle
 import kotlinx.coroutines.*
 

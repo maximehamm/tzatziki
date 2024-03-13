@@ -20,7 +20,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 import io.nimbly.i18n.dictionary.DictionaryView
-import io.nimbly.i18n.translation.TranslateView
+import io.nimbly.i18n.translation.view.TranslateView
 
 class TranslationPlusFactory : ToolWindowFactory {
 

@@ -55,15 +55,15 @@ object TranslationManager {
 
         if (origin?.element != null && origin.editor != null) {
             findUsages = null
-            updateListenersAfterUsagesCollected(project)
+            updateListenersAfterUsagesCollected(origin.element, project)
             SwingUtilities.invokeLater {
                 findUsages = findUsages(origin.element, origin.editor, GlobalSearchScope.allScope(origin.element.project))
-                updateListenersAfterUsagesCollected(project)
+                updateListenersAfterUsagesCollected(origin.element, project)
             }
         }
         else {
             findUsages = null
-            updateListenersAfterUsagesCollected(project)
+            updateListenersAfterUsagesCollected(origin?.element, project)
         }
 
 
@@ -81,15 +81,15 @@ object TranslationManager {
         }
     }
 
-    private fun updateListenersAfterUsagesCollected(project: Project?) {
+    private fun updateListenersAfterUsagesCollected(origin: PsiElement?, project: Project?) {
 
         val usages = getUsages()
-        if (project != null) {
+        if (project != null && origin != null) {
             DumbService.getInstance(project).smartInvokeLater {
-                listeners.forEach { it.onUsagesCollected(usages) }
+                listeners.forEach { it.onUsagesCollected(origin, usages) }
             }
         } else {
-            listeners.forEach { it.onUsagesCollected(usages) }
+            listeners.forEach { it.onUsagesCollected(null, usages) }
         }
     }
 
@@ -100,7 +100,7 @@ object TranslationManager {
 
 interface TranslationListener {
     fun onTranslation(event: TranslationEvent)
-    fun onUsagesCollected(usages: Set<PsiElement>)
+    fun onUsagesCollected(origin: PsiElement?, usages: Set<PsiElement>)
 }
 
 class TranslationEvent(

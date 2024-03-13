@@ -2,7 +2,6 @@ package io.nimbly.i18n.util
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiFile
-import io.nimbly.i18n.translation.EFormat
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.text.StringEscapeUtils
