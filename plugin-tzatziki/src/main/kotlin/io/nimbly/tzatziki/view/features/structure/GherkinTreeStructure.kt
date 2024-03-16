@@ -67,7 +67,9 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
 
     override fun getChildElements(element: Any): Array<Any> {
         if (element is AbstractTreeNode<*>)
-            return element.children.toTypedArray()
+            return element.children
+                .sortedBy { if (it is GherkinFileNode) it.file.name else it.toString() }
+                .toTypedArray()
         return emptyArray<Any>()
     }
 }
