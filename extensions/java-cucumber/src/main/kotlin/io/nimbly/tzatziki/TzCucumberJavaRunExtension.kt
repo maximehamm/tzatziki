@@ -48,7 +48,11 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
     }
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        return configuration is CucumberJavaRunConfiguration
+        return try {
+            configuration is CucumberJavaRunConfiguration
+        } catch (e: NoClassDefFoundError) {
+            false
+        }
     }
 
 }
