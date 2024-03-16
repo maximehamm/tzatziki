@@ -129,7 +129,7 @@ class Context {
 
             val focusInlay = if (!aboveLine) emptyList() else
                 e.editor.inlayModel.getBlockElementsForVisualLine(e.visualPosition.line, true)
-                    .filter { (it.renderer as EditorHint).translation.isNotBlank() }
+                    .filter { (it.renderer as? EditorHint)?.translation?.isNotBlank() == true }
                     //.filter { fullLine || it.visualPosition.column < e.visualPosition.column }
                     //.filter { fullLine || it.visualPosition.column + (it.renderer as EditorHint).translation.length + 2 > e.visualPosition.column }
                     as List<Inlay<EditorHint>>
