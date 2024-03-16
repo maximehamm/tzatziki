@@ -24,7 +24,6 @@
        <br/>
 
        <b><u>NEW!</u></b><br/>
-         ✓ <b>16.1</b> - Translate selection using Google Translate (files of any kind, gherkin, java, etc.)<br/>
          ✓ <b>15.0</b> - Display list of features, let group and filter them by tag names<br/>
          ✓ <b>14.1</b> - Kotlin : generate class and step functions<br/>
          ✓ <b>13.1</b> - Java : remove accent from generated method names<br/>
@@ -291,12 +290,6 @@
         <group id="io.nimbly.tzatziki.group" >
 
             <separator/>
-
-            <action class="io.nimbly.tzatziki.translation.TzTranslateAction"
-                    id="io.nimbly.tzatziki.TranslateAction"
-                    text="Translate" icon="ActionI18nIcons.I18N">
-                <keyboard-shortcut keymap="$default" first-keystroke="ctrl T"/>
-            </action>
 
             <action class="io.nimbly.tzatziki.actions.TzToggleTzatzikiAction"
                     id="io.nimbly.tzatziki.ToggleTzatziki"
