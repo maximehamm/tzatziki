@@ -40,6 +40,7 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
 import com.intellij.openapi.project.IndexNotReadyException
+import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import javax.swing.Icon
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
@@ -115,18 +116,18 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
         fun refresh(breakpoint: XBreakpoint<*>) {
 
-            // Optimisation to avoid expensive cost of searching for references
-            val elements: MutableSet<PsiElement>? = breakpoint.getUserData(TzBreakpointMakerProvider.BKEY)
-            if (elements != null && !elements.any { !it.isValid }) {
-                elements
-                    .map { it.containingFile }
-                    .toSet()
-                    .forEach { DaemonCodeAnalyzer.getInstance(project).restart(it) }
-                return
-            }
-
             // Avoid Index not ready exception
             DumbService.getInstance(project).runReadActionInSmartMode {
+
+                // Optimisation to avoid expensive cost of searching for references
+                val elements: MutableSet<PsiElement>? = breakpoint.getUserData(TzBreakpointMakerProvider.BKEY)
+                if (elements != null && !elements.any { !it.isValid }) {
+                    elements
+                        .map { it.containingFile }
+                        .toSet()
+                        .forEach { DaemonCodeAnalyzer.getInstance(project).restart(it) }
+                    return@runReadActionInSmartMode
+                }
 
                 val sourcePosition = breakpoint.sourcePosition ?: return@runReadActionInSmartMode
 
@@ -143,8 +144,8 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 val scope = restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(project))
                 val alreadyPerformed = mutableSetOf<PsiFile>()
                 ReferencesSearch.search(method, scope)
-                    .forEachAsync {
-                        if (it is GherkinStep) {
+                    .forEach {
+                        if (it is GherkinStep || it is CucumberStepReference) {
                             val f = it.element.containingFile
                             if (!alreadyPerformed.contains(f)) {
 
