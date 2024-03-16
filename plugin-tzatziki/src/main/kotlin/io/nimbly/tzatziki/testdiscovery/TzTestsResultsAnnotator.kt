@@ -20,13 +20,21 @@ import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.unscramble.AnalyzeStacktraceUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.editor.TEST_IGNORED
@@ -34,9 +42,7 @@ import io.nimbly.tzatziki.editor.TEST_KO
 import io.nimbly.tzatziki.editor.TEST_OK
 import io.nimbly.tzatziki.pdf.escape
 import io.nimbly.tzatziki.psi.fullRange
-import io.nimbly.tzatziki.util.TZATZIKI_NAME
-import io.nimbly.tzatziki.util.filterValuesNotNull
-import io.nimbly.tzatziki.util.textAttribut
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
@@ -189,7 +195,15 @@ private class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntenti
         endElement: PsiElement) {
 
         TzTestRegistry.cleanAllTestsResults(file)
-        PsiDocumentManager.getInstance(project).reparseFiles(listOf(file.virtualFile), true)
+        val vfile = file.virtualFile
+
+        ApplicationManager.getApplication().invokeLater {
+            try {
+                PsiDocumentManager.getInstance(project).reparseFiles(listOf(vfile), true)
+            } catch (e: IndexNotReadyException) {
+                // Ignore
+            }
+        }
     }
 
     override fun getFamilyName() = TZATZIKI_NAME
