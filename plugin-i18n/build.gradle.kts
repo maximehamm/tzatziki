@@ -11,7 +11,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
-         <li><b>6.0.0</b> Apply translation by cliking on hint</li>
+         <li><b>6.0.0</b> Apply translation by clicking on hint</li>
          <li><b>5.0.0</b> Smart replacement everywhere using refactoring !</li>
          <li><b>4.0.0</b> Escaping text depending on format : HTML, JSON, CSV, XML, PROPERTIES</li>
          <li><b>3.0.0</b> Commit dialog translation </li>
