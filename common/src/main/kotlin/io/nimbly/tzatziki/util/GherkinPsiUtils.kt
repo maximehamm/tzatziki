@@ -164,14 +164,14 @@ fun GherkinStepsHolder.findCucumberStepDefinitions(): List<AbstractStepDefinitio
 /**
  * Please take care of @IndexNotReadyException
  */
-fun findUsages(function: PsiElement): List<PsiReference> {
+fun findUsages(elt: PsiElement): List<PsiReference> {
 
-    val usagesManager = (FindManager.getInstance(function.project) as FindManagerImpl).findUsagesManager
-    val handler = usagesManager.getFindUsagesHandler(function, false)
+    val usagesManager = (FindManager.getInstance(elt.project) as FindManagerImpl).findUsagesManager
+    val handler = usagesManager.getFindUsagesHandler(elt, false)
         ?: return emptyList()
 
     val usages = mutableListOf<PsiReference>()
-    handler.processElementUsages(function, {
+    handler.processElementUsages(elt, {
         val ref = it.reference
         if (ref != null)
             usages.add(ref)

@@ -17,6 +17,7 @@ package io.nimbly.tzatziki
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -63,7 +64,16 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             // Find usages
             DumbService.getInstance(element.project).runReadActionInSmartMode {
 
-                val usages = findUsages(function)
+                val usages = try {
+                    findUsages(function)
+                } catch (e: IndexNotReadyException) {
+                    emptyList()
+                } catch (e: Exception) {
+                    if (e.cause !=null && e.cause is IndexNotReadyException)
+                         emptyList()
+                    else
+                        throw e
+                }
 
                 usages
                     .asSequence()
