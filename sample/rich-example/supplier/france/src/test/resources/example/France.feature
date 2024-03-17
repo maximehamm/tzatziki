@@ -13,7 +13,7 @@ Feature: Cocktail Ordering
   @Production @Chrome
   Scenario: Creating an empty order
     Given Romeo who wants to buy a drink
-    Then there is 0 cocktails in the order
+    Then ther ge is 0 cocktails in the order
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store

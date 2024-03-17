@@ -73,7 +73,7 @@ class EditorHint(
 
             if (translation.isNotBlank()) {
 
-                if (focus) {
+                if (focus && type == EHint.TRANSLATION) {
 
                     val fontMetrics = Companion.getFontMetrics(editor, false)
                     val suffixFont = fontMetrics.font.deriveFont(Font.ITALIC, fontMetrics.font.size2D * 0.9f)
