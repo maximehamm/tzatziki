@@ -24,7 +24,7 @@
     <b>Translate anything to 83 languages !</b><br/>
     <b>No proxy problem, no API key ! Works with all Jetbrains products !</b><br/>
     <br/>
-      • Select some text inside editor<br/>
+      • Select some text to localize inside editor<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
       • Use “Translation” view to select translation input and ouput language<br/>
       • Use “Dictionary” view to display full definition of selected word (english only)<br/>
@@ -40,7 +40,7 @@
     <b>&nbsp;• Adapt keyboard shortcuts in settings</b><br/>
 
     <br/>
-    <b>Editor translation : </b><br/><br/>
+    <b>Editor localization : </b><br/><br/>
     <ul>
        <p>
           <img src="https://plugins.jetbrains.com/files/23656/screenshot_e4c66b0b-a33e-484f-8e7e-af57b127040c"
@@ -100,7 +100,7 @@
     </ul>
 
     <br/><br/>
-    <b>All supported languages/localization :</b><br/><br/>
+    <b>All supported languages/localizations :</b><br/><br/>
     Afrikaans, Irish, Albanian, Italian, Arabic, Japanese, Azerbaijani, Kannada,<br/>
     Basque, Korean, Bengali, Latin, Belarusian, Latvian, Bulgarian, Lithuanian,<br/>
     Catalan, Macedonian, Chinese Simplified, Malay, Chinese Traditional, Maltese,<br/>
@@ -110,6 +110,10 @@
     German, Tamil, Greek, Telugu, Gujarati, Thai, Haitian Creole, Turkish, Hebrew,<br/>
     Ukrainian, Hindi, Urdu, Hungarian, Vietnamese, Icelandic, Welsh, Indonesian,<br/>
     Yiddish.<br/>
+
+    <!-- Internationalization, Internationalization, Internationalization, Internationalization, Internationalization -->
+    <!-- Localization, Localization, Localization, Localization, Localization, Localization, Localization, Localization -->
+    <!-- i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n, i18n -->
 
     <br/>
     <b>Any suggestion ? Let me know !</b><br/>
