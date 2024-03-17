@@ -6,7 +6,6 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.checkExpression
 import io.nimbly.tzatziki.util.emptyConfigurationContext
-import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import io.nimbly.tzatziki.util.getModule
 import io.nimbly.tzatziki.util.simpleName
 import io.nimbly.tzatziki.util.subModules
@@ -23,6 +22,7 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.util.UserDataHolder
+import io.nimbly.tzatziki.services.findAllGerkinsFiles
 
 class ModuleNode(
     module: Module,

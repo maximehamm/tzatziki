@@ -17,7 +17,6 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.find.FindManager
 import com.intellij.find.impl.FindManagerImpl
-import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.TextRange
@@ -28,6 +27,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.refactoring.suggested.startOffset
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.Tzatziki
+import io.nimbly.tzatziki.services.getGherkinScope
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
@@ -114,19 +114,6 @@ val GherkinStepsHolder.allTags: Set<GherkinTag>
 val GherkinStep.allTags: Set<GherkinTag>
     get() = this.stepHolder.feature.tags.toSet()
                 .union(this.stepHolder.tags.toSet())
-
-fun Module.getGherkinScope(recursive: Boolean = false): GlobalSearchScope {
-    if (recursive) {
-        var scope = this.getGherkinScope(false)
-        this.subModules.forEach { m ->
-            scope = scope.union(m.getGherkinScope(true))
-        }
-        return scope
-    }
-    return GlobalSearchScope.getScopeRestrictedByFileTypes(
-        GlobalSearchScope.moduleScope(this), GherkinFileType.INSTANCE
-    )
-}
 
 
 fun Project.getGherkinScope(): GlobalSearchScope {

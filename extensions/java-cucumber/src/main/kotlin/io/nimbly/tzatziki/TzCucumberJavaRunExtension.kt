@@ -20,10 +20,7 @@ import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.openapi.components.ServiceManager
-import io.nimbly.tzatziki.services.TzPersistenceStateService
-import io.nimbly.tzatziki.services.TzTagService
-import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.services.tzFileService
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
 
 class TzCucumberJavaRunExtension : RunConfigurationExtension() {
@@ -37,7 +34,7 @@ class TzCucumberJavaRunExtension : RunConfigurationExtension() {
         if (configuration !is CucumberJavaRunConfiguration)
             return
 
-        val state = configuration.project.tagService()
+        val state = configuration.project.tzFileService()
         val sel: String? = if (!state.filterByTags) null else state.selection
         if (sel.isNullOrBlank()) {
             params.vmParametersList.properties.remove("cucumber.filter.tags")

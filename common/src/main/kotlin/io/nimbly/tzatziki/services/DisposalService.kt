@@ -1,4 +1,4 @@
-package io.nimbly.tzatziki.view.features
+package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service

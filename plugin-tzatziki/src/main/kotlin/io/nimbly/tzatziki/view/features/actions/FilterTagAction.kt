@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.services.tzFileService
 import io.nimbly.tzatziki.view.features.FeaturePanel
 
 @Suppress("MissingActionUpdateThread")
@@ -14,21 +14,21 @@ class FilterTagAction(val panel: FeaturePanel) : ToggleAction() {
         this.templatePresentation.icon = ActionIcons.FILTER
     }
     override fun isSelected(e: AnActionEvent): Boolean {
-        return panel.project.tagService().filterByTags
+        return panel.project.tzFileService().filterByTags
     }
     override fun setSelected(e: AnActionEvent, state: Boolean) {
 
-        val tagService = panel.project.tagService()
+        val tzService = panel.project.tzFileService()
 
         val exp: Expression?
         if (state) {
-            exp = tagService.tagExpression()
+            exp = tzService.tagExpression()
         } else {
             exp = null
         }
 
-        tagService.filterByTags = state
-        tagService.updateTagsFilter(exp)
+        tzService.filterByTags = state
+        tzService.updateTagsFilter(exp)
 
         panel.filterByTag(state)
     }

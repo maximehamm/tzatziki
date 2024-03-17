@@ -5,7 +5,7 @@ import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.config.loadConfig
 import io.nimbly.tzatziki.markdown.adaptPicturesPath
-import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.services.tzFileService
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.checkExpression
@@ -60,7 +60,7 @@ class ExportPdf(private val paths: List<VirtualFile>, val project: Project) {
     fun exportFeatures() {
 
         // Check filtering
-        val filterExpression: Expression? = project.tagService().let {
+        val filterExpression: Expression? = project.tzFileService().let {
             if (it.filterByTags) it.tagExpression() else null
         }
 

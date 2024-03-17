@@ -29,6 +29,7 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
     internal var selectedTags: List<String> = emptyList()
     internal var selection: String? = null
 
+    internal var sourcePathOnly: Boolean? = null
     internal var groupTag: Boolean? = null
     internal var filterByTags: Boolean? = null
 
@@ -41,6 +42,7 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
         this.selectedTags = state.selectedTags
         this.groupTag = state.groupTag
         this.filterByTags = state.filterByTags
+        this.sourcePathOnly = state.sourcePathOnly
     }
 
     fun tagExpression(): Expression? {

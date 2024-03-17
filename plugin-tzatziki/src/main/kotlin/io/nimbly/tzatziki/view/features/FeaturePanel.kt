@@ -3,17 +3,11 @@ package io.nimbly.tzatziki.view.features
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
-import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.services.tzFileService
 import io.nimbly.tzatziki.util.ModuleId
 import io.nimbly.tzatziki.util.file
 import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.util.parentOfTypeIs
-import io.nimbly.tzatziki.view.features.actions.ExportPdfAction
-import io.nimbly.tzatziki.view.features.actions.FilterTagAction
-import io.nimbly.tzatziki.view.features.actions.GroupByModuleAction
-import io.nimbly.tzatziki.view.features.actions.GroupByTagAction
-import io.nimbly.tzatziki.view.features.actions.LocateAction
-import io.nimbly.tzatziki.view.features.actions.RunTestAction
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
@@ -46,6 +40,7 @@ import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor.Action
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
+import io.nimbly.tzatziki.view.features.actions.*
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -67,9 +62,9 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     init {
 
-        val tagService = project.tagService()
+        val tzService = project.tzFileService()
         structure = GherkinTreeTagStructure(this).apply {
-            this.groupTag = tagService.groupTag == true
+            this.groupTag = tzService.groupTag == true
         }
         model = StructureTreeModel(structure, this)
         tree = DnDAwareTree(AsyncTreeModel(model, this))
@@ -85,6 +80,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             it.add(CommonActionsManager.getInstance().createCollapseAllAction(treeExpander, this))
             it.add(LocateAction(this))
             it.addSeparator(" ")
+            it.add(SourcePathOnlyAction(this))
             it.add(GroupByModuleAction(this))
             it.add(GroupByTagAction(this))
             it.add(FilterTagAction(this))
@@ -108,11 +104,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
 
                 // First tag list initialization
-                val tagService = project.tagService()
-                val filterActivated = tagService.filterByTags
+                val tzService = project.tzFileService()
+                val filterActivated = tzService.filterByTags
                 refreshTags(
-                    tagService.getTags(),
-                    if (filterActivated) tagService.getTagsFilter() else null
+                    tzService.getTags(),
+                    if (filterActivated) tzService.getTagsFilter() else null
                 )
             }
         }
@@ -124,11 +120,11 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     fun filterByTag(filter: Boolean) {
 
-        val tagService = project.tagService()
-        tagService.filterByTags = filter
+        val tzService = project.tzFileService()
+        tzService.filterByTags = filter
 
         if (filter)
-            this.structure.filterByTags = tagService.tagExpression()
+            this.structure.filterByTags = tzService.tagExpression()
         else
             this.structure.filterByTags = null
 
@@ -137,12 +133,22 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     fun groupByTag(grouping: Boolean) {
 
-        project.tagService().groupTag = grouping
+        project.tzFileService().groupTag = grouping
 
         this.structure.groupTag = grouping
 
         forceRefresh()
     }
+
+    fun sourcePathOnly(grouping: Boolean) {
+
+        project.tzFileService().sourcePathOnly = grouping
+
+        forceRefresh()
+    }
+
+
+
 
     fun refreshTags(tags: SortedMap<String, Tag>) {
         if (structure.groupTag || structure.filterByTags != null) {
@@ -157,7 +163,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
     fun refreshTags(tagsFilter: Expression?) {
 
-        val filterActivated = project.tagService().filterByTags
+        val filterActivated = project.tzFileService().filterByTags
         if (filterActivated) {
             structure.filterByTags = tagsFilter
             invalidateAsync()

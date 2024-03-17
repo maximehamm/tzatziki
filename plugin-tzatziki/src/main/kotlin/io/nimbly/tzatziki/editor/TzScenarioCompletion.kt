@@ -32,7 +32,8 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
 import icons.CucumberIcons
-import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.TzFileService
+import io.nimbly.tzatziki.services.getGherkinScope
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
@@ -56,14 +57,14 @@ class TzScenarioCompletion: CompletionContributor() {
         val module = ModuleUtilCore.findModuleForPsiElement(step)
             ?: return
 
-        val tagService = project.getService(TzTagService::class.java)
+        val tzService = project.getService(TzFileService::class.java)
 
         val allSteps = mutableSetOf<Step>()
         FilenameIndex
             .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, module.getGherkinScope())
             .map { vfile -> vfile.getFile(project) }
             .filterIsInstance<GherkinFile>()
-            .filter { it.checkExpression(tagService.getTagsFilter()) }
+            .filter { it.checkExpression(tzService.getTagsFilter()) }
             .forEach { file ->
                 val steps = CachedValuesManager.getCachedValue(file, CacheKey) {
 

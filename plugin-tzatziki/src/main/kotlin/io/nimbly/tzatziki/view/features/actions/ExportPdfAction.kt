@@ -6,7 +6,6 @@ import io.nimbly.tzatziki.pdf.ExportPdf
 import io.nimbly.tzatziki.util.TZATZIKI_NAME
 import io.nimbly.tzatziki.util.TzatzikiException
 import io.nimbly.tzatziki.util.file
-import io.nimbly.tzatziki.util.findAllGerkinsFiles
 import io.nimbly.tzatziki.util.notification
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import io.nimbly.tzatziki.view.features.nodes.AbstractTzPsiElementNode
@@ -21,6 +20,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.ui.tree.TreeUtil
+import io.nimbly.tzatziki.services.findAllGerkinsFiles
 
 class ExportPdfAction(val panel: FeaturePanel) : AnAction() {
     init {

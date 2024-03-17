@@ -33,8 +33,8 @@ import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.cucumber.tagexpressions.TagExpressionParser
 import io.nimbly.tzatziki.services.Tag
-import io.nimbly.tzatziki.services.TzTagService
-import io.nimbly.tzatziki.services.tagService
+import io.nimbly.tzatziki.services.TzFileService
+import io.nimbly.tzatziki.services.tzFileService
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
@@ -81,8 +81,8 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
             PsiDocumentManager.getInstance(project).performWhenAllCommitted{
 
                 // First tag list initialization
-                val tagService = project.getService(TzTagService::class.java)
-                val tags = tagService.getTags()
+                val tzService = project.getService(TzFileService::class.java)
+                val tags = tzService.getTags()
                 tagsPanel = newTagPanel(tags)
                 panel.add(tagsPanel, BorderLayout.CENTER)
             }
@@ -201,34 +201,34 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
 
         // Update selection function
         fun updateSelection(selectionOnly: Boolean) {
-            val tagService = project.tagService()
+            val tzService = project.tzFileService()
             if (selectionOnly) {
-                tagService.selection = tSelection.text
+                tzService.selection = tSelection.text
             }
             else {
                 val checked = checks.filter { it.isSelected }.mapNotNull { it.text }.map { "@$it" }
                 tSelection.text = checked.joinToString(" or ")
 
-                tagService.selection = tSelection.text
-                tagService.selectedTags = checked
-                tagService.filterByTags = checked.isNotEmpty()
+                tzService.selection = tSelection.text
+                tzService.selectedTags = checked
+                tzService.filterByTags = checked.isNotEmpty()
 
-                tagService.updateTagsFilter(tagService.tagExpression())
+                tzService.updateTagsFilter(tzService.tagExpression())
             }
 
             try {
                 val expression = if (tSelection.text.trim().isEmpty()) null else TagExpressionParser.parse(tSelection.text.trim())
-                tagService.updateTagsFilter(expression)
+                tzService.updateTagsFilter(expression)
             } catch (ignored: Exception) {
             }
         }
 
         // Load previously checked values
-        val tagService = project.tagService()
+        val tzService = project.tzFileService()
         checks.forEach { check ->
-            check.isSelected = tagService.selectedTags.contains("@" + check.text)
+            check.isSelected = tzService.selectedTags.contains("@" + check.text)
         }
-        tSelection.text = tagService.selection
+        tSelection.text = tzService.selection
 
         // Setup listeners
         checks.forEach { check ->
@@ -253,21 +253,21 @@ class FilterItAction(val project: Project) : ToggleAction() {
         this.templatePresentation.icon = ActionIcons.FILTER
     }
     override fun isSelected(e: AnActionEvent): Boolean {
-        return project.tagService().filterByTags
+        return project.tzFileService().filterByTags
     }
     override fun setSelected(e: AnActionEvent, state: Boolean) {
 
-        val tagService = project.tagService()
+        val tzService = project.tzFileService()
 
         val exp: Expression?
         if (state) {
-            exp = tagService.tagExpression()
+            exp = tzService.tagExpression()
         } else {
             exp = null
         }
 
-        tagService.filterByTags = state
-        tagService.updateTagsFilter(exp)
+        tzService.filterByTags = state
+        tzService.updateTagsFilter(exp)
     }
 
     // Compatibility : introduced 2022.2.4

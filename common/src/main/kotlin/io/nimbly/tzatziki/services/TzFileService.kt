@@ -3,27 +3,23 @@ package io.nimbly.tzatziki.services
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
-import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiTreeChangeEvent
-import com.intellij.psi.PsiTreeChangeListener
+import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.*
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.view.features.DisposalService
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
-import com.intellij.psi.PsiDirectory
 import java.util.*
 
 @Service(Service.Level.PROJECT)
-class TzTagService(val project: Project) : Disposable {
+class TzFileService(val project: Project) : Disposable {
 
     private var tags: SortedMap<String, Tag>? = null
     private var tagsFilter: Expression? = null
@@ -38,6 +34,12 @@ class TzTagService(val project: Project) : Disposable {
             DisposalService.getInstance(project)
         )
     }
+
+    var sourcePathOnly: Boolean
+        get() = state().sourcePathOnly == true
+        set(b) {
+            state().sourcePathOnly = b
+        }
 
     var filterByTags: Boolean
         get() = state().filterByTags == true
@@ -105,11 +107,6 @@ class TzTagService(val project: Project) : Disposable {
         }
     }
 
-
-    internal fun refreshStructure() {
-        refreshTags(true, true)
-    }
-
     internal fun refreshTags(updateListeners: Boolean = true, force: Boolean = true) {
 
         // Get all tags
@@ -135,10 +132,70 @@ class TzTagService(val project: Project) : Disposable {
         this.tags = null
     }
 
+    fun getGherkinScope(module: Module, recursive: Boolean = false): GlobalSearchScope {
+        if (recursive) {
+            var scope = this.getGherkinScope(module)
+            module.subModules.forEach { m ->
+                scope = scope.union(m.getGherkinScope(true))
+            }
+            return scope
+        }
+        
+        val base = 
+            if (!sourcePathOnly)
+                module.moduleContentScope
+            else
+                GlobalSearchScope.moduleScope(module)
+        
+        return GlobalSearchScope.getScopeRestrictedByFileTypes(base, GherkinFileType.INSTANCE)
+    }
+
+    fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
+        val scope = project.getGherkinScope()
+        return findAllGerkinsFiles(scope, project)
+    }
+
+    fun findAllGerkinsFiles(module: Module, recursive: Boolean = false): Set<GherkinFile> {
+
+        val scope = module.getGherkinScope(recursive)
+        return findAllGerkinsFiles(scope, module.project)
+    }
+
+    private fun findAllGerkinsFiles(scope: GlobalSearchScope, project: Project): Set<GherkinFile> {
+
+        val allFeatures = mutableSetOf<GherkinFile>()
+        FilenameIndex
+            .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, scope)
+            .map { vfile -> vfile.getFile(project) }
+            .filterIsInstance<GherkinFile>()
+            .forEach { file ->
+                allFeatures.add(file)
+            }
+
+        return allFeatures
+    }
+
 }
 
-fun Project.tagService(): TzTagService
-    = this.getService(TzTagService::class.java)
+fun findAllGerkinsFiles(project: Project): Set<GherkinFile> {
+    return project.tzFileService().findAllGerkinsFiles(project)
+}
+
+fun findAllGerkinsFiles(module: Module, recursive: Boolean = false): Set<GherkinFile> {
+    return module.project.tzFileService().findAllGerkinsFiles(module, recursive)
+}
+
+
+fun Module.getGherkinScope(recursive: Boolean = false): GlobalSearchScope {
+    return this.project.tzFileService().getGherkinScope(this, recursive)
+}
+
+fun Module.getGherkinScope(): GlobalSearchScope {
+    return this.project.tzFileService().getGherkinScope(this)
+}
+
+fun Project.tzFileService(): TzFileService
+    = this.getService(TzFileService::class.java)
 
 interface TagsEventListener : EventListener {
     fun tagsUpdated(event: TagEvent) {}
@@ -154,7 +211,7 @@ interface TagsFilterEventListener : EventListener {
 class TagFilterEvent(val tagsFilter: Expression?, source: Any) : EventObject(source)
 
 
-private class PsiChangeListener(val service: TzTagService) : PsiTreeChangeListener {
+private class PsiChangeListener(val service: TzFileService) : PsiTreeChangeListener {
 
     override fun beforeChildAddition(event: PsiTreeChangeEvent) = Unit
     override fun beforeChildRemoval(event: PsiTreeChangeEvent) = Unit

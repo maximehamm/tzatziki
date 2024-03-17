@@ -37,9 +37,9 @@ class CucumberPlusFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(
             contentFactory.createContent(filterTagsView, "Filters", false))
 
-        val tagService = project.getService(TzTagService::class.java)
+        val tzService = project.getService(TzFileService::class.java)
 
-        tagService.addTagsListener(object : TagsEventListener {
+        tzService.addTagsListener(object : TagsEventListener {
             override fun tagsUpdated(event: TagEvent) {
                 featuresView.refreshTags(event.tags)
                 if (event.tagsUpdated)
@@ -47,7 +47,7 @@ class CucumberPlusFactory : ToolWindowFactory {
             }
         })
 
-        tagService.addTagsFilterListener(object : TagsFilterEventListener {
+        tzService.addTagsFilterListener(object : TagsFilterEventListener {
             override fun tagsFilterUpdated(event: TagFilterEvent) {
                 featuresView.refreshTags(event.tagsFilter)
             }

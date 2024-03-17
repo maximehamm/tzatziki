@@ -23,7 +23,7 @@ import com.intellij.codeInsight.lookup.LookupElementRenderer
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import icons.ActionIcons
-import io.nimbly.tzatziki.services.TzTagService
+import io.nimbly.tzatziki.services.TzFileService
 import io.nimbly.tzatziki.util.safeText
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 
@@ -36,8 +36,8 @@ class TzTagCompletion: CompletionContributor() {
             return
 
         // Find all tags
-        val tagService = origin.project.getService(TzTagService::class.java)
-        val allTags = tagService.getTags()
+        val tzService = origin.project.getService(TzFileService::class.java)
+        val allTags = tzService.getTags()
 
         //
         // Add completions
