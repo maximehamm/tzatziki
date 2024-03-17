@@ -3,9 +3,8 @@
 import java.net.URI
 
 allprojects {
-    group = "io." +
-            ".tzatziki"
-    version = "16.4.12"
+    group = "io.nimbly.tzatziki"
+    version = "16.6.0"
 }
 
 val notes by extra {"""
@@ -13,6 +12,9 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>16.6</b> New button to display also files not part of sources/resources path <br/>      
+         <li><b>16.5</b> Filter step completion according to tags filtering setup <br/>      
+         <li><b>16.3</b> Remove translation stuff : please use 'Translation+' plugin instead !<br/>       
          <li><b>16.2</b> Remove use of deprecated IntelliJ IDEA JDK apis<br/>       
          <li><b>16.1</b> Translate selection using Google Translate (files of any kind, gherkin, java, etc.)<br/>
          <li><b>15.4</b> IntelliJ IDEA 2023.3.2 compatibility</li>
