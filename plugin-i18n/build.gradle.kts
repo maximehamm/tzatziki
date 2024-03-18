@@ -73,7 +73,7 @@ tasks {
     }
 
     publishPlugin {
-        val t = "perm:aG1heGltZQ==.OTItOTI5Nw==.zJ37fiKDe5cwNCAN4tib1IvEtIuOis"
+        val t = System.getProperty("PublishToken")
         token.set(t)
     }
 }
