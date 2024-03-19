@@ -74,7 +74,7 @@ fun loadConfig(path: VirtualFile, project: Project): Config {
         if (relativePath.isBlank())
             relativePath = project.name + "/"
 
-        throw TzatzikiException("Common parent path '${relativePath}' should be part of same ressource path...")
+        throw TzatzikiException("Common parent path '${relativePath}' should be part of same resource path...")
     }
 
     PsiDocumentManager.getInstance(project).commitAllDocuments();

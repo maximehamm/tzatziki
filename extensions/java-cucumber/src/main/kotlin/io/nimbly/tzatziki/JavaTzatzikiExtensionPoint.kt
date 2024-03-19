@@ -18,6 +18,7 @@ package io.nimbly.tzatziki
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
 import com.intellij.pom.Navigatable
@@ -38,9 +39,8 @@ import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
-import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
-import com.intellij.openapi.project.IndexNotReadyException
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
+import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil.restrictScopeToGherkinFiles
 import javax.swing.Icon
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
@@ -93,6 +93,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
                 breakpoints
                     .filter { method.textRange.contains( it.xBreakpoint.sourcePosition?.offset ?: -1) }
+                    .filter { it.evaluationElement?.containingFile?.originalFile?.virtualFile == method.containingFile.originalFile.virtualFile }
                     .forEach { breakpoint ->
 
                         val tooltip = breakpoint.displayName
