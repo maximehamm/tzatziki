@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "16.6.2"
+    version = "17.0.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>17.0</b> Rewriting breakpoint supports. Now you can set breakpoints from Gherkin ! (Java, Koltin, Scala only) <br/>      
          <li><b>16.6</b> New button to display also files not part of sources/resources path <br/>      
          <li><b>16.5</b> Filter step completion according to tags filtering setup <br/>      
          <li><b>16.3</b> Remove translation stuff : please use 'Translation+' plugin instead !<br/>       

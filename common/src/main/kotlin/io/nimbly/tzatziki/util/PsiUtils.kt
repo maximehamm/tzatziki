@@ -141,6 +141,9 @@ val PsiElement.nextPipe: PsiElement
 fun PsiElement.getDocumentLine()
     = getDocument()?.getLineNumber(textOffset)
 
+fun PsiElement.getDocumentEndLine()
+        = getDocument()?.getLineNumber(endOffset)
+
 val PsiElement.safeText
     get() = text.safeText
 
@@ -180,6 +183,9 @@ fun findStepUsages(element: PsiElement): List<PsiReference> {
 
     return references
 }
+
+val PsiElement.endOffset: Int
+    get() = textRange.endOffset
 
 fun PsiElement.up(level: Int): PsiElement {
     var p = this

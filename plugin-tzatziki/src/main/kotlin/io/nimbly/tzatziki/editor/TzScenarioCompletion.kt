@@ -40,7 +40,6 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
-
 class TzScenarioCompletion: CompletionContributor() {
 
     companion object {

@@ -27,8 +27,10 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
-//https://youtrack.jetbrains.com/issue/IDEA-269898
-// Remove this when Jetbrain issue IDEA-269898 will be fixed")
+/**
+ * Support of multiple step references
+ * See https://youtrack.jetbrains.com/issue/IDEA-269898
+ */
 class TzCucumberStepInspection : GherkinInspection() {
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {

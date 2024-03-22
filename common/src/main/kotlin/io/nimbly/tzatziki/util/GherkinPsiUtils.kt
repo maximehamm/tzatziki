@@ -20,7 +20,9 @@ import com.intellij.find.impl.FindManagerImpl
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
@@ -161,6 +163,39 @@ fun GherkinStep.findCucumberStepDefinitions(): List<AbstractStepDefinition>
 fun GherkinStepsHolder.findCucumberStepDefinitions(): List<AbstractStepDefinition>
     = steps.flatMap { step -> step.findCucumberStepDefinitions() }
 
+fun findStep(
+    vfile: VirtualFile,
+    project: Project,
+    line: Int
+): GherkinStep? {
+    val file = vfile.getFile(project)
+        ?: return null
+
+    val document = file.getDocument()
+        ?: return null
+
+    val start = document.getLineStartOffset(line)
+    val end = document.getLineEndOffset(line)
+
+    return file.findElementsOfTypeInRange(TextRange(start, end), GherkinStep::class.java).firstOrNull()
+}
+
+fun <T : PsiElement> PsiFile.findElementsOfTypeInRange(range: TextRange, vararg classes: Class<out T>): List<T> {
+    val parent = getParentOfLine(range) ?: return emptyList()
+    return PsiTreeUtil.findChildrenOfAnyType(parent, false, *classes)
+        .filter { el -> range.intersects(el.textRange) }
+}
+
+private fun PsiFile.getParentOfLine(range: TextRange): PsiElement? {
+    var parent = findElementAt(range.startOffset) ?: return null
+    while (true) {
+        if (parent.startOffset <= range.startOffset && parent.endOffset >= range.endOffset) {
+            break
+        }
+        parent = parent.parent ?: break
+    }
+    return parent
+}
 /**
  * Please take care of @IndexNotReadyException
  */

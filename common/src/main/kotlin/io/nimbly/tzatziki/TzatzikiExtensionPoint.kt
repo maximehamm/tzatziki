@@ -16,30 +16,22 @@
 package io.nimbly.tzatziki
 
 import com.intellij.openapi.extensions.ExtensionPointName
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.UserDataHolder
-import com.intellij.pom.Navigatable
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
+import com.intellij.xdebugger.breakpoints.XBreakpoint
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
-import javax.swing.Icon
 
 interface TzatzikiExtensionPoint {
 
-    fun isDeprecated(element: PsiElement): Boolean
     fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean
-    fun findBreakpoint(source: PsiElement, stepDefinitions: List<AbstractStepDefinition>): TzBreakpoint?
-    fun initBreakpointListener(project: Project)
+    fun isDeprecated(element: PsiElement): Boolean
+
+    fun findBestPositionToAddBreakpoint(stepDefinitions: List<AbstractStepDefinition>): Pair<PsiElement, Int>?
+    fun findStepsAndBreakpoints(vfile: VirtualFile?, offset: Int?): Pair<List<GherkinStep>, List<XBreakpoint<*>>>?
 }
 
 object Tzatziki {
     operator fun invoke(): ExtensionPointName<TzatzikiExtensionPoint> =
         ExtensionPointName.create("io.nimbly.tzatziki.io.nimbly.tzatziki.main")
 }
-
-abstract class TzBreakpoint(
-    val navigatable: Navigatable,
-    val tooltip: String,
-    val icon: Icon,
-    val file: PsiFile,
-    val targets: List<PsiElement>) : UserDataHolder

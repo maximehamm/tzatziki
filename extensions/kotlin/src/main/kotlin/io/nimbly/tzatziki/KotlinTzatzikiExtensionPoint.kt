@@ -15,23 +15,21 @@
 
 package io.nimbly.tzatziki
 
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.openapi.project.DumbService
-import com.intellij.openapi.project.IndexNotReadyException
-import com.intellij.openapi.project.Project
+import com.intellij.debugger.DebuggerManagerEx
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.breakpoints.XBreakpoint
-import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import io.nimbly.tzatziki.util.findUsages
+import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.getFile
-import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
-import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
 class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
@@ -39,64 +37,59 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         return element is PsiMethod && element.isDeprecated
     }
 
+    /**
+     * Let's do it using java extension
+     */
     override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {
         return false
     }
 
-    override fun findBreakpoint(source: PsiElement, stepDefinitions: List<AbstractStepDefinition>): TzBreakpoint? {
-        return null
+    override fun findStepsAndBreakpoints(vfile: VirtualFile?, offset: Int?): Pair<List<GherkinStep>, List<XBreakpoint<*>>>? {
+
+        vfile ?: return null
+        offset ?: return null
+
+        val project = ProjectManager.getInstance().openProjects
+            .filter { !it.isDisposed }
+            .firstOrNull() { vfile.getFile(it) != null }
+            ?: return null
+
+        val file = vfile.getFile(project) ?: return null
+        val element = file.findElementAt(offset) ?: return null
+
+        val fcts = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java)
+            ?: return null
+
+        val cucumberAnnotation = fcts.annotationEntries
+            .find { it.resolveToDescriptorIfAny(BodyResolveMode.PARTIAL_NO_ADDITIONAL)?.fqName?.asString()?.startsWith("io.cucumber.java") == true }
+        if (cucumberAnnotation == null)
+            return null
+
+        val stepReferences = findUsages(fcts)
+        val steps = stepReferences.map { it.element }.filterIsInstance<GherkinStep>()
+
+        val allBreakpoints = DebuggerManagerEx.getInstanceEx(project)
+            .breakpointManager
+            .breakpoints
+            .filter { fcts.textRange.contains( it.xBreakpoint.sourcePosition?.offset ?: -1) }
+            .filter { it.evaluationElement?.containingFile?.originalFile?.virtualFile == fcts.containingFile.originalFile.virtualFile }
+            .map { it.xBreakpoint }
+
+        return steps to allBreakpoints
     }
 
-    override fun initBreakpointListener(project: Project) {
+    override fun findBestPositionToAddBreakpoint(stepDefinitions: List<AbstractStepDefinition>): Pair<PsiElement, Int>? {
 
-        fun refresh(breakpoint: XBreakpoint<*>) {
+        val fcts = stepDefinitions
+            .mapNotNull { it.element }
+            .filterIsInstance<KtNamedFunction>()
 
-            val sourcePosition = breakpoint.sourcePosition ?: return
+        if (fcts.isEmpty())
+            return null
 
-            val vfile = sourcePosition.file
-            if (!vfile.isValid) return
-            val file = vfile.getFile(project) ?: return
-            if (file !is KtFile) return
+        val m = fcts.firstOrNull() ?: return null
+        val l = m.getDocumentLine() ?: return null
 
-            val element = file.findElementAt(sourcePosition.offset) ?: return
-            val function = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java) ?: return
-
-            // Find usages
-            DumbService.getInstance(element.project).runReadActionInSmartMode {
-
-                val usages = try {
-                    findUsages(function)
-                } catch (e: IndexNotReadyException) {
-                    emptyList()
-                } catch (e: Exception) {
-                    if (e.cause !=null && e.cause is IndexNotReadyException)
-                         emptyList()
-                    else
-                        throw e
-                }
-
-                usages
-                    .asSequence()
-                    .filterIsInstance<CucumberStepReference>()
-                    .map { it.element }
-                    .filterIsInstance<GherkinStep>()
-                    .map { it.containingFile }
-                    .toSet()
-                    .forEach {
-                        DaemonCodeAnalyzer.getInstance(project).restart(it)
-                    }
-
-            }
-
-        }
-
-        project.messageBus
-            .connect()
-            .subscribe(XBreakpointListener.TOPIC, object : XBreakpointListener<XBreakpoint<*>> {
-                override fun breakpointChanged(breakpoint: XBreakpoint<*>) = refresh(breakpoint)
-                override fun breakpointAdded(breakpoint: XBreakpoint<*>) = refresh(breakpoint)
-                override fun breakpointRemoved(breakpoint: XBreakpoint<*>) = refresh(breakpoint)
-                override fun breakpointPresentationUpdated(breakpoint: XBreakpoint<*>, session: XDebugSession?) = Unit
-            })
+        return m to l
     }
 }
