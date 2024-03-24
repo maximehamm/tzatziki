@@ -241,6 +241,10 @@
         // Breakpoints
         <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointProjectListener"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointType"/>
+
+    <debugger.sourcePositionHighlighter implementation="io.nimbly.tzatziki.breakpoints.TzSourcePositionHighlighter"/>
+    <debugger.sourcePositionProvider implementation="io.nimbly.tzatziki.breakpoints.TzSourcePositionProvider"/>
+
         <localInspection language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointSyncInspection"
                          shortName="CucumberPlusBreakpointSync" displayName="Synchronize Gherkin and implemtation breakpoints"
                          groupName="Cucumber+" hasStaticDescription="true" enabledByDefault="true" level="INFO"/>

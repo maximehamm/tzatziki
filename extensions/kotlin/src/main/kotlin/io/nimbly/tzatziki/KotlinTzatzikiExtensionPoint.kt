@@ -23,6 +23,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import io.nimbly.tzatziki.util.findUsages
+import io.nimbly.tzatziki.util.getDocumentEndLine
 import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.getFile
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
@@ -88,7 +89,14 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             return null
 
         val m = fcts.firstOrNull() ?: return null
-        val l = m.getDocumentLine() ?: return null
+        val start = m.getDocumentLine() ?:return null
+        val end = m.getDocumentEndLine() ?:return null
+
+        val l =
+            if (start + 1 <= end)
+                start + 1
+            else
+                start
 
         return m to l
     }

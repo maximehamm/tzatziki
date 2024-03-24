@@ -32,6 +32,23 @@ interface TzatzikiExtensionPoint {
 }
 
 object Tzatziki {
+
     operator fun invoke(): ExtensionPointName<TzatzikiExtensionPoint> =
         ExtensionPointName.create("io.nimbly.tzatziki.io.nimbly.tzatziki.main")
+
+    fun findSteps(vfile: VirtualFile?, offset: Int?): List<GherkinStep> {
+        return findStepsAndBreakpoints(vfile, offset)?.first ?: listOf()
+    }
+
+    fun findBreakpoints(vfile: VirtualFile?, offset: Int?): List<XBreakpoint<*>> {
+        return findStepsAndBreakpoints(vfile, offset)?.second ?: listOf()
+    }
+
+    fun findStepsAndBreakpoints(vfile: VirtualFile?, offset: Int?): Pair<List<GherkinStep>, List<XBreakpoint<*>>>? {
+        return invoke().extensionList.firstNotNullOfOrNull {
+            it.findStepsAndBreakpoints(vfile, offset)
+        }
+    }
+
+
 }

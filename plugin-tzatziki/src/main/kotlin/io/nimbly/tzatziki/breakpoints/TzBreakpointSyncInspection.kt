@@ -80,7 +80,7 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                     step.updatePresentation(codeBreakpoints)
                 }
                 else if (codeBreakpoints!=null) {
-                    step.updatePresentation(codeBreakpoints)
+                    // step.updatePresentation(codeBreakpoints)
                 }
             }
         }

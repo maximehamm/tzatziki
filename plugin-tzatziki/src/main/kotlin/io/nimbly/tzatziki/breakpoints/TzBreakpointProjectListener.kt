@@ -1,21 +1,70 @@
 package io.nimbly.tzatziki.breakpoints
 
+import com.intellij.debugger.engine.JavaDebugProcess
+import com.intellij.debugger.impl.DebuggerContextImpl
+import com.intellij.debugger.impl.DebuggerContextListener
+import com.intellij.debugger.impl.DebuggerSession
+import com.intellij.execution.ExecutionListener
+import com.intellij.execution.ExecutionManager
+import com.intellij.execution.RunManager
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessHandler
+import com.intellij.execution.process.ProcessListener
+import com.intellij.execution.runners.ExecutionEnvironment
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
+import com.intellij.openapi.editor.markup.MarkupModel
+import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.startup.StartupActivity
-import com.intellij.xdebugger.XDebugSession
-import com.intellij.xdebugger.XDebuggerManager
-import com.intellij.xdebugger.XDebuggerUtil
+import com.intellij.openapi.util.Key
+import com.intellij.xdebugger.*
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
+import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import java.net.URI
 
 class TzBreakpointProjectListener : StartupActivity {
 
+    companion object {
+        val CUCUMBER_EXECUTION_POSITION: Key<String?> = Key.create<String?>("CUCUMBER_EXECUTION_POSITION")
+    }
+
     override fun runActivity(project: Project) {
+
+        var highlighted: RangeHighlighter? = null
+        var markupModel: MarkupModel? = null
+
+        project.messageBus
+            .connect()
+            .subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
+
+                private var listener: ProcessListener? = null
+
+                override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
+                    val listener = object : ProcessListener {
+                        override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                            val regex = Regex("locationHint = '([^']+)")
+                            val fileName = regex.find(event.text)?.groupValues?.get(1)
+                            project.putUserData(CUCUMBER_EXECUTION_POSITION, fileName)
+                        }
+                    }
+                    handler.addProcessListener(listener)
+                    this.listener = listener
+                }
+
+                override fun processTerminated(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler, exitCode: Int) {
+                    removeBreakpointHighlighter(markupModel, highlighted)
+                }
+
+            })
 
         project.messageBus
             .connect()
@@ -31,6 +80,84 @@ class TzBreakpointProjectListener : StartupActivity {
 
                 override fun breakpointPresentationUpdated(breakpoint: XBreakpoint<*>, session: XDebugSession?) = Unit
             })
+
+        project.messageBus
+            .connect()
+            .subscribe(XDebuggerManager.TOPIC, object : XDebuggerManagerListener {
+
+                override fun processStarted(debugProcess: XDebugProcess) {
+                    if (debugProcess !is JavaDebugProcess) return
+                    debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
+
+                        override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
+
+                            // Check if running a cucumber test
+                            if ("Cucumber Java" != RunManager.getInstance(project).selectedConfiguration?.type?.displayName)
+                                return
+
+                            // Check current cucumber step...
+                            val filePathAndPosition = project.getUserData(CUCUMBER_EXECUTION_POSITION)
+                                ?: return
+                            if (filePathAndPosition.lastIndexOf(':') < 1) return
+                            val filePath = URI(filePathAndPosition.substringBeforeLast(':')).path
+                            val fileLine = filePathAndPosition.substringAfterLast(':').toIntOrNull() ?: return
+
+                            // Search if we stopped at a gherkin breakpoint
+                            val file = newContext.sourcePosition?.file ?: return
+                            val offset = newContext.sourcePosition.offset
+                            val step = Tzatziki.findSteps(file.virtualFile, offset)
+                                .filter { it.containingFile.virtualFile.path == filePath }
+                                .firstOrNull { it.getDocumentLine() == fileLine - 1 }
+                                ?: return
+
+                            // Find step's breakpoint
+                            val breakpoint = step.findBreakpoint()
+                                ?: return
+
+                            // If breakpoint in deactivate, let's resume debugger
+                            if (!breakpoint.isEnabled) {
+                                debugProcess.debuggerSession.xDebugSession?.resume()
+                                return
+                            }
+
+                            // Select step breakpoint
+                            FileEditorManager.getInstance(project).getAllEditors(step.containingFile.virtualFile)
+                                .filterIsInstance<TextEditor>()
+                                .forEach { editor ->
+
+                                    val doc = step.getDocument() ?: return@forEach
+                                    val line = doc.getLineNumber(step.textOffset)
+                                    val start = doc.getLineStartOffset(line)
+                                    val end = doc.getLineEndOffset(line)
+
+                                    removeBreakpointHighlighter(markupModel, highlighted)
+
+                                    markupModel = editor.editor.markupModel
+                                    highlighted = markupModel?.addRangeHighlighter(
+                                        DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
+                                        start,
+                                        end,
+                                        DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
+                                        HighlighterTargetArea.LINES_IN_RANGE
+                                    )
+                                }
+                        }
+                    })
+                }
+
+                override fun processStopped(debugProcess: XDebugProcess) {
+                    removeBreakpointHighlighter(markupModel, highlighted)
+                }
+            })
+
+    }
+
+    fun removeBreakpointHighlighter(markupModel: MarkupModel?, highlighted: RangeHighlighter?) {
+        markupModel ?: return
+        highlighted ?: return
+        ApplicationManager.getApplication().invokeLater {
+            markupModel.removeHighlighter(highlighted)
+        }
     }
 
     private fun refresh(breakpoint: XBreakpoint<*>, action: EAction) {
@@ -66,7 +193,6 @@ class TzBreakpointProjectListener : StartupActivity {
         } ?: return
 
         val currentBreakpoints = Tzatziki().extensionList.firstNotNullOfOrNull {
-
             val offset = breakPointElement.first.containingFile.getDocument()?.getLineStartOffset(breakPointElement.second)
             it.findStepsAndBreakpoints(
                 breakPointElement.first.containingFile.virtualFile,
@@ -93,7 +219,7 @@ class TzBreakpointProjectListener : StartupActivity {
             val condition = breakpoint.conditionExpression
 
             currentBreakpoints?.second?.forEach { b ->
-                b.isEnabled = enabled
+                // b.isEnabled = enabled
                 b.conditionExpression = condition
             }
         }
@@ -129,8 +255,9 @@ class TzBreakpointProjectListener : StartupActivity {
             else if (action == EAction.REMOVED && remainingBreakpoints.size == 0) {
                 deleteBreakpoints(step)
             }
-
-            step.updatePresentation(remainingBreakpoints)
+            else {
+                step.updatePresentation(remainingBreakpoints)
+            }
         }
     }
 

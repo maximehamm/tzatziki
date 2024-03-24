@@ -73,6 +73,7 @@ class ScalaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         val method = PsiTreeUtil.getParentOfType(element, ScMethodCall::class.java)
             ?: return null
 
+        // TODO Try to use CucumberUtil().findGherkinReferencesToElement ?
         val allSteps = mutableSetOf<GherkinStep>()
         FilenameIndex
             .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, project.getGherkinScope())
