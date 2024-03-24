@@ -69,14 +69,33 @@ class TzBreakpointProjectListener : StartupActivity {
 
             })
 
+        var modificationInProgress = false
+        var addInProgress = false
         project.messageBus
             .connect()
             .subscribe(XBreakpointListener.TOPIC, object : XBreakpointListener<XBreakpoint<*>> {
-                override fun breakpointChanged(breakpoint: XBreakpoint<*>) =
-                    refresh(breakpoint, EAction.CHANGED)
 
-                override fun breakpointAdded(breakpoint: XBreakpoint<*>) =
-                    refresh(breakpoint, EAction.ADDED)
+                override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
+                    if (modificationInProgress)
+                        return
+                    try {
+                        modificationInProgress = true
+                        refresh(breakpoint, EAction.CHANGED)
+                    } finally {
+                        modificationInProgress = false
+                    }
+                }
+
+                override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
+                    if (addInProgress)
+                        return
+                    try {
+                        addInProgress = true
+                        refresh(breakpoint, EAction.ADDED)
+                    } finally {
+                        addInProgress = false
+                    }
+                }
 
                 override fun breakpointRemoved(breakpoint: XBreakpoint<*>) =
                     refresh(breakpoint, EAction.REMOVED)
@@ -172,10 +191,10 @@ class TzBreakpointProjectListener : StartupActivity {
         }
     }
 
-    private fun refreshGherkin(codeBreakpoint: XBreakpoint<*>, action: EAction) {
+    private fun refreshGherkin(gherkinBreakpoint: XBreakpoint<*>, action: EAction) {
 
-        val vfile = codeBreakpoint.sourcePosition?.file ?: return
-        val line = codeBreakpoint.sourcePosition?.line ?: return
+        val vfile = gherkinBreakpoint.sourcePosition?.file ?: return
+        val line = gherkinBreakpoint.sourcePosition?.line ?: return
 
         val project = ProjectManager.getInstance().openProjects
             .filter { !it.isDisposed }
@@ -191,14 +210,14 @@ class TzBreakpointProjectListener : StartupActivity {
 
         stepDefinitions.first().element
 
-        val breakPointElement = Tzatziki().extensionList.firstNotNullOfOrNull {
+        val codeBreakPointElt = Tzatziki().extensionList.firstNotNullOfOrNull {
             it.findBestPositionToAddBreakpoint(stepDefinitions)
         } ?: return
 
         val allCodeBreakpoints = Tzatziki().extensionList.firstNotNullOfOrNull {
-            val offset = breakPointElement.first.containingFile.getDocument()?.getLineStartOffset(breakPointElement.second)
+            val offset = codeBreakPointElt.first.containingFile.getDocument()?.getLineStartOffset(codeBreakPointElt.second)
             it.findStepsAndBreakpoints(
-                breakPointElement.first.containingFile.virtualFile,
+                codeBreakPointElt.first.containingFile.virtualFile,
                 offset
             )
         }
@@ -208,8 +227,16 @@ class TzBreakpointProjectListener : StartupActivity {
             if (allCodeBreakpoints?.second?.isEmpty() == true) {
                 XDebuggerUtil.getInstance().toggleLineBreakpoint(
                     project,
-                    breakPointElement.first.containingFile.virtualFile,
-                    breakPointElement.second)
+                    codeBreakPointElt.first.containingFile.virtualFile,
+                    codeBreakPointElt.second)
+
+//                 (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
+//                        project,
+//                        codeBreakPointElt.first.containingFile.virtualFile,
+//                        codeBreakPointElt.second, false)
+//                        ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
+//                            it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+//                        }
             }
             allCodeBreakpoints?.second?.forEach { b ->
                 b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
@@ -237,6 +264,10 @@ class TzBreakpointProjectListener : StartupActivity {
 
         val steps = pair.first
         val codeBreakpoints = pair.second
+        val createdFromCode = breakpoint.conditionExpression == null
+
+        if (breakpoint.conditionExpression == null)
+            breakpoint.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
 
         steps.forEach { step ->
 
@@ -245,13 +276,16 @@ class TzBreakpointProjectListener : StartupActivity {
 
             if (action == EAction.ADDED && codeBreakpoints.size == 1) {
 
-                val oldBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
-                    .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
-                    .filter { it.sourcePosition?.line == step.getDocumentLine() }
+                if (createdFromCode) {
 
-                if (oldBreakpoints.isEmpty()) {
-                    toggleBreakpoint(step, documentLine)
-                    step.updatePresentation(codeBreakpoints)
+                    val oldStepBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
+                        .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
+                        .filter { it.sourcePosition?.line == step.getDocumentLine() }
+
+                    if (oldStepBreakpoints.isEmpty()) {
+                        toggleBreakpoint(step, documentLine)
+                        step.updatePresentation(codeBreakpoints)
+                    }
                 }
             }
             else if (action == EAction.REMOVED && codeBreakpoints.size == 0) {

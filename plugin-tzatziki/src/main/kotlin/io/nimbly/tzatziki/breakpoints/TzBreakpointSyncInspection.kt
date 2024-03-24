@@ -70,6 +70,12 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                     )
                 }?.second?.nullIfEmpty()
 
+                // Mark all code breakpoint
+                codeBreakpoints?.forEach {
+                    if (it.conditionExpression == null)
+                        it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+                }
+
                 // Compare
                 if (gherkinBreakpoints != null && codeBreakpoints == null) {
 
@@ -79,11 +85,11 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                 else if (gherkinBreakpoints == null && codeBreakpoints != null) {
 
                     // Create missing gherkin breakpoint
-                    XDebuggerUtil.getInstance().toggleLineBreakpoint(
-                        step.project,
-                        step.containingFile.virtualFile,
-                        stepLine
-                    )
+//                    XDebuggerUtil.getInstance().toggleLineBreakpoint(
+//                        step.project,
+//                        step.containingFile.virtualFile,
+//                        stepLine
+//                    )
                     step.updatePresentation(codeBreakpoints)
                 }
                 else if (codeBreakpoints!=null) {
