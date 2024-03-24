@@ -21,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import io.nimbly.tzatziki.util.findUsages
 import io.nimbly.tzatziki.util.getDocumentEndLine
@@ -92,12 +93,15 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         val start = m.getDocumentLine() ?:return null
         val end = m.getDocumentEndLine() ?:return null
 
-        val l =
-            if (start + 1 <= end)
-                start + 1
-            else
-                start
+        var line = start
+        val xutil = XDebuggerUtil.getInstance()
+        for (l in start + 1..end) {
+            if (xutil.canPutBreakpointAt(m.project, m.containingFile.virtualFile, l)) {
+                line = l
+                break
+            }
+        }
 
-        return m to l
+        return m to line
     }
 }

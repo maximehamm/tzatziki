@@ -4,6 +4,7 @@ import com.intellij.debugger.engine.JavaDebugProcess
 import com.intellij.debugger.impl.DebuggerContextImpl
 import com.intellij.debugger.impl.DebuggerContextListener
 import com.intellij.debugger.impl.DebuggerSession
+import com.intellij.debugger.ui.breakpoints.JavaLineBreakpointType
 import com.intellij.execution.ExecutionListener
 import com.intellij.execution.ExecutionManager
 import com.intellij.execution.RunManager
@@ -29,11 +30,13 @@ import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import com.intellij.xdebugger.breakpoints.XLineBreakpointType
 import com.intellij.xdebugger.impl.XDebuggerUtilImpl
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
+import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 import org.jetbrains.plugins.cucumber.psi.*
 import java.net.URI
 
@@ -68,7 +71,7 @@ class TzBreakpointProjectListener : StartupActivity {
 
     override fun runActivity(project: Project) {
 
-        var highlighted: RangeHighlighter? = null
+        val highlighted = mutableListOf<RangeHighlighter>()
         var markupModel: MarkupModel? = null
 
         project.messageBus
@@ -192,32 +195,39 @@ class TzBreakpointProjectListener : StartupActivity {
                                 .forEach { editor ->
 
                                     val doc = step.getDocument() ?: return@forEach
-                                    val line: Int
+
+                                    val line = doc.getLineNumber(step.textOffset)
+                                    val start = doc.getLineStartOffset(line)
+                                    val end = doc.getLineEndOffset(line)
+
+                                    markupModel = editor.editor.markupModel
+
+                                    removeBreakpointHighlighter(markupModel, highlighted)
+
+                                    highlighted += editor.editor.markupModel.addRangeHighlighter(
+                                        DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
+                                        start, end,
+                                        DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
+                                        HighlighterTargetArea.LINES_IN_RANGE
+                                    )
 
                                     val exampleNumber = project.cucumberExecutionPoint().exampleNumber
                                     if (step.stepHolder is GherkinScenarioOutline) {
 
-                                        val examples = step.findExampleTable() ?: return@forEach
-                                        val row = examples.dataRows.getOrNull(exampleNumber ?: 0) ?: return@forEach
+                                        val examples = step.findExampleTable()
+                                        val row = examples?.dataRows?.getOrNull(exampleNumber ?: 0)
 
-                                        line = doc.getLineNumber(row.textOffset)
+                                        if (row != null) {
+                                            val exline = doc.getLineNumber(row.textOffset)
+                                            highlighted += editor.editor.markupModel.addRangeHighlighter(
+                                                DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
+                                                doc.getLineStartOffset(exline),
+                                                doc.getLineEndOffset(exline),
+                                                DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
+                                                HighlighterTargetArea.LINES_IN_RANGE
+                                            )
+                                        }
                                     }
-                                    else {
-                                        line = doc.getLineNumber(step.textOffset)
-                                    }
-                                    val start = doc.getLineStartOffset(line)
-                                    val end = doc.getLineEndOffset(line)
-
-                                    removeBreakpointHighlighter(markupModel, highlighted)
-
-                                    markupModel = editor.editor.markupModel
-                                    highlighted = markupModel?.addRangeHighlighter(
-                                        DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
-                                        start,
-                                        end,
-                                        DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
-                                        HighlighterTargetArea.LINES_IN_RANGE
-                                    )
 
                                     val vp = editor.editor.offsetToLogicalPosition(step.textOffset)
                                     editor.editor.scrollingModel.scrollTo(vp, ScrollType.MAKE_VISIBLE)
@@ -233,12 +243,19 @@ class TzBreakpointProjectListener : StartupActivity {
 
     }
 
-    fun removeBreakpointHighlighter(markupModel: MarkupModel?, highlighted: RangeHighlighter?) {
+    fun removeBreakpointHighlighter(markupModel: MarkupModel?, highlighted: MutableList<RangeHighlighter>) {
         markupModel ?: return
-        highlighted ?: return
+
+        val copy = highlighted.toList()
+        highlighted.clear()
+
         ApplicationManager.getApplication().invokeLater {
-            markupModel.removeHighlighter(highlighted)
+            copy.forEach {
+                markupModel.removeHighlighter(it)
+                highlighted.remove(it)
+            }
         }
+
     }
 
     private fun refresh(breakpoint: XBreakpoint<*>, action: EAction) {
@@ -284,12 +301,13 @@ class TzBreakpointProjectListener : StartupActivity {
         if (action == EAction.ADDED) {
 
             if (allCodeBreakpoints?.second?.isEmpty() == true) {
-             (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
+              (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
                     project,
                     codeBreakPointElt.first.containingFile.virtualFile,
                     codeBreakPointElt.second, false)
                     ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
                         it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+                        (it.properties as JavaLineBreakpointProperties).lambdaOrdinal =  -1
                     }
             }
             allCodeBreakpoints?.second?.forEach { b ->
@@ -352,11 +370,13 @@ class TzBreakpointProjectListener : StartupActivity {
     }
 
     private fun toggleBreakpoint(step: GherkinStep, documentLine: Int) {
-        XDebuggerUtil.getInstance().toggleLineBreakpoint(
+        (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
             step.project,
             step.containingFile.virtualFile,
-            documentLine
-        )
+            documentLine, false)
+            ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
+                it.conditionExpression = null
+            }
     }
 
     private fun deleteBreakpoints(step: GherkinStep) {
