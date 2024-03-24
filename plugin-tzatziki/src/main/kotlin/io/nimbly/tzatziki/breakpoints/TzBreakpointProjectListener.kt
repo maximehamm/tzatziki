@@ -12,6 +12,7 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.MarkupModel
 import com.intellij.openapi.editor.markup.RangeHighlighter
@@ -21,6 +22,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Key
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.util.PsiUtil
 import com.intellij.xdebugger.*
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
@@ -31,8 +34,7 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.plugins.cucumber.psi.GherkinFileType
-import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.*
 import java.net.URI
 
 const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
@@ -40,7 +42,28 @@ const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
 class TzBreakpointProjectListener : StartupActivity {
 
     companion object {
-        val CUCUMBER_EXECUTION_POSITION: Key<String?> = Key.create<String?>("CUCUMBER_EXECUTION_POSITION")
+        private val CUCUMBER_EXECUTION_POINT: Key<TzExecutionPosition> = Key.create("CUCUMBER_EXECUTION_POSITION")
+
+        fun Project.cucumberExecutionPoint(): TzExecutionPosition {
+            var p = this.getUserData(CUCUMBER_EXECUTION_POINT)
+            if (p == null) {
+                p = TzExecutionPosition()
+                this.putUserData(CUCUMBER_EXECUTION_POINT, p)
+            }
+            return p
+        }
+    }
+
+    data class TzExecutionPosition(
+        var featurePath: String? = null,
+        var lineNumber: Int? = null,
+        var exampleNumber: Int? = null
+    ) {
+        fun clear() {
+            featurePath = null
+            lineNumber = null
+            exampleNumber = null
+        }
     }
 
     override fun runActivity(project: Project) {
@@ -55,11 +78,32 @@ class TzBreakpointProjectListener : StartupActivity {
                 private var listener: ProcessListener? = null
 
                 override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
+
+                    project.cucumberExecutionPoint().clear()
                     val listener = object : ProcessListener {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                            val regex = Regex("locationHint = '([^']+)")
-                            val fileName = regex.find(event.text)?.groupValues?.get(1)
-                            project.putUserData(CUCUMBER_EXECUTION_POSITION, fileName)
+
+                            val regex = Regex(" locationHint = '([^']+)")
+                            val filePathAndPosition = regex.find(event.text)?.groupValues?.get(1)
+                            if (filePathAndPosition != null) {
+                                if (filePathAndPosition.lastIndexOf(':') < 1) return
+                                val filePath = URI(filePathAndPosition.substringBeforeLast(':')).path
+                                val fileLine = filePathAndPosition.substringAfterLast(':').toIntOrNull() ?: return
+
+                                val p = project.cucumberExecutionPoint()
+                                p.featurePath = filePath
+                                p.lineNumber = fileLine
+                            }
+                            else {
+
+                                val regex2 = Regex(" name = 'Example #(\\d+)'")
+                                val exampleNumber = regex2.find(event.text)?.groupValues?.get(1)?.toInt()
+                                if (exampleNumber != null) {
+
+                                    val p = project.cucumberExecutionPoint()
+                                    p.exampleNumber = exampleNumber
+                                }
+                            }
                         }
                     }
                     handler.addProcessListener(listener)
@@ -121,18 +165,15 @@ class TzBreakpointProjectListener : StartupActivity {
                                 return
 
                             // Check current cucumber step...
-                            val filePathAndPosition = project.getUserData(CUCUMBER_EXECUTION_POSITION)
-                                ?: return
-                            if (filePathAndPosition.lastIndexOf(':') < 1) return
-                            val filePath = URI(filePathAndPosition.substringBeforeLast(':')).path
-                            val fileLine = filePathAndPosition.substringAfterLast(':').toIntOrNull() ?: return
+                            val executionPoint = project.cucumberExecutionPoint()
+                            if (executionPoint.featurePath == null) return
 
                             // Search if we stopped at a gherkin breakpoint
                             val file = newContext.sourcePosition?.file ?: return
                             val offset = newContext.sourcePosition.offset
                             val step = Tzatziki.findSteps(file.virtualFile, offset)
-                                .filter { it.containingFile.virtualFile.path == filePath }
-                                .firstOrNull { it.getDocumentLine() == fileLine - 1 }
+                                .filter { it.containingFile.virtualFile.path == executionPoint.featurePath }
+                                .firstOrNull { it.getDocumentLine() == executionPoint.lineNumber!! - 1 }
                                 ?: return
 
                             // Find step's breakpoint
@@ -151,7 +192,19 @@ class TzBreakpointProjectListener : StartupActivity {
                                 .forEach { editor ->
 
                                     val doc = step.getDocument() ?: return@forEach
-                                    val line = doc.getLineNumber(step.textOffset)
+                                    val line: Int
+
+                                    val exampleNumber = project.cucumberExecutionPoint().exampleNumber
+                                    if (step.stepHolder is GherkinScenarioOutline) {
+
+                                        val examples = step.findExampleTable() ?: return@forEach
+                                        val row = examples.dataRows.getOrNull(exampleNumber ?: 0) ?: return@forEach
+
+                                        line = doc.getLineNumber(row.textOffset)
+                                    }
+                                    else {
+                                        line = doc.getLineNumber(step.textOffset)
+                                    }
                                     val start = doc.getLineStartOffset(line)
                                     val end = doc.getLineEndOffset(line)
 
@@ -165,6 +218,9 @@ class TzBreakpointProjectListener : StartupActivity {
                                         DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
                                         HighlighterTargetArea.LINES_IN_RANGE
                                     )
+
+                                    val vp = editor.editor.offsetToLogicalPosition(step.textOffset)
+                                    editor.editor.scrollingModel.scrollTo(vp, ScrollType.MAKE_VISIBLE)
                                 }
                         }
                     })

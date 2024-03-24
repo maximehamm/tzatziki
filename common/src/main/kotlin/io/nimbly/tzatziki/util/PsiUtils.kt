@@ -24,6 +24,7 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.patterns.ElementPattern
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.search.GlobalSearchScope
@@ -34,13 +35,11 @@ import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.util.CommonProcessors
 import com.intellij.util.Processor
-import org.jetbrains.plugins.cucumber.psi.GherkinStep
-import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
-import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import org.jetbrains.plugins.cucumber.steps.search.CucumberStepSearchUtil
 import java.io.File
+
 
 fun VirtualFile.getFile(project: Project): PsiFile?
     = PsiManager.getInstance(project).findFile(this)
@@ -218,4 +217,25 @@ fun String.ellipsis(length: Int): String {
 
 inline fun <reified T : PsiElement> PsiElement.parentOfTypeIs(withSelf: Boolean = false): T? {
     return PsiTreeUtil.getParentOfType(this, T::class.java, !withSelf)
+}
+
+fun GherkinStep.findExampleTable() : GherkinTable? {
+
+    if (this.stepHolder !is GherkinScenarioOutline)
+        return null
+    val exblock = this.getNextSiblingOfType<GherkinExamplesBlock>() ?: return null
+
+    return exblock.table
+}
+
+inline fun <reified T : PsiElement> PsiElement?.getNextSiblingOfType(): T? {
+    if (this == null) return null
+    var child = nextSibling
+    while (child != null) {
+        if (child is T) {
+            return child
+        }
+        child = child.nextSibling
+    }
+    return null
 }
