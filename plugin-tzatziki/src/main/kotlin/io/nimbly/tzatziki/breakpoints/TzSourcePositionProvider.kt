@@ -55,40 +55,41 @@ class TzSourcePositionProvider : SourcePositionProvider() {
 
         return TzSourcePosition(elementAt)
     }
-}
 
-class TzSourcePosition(val element: PsiElement) : SourcePosition() {
+    @Deprecated("TO REMOVE")
+    class TzSourcePosition(val element: PsiElement) : SourcePosition() {
 
-    override fun navigate(requestFocus: Boolean) {
-        //TODO
+        override fun navigate(requestFocus: Boolean) {
+            //TODO
+        }
+
+        override fun canNavigate(): Boolean {
+            return false
+        }
+
+        override fun canNavigateToSource(): Boolean {
+            return false
+        }
+
+        override fun getFile(): PsiFile {
+            return element.containingFile
+        }
+
+        override fun getElementAt(): PsiElement {
+            return element
+        }
+
+        override fun getLine(): Int {
+            return element.getDocumentLine() ?: 0
+        }
+
+        override fun getOffset(): Int {
+            return element.textOffset
+        }
+
+        override fun openEditor(requestFocus: Boolean): Editor {
+            return EditorFactory.getInstance().editors(element.getDocument()!!).findFirst().get()
+        }
+
     }
-
-    override fun canNavigate(): Boolean {
-        return false
-    }
-
-    override fun canNavigateToSource(): Boolean {
-        return false
-    }
-
-    override fun getFile(): PsiFile {
-        return element.containingFile
-    }
-
-    override fun getElementAt(): PsiElement {
-        return element
-    }
-
-    override fun getLine(): Int {
-        return element.getDocumentLine() ?: 0
-    }
-
-    override fun getOffset(): Int {
-        return element.textOffset
-    }
-
-    override fun openEditor(requestFocus: Boolean): Editor {
-        return EditorFactory.getInstance().editors(element.getDocument()!!).findFirst().get()
-    }
-
 }

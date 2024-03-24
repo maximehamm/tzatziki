@@ -246,7 +246,7 @@
         <!--<debugger.sourcePositionProvider implementation="io.nimbly.tzatziki.breakpoints.TzSourcePositionProvider"/>-->
 
         <localInspection language="Gherkin" implementationClass="io.nimbly.tzatziki.breakpoints.TzBreakpointSyncInspection"
-                         shortName="CucumberPlusBreakpointSync" displayName="Synchronize Gherkin and implemtation breakpoints"
+                         shortName="CucumberPlusBreakpointSync" displayName="Synchronize Gherkin and implementation breakpoints"
                          groupName="Cucumber+" hasStaticDescription="true" enabledByDefault="true" level="INFO"/>
 
         // Collapse Block

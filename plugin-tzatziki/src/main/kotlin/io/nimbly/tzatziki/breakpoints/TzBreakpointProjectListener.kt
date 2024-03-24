@@ -24,6 +24,9 @@ import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.*
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
+import com.intellij.xdebugger.breakpoints.XBreakpointProperties
+import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import com.intellij.xdebugger.impl.XDebuggerUtilImpl
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.Tzatziki
@@ -225,18 +228,13 @@ class TzBreakpointProjectListener : StartupActivity {
         if (action == EAction.ADDED) {
 
             if (allCodeBreakpoints?.second?.isEmpty() == true) {
-                XDebuggerUtil.getInstance().toggleLineBreakpoint(
+             (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
                     project,
                     codeBreakPointElt.first.containingFile.virtualFile,
-                    codeBreakPointElt.second)
-
-//                 (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
-//                        project,
-//                        codeBreakPointElt.first.containingFile.virtualFile,
-//                        codeBreakPointElt.second, false)
-//                        ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
-//                            it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-//                        }
+                    codeBreakPointElt.second, false)
+                    ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
+                        it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+                    }
             }
             allCodeBreakpoints?.second?.forEach { b ->
                 b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
@@ -266,7 +264,7 @@ class TzBreakpointProjectListener : StartupActivity {
         val codeBreakpoints = pair.second
         val createdFromCode = breakpoint.conditionExpression == null
 
-        if (breakpoint.conditionExpression == null)
+        if (steps.isNotEmpty() && breakpoint.conditionExpression == null)
             breakpoint.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
 
         steps.forEach { step ->

@@ -17,7 +17,10 @@ package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.Application
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.psi.PsiElementVisitor
+import com.intellij.psi.PsiFile
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.XExpression
@@ -26,10 +29,7 @@ import com.intellij.xdebugger.impl.breakpoints.XBreakpointBase
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
-import io.nimbly.tzatziki.util.JavaUtil
-import io.nimbly.tzatziki.util.getDocumentLine
-import io.nimbly.tzatziki.util.nullIfEmpty
-import io.nimbly.tzatziki.util.updatePresentation
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -41,6 +41,33 @@ class TzBreakpointSyncInspection : GherkinInspection() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
 
         return object : GherkinElementVisitor() {
+
+            /*
+            override fun visitFile(file: PsiFile) {
+
+                // Look for orphan breakpoint that no more belongs to a step
+                val gherkinBreakpoints = XDebuggerManager.getInstance(file.project).breakpointManager.allBreakpoints
+                    .filter { it.sourcePosition?.file == file.virtualFile }
+                    .nullIfEmpty()
+                    ?: return
+
+                XDebuggerManager.getInstance(file.project).breakpointManager.allBreakpoints
+                    .filter { it.sourcePosition?.file == file.virtualFile }
+                    .forEach { p ->
+                        val line = file.getDocumentLine() ?: return@forEach
+                        val step = findStep(file.virtualFile, file.project, line)
+                        if (step == null) {
+                            ApplicationManager.getApplication().invokeLater {
+                                ApplicationManager.getApplication().runWriteAction {
+                                    gherkinBreakpoints.forEach {
+                                        XDebuggerManager.getInstance(file.project).breakpointManager.removeBreakpoint(p)
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+            */
 
             override fun visitStep(step: GherkinStep) {
 
@@ -79,17 +106,19 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                 // Compare
                 if (gherkinBreakpoints != null && codeBreakpoints == null) {
 
-                    // Disable breakpoint since reference is lost !
-                    gherkinBreakpoints.forEach { it.isEnabled = false }
+                    // Drop breakpoint since reference is lost !
+                    /*
+                    ApplicationManager.getApplication().invokeLater {
+                        ApplicationManager.getApplication().runWriteAction {
+                            gherkinBreakpoints.forEach {
+                                XDebuggerManager.getInstance(step.project).breakpointManager.removeBreakpoint(it)
+                            }
+                        }
+                    }*/
                 }
                 else if (gherkinBreakpoints == null && codeBreakpoints != null) {
 
                     // Create missing gherkin breakpoint
-//                    XDebuggerUtil.getInstance().toggleLineBreakpoint(
-//                        step.project,
-//                        step.containingFile.virtualFile,
-//                        stepLine
-//                    )
                     step.updatePresentation(codeBreakpoints)
                 }
                 else if (codeBreakpoints!=null) {
