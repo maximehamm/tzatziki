@@ -24,12 +24,15 @@ import com.intellij.openapi.util.Key
 import com.intellij.xdebugger.*
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
+import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.net.URI
+
+const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
 
 class TzBreakpointProjectListener : StartupActivity {
 
@@ -169,10 +172,10 @@ class TzBreakpointProjectListener : StartupActivity {
         }
     }
 
-    private fun refreshGherkin(breakpoint: XBreakpoint<*>, action: EAction) {
+    private fun refreshGherkin(codeBreakpoint: XBreakpoint<*>, action: EAction) {
 
-        val vfile = breakpoint.sourcePosition?.file ?: return
-        val line = breakpoint.sourcePosition?.line ?: return
+        val vfile = codeBreakpoint.sourcePosition?.file ?: return
+        val line = codeBreakpoint.sourcePosition?.line ?: return
 
         val project = ProjectManager.getInstance().openProjects
             .filter { !it.isDisposed }
@@ -192,7 +195,7 @@ class TzBreakpointProjectListener : StartupActivity {
             it.findBestPositionToAddBreakpoint(stepDefinitions)
         } ?: return
 
-        val currentBreakpoints = Tzatziki().extensionList.firstNotNullOfOrNull {
+        val allCodeBreakpoints = Tzatziki().extensionList.firstNotNullOfOrNull {
             val offset = breakPointElement.first.containingFile.getDocument()?.getLineStartOffset(breakPointElement.second)
             it.findStepsAndBreakpoints(
                 breakPointElement.first.containingFile.virtualFile,
@@ -202,25 +205,24 @@ class TzBreakpointProjectListener : StartupActivity {
 
         if (action == EAction.ADDED) {
 
-            if (currentBreakpoints?.second?.isEmpty() == true) {
+            if (allCodeBreakpoints?.second?.isEmpty() == true) {
                 XDebuggerUtil.getInstance().toggleLineBreakpoint(
                     project,
                     breakPointElement.first.containingFile.virtualFile,
                     breakPointElement.second)
             }
+            allCodeBreakpoints?.second?.forEach { b ->
+                b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+            }
         } else if (action == EAction.REMOVED) {
 
-            currentBreakpoints?.second?.forEach { b ->
+            allCodeBreakpoints?.second?.forEach { b ->
                 XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
             }
         } else if (action == EAction.CHANGED) {
 
-            val enabled = breakpoint.isEnabled
-            val condition = breakpoint.conditionExpression
-
-            currentBreakpoints?.second?.forEach { b ->
-                // b.isEnabled = enabled
-                b.conditionExpression = condition
+            allCodeBreakpoints?.second?.forEach { b ->
+                b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
             }
         }
     }
@@ -234,14 +236,14 @@ class TzBreakpointProjectListener : StartupActivity {
         } ?: return
 
         val steps = pair.first
-        val remainingBreakpoints = pair.second
+        val codeBreakpoints = pair.second
 
         steps.forEach { step ->
 
             val documentLine = step.getDocumentLine()
                 ?: return@forEach
 
-            if (action == EAction.ADDED && remainingBreakpoints.size == 1) {
+            if (action == EAction.ADDED && codeBreakpoints.size == 1) {
 
                 val oldBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
                     .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
@@ -249,14 +251,14 @@ class TzBreakpointProjectListener : StartupActivity {
 
                 if (oldBreakpoints.isEmpty()) {
                     toggleBreakpoint(step, documentLine)
-                    step.updatePresentation(remainingBreakpoints)
+                    step.updatePresentation(codeBreakpoints)
                 }
             }
-            else if (action == EAction.REMOVED && remainingBreakpoints.size == 0) {
+            else if (action == EAction.REMOVED && codeBreakpoints.size == 0) {
                 deleteBreakpoints(step)
             }
             else {
-                step.updatePresentation(remainingBreakpoints)
+                step.updatePresentation(codeBreakpoints)
             }
         }
     }

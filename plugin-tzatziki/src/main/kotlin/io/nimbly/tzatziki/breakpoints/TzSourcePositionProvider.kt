@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getNextSiblingIgnoringWhitespace
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import java.net.URI
 
+@Deprecated("TO REMOVE")
 class TzSourcePositionProvider : SourcePositionProvider() {
 
     override fun computeSourcePosition(

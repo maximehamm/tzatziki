@@ -4,17 +4,16 @@ import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
-fun GherkinStep.updatePresentation(breakpoints: List<XBreakpoint<*>>) {
+fun GherkinStep.updatePresentation(codeBreakpoints: List<XBreakpoint<*>>) {
 
-    val enabled = breakpoints.map { if (it.isEnabled) 1 else 0 }.sum()
-    val condition = breakpoints.map { it.conditionExpression }.filterNotNull().firstOrNull()
+    val enabled = codeBreakpoints.map { if (it.isEnabled) 1 else 0 }.sum()
+    val condition = codeBreakpoints.map { it.conditionExpression }.filterNotNull().firstOrNull()
 
     val stepBreakpoints = XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints
         .filter { it.sourcePosition?.file == containingFile.virtualFile }
         .filter { it.sourcePosition?.line == getDocumentLine() }
     stepBreakpoints.forEach { b ->
         b.isEnabled = enabled > 0
-        b.conditionExpression = condition
     }
 }
 

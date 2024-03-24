@@ -15,8 +15,11 @@
 
 package io.nimbly.tzatziki.util
 
+import com.intellij.vcs.log.history.removeTrivialMerges
+import java.lang.reflect.Field
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import javax.swing.Icon
 
 object JavaUtil {
 
@@ -35,6 +38,23 @@ object JavaUtil {
             f1.isAccessible = true
             f1.setInt(`object`, inte)
         } catch (ignored: Exception) {
+        }
+    }
+
+    fun updateAnyField(`object`: Any, field: String, icon: Any) {
+        try {
+            val f1 = `object`.javaClass.findField(field)
+            f1.isAccessible = true
+            f1.set(`object`, icon)
+        } catch (ignored: Exception) {
+        }
+    }
+
+    private fun Class<*>.findField(field: String?): Field {
+        try {
+            return this.getDeclaredField(field)
+        } catch (e: Exception) {
+            return superclass.findField(field)
         }
     }
 }

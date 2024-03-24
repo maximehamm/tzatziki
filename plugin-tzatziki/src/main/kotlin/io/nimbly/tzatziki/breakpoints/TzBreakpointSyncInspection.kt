@@ -16,11 +16,17 @@
 package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.codeInspection.ProblemsHolder
+import com.intellij.icons.AllIcons
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
+import com.intellij.xdebugger.XExpression
+import com.intellij.xdebugger.impl.breakpoints.CustomizedBreakpointPresentation
+import com.intellij.xdebugger.impl.breakpoints.XBreakpointBase
+import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
+import io.nimbly.tzatziki.util.JavaUtil
 import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.nullIfEmpty
 import io.nimbly.tzatziki.util.updatePresentation
@@ -28,6 +34,7 @@ import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
+import javax.swing.Icon
 
 class TzBreakpointSyncInspection : GherkinInspection() {
 
@@ -82,6 +89,7 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                 else if (codeBreakpoints!=null) {
                     // step.updatePresentation(codeBreakpoints)
                 }
+
             }
         }
     }
