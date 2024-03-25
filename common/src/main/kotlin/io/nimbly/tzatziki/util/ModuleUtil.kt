@@ -4,6 +4,8 @@ import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
 import java.nio.file.Path
 
@@ -42,6 +44,11 @@ val Module.path: Path
             ?: return this.project.basePath?.toPath() ?: "".toPath()
     }
 
+fun VirtualFile.findProject(): Project? {
+    return ProjectManager.getInstance().openProjects
+        .filter { !it.isDisposed }
+        .firstOrNull() { this.getFile(it) != null }
+}
 fun Project.modulesTree(): Node<Module>? {
 
     val moduleMap = mutableMapOf<Path, Module>()

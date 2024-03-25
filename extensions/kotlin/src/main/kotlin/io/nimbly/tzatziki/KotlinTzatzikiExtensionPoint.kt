@@ -23,10 +23,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
-import io.nimbly.tzatziki.util.findUsages
-import io.nimbly.tzatziki.util.getDocumentEndLine
-import io.nimbly.tzatziki.util.getDocumentLine
-import io.nimbly.tzatziki.util.getFile
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
@@ -51,11 +48,7 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         vfile ?: return null
         offset ?: return null
 
-        val project = ProjectManager.getInstance().openProjects
-            .filter { !it.isDisposed }
-            .firstOrNull() { vfile.getFile(it) != null }
-            ?: return null
-
+        val project = vfile.findProject() ?: return null
         val file = vfile.getFile(project) ?: return null
         val element = file.findElementAt(offset) ?: return null
 

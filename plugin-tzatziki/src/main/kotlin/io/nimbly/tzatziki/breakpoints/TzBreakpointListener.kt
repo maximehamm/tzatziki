@@ -1,5 +1,7 @@
 package io.nimbly.tzatziki.breakpoints
 
+import com.intellij.icons.AllIcons.Debugger.Db_dep_field_breakpoint
+import com.intellij.icons.AllIcons.Debugger.Db_field_breakpoint
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.markup.MarkupModel
 import com.intellij.openapi.editor.markup.RangeHighlighter
@@ -12,7 +14,9 @@ import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.impl.XDebuggerUtilImpl
+import com.intellij.xdebugger.impl.breakpoints.CustomizedBreakpointPresentation
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
+import com.intellij.xdebugger.impl.breakpoints.XLineBreakpointImpl
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
@@ -72,11 +76,7 @@ class TzBreakpointListener : StartupActivity {
 
         val vfile = gherkinBreakpoint.sourcePosition?.file ?: return
         val line = gherkinBreakpoint.sourcePosition?.line ?: return
-
-        val project = ProjectManager.getInstance().openProjects
-            .filter { !it.isDisposed }
-            .firstOrNull() { vfile.getFile(it) != null }
-            ?: return
+        val project = vfile.findProject() ?: return
 
         val step = findStep(vfile, project, line)
             ?: return
@@ -108,7 +108,7 @@ class TzBreakpointListener : StartupActivity {
                     codeBreakPointElt.second, false)
                     ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>> ->
                         it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-                        (it.properties as JavaLineBreakpointProperties).lambdaOrdinal =  -1
+                        (it.properties as? JavaLineBreakpointProperties)?.let { it.lambdaOrdinal =  -1 } // TIPS : Fix for a Kotlin exception is some cases....
                     }
             }
             allCodeBreakpoints?.second?.forEach { b ->

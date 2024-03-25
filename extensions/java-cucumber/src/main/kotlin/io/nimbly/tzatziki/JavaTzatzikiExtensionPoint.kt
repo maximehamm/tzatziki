@@ -45,11 +45,7 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         vfile ?: return null
         offset ?: return null
 
-        val project = ProjectManager.getInstance().openProjects
-            .filter { !it.isDisposed }
-            .firstOrNull() { vfile.getFile(it) != null }
-            ?: return null
-
+        val project = vfile.findProject() ?: return null
         val file = vfile.getFile(project) ?: return null
         val element = file.findElementAt(offset) ?: return null
 
