@@ -24,7 +24,7 @@ class TzBreakpointListener : StartupActivity {
 
     override fun runActivity(project: Project) {
 
-        var modificationInProgress = false
+        var changeInProgress = false
         var addInProgress = false
 
         project.messageBus
@@ -32,13 +32,13 @@ class TzBreakpointListener : StartupActivity {
             .subscribe(XBreakpointListener.TOPIC, object : XBreakpointListener<XBreakpoint<*>> {
 
                 override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
-                    if (modificationInProgress)
+                    if (changeInProgress)
                         return
                     try {
-                        modificationInProgress = true
+                        changeInProgress = true
                         refresh(breakpoint, EAction.CHANGED)
                     } finally {
-                        modificationInProgress = false
+                        changeInProgress = false
                     }
                 }
 
@@ -79,38 +79,59 @@ class TzBreakpointListener : StartupActivity {
 
                     val step = file.findElementsOfTypeInRange(lineRange, GherkinStep::class.java).firstOrNull()
                     if (step != null && line == step.getDocumentLine())
-                        refreshGherkinStep(step, action)
+                        refreshGherkinStep(step, gherkinBreakpoint, action)
 
                     val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
                     if (row != null && row !is GherkinTableHeaderRowImpl)
-                        refreshGherkinRow(row, action)
+                        refreshGherkinRow(row, gherkinBreakpoint, action)
 
                 }
 
-                private fun refreshGherkinRow(row: GherkinTableRow, action: EAction) {
+                private fun refreshGherkinRow(row: GherkinTableRow, gherkinBreakpoint: XBreakpoint<*>, action: EAction) {
 
                     val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java) ?: return
                     val scenario = examples.getParentOfTypes(true, GherkinScenarioOutline::class.java) ?: return
 
-                    if (action != EAction.ADDED)
-                        return
+                    if (action == EAction.ADDED) {
 
-                    // Check if at least one breakpoint is set
-                    if (scenario.steps.find { it.findBreakpoint() != null } != null)
-                        return
+                        // Check if at least one breakpoint is set
+                        if (scenario.steps.find { it.findBreakpoint() != null } != null)
+                            return
 
-                    // Add step breakpoints
-                    scenario.steps.forEach { step ->
-                        val documentLine = step.getDocumentLine() ?: return@forEach
-                        step.toggleGherkinBreakpoint(documentLine)
+                        // Add step breakpoints
+                        scenario.steps.forEach { step ->
 
-                        // Refresh step (i.e add code breakpoint if needed)
-                        addInProgress = false // Let recurse !
-                        refreshGherkinStep(step, EAction.ADDED)
+                            val documentLine = step.getDocumentLine() ?: return@forEach
+                            step.toggleGherkinBreakpoint(documentLine)
+
+                            // Refresh step (i.e add code breakpoint if needed)
+                            addInProgress = false // Let recurse !
+                            refreshGherkinStep(step, null, EAction.ADDED)
+                        }
+                    }
+                    else if (action == EAction.REMOVED) {
+
+                        // Remove step's breakpoint if no more row breakpoint exists
+                        val hasStillRowBreakpoint = scenario.allExamples().find { it.findBreakpoint() != null } != null
+                        if (!hasStillRowBreakpoint) {
+                            scenario.steps.forEach { it.deleteBreakpoints() }
+                        }
+                    }
+                    else if (action == EAction.CHANGED) {
+
+                        // Sync row breakpoint if all step's breakpoint has same state
+                        val state = gherkinBreakpoint.isEnabled
+                        if (gherkinBreakpoint.isEnabled ||
+                            scenario.allExamples().filter { it != row }.find { it.findBreakpoint() != null && it.findBreakpoint()?.isEnabled != gherkinBreakpoint.isEnabled } == null) {
+
+                            scenario.steps.forEach {
+                                it.enableBreakpoints(state)
+                            }
+                        }
                     }
                 }
 
-                private fun refreshGherkinStep(step: GherkinStep, action: EAction) {
+                private fun refreshGherkinStep(step: GherkinStep, gherkinBreakpoint: XBreakpoint<*>?, action: EAction) {
 
                     val stepDefinitions = step.findCucumberStepDefinitions()
                     if (stepDefinitions.isEmpty())
@@ -157,16 +178,44 @@ class TzBreakpointListener : StartupActivity {
                             }
                         }
 
-                    } else if (action == EAction.REMOVED) {
+                    }
+                    else if (action == EAction.REMOVED) {
 
+                        // Remove code breakpoint
                         allCodeBreakpoints?.second?.forEach { b ->
                             XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
                         }
-                    } else if (action == EAction.CHANGED) {
 
+                        // Remove row breakspoints
+                        val scenarioStillHasBreakpoints = step.stepHolder.steps.find { it.findBreakpoint() != null } != null
+                        if (step.stepHolder is GherkinScenarioOutline && !scenarioStillHasBreakpoints) {
+
+                            val allExamples = (step.stepHolder as GherkinScenarioOutline).allExamples()
+                            allExamples.forEach { it.deleteBreakpoints() }
+                        }
+
+                    }
+                    else if (action == EAction.CHANGED && gherkinBreakpoint!=null) {
+
+                        // Fix code breakpoint (if needed)
                         allCodeBreakpoints?.second?.forEach { b ->
                             b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
                         }
+
+                        // Sync row breakpoint if all step's breakpoint has same state
+                        val state = gherkinBreakpoint.isEnabled
+                        val scenario = step.getParentOfTypes(true, GherkinScenarioOutline::class.java)
+                        if (scenario != null) {
+
+                            if (gherkinBreakpoint.isEnabled ||
+                                scenario.steps.filter { it != step }.find { it.findBreakpoint() != null && it.findBreakpoint()?.isEnabled != gherkinBreakpoint.isEnabled } == null) {
+
+                                scenario.allExamples().forEach {
+                                    it.enableBreakpoints(state)
+                                }
+                            }
+                        }
+
                     }
                 }
 
@@ -205,7 +254,7 @@ class TzBreakpointListener : StartupActivity {
                             }
                         }
                         else if (action == EAction.REMOVED && codeBreakpoints.size == 0) {
-                            deleteBreakpoints(step)
+                            step.deleteBreakpoints()
                         }
                         else {
                             step.updatePresentation(codeBreakpoints)
@@ -225,12 +274,21 @@ class TzBreakpointListener : StartupActivity {
             }
     }
 
-    private fun deleteBreakpoints(step: GherkinStep) {
-        val oldBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
-            .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
-            .filter { it.sourcePosition?.line == step.getDocumentLine() }
+    private fun GherkinPsiElement.deleteBreakpoints() {
+        val oldBreakpoints = XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints
+            .filter { it.sourcePosition?.file == containingFile.virtualFile }
+            .filter { it.sourcePosition?.line == getDocumentLine() }
         oldBreakpoints.forEach { b ->
-            XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
+            XDebuggerUtil.getInstance().removeBreakpoint(project, b)
+        }
+    }
+
+    private fun GherkinPsiElement.enableBreakpoints(enabled: Boolean) {
+        val oldBreakpoints = XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints
+            .filter { it.sourcePosition?.file == containingFile.virtualFile }
+            .filter { it.sourcePosition?.line == getDocumentLine() }
+        oldBreakpoints.forEach { b ->
+            b.isEnabled = enabled
         }
     }
 
