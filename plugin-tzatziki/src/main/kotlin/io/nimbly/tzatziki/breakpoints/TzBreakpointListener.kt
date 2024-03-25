@@ -156,7 +156,12 @@ class TzBreakpointListener : StartupActivity {
                                 codeBreakPointElt.second, false)
                                 ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>>? ->
                                     it?.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-                                    (it?.properties as? JavaLineBreakpointProperties)?.let { it.lambdaOrdinal =  -1 } // TIPS : Fix for a Kotlin exception is some cases....
+                                    (it?.properties as? JavaLineBreakpointProperties)?.let {
+                                        // TIPS : Fix for a Kotlin exception is some cases....
+                                        // Using reflexion because this does no more exists in Intellij newer version
+                                        // it.lambdaOrdinal =  -1
+                                        JavaUtil.updateField(it, "myLambdaOrdinal", -1)
+                                    }
                                 }
                         }
                         allCodeBreakpoints?.second?.forEach { b ->

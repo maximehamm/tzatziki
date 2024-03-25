@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.execution.ExecutionListener
 import com.intellij.execution.ExecutionManager
+import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
@@ -72,7 +73,7 @@ class TzExecutionCucumberListener : StartupActivity {
                 override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
 
                     project.cucumberExecutionTracker().clear()
-                    val listener = object : ProcessListener {
+                    val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 
                             val regex = Regex(" locationHint = '([^']+)")
