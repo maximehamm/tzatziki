@@ -54,7 +54,7 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?): String {
 
-        var text = "Cucumber+ Example"
+        val text = "Cucumber+ Example"
 
         val line = breakpoint?.sourcePosition?.line ?: return text
         val vfile = breakpoint.sourcePosition?.file ?: return text
@@ -72,7 +72,7 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
         val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java)
             ?: return text
 
-        val scenario = row.getParentOfTypes(true, GherkinScenarioOutline::class.java)
+        val scenario = examples.getParentOfTypes(true, GherkinScenarioOutline::class.java)
             ?: return text
 
         val index = scenario.allExamples().indexOf(row)
