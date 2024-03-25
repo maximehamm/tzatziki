@@ -214,3 +214,9 @@ fun findUsages(elt: PsiElement): List<PsiReference> {
     }, handler.findUsagesOptions)
     return usages
 }
+
+fun GherkinScenarioOutline.allExamples(): List<GherkinTableRow>
+    = this.examplesBlocks.map { it.table.dataRows }.flatten()
+
+fun GherkinScenarioOutline.getExample(exampleNumber: Int): GherkinTableRow?
+    = allExamples().getOrNull(exampleNumber)

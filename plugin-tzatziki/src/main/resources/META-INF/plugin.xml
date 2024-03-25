@@ -239,7 +239,10 @@
                                   implementationClass="io.nimbly.tzatziki.run.TzSingleLineRunLineMarkerContributor"/>
 
         // Breakpoints
-        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointProjectListener"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzExecutionCucumberListener"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzExecutionCodeListener"/>
+
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointType"/>
 
         <!--<debugger.sourcePositionHighlighter implementation="io.nimbly.tzatziki.breakpoints.TzSourcePositionHighlighter"/>-->

@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.util
 
+import com.intellij.psi.PsiElement
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -17,7 +18,7 @@ fun GherkinStep.updatePresentation(codeBreakpoints: List<XBreakpoint<*>>) {
     }
 }
 
-fun GherkinStep.findBreakpoint(): XBreakpoint<*>? {
+fun PsiElement.findBreakpoint(): XBreakpoint<*>? {
     return XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints
         .filter { it.sourcePosition?.file == containingFile.virtualFile }
         .firstOrNull { it.sourcePosition?.line == getDocumentLine() }

@@ -2,12 +2,18 @@ package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider
-import io.nimbly.tzatziki.util.findStep
+import io.nimbly.tzatziki.util.*
+import org.jetbrains.kotlin.psi.psiUtil.getParentOfTypes
+import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 import java.util.*
 
@@ -16,22 +22,34 @@ class TzBreakpointType() :
 
     override fun canPutAt(vfile: VirtualFile, line: Int, project: Project): Boolean {
 
-        val step = findStep(vfile, project, line)
-            ?: return false
+        val file = vfile.getFile(project) ?: return false
+        val doc = file.getDocument() ?: return false
+        val lineRange = doc.getLineRange(line).shrink(1, 1)
+        val step = file.findElementsOfTypeInRange(lineRange, GherkinStep::class.java).firstOrNull()
+        if (step != null) {
 
-        val reference = step.references
-            .filterIsInstance<CucumberStepReference>()
-            .firstOrNull()
-            ?: return false
-
-        try {
-            reference.resolveToDefinition()
-                ?: return false
-        } catch (e: IndexNotReadyException) {
-            return false
+            if (line == step.getDocumentLine())
+                return true
+            // try {
+            //     val reference = step.references
+            //         .filterIsInstance<CucumberStepReference>()
+            //         .firstOrNull()
+            //         ?: return false
+            //     val stepDefinition = reference.resolveToDefinition()
+            //     if (stepDefinition != null)
+            //         return true
+            // } catch (ignored: IndexNotReadyException) {
+            // }
+             return false
         }
 
-        return true
+        val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
+        if (row != null && row !is GherkinTableHeaderRowImpl) {
+            val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java)
+            return examples != null
+        }
+
+        return false
     }
 
     override fun createBreakpointProperties(vfile: VirtualFile, line: Int): TzXBreakpointProperties? {
