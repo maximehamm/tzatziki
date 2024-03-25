@@ -3,7 +3,7 @@
 Developped by Maxime HAMM
 _Maxime.HAMM@nimbly-consulting.com_
 
-This plugin is compatible with all Jetbrain products
+This plugin is compatible with Jetbrain products
 
 - `plugin` : main plugin code
 - `extensions` : extensions (future use)
