@@ -178,9 +178,14 @@ class TzBreakpointListener : StartupActivity {
                     }
                     else if (action == EAction.REMOVED) {
 
-                        // Remove code breakpoint
-                        allCodeBreakpoints?.second?.forEach { b ->
-                            XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
+                        // Count the number of gherkin breakpoint link to this code breakpoint
+                        val stepBreakpoints = allCodeBreakpoints?.first?.map { it.findBreakpoint() }?.filterNotNull()?.size
+
+                        // If there is more gherkin breakpoint, then remove the related code breakpoint
+                        if (stepBreakpoints == 0) {
+                            allCodeBreakpoints.second.forEach { b ->
+                                XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
+                            }
                         }
 
                         // Remove row breakspoints

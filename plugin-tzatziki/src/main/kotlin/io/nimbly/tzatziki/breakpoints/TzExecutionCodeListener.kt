@@ -19,8 +19,11 @@ import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.breakpoints.TzExecutionCucumberListener.Companion.cucumberExecutionTracker
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
+import com.intellij.openapi.diagnostic.logger
 
 class TzExecutionCodeListener : StartupActivity {
+
+    private val LOG = logger<TzExecutionCodeListener>()
 
     override fun runActivity(project: Project) {
 
@@ -29,43 +32,58 @@ class TzExecutionCodeListener : StartupActivity {
             .subscribe(XDebuggerManager.TOPIC, object : XDebuggerManagerListener {
 
                 override fun processStarted(debugProcess: XDebugProcess) {
+
+                    LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
                     if (debugProcess !is JavaDebugProcess) return
                     debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
                         override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
 
+                            LOG.info("C+ XDebuggerManager.TOPIC - changeEvent")
+
                             // Check if running a cucumber test
-                            if ("Cucumber Java" != RunManager.getInstance(project).selectedConfiguration?.type?.displayName)
+                            val displayName = RunManager.getInstance(project).selectedConfiguration?.type?.displayName
+                            LOG.debug("C+ XDebuggerManager.TOPIC - displayName = $displayName")
+                            if ("Cucumber Java" != displayName)
                                 return
 
                             // Check current cucumber step...
                             val executionPoint = project.cucumberExecutionTracker()
                             if (executionPoint.featurePath == null) return
+                            LOG.debug("C+ XDebuggerManager.TOPIC - featurePath = " + executionPoint.featurePath)
 
                             // Search if we stopped at a gherkin breakpoint
                             val file = newContext.sourcePosition?.file ?: return
                             val offset = newContext.sourcePosition.offset
                             val step = Tzatziki.findSteps(file.virtualFile, offset)
-                                .filter { it.containingFile.virtualFile.path == executionPoint.featurePath }
+                                .filter {
+                                    LOG.debug("C+ XDebuggerManager.TOPIC - path = " + it.containingFile.virtualFile.path)
+                                    it.containingFile.virtualFile.path.noSlash() == executionPoint.featurePath
+                                }
                                 .firstOrNull { it.getDocumentLine() == executionPoint.lineNumber!! - 1 }
                                 ?: return
+                            LOG.debug("C+ XDebuggerManager.TOPIC - Step found")
 
                             // Find step's breakpoint
                             val breakpoint = step.findBreakpoint()
+                            LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint found")
 
                             // If breakpoint in deactivate, let's resume debugger
                             if (breakpoint == null || !breakpoint.isEnabled) {
+
+                                LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint enabled " + breakpoint?.isEnabled)
                                 debugProcess.debuggerSession.xDebugSession?.resume()
                                 return
                             }
 
-                            // Check if line breakpoint existe
+                            // Check if line breakpoint exists
                             val scenarioOutline = step.stepHolder as? GherkinScenarioOutline
                             if (scenarioOutline != null) {
 
                                 val example = scenarioOutline.getExample(executionPoint.exampleNumber)
                                 if (example != null) {
 
+                                    LOG.debug("C+ XDebuggerManager.TOPIC - Example found")
                                     val exampleBreakpoint = example.findBreakpoint()
                                     if (exampleBreakpoint == null || !exampleBreakpoint.isEnabled) {
                                         debugProcess.debuggerSession.xDebugSession?.resume()
@@ -79,6 +97,7 @@ class TzExecutionCodeListener : StartupActivity {
                                 .filterIsInstance<TextEditor>()
                                 .forEach { editor ->
 
+                                    LOG.debug("C+ XDebuggerManager.TOPIC - Highlighting step")
                                     val doc = step.getDocument() ?: return@forEach
 
                                     val line = doc.getLineNumber(step.textOffset)
@@ -102,6 +121,8 @@ class TzExecutionCodeListener : StartupActivity {
 
                                         val row = (step.stepHolder as GherkinScenarioOutline).getExample(exampleNumber ?: 0)
                                         if (row != null) {
+
+                                            LOG.debug("C+ XDebuggerManager.TOPIC - Highlighting row")
                                             val exline = doc.getLineNumber(row.textOffset)
                                             tracker.highlighters += editor.editor.markupModel.addRangeHighlighter(
                                                 DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
@@ -122,8 +143,17 @@ class TzExecutionCodeListener : StartupActivity {
                 }
 
                 override fun processStopped(debugProcess: XDebugProcess) {
+
+                    LOG.info("C+ XDebuggerManager.TOPIC - processStopped : " + debugProcess::class.java)
                     project.cucumberExecutionTracker().removeHighlighters()
                 }
             })
     }
+}
+
+private fun String.noSlash(): String {
+    if (this.startsWith("/"))
+        return this.substringAfter("/")
+    else
+        return this
 }

@@ -8,14 +8,20 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.markup.MarkupModel
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Key
+import io.nimbly.tzatziki.util.toPath
 import java.net.URI
+import java.nio.file.Path
+import kotlin.io.path.toPath
 
 class TzExecutionCucumberListener : StartupActivity {
+
+    private val LOG = logger<TzExecutionCucumberListener>()
 
     companion object {
 
@@ -72,17 +78,21 @@ class TzExecutionCucumberListener : StartupActivity {
 
                 override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
 
+                    LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processStarting")
+
                     project.cucumberExecutionTracker().clear()
                     val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 
-                            val regex = Regex(" locationHint = '([^']+)")
-                            val filePathAndPosition = regex.find(event.text)?.groupValues?.get(1)
+                            LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
+                            val regex = Regex(" locationHint = '(?:file:///)?([^']+)")
+                            val filePathAndPosition = regex.find(event.text)?.groupValues?.get(1)?.trim()
                             if (filePathAndPosition != null) {
                                 if (filePathAndPosition.lastIndexOf(':') < 1) return
-                                val filePath = URI(filePathAndPosition.substringBeforeLast(':')).path
+                                val filePath = filePathAndPosition.substringBeforeLast(':')
                                 val fileLine = filePathAndPosition.substringAfterLast(':').toIntOrNull() ?: return
 
+                                LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - filePath = $filePath line $fileLine")
                                 val p = project.cucumberExecutionTracker()
                                 p.featurePath = filePath
                                 p.lineNumber = fileLine
@@ -92,6 +102,8 @@ class TzExecutionCucumberListener : StartupActivity {
                                 val regex2 = Regex(" name = 'Example #(\\d+)'")
                                 val exampleNumber = regex2.find(event.text)?.groupValues?.get(1)?.toInt()
                                 if (exampleNumber != null) {
+
+                                    LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - exampleNumber = $exampleNumber")
 
                                     val p = project.cucumberExecutionTracker()
                                     p.exampleNumber = exampleNumber
@@ -104,6 +116,9 @@ class TzExecutionCucumberListener : StartupActivity {
                 }
 
                 override fun processTerminated(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler, exitCode: Int) {
+
+                    LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processTerminated")
+
                     project.cucumberExecutionTracker().removeHighlighters()
                 }
 
