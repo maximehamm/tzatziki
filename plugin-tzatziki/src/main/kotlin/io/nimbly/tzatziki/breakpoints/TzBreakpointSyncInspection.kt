@@ -107,7 +107,8 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                 else if (gherkinBreakpoints == null && codeBreakpoints != null) {
 
                     // Create missing gherkin breakpoint
-                    step.toggleGherkinBreakpoint(stepLine)
+                    // TODO Do it only if code step has only one reference !
+                    // step.toggleGherkinBreakpoint(stepLine)
                 }
                 else if (codeBreakpoints!=null) {
 

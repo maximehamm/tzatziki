@@ -22,6 +22,7 @@ class TzBreakpointListener : StartupActivity {
 
         var changeInProgress = false
         var addInProgress = false
+        var removeInProgress = false
 
         project.messageBus
             .connect()
@@ -49,8 +50,16 @@ class TzBreakpointListener : StartupActivity {
                     }
                 }
 
-                override fun breakpointRemoved(breakpoint: XBreakpoint<*>) =
-                    refresh(breakpoint, EAction.REMOVED)
+                override fun breakpointRemoved(breakpoint: XBreakpoint<*>) {
+                    if (removeInProgress)
+                        return
+                    try {
+                        removeInProgress = true
+                        refresh(breakpoint, EAction.REMOVED)
+                    } finally {
+                        removeInProgress = false
+                    }
+                }
 
                 override fun breakpointPresentationUpdated(breakpoint: XBreakpoint<*>, session: XDebugSession?) = Unit
 
@@ -67,7 +76,6 @@ class TzBreakpointListener : StartupActivity {
 
                     val vfile = gherkinBreakpoint.sourcePosition?.file ?: return
                     val line = gherkinBreakpoint.sourcePosition?.line ?: return
-                    val project = vfile.findProject() ?: return
 
                     val file = vfile.getFile(project) ?: return
                     val doc = file.getDocument() ?: return
