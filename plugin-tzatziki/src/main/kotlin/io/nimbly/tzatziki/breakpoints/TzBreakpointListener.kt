@@ -7,13 +7,9 @@ import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
-import com.intellij.xdebugger.breakpoints.XBreakpointProperties
-import com.intellij.xdebugger.breakpoints.XLineBreakpoint
-import com.intellij.xdebugger.impl.XDebuggerUtilImpl
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfTypes
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
@@ -137,32 +133,20 @@ class TzBreakpointListener : StartupActivity {
                     if (stepDefinitions.isEmpty())
                         return
 
-                    val codeBreakPointElt = Tzatziki().extensionList.firstNotNullOfOrNull {
+                    val codeElement = Tzatziki().extensionList.firstNotNullOfOrNull {
                         it.findBestPositionToAddBreakpoint(stepDefinitions)
                     } ?: return
 
                     val allCodeBreakpoints = Tzatziki.findStepsAndBreakpoints(
-                        codeBreakPointElt.first.containingFile.virtualFile,
-                        codeBreakPointElt.first.containingFile.getDocument()?.getLineStartOffset(codeBreakPointElt.second)
+                        codeElement.first.containingFile.virtualFile,
+                        codeElement.first.containingFile.getDocument()?.getLineStartOffset(codeElement.second)
                     )
 
                     if (action == EAction.ADDED) {
 
                         // Add code breakpoints
                         if (allCodeBreakpoints?.second?.isEmpty() == true) {
-                            (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
-                                step.project,
-                                codeBreakPointElt.first.containingFile.virtualFile,
-                                codeBreakPointElt.second, false)
-                                ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>>? ->
-                                    it?.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-                                    (it?.properties as? JavaLineBreakpointProperties)?.let {
-                                        // TIPS : Fix for a Kotlin exception is some cases....
-                                        // Using reflexion because this does no more exists in Intellij newer version
-                                        // it.lambdaOrdinal =  -1
-                                        JavaUtil.updateField(it, "myLambdaOrdinal", -1)
-                                    }
-                                }
+                            toggleCodeBreakpoint(codeElement, project)
                         }
                         allCodeBreakpoints?.second?.forEach { b ->
                             b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
@@ -267,25 +251,6 @@ class TzBreakpointListener : StartupActivity {
                     }
                 }
             })
-    }
-
-    private fun GherkinPsiElement.toggleGherkinBreakpoint(documentLine: Int) {
-        (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
-            project,
-            containingFile.virtualFile,
-            documentLine, false)
-            ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>>? ->
-                it?.conditionExpression = null
-            }
-    }
-
-    private fun GherkinPsiElement.deleteBreakpoints() {
-        val oldBreakpoints = XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints
-            .filter { it.sourcePosition?.file == containingFile.virtualFile }
-            .filter { it.sourcePosition?.line == getDocumentLine() }
-        oldBreakpoints.forEach { b ->
-            XDebuggerUtil.getInstance().removeBreakpoint(project, b)
-        }
     }
 
     private fun GherkinPsiElement.enableBreakpoints(enabled: Boolean) {

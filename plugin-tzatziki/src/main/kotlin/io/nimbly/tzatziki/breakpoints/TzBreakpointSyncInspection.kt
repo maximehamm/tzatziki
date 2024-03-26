@@ -16,16 +16,11 @@
 package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.application.Application
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
-import com.intellij.xdebugger.XExpression
-import com.intellij.xdebugger.impl.breakpoints.CustomizedBreakpointPresentation
-import com.intellij.xdebugger.impl.breakpoints.XBreakpointBase
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
@@ -33,8 +28,8 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.inspections.GherkinInspection
 import org.jetbrains.plugins.cucumber.psi.GherkinElementVisitor
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
-import javax.swing.Icon
 
 class TzBreakpointSyncInspection : GherkinInspection() {
 
@@ -42,32 +37,25 @@ class TzBreakpointSyncInspection : GherkinInspection() {
 
         return object : GherkinElementVisitor() {
 
-            /*
             override fun visitFile(file: PsiFile) {
-
-                // Look for orphan breakpoint that no more belongs to a step
-                val gherkinBreakpoints = XDebuggerManager.getInstance(file.project).breakpointManager.allBreakpoints
+                // Remove orphan breakpoints
+                XDebuggerManager.getInstance(file.project)
+                    .breakpointManager
+                    .allBreakpoints
                     .filter { it.sourcePosition?.file == file.virtualFile }
-                    .nullIfEmpty()
-                    ?: return
+                    .forEach { breakpoint ->
 
-                XDebuggerManager.getInstance(file.project).breakpointManager.allBreakpoints
-                    .filter { it.sourcePosition?.file == file.virtualFile }
-                    .forEach { p ->
-                        val line = file.getDocumentLine() ?: return@forEach
-                        val step = findStep(file.virtualFile, file.project, line)
-                        if (step == null) {
-                            ApplicationManager.getApplication().invokeLater {
-                                ApplicationManager.getApplication().runWriteAction {
-                                    gherkinBreakpoints.forEach {
-                                        XDebuggerManager.getInstance(file.project).breakpointManager.removeBreakpoint(p)
-                                    }
-                                }
-                            }
+                        val line = breakpoint.sourcePosition?.line ?: return@forEach
+                        val range = file.getDocument()?.getLineRange(line) ?: return@forEach
+                        if (file.findElementsOfTypeInRange(range, GherkinStep::class.java, GherkinTableRow::class.java).isNotEmpty())
+                            return@forEach
+
+                        DumbService.getInstance(file.project).smartInvokeLater {
+                            XDebuggerUtil.getInstance().removeBreakpoint(file.project, breakpoint)
                         }
-                }
+                    }
             }
-            */
+
 
             override fun visitStep(step: GherkinStep) {
 
@@ -79,16 +67,19 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                     ?: return
 
                 // Look for gherkin breakpoints
-                val reference = step.references
+                 val reference = step.references
                     .filterIsInstance<CucumberStepReference>()
                     .firstOrNull()
-                val gherkinBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
+                val gherkinBreakpoints = XDebuggerManager.getInstance(step.project)
+                    .breakpointManager
+                    .allBreakpoints
                     .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
                     .filter { it.sourcePosition?.line == stepLine }
                     .nullIfEmpty()
 
                 // Look for code breakpoints
-                val codeElement = reference?.resolveToDefinition()?.element
+                val stepDefinitions = reference?.resolveToDefinition()
+                val codeElement = stepDefinitions?.element
                 val codeBreakpoints =
                     Tzatziki().extensionList.firstNotNullOfOrNull {
                     it.findStepsAndBreakpoints(
@@ -104,24 +95,22 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                 }
 
                 // Compare
-                if (gherkinBreakpoints != null && codeBreakpoints == null) {
+                if (gherkinBreakpoints != null && codeBreakpoints == null && stepDefinitions != null) {
 
-                    // Drop breakpoint since reference is lost !
-                    /*
-                    ApplicationManager.getApplication().invokeLater {
-                        ApplicationManager.getApplication().runWriteAction {
-                            gherkinBreakpoints.forEach {
-                                XDebuggerManager.getInstance(step.project).breakpointManager.removeBreakpoint(it)
-                            }
-                        }
-                    }*/
+                    // Restore breakpoint since reference is lost !
+                    val elt = Tzatziki().extensionList.firstNotNullOfOrNull {
+                        it.findBestPositionToAddBreakpoint(listOf(stepDefinitions))
+                    } ?: return
+                    toggleCodeBreakpoint(elt, step.project)
+
                 }
                 else if (gherkinBreakpoints == null && codeBreakpoints != null) {
 
                     // Create missing gherkin breakpoint
-                    step.updatePresentation(codeBreakpoints)
+                    step.toggleGherkinBreakpoint(stepLine)
                 }
                 else if (codeBreakpoints!=null) {
+
                     // step.updatePresentation(codeBreakpoints)
                 }
 

@@ -96,6 +96,7 @@ class TzExecutionCodeListener : StartupActivity {
                                         DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
                                         HighlighterTargetArea.LINES_IN_RANGE
                                     )
+                                    var offsetToScrollTo = step.textOffset
 
                                     val exampleNumber = tracker.exampleNumber
                                     if (step.stepHolder is GherkinScenarioOutline) {
@@ -110,10 +111,11 @@ class TzExecutionCodeListener : StartupActivity {
                                                 DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
                                                 HighlighterTargetArea.LINES_IN_RANGE
                                             )
+                                            offsetToScrollTo = row.textOffset
                                         }
                                     }
 
-                                    val vp = editor.editor.offsetToLogicalPosition(step.textOffset)
+                                    val vp = editor.editor.offsetToLogicalPosition(offsetToScrollTo)
                                     editor.editor.scrollingModel.scrollTo(vp, ScrollType.MAKE_VISIBLE)
                                 }
                         }
