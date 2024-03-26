@@ -52,10 +52,9 @@ class TzExecutionCodeListener : StartupActivity {
 
                             // Find step's breakpoint
                             val breakpoint = step.findBreakpoint()
-                                ?: return
 
                             // If breakpoint in deactivate, let's resume debugger
-                            if (!breakpoint.isEnabled) {
+                            if (breakpoint == null || !breakpoint.isEnabled) {
                                 debugProcess.debuggerSession.xDebugSession?.resume()
                                 return
                             }
