@@ -5,9 +5,8 @@ import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.psi.PsiElement
-import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
-import com.intellij.util.ui.UIUtil
+import com.intellij.ui.JBColor
 import io.nimbly.i18n.translation.TranslationManager
 import java.awt.Font
 import java.awt.Graphics
@@ -48,7 +47,7 @@ class EditorHint(
         if (focus) {
             att = att.clone()
             att.foregroundColor =
-                if (UIUtil.isUnderDarcula())
+                if (!JBColor.isBright())
                     att.foregroundColor.brighter()
                 else
                     att.foregroundColor.darker().darker()

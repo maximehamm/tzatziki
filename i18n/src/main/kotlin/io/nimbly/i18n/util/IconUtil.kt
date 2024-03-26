@@ -81,7 +81,7 @@ fun Icon.toBase64(): String {
 
 fun Icon.addVeilToIcon(): Icon {
 
-        val veilColor = if (UIUtil.isUnderDarcula()) Color(0, 0, 0, 128) else Color(255, 255, 255, 128)
+        val veilColor = if (!JBColor.isBright()) Color(0, 0, 0, 128) else Color(255, 255, 255, 128)
 
         val width = iconWidth
         val height = iconHeight
