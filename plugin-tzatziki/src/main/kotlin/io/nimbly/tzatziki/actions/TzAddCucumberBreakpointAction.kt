@@ -1,12 +1,10 @@
 package io.nimbly.tzatziki.actions
 
-import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.project.DumbAwareAction
-import com.intellij.ui.ExperimentalUI
 import com.intellij.xdebugger.XSourcePosition
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.impl.XSourcePositionImpl
@@ -27,12 +25,12 @@ class TzAddCucumberBreakpointAction : DumbAwareAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        e.presentation.isEnabledAndVisible = ExperimentalUI.isNewUI() && getLineBreakpointPosition(e) != null
+        getLineBreakpointPosition(e) != null
     }
 
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.BGT
-    }
+//    override fun getActionUpdateThread(): ActionUpdateThread {
+//        return ActionUpdateThread.BGT
+//    }
 
     private fun getLineBreakpointPosition(e: AnActionEvent): XSourcePosition? {
         val project = e.project

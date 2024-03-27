@@ -20,8 +20,6 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.idea.editor.fixers.end
-import org.jetbrains.kotlin.idea.editor.fixers.start
 
 fun Document.getLineStart(offset: Int)
     = getLineStartOffset(getLineNumber(offset))
@@ -43,12 +41,12 @@ fun Document.getLineRange(line: Int): TextRange {
 }
 
 fun TextRange.shrink(left: Int = 0, right: Int = 0): TextRange {
-    val start = this.start + left
-    if (start > this.end)
+    val start = this.startOffset + left
+    if (start > this.endOffset)
         return this
-    val end = this.end - right
+    val end = this.endOffset - right
     if (start > end)
-        return TextRange(start, this.end)
+        return TextRange(start, this.endOffset)
     return TextRange(start, end)
 }
 

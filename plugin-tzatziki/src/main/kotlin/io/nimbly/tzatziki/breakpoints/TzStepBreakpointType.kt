@@ -8,7 +8,6 @@ import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.kotlin.psi.psiUtil.getParentOfTypes
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -45,7 +44,7 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
 
         val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
         if (row != null && row !is GherkinTableHeaderRowImpl) {
-            val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java)
+            val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
             return examples != null
         }
 
@@ -69,10 +68,10 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
         if (row is GherkinTableHeaderRowImpl)
             return text
 
-        val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java)
+        val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
             ?: return text
 
-        val scenario = examples.getParentOfTypes(true, GherkinScenarioOutline::class.java)
+        val scenario = examples.parentOfTypeIs<GherkinScenarioOutline>(true)
             ?: return text
 
         val index = scenario.allExamples().indexOf(row)

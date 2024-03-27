@@ -10,7 +10,6 @@ import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.kotlin.psi.psiUtil.getParentOfTypes
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
@@ -93,8 +92,8 @@ class TzBreakpointListener : StartupActivity {
 
                 private fun refreshGherkinRow(row: GherkinTableRow, gherkinBreakpoint: XBreakpoint<*>, action: EAction) {
 
-                    val examples = row.getParentOfTypes(true, GherkinExamplesBlock::class.java) ?: return
-                    val scenario = examples.getParentOfTypes(true, GherkinScenarioOutline::class.java) ?: return
+                    val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true) ?: return
+                    val scenario = examples.parentOfTypeIs<GherkinScenarioOutline>(true) ?: return
 
                     if (action == EAction.ADDED) {
 
@@ -161,7 +160,7 @@ class TzBreakpointListener : StartupActivity {
                         }
 
                         // Add example breakpoints
-                        val scenario = step.getParentOfTypes(true, GherkinScenarioOutline::class.java)
+                        val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
                         if (scenario != null) {
                             val examples = scenario.allExamples()
                             val hasBreakpoints = examples.find { it.findBreakpoint() != null } != null
@@ -206,7 +205,7 @@ class TzBreakpointListener : StartupActivity {
 
                         // Sync row breakpoint if all step's breakpoint has same state
                         val state = gherkinBreakpoint.isEnabled
-                        val scenario = step.getParentOfTypes(true, GherkinScenarioOutline::class.java)
+                        val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
                         if (scenario != null) {
 
                             if (gherkinBreakpoint.isEnabled ||

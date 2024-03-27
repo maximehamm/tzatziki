@@ -17,6 +17,8 @@ package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDirectory
+import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 
@@ -53,3 +55,6 @@ fun VirtualFile.chooseFileName(name: String, ext: String): String {
 
     return "$name.$ext"
 }
+
+fun VirtualFile.toPsiDirectory(project: Project): PsiDirectory?
+    = PsiManager.getInstance(project).findDirectory(this)

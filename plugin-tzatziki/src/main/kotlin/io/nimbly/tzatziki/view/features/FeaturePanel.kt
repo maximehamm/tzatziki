@@ -4,17 +4,12 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.services.Tag
 import io.nimbly.tzatziki.services.TagComparator
 import io.nimbly.tzatziki.services.tzFileService
-import io.nimbly.tzatziki.util.ModuleId
-import io.nimbly.tzatziki.util.file
-import io.nimbly.tzatziki.util.parent
-import io.nimbly.tzatziki.util.parentOfTypeIs
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinScenarioNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
 import io.nimbly.tzatziki.view.features.structure.GherkinTreeTagStructure
-import org.jetbrains.kotlin.idea.util.projectStructure.module
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
@@ -40,6 +35,7 @@ import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.tree.TreeVisitor.Action
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.tree.TreeUtil
+import io.nimbly.tzatziki.util.*
 import io.nimbly.tzatziki.view.features.actions.*
 import java.awt.BorderLayout
 import java.awt.event.MouseAdapter
@@ -208,7 +204,7 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
 
         val fileStack = mutableSetOf<Any>().apply {
             this.add(file)
-            var m = file.module
+            var m = file.getModule()
             while (m != null) {
                 this.add(ModuleId(m.name))
                 m = m.parent

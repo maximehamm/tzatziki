@@ -1,13 +1,5 @@
 package io.nimbly.tzatziki
 
-import io.nimbly.tzatziki.util.TzStepTypesCompletion
-import io.nimbly.tzatziki.util.getLineStart
-import io.nimbly.tzatziki.util.getModule
-import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
-import org.jetbrains.kotlin.psi.KtAnnotationEntry
-import org.jetbrains.kotlin.psi.KtStringTemplateEntry
-import org.jetbrains.plugins.cucumber.MapParameterTypeManager
-import org.jetbrains.plugins.cucumber.java.CucumberJavaUtil
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
@@ -18,6 +10,11 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
+import io.nimbly.tzatziki.util.TzStepTypesCompletion
+import io.nimbly.tzatziki.util.getLineStart
+import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 
 /**
  * Complete step definition
