@@ -346,6 +346,15 @@
             <add-to-group group-id="io.nimbly.tzatziki.group" anchor="after" relative-to-action="io.nimbly.tzatziki.ShiftRight"/>
 
         </group>
+
+
+        <group>
+            <action class="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
+                    id="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
+                    text="Add Cucumber+ Breakpoint">
+            </action>
+            <add-to-group group-id="XDebugger.Hover.Breakpoint.Context.Menu" anchor="last"/>
+        </group>
     </actions>
 
 
