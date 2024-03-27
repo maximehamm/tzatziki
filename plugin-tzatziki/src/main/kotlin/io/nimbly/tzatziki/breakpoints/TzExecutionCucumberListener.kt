@@ -86,7 +86,13 @@ class TzExecutionCucumberListener : StartupActivity {
 
                     LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processStarting")
 
-                    project.cucumberExecutionTracker().clear()
+                    val tracker = project.cucumberExecutionTracker()
+                    tracker.clear()
+
+                    val singleExampleNo = ".*- Example n°([0-9]+)".toRegex().find(env.runProfile.name)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                    if (singleExampleNo != null)
+                        tracker.exampleNumber = singleExampleNo - 1
+
                     val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 

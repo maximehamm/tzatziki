@@ -37,6 +37,7 @@ class TzExecutionCodeListener : StartupActivity {
 
                     LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
                     if (debugProcess !is JavaDebugProcess) return
+
                     debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
                         override fun changeEvent(newContext: DebuggerContextImpl, event: Event?) {
