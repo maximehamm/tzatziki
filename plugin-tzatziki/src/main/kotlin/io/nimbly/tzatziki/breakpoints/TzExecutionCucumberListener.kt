@@ -14,10 +14,9 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFile
 import io.nimbly.tzatziki.util.toPath
-import java.net.URI
-import java.nio.file.Path
-import kotlin.io.path.toPath
 
 class TzExecutionCucumberListener : StartupActivity {
 
@@ -64,7 +63,11 @@ class TzExecutionCucumberListener : StartupActivity {
                     model.removeHighlighter(it)
                 }
             }
+        }
 
+        fun findFile(): VirtualFile? {
+            val toPath = featurePath?.toPath() ?: return null
+            return LocalFileSystem.getInstance().findFileByNioFile(toPath)
         }
     }
 
@@ -85,7 +88,7 @@ class TzExecutionCucumberListener : StartupActivity {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 
                             LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
-                            val regex = Regex(" locationHint = '(?:file:///)?([^']+)")
+                            val regex = Regex(" locationHint = '(?:file://)?([^']+)")
                             val filePathAndPosition = regex.find(event.text)?.groupValues?.get(1)?.trim()
                             if (filePathAndPosition != null) {
                                 if (filePathAndPosition.lastIndexOf(':') < 1) return
@@ -95,7 +98,7 @@ class TzExecutionCucumberListener : StartupActivity {
                                 LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - filePath = $filePath line $fileLine")
                                 val p = project.cucumberExecutionTracker()
                                 p.featurePath = filePath
-                                p.lineNumber = fileLine
+                                p.lineNumber = fileLine - 1
                             }
                             else {
 

@@ -177,6 +177,7 @@ fun findStep(
     val start = document.getLineStartOffset(line)
     val end = document.getLineEndOffset(line)
 
+    document.getText(TextRange(start, end))
     return file.findElementsOfTypeInRange(TextRange(start, end), GherkinStep::class.java).firstOrNull()
 }
 

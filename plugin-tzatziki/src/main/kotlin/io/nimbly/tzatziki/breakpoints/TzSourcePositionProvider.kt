@@ -31,7 +31,7 @@ class TzSourcePositionProvider : SourcePositionProvider() {
         val featurePath = executionPoint.featurePath ?: return null
         val lineNumber = executionPoint.lineNumber ?: return null
 
-        val vfile = LocalFileSystem.getInstance().findFileByNioFile(featurePath.toPath()) ?: return null
+        val vfile = executionPoint.findFile() ?: return null
         val file = vfile.getFile(project) ?: return null
         val document = file.getDocument() ?: return null
 

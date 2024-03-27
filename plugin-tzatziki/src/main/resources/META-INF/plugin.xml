@@ -23,11 +23,16 @@
        <b>The best Cucumber user experience to run, edit, print Gherkin features... and develop with Java, Kotlin, Scala...</b><br/>
        <br/>
 
-       <b><u>NEW!</u></b><br/>
-         ✓ <b>17.0</b> - Rewriting breakpoint supports. Now you can set breakpoints from Gherkin ! (Java, Koltin, Scala only)<br/>
-       <br/>
-       <br/>
+       <b><u>NEW</u> : Rewriting breakpoint supports (Java, Koltin, Scala only)</u></b><br/>
+         ✓ Hightlighting the Gherkin step/example in progress when debugger in pause<br/>
+         ✓ Add breakpoint from Gherkin : the debugger will stop only for selected step/example<br/>
+         ✓ Add breakpoint from Java, Koltin, Scala : add a condition « "Cucumber+"!=null » to stop only for Gherkin step's having breakpoints <br/>
+       <ul>
+          <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_ad0ad1a6-21f0-40b1-987c-0ece62aabff0"
+                 alt="Cucumber+ debugger" width="419" height="233"></p>
+       </ul>
 
+       <br/>
        <b>Display list of features in Cucumber+ tool window</b><br/>
        <ul>
           <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_079b1743-4074-4704-86ad-012f8815d057"
