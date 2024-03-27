@@ -66,7 +66,10 @@ class TzExecutionCucumberListener : StartupActivity {
         }
 
         fun findFile(): VirtualFile? {
-            val toPath = featurePath?.toPath() ?: return null
+            var p = featurePath ?: return null
+            if (p.matches("^/[A-Z]:.*".toRegex()))
+                p = p.substring(1)
+            val toPath = p.toPath()
             return LocalFileSystem.getInstance().findFileByNioFile(toPath)
         }
     }
