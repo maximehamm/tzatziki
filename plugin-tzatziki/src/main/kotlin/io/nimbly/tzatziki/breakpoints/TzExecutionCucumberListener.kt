@@ -21,6 +21,7 @@ import io.nimbly.tzatziki.util.toPath
 class TzExecutionCucumberListener : StartupActivity {
 
     private val LOG = logger<TzExecutionCucumberListener>()
+    private val REGEX = Regex(" locationHint = '(?:file://)?([^:]+):(\\d+)'(?: name = 'Example #(\\d+)')?")
 
     companion object {
 
@@ -39,7 +40,7 @@ class TzExecutionCucumberListener : StartupActivity {
     data class TzExecutionTracker(
         var featurePath: String? = null,
         var lineNumber: Int? = null,
-        var exampleNumber: Int = 0,
+        var exampleLine: Int? = null,
 
         val highlighters: MutableList<RangeHighlighter> = mutableListOf(),
         var highlightersModel: MarkupModel? = null
@@ -48,7 +49,7 @@ class TzExecutionCucumberListener : StartupActivity {
         fun clear() {
             featurePath = null
             lineNumber = null
-            exampleNumber = 0
+            exampleLine = null
         }
 
         fun removeHighlighters() {
@@ -89,37 +90,32 @@ class TzExecutionCucumberListener : StartupActivity {
                     val tracker = project.cucumberExecutionTracker()
                     tracker.clear()
 
-                    val singleExampleNo = ".*- Example n°([0-9]+)".toRegex().find(env.runProfile.name)?.groupValues?.getOrNull(1)?.toIntOrNull()
-                    if (singleExampleNo != null)
-                        tracker.exampleNumber = singleExampleNo - 1
-
                     val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 
-                            LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
-                            val regex = Regex(" locationHint = '(?:file://)?([^']+)")
-                            val filePathAndPosition = regex.find(event.text)?.groupValues?.get(1)?.trim()
-                            if (filePathAndPosition != null) {
-                                if (filePathAndPosition.lastIndexOf(':') < 1) return
-                                val filePath = filePathAndPosition.substringBeforeLast(':')
-                                val fileLine = filePathAndPosition.substringAfterLast(':').toIntOrNull() ?: return
+                            val values = REGEX.find(event.text)?.groupValues
+                                ?:return
 
-                                LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - filePath = $filePath line $fileLine")
+                            println(event.text)
+                            LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
+
+                            val path = values[1].trim()
+                            val line = values[2].toInt()
+                            val isExample = values[3].isNotEmpty()
+
+                            if (!isExample) {
+
+                                LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - filePath = $path line $line")
                                 val p = project.cucumberExecutionTracker()
-                                p.featurePath = filePath
-                                p.lineNumber = fileLine - 1
+                                p.featurePath = path
+                                p.lineNumber = line - 1
                             }
                             else {
 
-                                val regex2 = Regex(" name = 'Example #(\\d+)'")
-                                val exampleNumber = regex2.find(event.text)?.groupValues?.get(1)?.toInt()
-                                if (exampleNumber != null) {
+                                LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - exampleLine = $line")
 
-                                    LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - exampleNumber = $exampleNumber")
-
-                                    val p = project.cucumberExecutionTracker()
-                                    p.exampleNumber = exampleNumber
-                                }
+                                val p = project.cucumberExecutionTracker()
+                                p.exampleLine = line
                             }
                         }
                     }

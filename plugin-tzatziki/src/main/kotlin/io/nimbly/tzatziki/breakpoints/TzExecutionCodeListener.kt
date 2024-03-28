@@ -88,7 +88,7 @@ class TzExecutionCodeListener : StartupActivity {
                             val scenarioOutline = step.stepHolder as? GherkinScenarioOutline
                             if (scenarioOutline != null) {
 
-                                val example = scenarioOutline.getExample(executionPoint.exampleNumber)
+                                val example = scenarioOutline.getExample(executionPoint.exampleLine)
                                 if (example != null) {
 
                                     LOG.debug("C+ XDebuggerManager.TOPIC - Example found")
@@ -140,10 +140,10 @@ class TzExecutionCodeListener : StartupActivity {
                 )
                 var offsetToScrollTo = step.textOffset
 
-                val exampleNumber = tracker.exampleNumber
+                val exampleLine = tracker.exampleLine
                 if (step.stepHolder is GherkinScenarioOutline) {
 
-                    val row = (step.stepHolder as GherkinScenarioOutline).getExample(exampleNumber ?: 0)
+                    val row = (step.stepHolder as GherkinScenarioOutline).getExample(exampleLine)
                     if (row != null) {
 
                         LOG.debug("C+ XDebuggerManager.TOPIC - Highlighting row")
