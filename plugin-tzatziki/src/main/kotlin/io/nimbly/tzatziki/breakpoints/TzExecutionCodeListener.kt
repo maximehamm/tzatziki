@@ -3,9 +3,9 @@ package io.nimbly.tzatziki.breakpoints
 import com.intellij.debugger.engine.JavaDebugProcess
 import com.intellij.debugger.impl.DebuggerContextImpl
 import com.intellij.debugger.impl.DebuggerContextListener
-import com.intellij.debugger.impl.DebuggerSession
 import com.intellij.debugger.impl.DebuggerSession.Event
 import com.intellij.execution.RunManager
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -16,11 +16,12 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerManagerListener
 import com.intellij.xdebugger.ui.DebuggerColors
-import io.nimbly.tzatziki.breakpoints.TzExecutionCucumberListener.Companion.cucumberExecutionTracker
-import io.nimbly.tzatziki.util.*
-import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
-import com.intellij.openapi.diagnostic.logger
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.util.findBreakpoint
+import io.nimbly.tzatziki.util.findStep
+import io.nimbly.tzatziki.util.getDocument
+import io.nimbly.tzatziki.util.getExample
+import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
 class TzExecutionCodeListener : StartupActivity {

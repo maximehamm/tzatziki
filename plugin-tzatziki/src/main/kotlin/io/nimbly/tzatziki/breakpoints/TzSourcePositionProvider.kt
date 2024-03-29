@@ -7,15 +7,12 @@ import com.intellij.debugger.ui.tree.NodeDescriptor
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
-import io.nimbly.tzatziki.breakpoints.TzExecutionCucumberListener.Companion.cucumberExecutionTracker
 import io.nimbly.tzatziki.util.getDocument
 import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.getFile
-import io.nimbly.tzatziki.util.toPath
 
 @Deprecated("TO REMOVE")
 class TzSourcePositionProvider : SourcePositionProvider() {
@@ -28,7 +25,6 @@ class TzSourcePositionProvider : SourcePositionProvider() {
     ): SourcePosition? {
 
         val executionPoint = project.cucumberExecutionTracker()
-        val featurePath = executionPoint.featurePath ?: return null
         val lineNumber = executionPoint.lineNumber ?: return null
 
         val vfile = executionPoint.findFile() ?: return null
