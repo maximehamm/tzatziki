@@ -25,7 +25,8 @@ Launch task `runIde` from `plugin` module
 Setup a system variable :
 - Edit `~/.bash_profile` (if you're using bash)
   Then `source ~/.bash_profile`
-- Add `export ORG_GRADLE_PROJECT_intellijPublishToken='xxxx'`
+  Add `export ORG_GRADLE_PROJECT_intellijPublishToken='xxxx'`
+- Or add `-DPublishToken=xxxx` as VM Parameter 
 
 _Token is known by Maxime HAMM :)_
 
