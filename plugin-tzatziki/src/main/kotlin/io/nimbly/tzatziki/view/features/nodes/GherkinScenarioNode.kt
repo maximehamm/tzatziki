@@ -13,7 +13,6 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.CucumberPlusDataKeys
 import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.getModule
-import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 
 class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Expression?) : AbstractTzPsiElementNode<GherkinStepsHolder>(p, scenario, exp),
@@ -29,8 +28,13 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
     }
 
     override fun getRunConfiguration(): RunConfigurationProducer<*>? {
-        val runConfProds = RunConfigurationProducer.getProducers(project)
-        return runConfProds.find { it.javaClass == CucumberJavaScenarioRunConfigurationProducer::class.java }
+        try {
+            val runConfProds = RunConfigurationProducer.getProducers(project)
+            return runConfProds.find { it.javaClass == org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer::class.java }
+        } catch (e: NoClassDefFoundError) {
+            // Needed to avoid crashed on GoLand, PhpStorm...
+            return null
+        }
     }
 
     override fun getRunDataContext(): ConfigurationContext {

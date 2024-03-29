@@ -17,12 +17,14 @@ package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.StoragePathMacros
 import io.cucumber.tagexpressions.Expression
 import io.cucumber.tagexpressions.TagExpressionParser
 
+@Service(Service.Level.PROJECT)
 @State(name = "ProjectCucumberState", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateService> {
 

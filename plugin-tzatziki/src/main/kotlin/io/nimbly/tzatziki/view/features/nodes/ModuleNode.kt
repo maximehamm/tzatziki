@@ -3,7 +3,6 @@
 package io.nimbly.tzatziki.view.features.nodes
 
 import io.cucumber.tagexpressions.Expression
-import org.jetbrains.plugins.cucumber.java.run.CucumberJavaAllFeaturesInFolderRunConfigurationProducer
 import com.intellij.execution.Location
 import com.intellij.execution.PsiLocation
 import com.intellij.execution.actions.ConfigurationContext
@@ -44,8 +43,13 @@ class ModuleNode(
     override fun isAlwaysExpand() = true
 
     override fun getRunConfiguration(): RunConfigurationProducer<*>? {
-        val runConfProds = RunConfigurationProducer.getProducers(project)
-        return runConfProds.find { it.javaClass == CucumberJavaAllFeaturesInFolderRunConfigurationProducer::class.java }
+        try {
+            val runConfProds = RunConfigurationProducer.getProducers(project)
+            return runConfProds.find { it.javaClass == org.jetbrains.plugins.cucumber.java.run.CucumberJavaAllFeaturesInFolderRunConfigurationProducer::class.java }
+        } catch (e: NoClassDefFoundError) {
+            // Needed to avoid crashed on GoLand, PhpStorm...
+            return null
+        }
     }
 
     override fun getRunDataContext(): ConfigurationContext {

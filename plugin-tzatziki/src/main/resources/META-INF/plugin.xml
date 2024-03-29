@@ -266,8 +266,8 @@
                     icon="ActionIcons.CUCUMBER_PLUS_16"/>
 
         // Project settings
-        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzPersistenceStateService"/>
-        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzFileService"/>
+<!--        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzPersistenceStateService"/>-->
+<!--        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzFileService"/>-->
 
         // New UI 2023 Icons mapping to "expUI" folder
         <iconMapper mappingFile="TzatzikiIconMappings.json"/>
