@@ -16,6 +16,7 @@ import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.util.toPath
 
 class TzExecutionCucumberListener : StartupActivity {
@@ -85,6 +86,8 @@ class TzExecutionCucumberListener : StartupActivity {
 
                 override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
 
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
                     LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processStarting")
 
                     val tracker = project.cucumberExecutionTracker()
@@ -125,6 +128,8 @@ class TzExecutionCucumberListener : StartupActivity {
 
                 override fun processTerminated(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler, exitCode: Int) {
 
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
                     LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processTerminated")
 
                     project.cucumberExecutionTracker().removeHighlighters()

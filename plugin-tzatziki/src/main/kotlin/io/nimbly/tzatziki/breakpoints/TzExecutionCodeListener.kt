@@ -16,11 +16,11 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerManagerListener
 import com.intellij.xdebugger.ui.DebuggerColors
-import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.breakpoints.TzExecutionCucumberListener.Companion.cucumberExecutionTracker
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import com.intellij.openapi.diagnostic.logger
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
 class TzExecutionCodeListener : StartupActivity {
@@ -37,6 +37,9 @@ class TzExecutionCodeListener : StartupActivity {
 
                     LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
                     if (debugProcess !is JavaDebugProcess) return
+
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
 
                     debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 

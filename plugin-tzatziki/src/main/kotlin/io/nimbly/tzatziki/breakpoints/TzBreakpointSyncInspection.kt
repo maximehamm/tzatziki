@@ -38,6 +38,10 @@ class TzBreakpointSyncInspection : GherkinInspection() {
         return object : GherkinElementVisitor() {
 
             override fun visitFile(file: PsiFile) {
+
+                if (!TOGGLE_CUCUMBER_PL)
+                    return
+
                 // Remove orphan breakpoints
                 XDebuggerManager.getInstance(file.project)
                     .breakpointManager

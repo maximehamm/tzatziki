@@ -8,6 +8,7 @@ import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointListener
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
+import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
@@ -28,6 +29,8 @@ class TzBreakpointListener : StartupActivity {
             .subscribe(XBreakpointListener.TOPIC, object : XBreakpointListener<XBreakpoint<*>> {
 
                 override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
                     if (changeInProgress)
                         return
                     try {
@@ -39,6 +42,8 @@ class TzBreakpointListener : StartupActivity {
                 }
 
                 override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
                     if (addInProgress)
                         return
                     try {
@@ -50,6 +55,8 @@ class TzBreakpointListener : StartupActivity {
                 }
 
                 override fun breakpointRemoved(breakpoint: XBreakpoint<*>) {
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
                     if (removeInProgress)
                         return
                     try {
