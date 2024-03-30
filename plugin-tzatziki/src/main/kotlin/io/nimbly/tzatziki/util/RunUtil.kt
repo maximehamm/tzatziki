@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.execution.actions.ConfigurationContext
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.DataKey
 
@@ -20,9 +21,8 @@ class TzDataContext : DataContext {
         this.put(dataKey.name, data)
     }
 
-    @Suppress("DEPRECATION") // Compatibility issue
     fun configutation()
-        = ConfigurationContext.getFromContext(this)
+        = ConfigurationContext.getFromContext(this, ActionPlaces.UNKNOWN)
 }
 
 
