@@ -24,11 +24,16 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Key
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.util.toPath
+import io.nimbly.tzatziki.util.*
+import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -57,6 +62,8 @@ class TzExecutionCucumberListener : StartupActivity {
         var exampleLine: Int? = null,
 
         val highlighters: MutableList<RangeHighlighter> = mutableListOf(),
+        var highlighters2: MutableList<Pair<MarkupModelEx, RangeHighlighterEx>> = mutableListOf(),
+
         var highlightersModel: MarkupModel? = null
     ) {
 
@@ -64,6 +71,14 @@ class TzExecutionCucumberListener : StartupActivity {
             featurePath = null
             lineNumber = null
             exampleLine = null
+        }
+
+        fun removeHighlighters2() {
+            ApplicationManager.getApplication().invokeLater {
+                highlighters2.forEach {
+                    it.first.removeHighlighter(it.second)
+                }
+            }
         }
 
         fun removeHighlighters() {
@@ -96,8 +111,13 @@ class TzExecutionCucumberListener : StartupActivity {
             .subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
 
                 private var listener: ProcessListener? = null
-                private val highlights = mutableListOf<Pair<MarkupModelEx, RangeHighlighter>>()
                 private val color = EditorColorsManager.getInstance().globalScheme.getAttributes(DebuggerColors.EXECUTIONPOINT_ATTRIBUTES).backgroundColor
+                private var stopRequested = false
+
+                override fun processTerminating(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
+                    stopRequested = true
+                    super.processTerminating(executorId, env, handler)
+                }
 
                 override fun processStarting(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
 
@@ -107,11 +127,16 @@ class TzExecutionCucumberListener : StartupActivity {
 
                     val tracker = project.cucumberExecutionTracker()
                     tracker.clear()
+                    tracker.removeHighlighters2()
 
+                    stopRequested = false
                     val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
 
                             if (!TOGGLE_CUCUMBER_PL)
+                                return
+
+                            if (stopRequested)
                                 return
 
                             val values = REGEX.find(event.text)?.groupValues
@@ -123,18 +148,15 @@ class TzExecutionCucumberListener : StartupActivity {
                             val path = values[1].trim()
                             var line = values[2].toInt()
                             val isExample = values[3].isNotEmpty()
-
                             if (!isExample) {
 
                                 LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - filePath = $path line $line")
-                                val p = project.cucumberExecutionTracker()
-                                p.featurePath = path
-                                p.lineNumber = line - 1
+                                tracker.featurePath = path
+                                tracker.lineNumber = line - 1
                             }
                             else {
 
                                 LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - exampleLine = $line")
-
                                 val p = project.cucumberExecutionTracker()
                                 p.exampleLine = line
                             }
@@ -142,21 +164,50 @@ class TzExecutionCucumberListener : StartupActivity {
                             // Highlight gutter
                             val executionPoint = project.cucumberExecutionTracker()
                             val vfile = executionPoint.findFile() ?: return
-                            ApplicationManager.getApplication().invokeLater {
 
-                                FileEditorManager.getInstance(project)
-                                    .getEditors(vfile)
-                                    .filterIsInstance<TextEditor>()
-                                    .map { it.editor }
-                                    .forEach { editor ->
+                            ApplicationManager.getApplication().runReadAction {
 
-                                        val markupModel = editor.markupModel as? MarkupModelEx
-                                            ?: return@forEach
+                                val file = vfile.getFile(project) ?: return@runReadAction
+                                val offsetStart = file.getDocument()?.getLineStartOffset(line - 1) ?: return@runReadAction
+                                val offsetEnd = file.getDocument()?.getLineEndOffset(line - 1) ?: return@runReadAction
 
-                                        if (line == (editor.document.lineCount))
-                                            line ++
+                                val lineStart =
+                                    if (isExample) {
+                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinTableRow::class.java)
+                                            .firstOrNull()
+                                            ?.parentOfTypeIs<GherkinExamplesBlock>()
+                                            ?.getDocumentLine() ?: return@runReadAction
+                                    }
+                                    else {
+                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStepsHolder::class.java)
+                                            .firstOrNull()
+                                            ?.getDocumentLine() ?: return@runReadAction
+                                    }
+                                val lineEnd =
+                                    if (isExample) {
+                                       line
+                                    } else {
+                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStep::class.java)
+                                            .firstOrNull()
+                                            ?.getDocumentEndLine()
+                                            ?.inc() ?: return@runReadAction
+                                    }
 
-                                        highlights += highlighterExPair(markupModel, editor, line)
+                                ApplicationManager.getApplication().invokeLater {
+                                    FileEditorManager.getInstance(project)
+                                        .getEditors(vfile)
+                                        .filterIsInstance<TextEditor>()
+                                        .map { it.editor }
+                                        .forEach { editor ->
+
+                                            val markupModel = editor.markupModel as? MarkupModelEx
+                                                ?: return@forEach
+
+                                            if (line == (editor.document.lineCount))
+                                                line++
+
+                                            tracker.highlighters2 += highlightProgression(markupModel, lineStart, lineEnd)
+                                        }
                                 }
 
                             }
@@ -176,29 +227,29 @@ class TzExecutionCucumberListener : StartupActivity {
                     project.cucumberExecutionTracker().removeHighlighters()
 
                     // Just for fun to show line going to the buttom
-                    ApplicationManager.getApplication().invokeLater {
-                        highlights.forEach {
-                            it.first.removeHighlighter(it.second)
-                        }
-                    }
+//                    Thread.sleep(1000)
+//                    ApplicationManager.getApplication().invokeLater {
+//                        highlights.forEach {
+//                            it.first.removeHighlighter(it.second)
+//                        }
+//                    }
                 }
 
-                private fun highlighterExPair(
+                private fun highlightProgression(
                     markupModel: MarkupModelEx,
-                    editor: Editor,
-                    line: Int
-                ) = markupModel to markupModel.addRangeHighlighterAndChangeAttributes(
+                    lineStart:Int,
+                    lineEnd: Int
+                ): Pair<MarkupModelEx, RangeHighlighterEx> = markupModel to markupModel.addRangeHighlighterAndChangeAttributes(
                     null,
-                    0,
-                    editor.document.textLength,
+                    0,  markupModel.document.textLength, // startOffset, endOffset,
                     DiffDrawUtil.LST_LINE_MARKER_LAYER + 1,
                     HighlighterTargetArea.LINES_IN_RANGE,
                     false
                 ) { it: RangeHighlighterEx ->
                     it.isGreedyToLeft = true; it.isGreedyToRight = true
                     it.lineMarkerRenderer = MyGutterRenderer(
-                        0,
-                        line,
+                        lineStart,
+                        lineEnd,
                         color, //JBUI.CurrentTheme.RunWidget.RUNNING_BACKGROUND,
                         "Cucumber+ test progress"
                     )
