@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.breakpoints
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.xdebugger.XDebugSession
@@ -11,12 +12,15 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
+import io.nimbly.tzatziki.view.features.FeaturePanel
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
 const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
 
 class TzBreakpointListener : StartupActivity {
+
+    val LOG = Logger.getInstance(TzBreakpointListener::class.java);
 
     override fun runActivity(project: Project) {
 
@@ -70,11 +74,14 @@ class TzBreakpointListener : StartupActivity {
                 override fun breakpointPresentationUpdated(breakpoint: XBreakpoint<*>, session: XDebugSession?) = Unit
 
                 private fun refresh(breakpoint: XBreakpoint<*>, action: EAction) {
-
-                    if (breakpoint.sourcePosition?.file?.fileType == GherkinFileType.INSTANCE) {
-                        refreshGherkin(breakpoint, action)
-                    } else {
-                        refreshCode(breakpoint, action)
+                    try {
+                        if (breakpoint.sourcePosition?.file?.fileType == GherkinFileType.INSTANCE) {
+                            refreshGherkin(breakpoint, action)
+                        } else {
+                            refreshCode(breakpoint, action)
+                        }
+                    } catch (e: Exception) {
+                        LOG.warn("Refresh issue", e)
                     }
                 }
 

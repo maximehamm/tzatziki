@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.module.Module
@@ -84,8 +85,9 @@ class TzFileService(val project: Project) : Disposable {
         return tagsFilter
     }
 
+
     private fun state()
-        = ServiceManager.getService(project, TzPersistenceStateService::class.java)
+        = project.getService(TzPersistenceStateService::class.java)
 
     fun addTagsListener(listener: TagsEventListener) {
         this.tagsListeners.add(listener)
