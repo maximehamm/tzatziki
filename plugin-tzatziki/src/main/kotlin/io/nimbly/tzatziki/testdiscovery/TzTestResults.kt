@@ -73,6 +73,12 @@ object TzTestRegistry {
     }
 
     val results get() = activeResults
+
+    fun hasResults(file: PsiFile): Boolean {
+        return activeResults.tests
+            .filter { file != it.value.scenario?.containingFile }
+            .isNotEmpty()
+    }
 }
 
 class TzTestResult {

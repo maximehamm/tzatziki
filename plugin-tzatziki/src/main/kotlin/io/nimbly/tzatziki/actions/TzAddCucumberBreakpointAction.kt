@@ -11,7 +11,9 @@ import com.intellij.xdebugger.impl.XSourcePositionImpl
 import com.intellij.xdebugger.impl.breakpoints.XBreakpointUtil
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
+@Suppress("MissingActionUpdateThread")
 class TzAddCucumberBreakpointAction : DumbAwareAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -25,17 +27,18 @@ class TzAddCucumberBreakpointAction : DumbAwareAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        getLineBreakpointPosition(e) != null
+        e.presentation.isEnabledAndVisible = getLineBreakpointPosition(e) != null
     }
 
-//    override fun getActionUpdateThread(): ActionUpdateThread {
-//        return ActionUpdateThread.BGT
-//    }
 
     private fun getLineBreakpointPosition(e: AnActionEvent): XSourcePosition? {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)
         val file = e.getData(CommonDataKeys.VIRTUAL_FILE)
+
+        if (file?.fileType == GherkinFileType.INSTANCE)
+            return null
+
         if (project != null && editor != null && file != null) {
             val gutter = editor.gutter
             if (gutter is EditorGutterComponentEx) {

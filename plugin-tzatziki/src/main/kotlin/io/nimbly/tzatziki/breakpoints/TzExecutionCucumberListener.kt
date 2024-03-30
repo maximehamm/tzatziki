@@ -29,6 +29,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.actions.isShowProgressionGuide
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -57,12 +58,13 @@ class TzExecutionCucumberListener : StartupActivity {
     private val REGEX = Regex(" locationHint = '(?:file://)?([^:]+):(\\d+)'(?: name = 'Example #(\\d+)')?")
 
     data class TzExecutionTracker(
+
         var featurePath: String? = null,
         var lineNumber: Int? = null,
         var exampleLine: Int? = null,
 
         val highlighters: MutableList<RangeHighlighter> = mutableListOf(),
-        var highlighters2: MutableList<Pair<MarkupModelEx, RangeHighlighterEx>> = mutableListOf(),
+        val progressionGuides: MutableList<Pair<MarkupModelEx, RangeHighlighterEx>> = mutableListOf(),
 
         var highlightersModel: MarkupModel? = null
     ) {
@@ -73,11 +75,12 @@ class TzExecutionCucumberListener : StartupActivity {
             exampleLine = null
         }
 
-        fun removeHighlighters2() {
+        fun removeProgressionGuides() {
             ApplicationManager.getApplication().invokeLater {
-                highlighters2.forEach {
+                progressionGuides.forEach {
                     it.first.removeHighlighter(it.second)
                 }
+                progressionGuides.clear()
             }
         }
 
@@ -127,7 +130,7 @@ class TzExecutionCucumberListener : StartupActivity {
 
                     val tracker = project.cucumberExecutionTracker()
                     tracker.clear()
-                    tracker.removeHighlighters2()
+                    tracker.removeProgressionGuides()
 
                     stopRequested = false
                     val listener = object : ProcessAdapter() {
@@ -161,7 +164,10 @@ class TzExecutionCucumberListener : StartupActivity {
                                 p.exampleLine = line
                             }
 
-                            // Highlight gutter
+                            // Show progression guide
+                            if (!isShowProgressionGuide())
+                                return
+
                             val executionPoint = project.cucumberExecutionTracker()
                             val vfile = executionPoint.findFile() ?: return
 
@@ -193,6 +199,7 @@ class TzExecutionCucumberListener : StartupActivity {
                                             ?.inc() ?: return@runReadAction
                                     }
 
+
                                 ApplicationManager.getApplication().invokeLater {
                                     FileEditorManager.getInstance(project)
                                         .getEditors(vfile)
@@ -206,7 +213,7 @@ class TzExecutionCucumberListener : StartupActivity {
                                             if (line == (editor.document.lineCount))
                                                 line++
 
-                                            tracker.highlighters2 += highlightProgression(markupModel, lineStart, lineEnd)
+                                            tracker.progressionGuides += highlightProgression(markupModel, lineStart, lineEnd)
                                         }
                                 }
 

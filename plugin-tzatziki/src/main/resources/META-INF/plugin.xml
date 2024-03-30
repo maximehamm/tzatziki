@@ -308,6 +308,11 @@
                     text="Toggle Cucumber+">
             </action>
 
+            <action class="io.nimbly.tzatziki.actions.TzClearTestsResultHighlightsAction"
+                    id="io.nimbly.tzatziki.HideTestResultHighlightsAndGuidesAction"
+                    text="Hide tests execution highlights">
+            </action>
+
             <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
                     id="io.nimbly.tzatziki.ShiftUp"
                     text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
@@ -348,13 +353,23 @@
         </group>
 
 
-        <group>
+        <group id="io.nimbly.tzatziki.breakpoint.group">
             <action class="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
                     id="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
                     text="Add Cucumber+ Breakpoint">
             </action>
-            <add-to-group group-id="XDebugger.Hover.Breakpoint.Context.Menu" anchor="last"/>
+            <add-to-group group-id="EditorGutterPopupMenu.Appearance" anchor="last"/>
         </group>
+
+        <group id="io.nimbly.tzatziki.execution-progress.group">
+            <action class="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuideAction"
+                    id="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuideAction"
+                    text="Show Cucumber+ Execution Guides">
+            </action>
+            <add-to-group group-id="EditorGutterPopupMenu.Appearance" anchor="after" relative-to-action="EditorGutterToggleGlobalLineNumbers"/>
+        </group>
+
+
     </actions>
 
 

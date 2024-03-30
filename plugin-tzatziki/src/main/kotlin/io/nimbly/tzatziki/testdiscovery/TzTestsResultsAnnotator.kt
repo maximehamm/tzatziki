@@ -20,8 +20,6 @@ import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.model.SideEffectGuard
-import com.intellij.model.SideEffectGuard.SideEffectNotAllowedException
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.TextAttributesKey
@@ -182,7 +180,7 @@ private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) :
     override fun getText() = "Print stacktrace"
 }
 
-private class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {
+class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {
 
     override operator fun invoke(
         project: Project,
@@ -191,24 +189,31 @@ private class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntenti
         startElement: PsiElement,
         endElement: PsiElement) {
 
-        TzTestRegistry.cleanAllTestsResults(file)
-
-        try {
-            ApplicationManager.getApplication().invokeLater {
-                try {
-                    val vfile = file.virtualFile
-                    PsiDocumentManager.getInstance(project).reparseFiles(listOf(vfile), true)
-                } catch (_: IndexNotReadyException) {
-                }
-
-                project.cucumberExecutionTracker().removeHighlighters2()
-            }
-        } catch (_: SideEffectNotAllowedException) {
-        }
-
-
+        clear(file)
     }
 
     override fun getFamilyName() = TZATZIKI_NAME
     override fun getText() = "Clear results"
+
+    companion object {
+
+        fun clear(file: PsiFile) {
+
+            TzTestRegistry.cleanAllTestsResults(file)
+
+            try {
+                ApplicationManager.getApplication().invokeLater {
+                    try {
+                        val vfile = file.virtualFile
+                        PsiDocumentManager.getInstance(file.project).reparseFiles(listOf(vfile), true)
+                    } catch (_: IndexNotReadyException) {
+                    }
+
+                    file.project.cucumberExecutionTracker().removeProgressionGuides()
+                }
+            } catch (_: Exception) {
+                //TODO Replace with "SideEffectNotAllowedException" when Cucumber no more supports Idea version prior to 2023.3.6...
+            }
+        }
+    }
 }
