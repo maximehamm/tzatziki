@@ -201,6 +201,14 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
         override fun getName(): String {
             return step.name.replace("<\\w+>".toRegex(), "@\"\"@")
         }
+
+        @Deprecated("Deprecated in Java")
+        override fun checkAdd(element: PsiElement) {
+        }
+
+        @Deprecated("Deprecated in Java")
+        override fun checkDelete() {
+        }
     }
 
     class TzFunctionNameGenerator(concatenator: Concatenator) : FunctionNameGenerator(concatenator) {
