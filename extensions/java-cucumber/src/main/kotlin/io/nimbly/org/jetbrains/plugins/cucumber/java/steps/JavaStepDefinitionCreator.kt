@@ -5,6 +5,7 @@ import com.intellij.codeInsight.daemon.impl.quickfix.CreateFromUsageUtils
 import com.intellij.codeInsight.template.*
 import com.intellij.ide.fileTemplates.FileTemplateDescriptor
 import com.intellij.ide.fileTemplates.FileTemplateManager
+import com.intellij.lang.ASTNode
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -197,18 +198,12 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
         return STEP_DEFINITION_SUFFIX
     }
 
-    class FakeStep(val step: GherkinStep) : GherkinStep by step {
-        override fun getName(): String {
-            return step.name.replace("<\\w+>".toRegex(), "@\"\"@")
-        }
+    class FakeStep(val step: GherkinStep) {
+        val name
+            get() = step.name.replace("<\\w+>".toRegex(), "@\"\"@")
 
-        @Deprecated("Deprecated in Java")
-        override fun checkAdd(element: PsiElement) {
-        }
-
-        @Deprecated("Deprecated in Java")
-        override fun checkDelete() {
-        }
+        val keyword
+            get() = step.keyword
     }
 
     class TzFunctionNameGenerator(concatenator: Concatenator) : FunctionNameGenerator(concatenator) {
@@ -308,6 +303,10 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
     }
 
     open fun createStep(step: GherkinStep): Step {
+        return Step(ArrayList(), step.keyword.text, step.name, 0, null, null)
+    }
+
+    open fun createStep(step: FakeStep): Step {
         return Step(ArrayList(), step.keyword.text, step.name, 0, null, null)
     }
 }

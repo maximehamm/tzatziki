@@ -162,15 +162,19 @@ class TzPostStartup : StartupActivity {
 
     @Suppress("DEPRECATION")
     abstract class AbstractWriteActionHandler(private val id: String) : EditorWriteActionHandler() {
+
         private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
+
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext)
                 = doDefault(editor, caret, dataContext)
+
         open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
                 = orginHandler.execute(editor, caret, dataContext)
 
         @Deprecated("Deprecated in Java")
         override fun isEnabled(editor: Editor, dataContext: DataContext)
                 = orginHandler.isEnabled(editor, dataContext)
+
         fun getActionId()
                 = id
     }
