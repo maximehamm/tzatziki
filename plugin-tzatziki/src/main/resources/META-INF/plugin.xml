@@ -362,8 +362,8 @@
         </group>
 
         <group id="io.nimbly.tzatziki.execution-progress.group">
-            <action class="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuideAction"
-                    id="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuideAction"
+            <action class="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuidesAction"
+                    id="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuidesAction"
                     text="Show Cucumber+ Execution Guides">
             </action>
             <add-to-group group-id="EditorGutterPopupMenu.Appearance" anchor="after" relative-to-action="EditorGutterToggleGlobalLineNumbers"/>
