@@ -42,7 +42,7 @@ class TzPictureCompletion: CompletionContributor() {
         val file = parameters.editor.file
             ?: return
 
-        val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(file.virtualFile)
+        val root = ProjectFileIndex.getInstance(project).getSourceRootForFile(file.virtualFile)
             ?: return
 
         val directory = root.getDirectory(project)

@@ -62,7 +62,7 @@ val ALL_DEFAULTS = listOf(
 fun loadConfig(path: VirtualFile, project: Project): Config {
 
     // Look for root config folder
-    val root = ProjectFileIndex.SERVICE.getInstance(project).getSourceRootForFile(path)
+    val root = ProjectFileIndex.getInstance(project).getSourceRootForFile(path)
     if (root == null) {
 
         var relativePath: String
@@ -152,38 +152,6 @@ fun loadConfig(files: List<VirtualFile>, project: Project): Config {
 
     return loadConfig(common, project)
 }
-
-fun setRootCustomProperty(origin: PsiElement, key: String, value: String): Boolean {
-
-    val propertiesFile = findRootCustomPropertiesFile(origin)
-        ?: return false
-
-    WriteCommandAction.runWriteCommandAction(origin.project) {
-        val property = propertiesFile.findPropertiesByKey(key).firstOrNull()
-        if (property != null) {
-            property.setValue(value)
-        }
-        else {
-            propertiesFile.addProperty(key, value)
-        }
-    }
-
-    return true
-}
-
-fun getRootCustomProperty(origin: PsiElement, key: String): String?
-    = findRootCustomPropertiesFile(origin)
-        ?.findPropertyByKey(key)
-        ?.value
-
-private fun findRootCustomPropertiesFile(origin: PsiElement): PropertiesFile? =
-    ProjectFileIndex.SERVICE
-        .getInstance(origin.project)
-        .getSourceRootForFile(origin.containingFile.virtualFile)
-        ?.findChild(CONFIG_FOLDER)
-        ?.findChild(PROPERTIES_FILENAME)
-        ?.getFile(origin.project)
-        ?.let { if (it is PropertiesFile) it else null}
 
 private fun VirtualFile.copyDefaultsToFolder(path: VirtualFile, project: Project): VirtualFile {
     return WriteCommandAction.runWriteCommandAction<VirtualFile>(project) {

@@ -21,7 +21,7 @@ import com.intellij.psi.PsiFile
 
 fun String.adaptPicturesPath(file: PsiFile): String {
 
-    val root = ProjectFileIndex.SERVICE.getInstance(file.project).getSourceRootForFile(file.virtualFile)
+    val root = ProjectFileIndex.getInstance(file.project).getSourceRootForFile(file.virtualFile)
         ?: return this
 
     var s = this
@@ -46,7 +46,7 @@ fun String.getRelativePath(file: PsiFile): String? {
     if (this.startsWith("http", true))
         return this
 
-    val root = ProjectFileIndex.SERVICE.getInstance(file.project).getSourceRootForFile(file.virtualFile)
+    val root = ProjectFileIndex.getInstance(file.project).getSourceRootForFile(file.virtualFile)
         ?: return null
 
     val f = root.findFileByRelativePath(this)
