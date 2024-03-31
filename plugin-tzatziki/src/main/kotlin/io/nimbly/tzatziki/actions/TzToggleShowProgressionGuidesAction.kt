@@ -4,7 +4,7 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
-import io.nimbly.tzatziki.breakpoints.cucumberExecutionTracker
+import io.nimbly.tzatziki.run.cucumberExecutionTracker
 
 private val KEY = "io.nimbly.tzatziki.execution.ShowProgressionGuides"
 

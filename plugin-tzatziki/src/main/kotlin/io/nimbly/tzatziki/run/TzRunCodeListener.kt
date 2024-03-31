@@ -1,32 +1,34 @@
-package io.nimbly.tzatziki.breakpoints
+package io.nimbly.tzatziki.run
 
 import com.intellij.debugger.engine.JavaDebugProcess
 import com.intellij.debugger.impl.DebuggerContextImpl
 import com.intellij.debugger.impl.DebuggerContextListener
-import com.intellij.debugger.impl.DebuggerSession.Event
+import com.intellij.debugger.impl.DebuggerSession
 import com.intellij.execution.RunManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import com.intellij.ui.JBColor
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerManagerListener
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.util.findBreakpoint
-import io.nimbly.tzatziki.util.findStep
-import io.nimbly.tzatziki.util.getDocument
-import io.nimbly.tzatziki.util.getExample
+import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
+import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
+import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
+import java.awt.Color
 
-class TzExecutionCodeListener : StartupActivity {
+class TzRunCodeListener : StartupActivity {
 
-    private val LOG = logger<TzExecutionCodeListener>()
+    private val LOG = logger<TzRunCodeListener>()
 
     override fun runActivity(project: Project) {
 
@@ -44,10 +46,10 @@ class TzExecutionCodeListener : StartupActivity {
 
                     debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
-                        override fun changeEvent(newContext: DebuggerContextImpl, event: Event?) {
+                        override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
 
                             LOG.info("C+ XDebuggerManager.TOPIC - changeEvent = $event")
-                            if (event != Event.PAUSE)
+                            if (event != DebuggerSession.Event.PAUSE)
                                 return
 
                             // Check if running a cucumber test
@@ -121,6 +123,7 @@ class TzExecutionCodeListener : StartupActivity {
     private fun highlightExecutionPosition(step: GherkinStep) {
 
         val project = step.project
+
         FileEditorManager.getInstance(project).getAllEditors(step.containingFile.virtualFile)
             .filterIsInstance<TextEditor>()
             .forEach { editor ->
@@ -153,7 +156,7 @@ class TzExecutionCodeListener : StartupActivity {
                         LOG.debug("C+ XDebuggerManager.TOPIC - Highlighting row")
                         val exline = doc.getLineNumber(row.textOffset)
                         tracker.highlighters += editor.editor.markupModel.addRangeHighlighter(
-                            DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
+                            BREAKPOINT_EXAMPLE,
                             doc.getLineStartOffset(exline),
                             doc.getLineEndOffset(exline),
                             DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
@@ -169,9 +172,11 @@ class TzExecutionCodeListener : StartupActivity {
     }
 }
 
-private fun String.noSlash(): String {
-    if (this.startsWith("/"))
-        return this.substringAfter("/")
-    else
-        return this
-}
+//fun Color.adaptForStepExample()
+//    = JBColor(brighter(0.7), darker(0.7))
+
+//fun Color.adaptForStepExample(): Color =
+//    if (JBColor.isBright())
+//        brighter(0.7)
+//    else
+//        darker(0.7)

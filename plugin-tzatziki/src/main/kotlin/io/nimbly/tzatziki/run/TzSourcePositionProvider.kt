@@ -1,4 +1,4 @@
-package io.nimbly.tzatziki.breakpoints
+package io.nimbly.tzatziki.run
 
 import com.intellij.debugger.SourcePosition
 import com.intellij.debugger.engine.SourcePositionProvider

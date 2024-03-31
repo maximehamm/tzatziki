@@ -15,20 +15,27 @@
 
 package io.nimbly.tzatziki.editor
 
-import icons.ActionIcons.CUCUMBER_PLUS_16
-import io.nimbly.tzatziki.util.TZATZIKI_NAME
-import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
-import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
+import com.intellij.openapi.editor.colors.EditorColorsScheme
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.options.colors.AttributesDescriptor
 import com.intellij.openapi.options.colors.ColorDescriptor
 import com.intellij.openapi.options.colors.ColorSettingsPage
+import com.intellij.xdebugger.ui.DebuggerColors
+import icons.ActionIcons.CUCUMBER_PLUS_16
+import io.nimbly.tzatziki.util.TZATZIKI_NAME
+import org.jetbrains.plugins.cucumber.psi.GherkinSyntaxHighlighter
+import org.jetbrains.plugins.cucumber.psi.i18n.JsonGherkinKeywordProvider
 
 val TEST_KO = TextAttributesKey.createTextAttributesKey("CCP_TEST_KO", DefaultLanguageHighlighterColors.STRING)
 val TEST_OK = TextAttributesKey.createTextAttributesKey("CCP_TEST_OK", DefaultLanguageHighlighterColors.STRING)
 val TEST_IGNORED = TextAttributesKey.createTextAttributesKey("CCP_TEST_IGNORED", DefaultLanguageHighlighterColors.STRING)
+val BREAKPOINT_EXAMPLE =  TextAttributesKey.createTextAttributesKey("CCP_BREAKPOINT_EXAMPLE", DebuggerColors.EXECUTIONPOINT_ATTRIBUTES)
+
+//val BREAKPOINT_EXAMPLE = TextAttributesKey.createTextAttributesKey("CCP_BREAKPOINT_EXAMPLE", DebuggerColors.EXECUTIONPOINT_ATTRIBUTES.defaultAttributes.clone().apply {
+//        this.backgroundColor = this.backgroundColor.adaptForStepExample()
+//    })
 
 // Markdown
 val BOLD = TextAttributesKey.createTextAttributesKey("CCP_MD_BOLD", DefaultLanguageHighlighterColors.STRING)
@@ -70,7 +77,9 @@ class TzColorSettingsPage : ColorSettingsPage {
         = listOf(AttributesDescriptor("Test passed", TEST_OK),
                 AttributesDescriptor("Test defect", TEST_KO),
                 AttributesDescriptor("Test ignored", TEST_IGNORED),
-                AttributesDescriptor("Step is deprecated", DEPRECATED)).toTypedArray()
+                AttributesDescriptor("Step is deprecated", DEPRECATED),
+                AttributesDescriptor("Breakpoint's example", BREAKPOINT_EXAMPLE)
+        ).toTypedArray()
 
     override fun getAdditionalHighlightingTagToDescriptorMap()
         = mapOf("OK" to TEST_OK,
@@ -84,4 +93,11 @@ class TzColorSettingsPage : ColorSettingsPage {
     override fun getIcon()
         = CUCUMBER_PLUS_16
 
+    override fun customizeColorScheme(scheme: EditorColorsScheme): EditorColorsScheme {
+
+//        val att = scheme.getAttributes(BREAKPOINT_EXAMPLE)
+//        att.backgroundColor = att.backgroundColor.adaptForStepExample()
+
+       return scheme
+    }
 }

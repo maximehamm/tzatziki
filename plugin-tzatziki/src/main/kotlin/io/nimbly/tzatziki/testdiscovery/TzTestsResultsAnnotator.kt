@@ -31,7 +31,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.unscramble.AnalyzeStacktraceUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.breakpoints.cucumberExecutionTracker
+import io.nimbly.tzatziki.run.cucumberExecutionTracker
 import io.nimbly.tzatziki.editor.TEST_IGNORED
 import io.nimbly.tzatziki.editor.TEST_KO
 import io.nimbly.tzatziki.editor.TEST_OK

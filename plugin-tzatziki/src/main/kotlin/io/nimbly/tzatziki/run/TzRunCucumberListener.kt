@@ -1,4 +1,4 @@
-package io.nimbly.tzatziki.breakpoints
+package io.nimbly.tzatziki.run
 
 import com.intellij.diff.util.DiffDrawUtil
 import com.intellij.execution.ExecutionListener
@@ -30,6 +30,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.actions.isShowProgressionGuide
+import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -113,9 +114,8 @@ class TzExecutionCucumberListener : StartupActivity {
             .connect()
             .subscribe(ExecutionManager.EXECUTION_TOPIC, object : ExecutionListener {
 
-                private var listener: ProcessListener? = null
-                private val color = EditorColorsManager.getInstance().globalScheme.getAttributes(DebuggerColors.EXECUTIONPOINT_ATTRIBUTES).backgroundColor
                 private var stopRequested = false
+                private var listener: ProcessListener? = null
 
                 override fun processTerminating(executorId: String, env: ExecutionEnvironment, handler: ProcessHandler) {
                     stopRequested = true
@@ -213,7 +213,7 @@ class TzExecutionCucumberListener : StartupActivity {
                                             if (line == (editor.document.lineCount))
                                                 line++
 
-                                            tracker.progressionGuides += highlightProgression(markupModel, lineStart, lineEnd)
+                                            tracker.progressionGuides += highlightProgression(markupModel, lineStart, lineEnd, isExample)
                                         }
                                 }
 
@@ -232,20 +232,13 @@ class TzExecutionCucumberListener : StartupActivity {
                     LOG.info("C+ ExecutionManager.EXECUTION_TOPIC - processTerminated")
 
                     project.cucumberExecutionTracker().removeHighlighters()
-
-                    // Just for fun to show line going to the buttom
-//                    Thread.sleep(1000)
-//                    ApplicationManager.getApplication().invokeLater {
-//                        highlights.forEach {
-//                            it.first.removeHighlighter(it.second)
-//                        }
-//                    }
                 }
 
                 private fun highlightProgression(
                     markupModel: MarkupModelEx,
-                    lineStart:Int,
-                    lineEnd: Int
+                    lineStart: Int,
+                    lineEnd: Int,
+                    isExample: Boolean
                 ): Pair<MarkupModelEx, RangeHighlighterEx> = markupModel to markupModel.addRangeHighlighterAndChangeAttributes(
                     null,
                     0,  markupModel.document.textLength, // startOffset, endOffset,
@@ -253,11 +246,16 @@ class TzExecutionCucumberListener : StartupActivity {
                     HighlighterTargetArea.LINES_IN_RANGE,
                     false
                 ) { it: RangeHighlighterEx ->
-                    it.isGreedyToLeft = true; it.isGreedyToRight = true
+                    it.isGreedyToLeft = true
+                    it.isGreedyToRight = true
+
                     it.lineMarkerRenderer = MyGutterRenderer(
                         lineStart,
                         lineEnd,
-                        color, //JBUI.CurrentTheme.RunWidget.RUNNING_BACKGROUND,
+                        if (isExample)
+                            EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_EXAMPLE).backgroundColor
+                        else
+                            EditorColorsManager.getInstance().globalScheme.getAttributes(DebuggerColors.EXECUTIONPOINT_ATTRIBUTES).backgroundColor,
                         "Cucumber+ test progress"
                     )
                 }
@@ -281,7 +279,6 @@ class MyGutterRenderer(
     }
     override fun doAction(editor: Editor, e: MouseEvent) {
     }
-
     override fun getAccessibleName(): String {
         return myTooltip
     }

@@ -38,4 +38,10 @@
     </value>
   </option>
 
+  <option name="CCP_BREAKPOINT_EXAMPLE">
+    <value>
+      <option name="BACKGROUND" value="193A7A"/>
+    </value>
+  </option>
+
 </list>
