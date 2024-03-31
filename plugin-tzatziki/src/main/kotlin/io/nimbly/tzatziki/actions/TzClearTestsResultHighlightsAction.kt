@@ -13,8 +13,10 @@ class TzClearTestsResultHighlightsAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
 
         val file = CommonDataKeys.PSI_FILE.getData(e.dataContext)
-        if (file != null)
+        if (file != null) {
             ClearAnnotationsFix.clear(file)
+            TzTestRegistry.clearHighlighters()
+        }
     }
 
     override fun update(e: AnActionEvent) {

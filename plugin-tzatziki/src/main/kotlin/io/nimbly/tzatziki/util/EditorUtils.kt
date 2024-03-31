@@ -157,24 +157,6 @@ fun Editor.highlight(start: Int, end: Int, outHighlightersRanges: MutableList<Te
     outHighlightersRanges?.add(TextRange(start, end))
 }
 
-fun Editor.clearHighlights(
-    outHighlighters: MutableCollection<RangeHighlighter?>,
-    outHighlightersRanges: MutableCollection<TextRange?>?
-) {
-
-    val p = project ?: return
-
-    val highlightManager = HighlightManager.getInstance(p)
-    outHighlighters.forEach(Consumer { r: RangeHighlighter? ->
-        highlightManager.removeSegmentHighlighter(
-            this,
-            r!!
-        )
-    })
-    outHighlighters.clear()
-    outHighlightersRanges?.clear()
-}
-
 fun EditorEx.toggleColumnMode() {
     val selectionModel = this.selectionModel
     val caretModel = this.caretModel

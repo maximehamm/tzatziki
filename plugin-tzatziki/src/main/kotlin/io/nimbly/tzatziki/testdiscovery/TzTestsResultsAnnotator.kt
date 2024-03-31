@@ -44,6 +44,9 @@ import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
 import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableRowImpl
 
+/**
+ * Adding tooltip annotation over tests results
+ */
 class TzTestsResultsAnnotator : Annotator {
 
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
@@ -60,7 +63,7 @@ class TzTestsResultsAnnotator : Annotator {
 
     private fun annotateStep(step: GherkinStep, holder: AnnotationHolder) {
         val results = TzTestRegistry.results
-        doAnnotate(results[step], step, holder)
+        doAnnotateCommon(results[step], step, holder)
     }
 
     private fun annotateRow(row: GherkinTableRow, holder: AnnotationHolder) {
@@ -71,22 +74,20 @@ class TzTestsResultsAnnotator : Annotator {
             .toMap()
             .filterValuesNotNull()
             .forEach { (cell, tests) ->
-                doAnnotate(tests, cell, holder)
+                doAnnotateCommon(tests, cell, holder)
             }
     }
 
-    private fun doAnnotate(tests: Set<SMTestProxy>, element: GherkinPsiElement, holder: AnnotationHolder) {
+    private fun doAnnotateCommon(tests: Set<SMTestProxy>, element: GherkinPsiElement, holder: AnnotationHolder) {
 
         if (tests.isEmpty()) return
         val what = if (element is GherkinTableCell) "step" else "example"
-        val textKey: TextAttributesKey
         val tooltip: String
         val stacktrace: String?
         if (tests.size == 1) {
 
             // Simple step or a cell
             val test = tests.first()
-            textKey = test.textAttribut
             tooltip = when {
                 test.isIgnored -> "The $what <u>could not be executed</u>"
                 test.isDefect -> test.tooltip()
@@ -100,7 +101,7 @@ class TzTestsResultsAnnotator : Annotator {
             val ignored = tests.count { it.isIgnored }
             val ko = tests.count { it.isDefect && !it.isIgnored }
             val ok = tests.size - ignored - ko
-            textKey = when {
+            val textKey = when {
                 ignored == 0 && ko == 0 -> TEST_OK
                 ko > 0 -> TEST_KO
                 else -> TEST_IGNORED
@@ -119,49 +120,11 @@ class TzTestsResultsAnnotator : Annotator {
         val a = holder.newAnnotation(HighlightSeverity.INFORMATION, TZATZIKI_NAME)
             .range(element.bestRange())
             .tooltip(tooltip)
-            .textAttributes(textKey)
             .withFix(ClearAnnotationsFix(element))
         if (!stacktrace.isNullOrEmpty())
             a.newFix(PrintStackTraceFix(element, stacktrace)).registerFix()
         a.create()
     }
-}
-
-private fun PsiElement.bestRange(): TextRange {
-
-    if (this is GherkinTableRow)
-        return textRange
-
-    if (this is GherkinTableCell)
-        return fullRange
-
-    // Start after keyword
-    var i = text.indexOf(" ")
-    if (i<0)
-        return textRange
-
-    val t = text.substring(i)
-    val j = t.indexOfFirst { it != ' ' }
-    if (j>0)
-        i += j
-
-    // End at end ok line
-    var length = text.indexOf("\n")
-    if (length < 0) length = text.length
-
-    return TextRange(textRange.startOffset + i, textRange.startOffset + length)
-}
-
-private fun SMTestProxy.tooltip(): String {
-    var t = this.stacktrace
-    if (t.isNullOrBlank())
-        return "Cucumber test failure"
-
-    t = t.substringBefore("\n")
-    t = t.replaceFirst("^(\\w*\\.)*\\w*: ".toRegex(), "")
-    t = t.escape()
-
-    return "<html>$t</html>"
 }
 
 private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {

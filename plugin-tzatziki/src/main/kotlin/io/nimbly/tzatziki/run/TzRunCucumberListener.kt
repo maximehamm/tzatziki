@@ -27,11 +27,11 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.actions.isShowProgressionGuide
 import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
 import io.nimbly.tzatziki.editor.BREAKPOINT_STEP
+import io.nimbly.tzatziki.testdiscovery.TzTestRegistry
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -133,6 +133,8 @@ class TzExecutionCucumberListener : StartupActivity {
                     tracker.clear()
                     tracker.removeProgressionGuides()
 
+                    var first = true
+
                     stopRequested = false
                     val listener = object : ProcessAdapter() {
                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
@@ -165,12 +167,20 @@ class TzExecutionCucumberListener : StartupActivity {
                                 p.exampleLine = line
                             }
 
+                            val executionPoint = project.cucumberExecutionTracker()
+                            val vfile = executionPoint.findFile() ?: return
+
+                            // Clear tests results
+                            if (first) {
+                                first = false
+                                ApplicationManager.getApplication().invokeLater {
+                                    TzTestRegistry.clearHighlighters()
+                                }
+                            }
+
                             // Show progression guide
                             if (!isShowProgressionGuide())
                                 return
-
-                            val executionPoint = project.cucumberExecutionTracker()
-                            val vfile = executionPoint.findFile() ?: return
 
                             ApplicationManager.getApplication().runReadAction {
 
