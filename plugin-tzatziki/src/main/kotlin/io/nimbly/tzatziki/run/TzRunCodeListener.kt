@@ -21,6 +21,7 @@ import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
 import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
+import io.nimbly.tzatziki.editor.BREAKPOINT_STEP
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -140,7 +141,7 @@ class TzRunCodeListener : StartupActivity {
 
                 tracker.highlightersModel = editor.editor.markupModel
                 tracker.highlighters += editor.editor.markupModel.addRangeHighlighter(
-                    DebuggerColors.EXECUTIONPOINT_ATTRIBUTES,
+                    BREAKPOINT_STEP,
                     start, end,
                     DebuggerColors.EXECUTION_LINE_HIGHLIGHTERLAYER,
                     HighlighterTargetArea.LINES_IN_RANGE
@@ -171,12 +172,3 @@ class TzRunCodeListener : StartupActivity {
             }
     }
 }
-
-//fun Color.adaptForStepExample()
-//    = JBColor(brighter(0.7), darker(0.7))
-
-//fun Color.adaptForStepExample(): Color =
-//    if (JBColor.isBright())
-//        brighter(0.7)
-//    else
-//        darker(0.7)

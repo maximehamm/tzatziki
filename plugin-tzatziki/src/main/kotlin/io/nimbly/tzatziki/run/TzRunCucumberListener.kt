@@ -31,6 +31,7 @@ import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.actions.isShowProgressionGuide
 import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
+import io.nimbly.tzatziki.editor.BREAKPOINT_STEP
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -255,7 +256,7 @@ class TzExecutionCucumberListener : StartupActivity {
                         if (isExample)
                             EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_EXAMPLE).backgroundColor
                         else
-                            EditorColorsManager.getInstance().globalScheme.getAttributes(DebuggerColors.EXECUTIONPOINT_ATTRIBUTES).backgroundColor,
+                            EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_STEP).backgroundColor,
                         "Cucumber+ test progress"
                     )
                 }
