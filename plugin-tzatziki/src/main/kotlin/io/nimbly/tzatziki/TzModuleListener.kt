@@ -21,6 +21,7 @@ import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
@@ -160,6 +161,7 @@ class TzPostStartup : StartupActivity {
         }
     }
 
+    @Suppress("DEPRECATION")
     abstract class AbstractWriteActionHandler(private val id: String) : EditorWriteActionHandler() {
 
         private val orginHandler = EditorActionManager.getInstance().getActionHandler(id)
@@ -170,12 +172,13 @@ class TzPostStartup : StartupActivity {
         open fun doDefault(editor: Editor, caret: Caret?, dataContext: DataContext?)
                 = orginHandler.execute(editor, caret, dataContext)
 
-//        @Deprecated("Deprecated in Java")
-//        override fun isEnabled(editor: Editor, dataContext: DataContext)
-//                = orginHandler.isEnabled(editor, dataContext)
+        @Deprecated("Deprecated in Java, remove ")
+        override fun isEnabled(editor: Editor, dataContext: DataContext): Boolean {
+            return orginHandler.isEnabled(editor, dataContext)
+        }
 
-        override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?)
-                = orginHandler.isEnabled(editor, dataContext)
+//        override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?)
+//                = orginHandler.isEnabledForCaret(editor, caret, dataContext)
 
         fun getActionId()
                 = id
