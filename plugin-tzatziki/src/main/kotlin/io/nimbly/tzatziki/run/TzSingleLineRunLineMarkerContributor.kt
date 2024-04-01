@@ -33,6 +33,8 @@ import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
+import java.time.Instant
+import java.util.*
 
 //@see https://github.com/JetBrains/intellij-plugins/tree/master/cucumber/src/org/jetbrains/plugins/cucumber/run
 class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
@@ -61,6 +63,9 @@ class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
         val scenario = cell.parentOfTypeIs<GherkinStepsHolder>()
             ?: return null
 
+//        val feature = cell.parentOfTypeIs<GherkinFeature>()
+//            ?: return null
+
         val definitions = scenario.findCucumberStepDefinitions()
         if (definitions.isEmpty())
             return null
@@ -74,7 +79,7 @@ class TzSingleLineRunLineMarkerContributor : RunLineMarkerContributor() {
 
     private fun getTestStateStorage(element: PsiElement): TestStateStorage.Record? {
         val url = element.containingFile.virtualFile.url + ":" + CucumberUtil.getLineNumber(element)
-        return TestStateStorage.getInstance(element.project).getState('"' + url + '"')
+        return TestStateStorage.getInstance(element.project).getState(url)
     }
 
     private fun getInfo(state: TestStateStorage.Record?)
