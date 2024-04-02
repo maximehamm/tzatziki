@@ -5,6 +5,9 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
+import io.nimbly.i18n.translation.engines.EEngine
+import io.nimbly.i18n.translation.engines.Translation
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.*
 import java.util.*
 import javax.swing.SwingUtilities
@@ -26,17 +29,19 @@ object TranslationManager {
         style: EStyle,
         origin: Origin?,
         project: Project?
-    ): GTranslation? {
+    ): Translation? {
 
         val t = text.unescapeStyle(style)
         val translationText = t.unescapeFormat(format, false)
 
+        val engine = TranslationEngineFactory.engine(EEngine.DEEPL)
+
         val translation =
             if (format.preserveQuotes && translationText.surroundedWith("\n"))
-                googleTranslate(targetLanguage, sourceLanguage, translationText.removeSurrounding("\""))
+                engine.translate(targetLanguage, sourceLanguage, translationText.removeSurrounding("\""))
                     ?.apply { this.translated = this.translated.surround("\"")}
             else
-                googleTranslate(targetLanguage, sourceLanguage, translationText)
+                engine.translate(targetLanguage, sourceLanguage, translationText)
 
 
         if (translation != null) {
@@ -104,7 +109,7 @@ interface TranslationListener {
 }
 
 class TranslationEvent(
-    val translation: GTranslation
+    val translation: Translation
 )
 
 class Origin(

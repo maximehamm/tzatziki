@@ -48,6 +48,9 @@ import com.intellij.util.ui.JBUI
 import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.translation.*
+import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
+import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
 import io.nimbly.i18n.util.*
 import java.awt.*
 import java.awt.event.*

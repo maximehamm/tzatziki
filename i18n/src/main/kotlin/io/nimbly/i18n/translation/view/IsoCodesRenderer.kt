@@ -1,6 +1,7 @@
 package io.nimbly.i18n.translation.view
 
 import com.intellij.util.ui.UIUtil
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.TranslationIcons
 import java.awt.Component
 import java.awt.Font

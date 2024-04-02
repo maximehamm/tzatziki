@@ -4,7 +4,6 @@ import com.intellij.ide.util.PropertiesComponent
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.impl.NonProjectFileWritingAccessProvider
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.psi.meta.PsiMetaOwner
@@ -18,9 +17,9 @@ import com.intellij.refactoring.rename.RenamePsiElementProcessorBase
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase.DefaultRenamePsiElementProcessor
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.refactoring.util.NonCodeUsageInfo
-import io.nimbly.i18n.translation.REFACTORING
-import io.nimbly.i18n.translation.REFACTORING_PREVIEW
-import io.nimbly.i18n.translation.REFACTORING_SEARCH_IN_COMMENT
+import io.nimbly.i18n.translation.engines.google.REFACTORING
+import io.nimbly.i18n.translation.engines.google.REFACTORING_PREVIEW
+import io.nimbly.i18n.translation.engines.google.REFACTORING_SEARCH_IN_COMMENT
 
 fun canRename(element: PsiElement?): Boolean {
 

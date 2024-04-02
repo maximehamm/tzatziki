@@ -14,6 +14,7 @@ dependencies {
     implementation("org.apache.commons:commons-text:1.11.0")
     implementation("org.unbescape:unbescape:1.1.6.RELEASE")
     implementation("org.apache.commons:commons-csv:1.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
 }
 
 tasks {

@@ -5,7 +5,10 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.codeStyle.SuggestedNameInfo
 import com.intellij.refactoring.rename.NameSuggestionProvider
-import io.nimbly.i18n.translation.view.Lang
+import io.nimbly.i18n.translation.engines.Translation
+import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
+import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.detectStyle
 import kotlinx.coroutines.*
@@ -27,7 +30,7 @@ class TranslationRenamerFactory : NameSuggestionProvider {
             val name = nameSuggestionContext.nameIdentifier?.text
                 ?: return null
 
-            val deferred: Deferred<GTranslation?> = GlobalScope.async(Dispatchers.Default) {
+            val deferred: Deferred<Translation?> = GlobalScope.async(Dispatchers.Default) {
                 val translation = TranslationManager.translate(output, input, name, EFormat.TEXT, name.detectStyle(true), null, element.project)
                 translation;
             }

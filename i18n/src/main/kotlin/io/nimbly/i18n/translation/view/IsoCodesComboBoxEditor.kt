@@ -3,6 +3,7 @@ package io.nimbly.i18n.translation.view
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.util.ui.UIUtil
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.TranslationIcons
 import java.awt.BorderLayout
 import java.awt.Component

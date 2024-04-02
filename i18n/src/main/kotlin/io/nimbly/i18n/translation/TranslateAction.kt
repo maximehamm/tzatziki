@@ -40,7 +40,10 @@ import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import icons.ActionI18nIcons
-import io.nimbly.i18n.translation.view.Lang
+import io.nimbly.i18n.translation.engines.Translation
+import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
+import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.*
 
 @Suppress("MissingActionUpdateThread")
@@ -258,7 +261,7 @@ open class TranslateAction : DumbAwareAction()  {
 
     private fun displayInlays(
         element: PsiElement?,
-        translation: GTranslation,
+        translation: Translation,
         editor: Editor,
         startOffset: Int,
         zoom: Double,
