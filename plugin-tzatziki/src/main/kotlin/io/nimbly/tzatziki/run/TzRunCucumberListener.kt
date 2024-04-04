@@ -157,7 +157,7 @@ class TzExecutionCucumberListener : StartupActivity {
                             val values = REGEX.find(event.text)?.groupValues
                                 ?:return
 
-                            println(event.text)
+                            // println(event.text)
                             LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
 
                             val path = values[1].trim()
