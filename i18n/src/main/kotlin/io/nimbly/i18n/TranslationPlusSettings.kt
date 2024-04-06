@@ -10,8 +10,8 @@ import com.intellij.openapi.components.SettingsCategory
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import io.nimbly.i18n.translation.engines.EEngine
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
-
 
 @State(name = "TranslationPlusSettings", storages = [Storage("translationPlus.xml")], category = SettingsCategory.CODE)
 class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings.State?> {
@@ -19,13 +19,27 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
     var activeEngine: EEngine = EEngine.GOOGLE_FREE
     var keys: Map<EEngine, String> = mutableMapOf()
 
+    var input: String = Lang.AUTO.code
+    var output: String = Lang.DEFAULT.code
+
+    var useRefactoring: Boolean = true
+    var useRefactoringPreview: Boolean = true
+    var useRefactoringSearchInComment: Boolean = true
+
     override fun getState(): State {
         val state = State()
 
         state.activeEngine = activeEngine
 
-        keys.map { k ->
-            val attributes = createCredentialAttributes(k.value)
+        state.input = input
+        state.output = output
+
+        state.useRefactoring = useRefactoring
+        state.useRefactoringPreview = useRefactoringPreview
+        state.useRefactoringSearchInComment = useRefactoringSearchInComment
+
+        keys.forEach { k ->
+            val attributes = createCredentialAttributes(k.key)
             val credentials = Credentials(k.key.name, k.value)
             PasswordSafe.instance.set(attributes, credentials)
         }
@@ -34,29 +48,42 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
     }
 
     override fun loadState(state: State) {
+
         this.activeEngine = state.activeEngine
 
-        state.keys = TranslationEngineFactory.engines()
+        this.input = state.input
+        this.output = state.output
+
+        this.useRefactoring = state.useRefactoring
+        this.useRefactoringPreview = state.useRefactoringPreview
+        this.useRefactoringSearchInComment = state.useRefactoringSearchInComment
+
+        this.keys = TranslationEngineFactory.engines()
             .map { engine ->
-                val attributes = createCredentialAttributes(engine.type.name)
+                val attributes = createCredentialAttributes(engine.type)
                 val credentials = PasswordSafe.instance[attributes]
                 val key = credentials?.getPasswordAsString() ?: ""
                 engine.type to key}
             .toMap()
-
-//        this.keys = state.keys
     }
 
-    private fun createCredentialAttributes(key: String): CredentialAttributes {
+    private fun createCredentialAttributes(engine: EEngine): CredentialAttributes {
         return CredentialAttributes(
-            generateServiceName("TranslationPlus", key)
+            generateServiceName("TranslationPlus", engine.name)
         )
     }
 
 
     class State {
+
         var activeEngine: EEngine = EEngine.GOOGLE_FREE
-        var keys: Map<EEngine, String> = mutableMapOf()
+
+        var input: String = Lang.AUTO.code
+        var output: String = Lang.DEFAULT.code
+
+        var useRefactoring: Boolean = true
+        var useRefactoringPreview: Boolean = true
+        var useRefactoringSearchInComment: Boolean = true
     }
 
     companion object {

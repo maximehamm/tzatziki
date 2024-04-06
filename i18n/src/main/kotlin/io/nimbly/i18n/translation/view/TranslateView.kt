@@ -15,7 +15,6 @@
 package io.nimbly.i18n.translation.view
 
 import com.intellij.icons.AllIcons
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
@@ -28,6 +27,7 @@ import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -47,10 +47,10 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
+import io.nimbly.i18n.TranslationPlusSettings
+import io.nimbly.i18n.preferences.TranslationPlusOptionsConfigurable
 import io.nimbly.i18n.translation.*
 import io.nimbly.i18n.translation.engines.Lang
-import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
-import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
 import io.nimbly.i18n.util.*
 import java.awt.*
 import java.awt.event.*
@@ -190,8 +190,9 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         val isoCodes = languagesMap.map { Lang(it.key, it.value) }.sortedBy { it.name }
 
-        val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+        val settings = TranslationPlusSettings.getSettings()
+        val input = settings.input
+        val output = settings.output
 
         inputLanguage.apply {
             val model = this.model as CollectionComboBoxModel<Lang>
@@ -221,7 +222,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         inputLanguage.addItemListener { e ->
             if (e.stateChange == SELECTED) {
                 val lang = e.item as Lang
-                PropertiesComponent.getInstance().setValue(SAVE_INPUT, lang.code)
+                TranslationPlusSettings.getSettings().input = lang.code
                 if (!inputLanguageProgramaticSelection) {
                     inputLanguageAutoPrefered = (Lang.AUTO == lang)
                     this.inputLanguage.font = this.inputLanguage.font.deriveFont(Font.PLAIN)
@@ -231,7 +232,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         outputLanguage.addItemListener { e ->
             if (e.stateChange == SELECTED) {
                 val lang = e.item as Lang
-                PropertiesComponent.getInstance().setValue(SAVE_OUTPUT, lang.code)
+                TranslationPlusSettings.getSettings().output = lang.code
                 outputFlagIcon = TranslationIcons.getFlag(lang.code)
                 translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
             }
@@ -427,6 +428,8 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     }
 
     private fun initPanel(): JPanel {
+
+//        ShowSettingsUtil.getInstance().editConfigurable(null, "Translation+")
 
         val main = JBPanelWithEmptyText(GridLayoutManager(7, 4))
         main.border = JBUI.Borders.empty()

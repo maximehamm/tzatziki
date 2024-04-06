@@ -32,8 +32,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun createComponent(): JComponent? {
 
-//         if (main != null)
-//             return main
+         if (main != null)
+             return main
 
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()

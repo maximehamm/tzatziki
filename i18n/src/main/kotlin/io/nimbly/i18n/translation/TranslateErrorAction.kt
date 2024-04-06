@@ -1,13 +1,11 @@
 package io.nimbly.i18n.translation
 
 import com.intellij.analysis.problemsView.toolWindow.ProblemNode
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.project.DumbAwareAction
-import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
-import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.EStyle
@@ -16,13 +14,13 @@ import io.nimbly.i18n.util.languagesMap
 
 class TranslateErrorToInputAction : TranslateErrorAction() {
     override fun getLanguage(): String {
-        return PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
+        return TranslationPlusSettings.getSettings().input
     }
 }
 
 class TranslateErrorToOutputAction : TranslateErrorAction() {
     override fun getLanguage(): String {
-        return PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+        return TranslationPlusSettings.getSettings().output
     }
 }
 

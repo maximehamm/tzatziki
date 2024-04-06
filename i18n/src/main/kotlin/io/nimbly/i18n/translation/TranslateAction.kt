@@ -40,10 +40,8 @@ import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import icons.ActionI18nIcons
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Translation
-import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
-import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
-import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.*
 
 @Suppress("MissingActionUpdateThread")
@@ -58,8 +56,7 @@ open class TranslateAction : DumbAwareAction()  {
         val editor = editorRef ?: event.editor
         event.presentation.isEnabledAndVisible = editor!=null
 
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, "EN")
-
+        val output = TranslationPlusSettings.getSettings().output
         event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase())
             ?: ActionI18nIcons.I18N
 
@@ -211,8 +208,9 @@ open class TranslateAction : DumbAwareAction()  {
 
             //
             // Translate
-            val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
-            val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+            val settings = TranslationPlusSettings.getSettings()
+            val input = settings.input
+            val output = settings.output
 
             val translation = TranslationManager.translate(output, input, text, format, style, Origin.from(element, editor), project)
 
@@ -302,7 +300,7 @@ open class TranslateAction : DumbAwareAction()  {
             translationLines.removeAt(0)
         }
 
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+        val output = TranslationPlusSettings.getSettings().output
         val xindent = editor.offsetToPoint2D(startOffset).x.toInt()
 
         translationLines

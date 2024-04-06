@@ -1,18 +1,14 @@
 package io.nimbly.i18n.translation
 
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.codeStyle.SuggestedNameInfo
 import com.intellij.refactoring.rename.NameSuggestionProvider
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Translation
-import io.nimbly.i18n.translation.engines.google.SAVE_INPUT
-import io.nimbly.i18n.translation.engines.google.SAVE_OUTPUT
-import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.detectStyle
 import kotlinx.coroutines.*
-
 
 class TranslationRenamerFactory : NameSuggestionProvider {
 
@@ -22,8 +18,9 @@ class TranslationRenamerFactory : NameSuggestionProvider {
         result: MutableSet<String>
     ): SuggestedNameInfo? {
 
-        val input = PropertiesComponent.getInstance().getValue(SAVE_INPUT, Lang.AUTO.code)
-        val output = PropertiesComponent.getInstance().getValue(SAVE_OUTPUT, Lang.DEFAULT.code)
+        val settings = TranslationPlusSettings.getSettings()
+        val input = settings.input
+        val output = settings.output
 
         if (nameSuggestionContext is PsiNameIdentifierOwner) {
 

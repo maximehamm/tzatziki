@@ -1,6 +1,5 @@
 package io.nimbly.i18n.util
 
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.impl.NonProjectFileWritingAccessProvider
@@ -17,9 +16,7 @@ import com.intellij.refactoring.rename.RenamePsiElementProcessorBase
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase.DefaultRenamePsiElementProcessor
 import com.intellij.refactoring.suggested.startOffset
 import com.intellij.refactoring.util.NonCodeUsageInfo
-import io.nimbly.i18n.translation.engines.google.REFACTORING
-import io.nimbly.i18n.translation.engines.google.REFACTORING_PREVIEW
-import io.nimbly.i18n.translation.engines.google.REFACTORING_SEARCH_IN_COMMENT
+import io.nimbly.i18n.TranslationPlusSettings
 
 fun canRename(element: PsiElement?): Boolean {
 
@@ -67,20 +64,23 @@ fun isInInjectedLanguagePrefixSuffix(element: PsiElement): Boolean {
 }
 
 class RefactoringSetup {
-    var useRefactoring = PropertiesComponent.getInstance().getValue(REFACTORING) == "true"
+
+    val settings = TranslationPlusSettings.getSettings()
+
+    var useRefactoring = settings.useRefactoring
         set(value) {
             field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING, value.toString())
+            settings.useRefactoring = value
         }
-    var preview = PropertiesComponent.getInstance().getValue(REFACTORING_PREVIEW) == "true"
+    var preview = settings.useRefactoringPreview
         set(value) {
             field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING_PREVIEW, value)
+            settings.useRefactoringPreview = value
         }
-    var searchInComments: Boolean = PropertiesComponent.getInstance().getValue(REFACTORING_SEARCH_IN_COMMENT) == "true"
+    var searchInComments: Boolean = settings.useRefactoringSearchInComment
         set(value) {
             field = value
-            PropertiesComponent.getInstance().setValue(REFACTORING_SEARCH_IN_COMMENT, value)
+            settings.useRefactoringSearchInComment = value
         }
 }
 
