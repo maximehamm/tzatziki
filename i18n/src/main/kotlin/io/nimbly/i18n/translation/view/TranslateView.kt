@@ -445,7 +445,11 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         titlePane.addHyperlinkListener { e ->
             if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
-                ShowSettingsUtil.getInstance().editConfigurable(this, TranslationPlusOptionsConfigurable())
+
+                ShowSettingsUtil.getInstance().showSettingsDialog(ctxt.project, TranslationPlusOptionsConfigurable::class.java)
+
+                // Open as dialog with T+ settings only :
+                // ShowSettingsUtil.getInstance().editConfigurable(this, TranslationPlusOptionsConfigurable())
             }
         }
         initTitle()
