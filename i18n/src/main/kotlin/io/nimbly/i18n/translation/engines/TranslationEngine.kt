@@ -1,25 +1,30 @@
 package io.nimbly.i18n.translation.engines
 
+import io.nimbly.i18n.translation.engines.EEngine.*
 import io.nimbly.i18n.translation.engines.google.DeepLEngine
 import io.nimbly.i18n.translation.engines.google.GoogleEngine
+import io.nimbly.i18n.translation.engines.google.GoogleEngineFree
 import java.io.IOException
 
-enum class EEngine { GOOGLE, DEEPL }
+enum class EEngine { GOOGLE_FREE, GOOGLE, DEEPL }
 
 object TranslationEngineFactory {
 
-    private val engines = mapOf(
-        EEngine.GOOGLE to GoogleEngine(),
-        EEngine.DEEPL to DeepLEngine())
+    private val engines = listOf(
+        GoogleEngineFree(GOOGLE_FREE),
+        GoogleEngine(GOOGLE),
+        DeepLEngine(DEEPL))
 
     fun engines()
         = engines
 
     fun engine(id: EEngine)
-        = engines[id]!!
+        = engines.find { it.type == id }!!
 }
 
 interface IEngine {
+
+    val type: EEngine
 
     /**
      * Translate
@@ -35,6 +40,10 @@ interface IEngine {
         targetLanguage: String,
         sourceLanguage: String,
         textToTranslate: String): Translation?
+
+    fun label(): String
+
+    fun needApiKey() : Boolean
 }
 
 data class Translation(

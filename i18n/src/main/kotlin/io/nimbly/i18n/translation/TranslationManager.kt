@@ -5,6 +5,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.Translation
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
@@ -34,7 +35,10 @@ object TranslationManager {
         val t = text.unescapeStyle(style)
         val translationText = t.unescapeFormat(format, false)
 
-        val engine = TranslationEngineFactory.engine(EEngine.DEEPL)
+        val mySettings = TranslationPlusSettings.getSettings()
+        val activeEngine = mySettings.activeEngine
+
+        val engine = TranslationEngineFactory.engine(activeEngine)
 
         val translation =
             if (format.preserveQuotes && translationText.surroundedWith("\n"))

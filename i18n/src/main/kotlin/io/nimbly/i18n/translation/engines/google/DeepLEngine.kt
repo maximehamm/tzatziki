@@ -3,6 +3,8 @@ package io.nimbly.i18n.translation.engines.google
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import io.nimbly.i18n.TranslationPlusSettings
+import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.Translation
 import io.nimbly.i18n.translation.engines.Lang
@@ -13,7 +15,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class DeepLEngine : IEngine {
+class DeepLEngine(override val type: EEngine) : IEngine {
+
+    override fun label() = "DeepL API"
+
+    override fun needApiKey() = true
 
     override fun translate(
         targetLanguage: String,
@@ -21,7 +27,7 @@ class DeepLEngine : IEngine {
         textToTranslate: String
     ): Translation? {
 
-        val apiKey = xxx
+        val apiKey = TranslationPlusSettings.getSettings().keys[type]
 
         val client = OkHttpClient()
         val json = JsonObject()

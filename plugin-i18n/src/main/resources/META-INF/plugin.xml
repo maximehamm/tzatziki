@@ -141,6 +141,14 @@
 
         <iconMapper mappingFile="TranslationIconMappings.json"/>
 
+        <projectConfigurable instance="io.nimbly.i18n.preferences.TranslationPlusOptionsConfigurable"
+                             id="io.nimbly.i18n.preferences"
+                             parentId="tools"
+                             groupWeight="1"
+                             displayName="Translation+"/>
+
+        <applicationService serviceImplementation="io.nimbly.i18n.TranslationPlusSettings"/>
+
         <!--
         <annotator language="" implementationClass="io.nimbly.i18n.translation.TranslationAnnotator"/>
         -->

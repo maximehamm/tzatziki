@@ -5,16 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../../.run/RUN.run.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.run/RUN.run.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../plugin/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../../plugin/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/runConfigurations/Run_T_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/runConfigurations/Run_T_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../plugin-tzatziki/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../../plugin-tzatziki/build.gradle.kts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/features/cocktail.feature" beforeDir="false" afterPath="$PROJECT_DIR$/features/cocktail.feature" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../kotlin-easy-as-pie/easy.feature" beforeDir="false" afterPath="$PROJECT_DIR$/../kotlin-easy-as-pie/easy.feature" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/rich-example.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/rich-example.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rich-example/src/test/resources/io/nimbly/example/cocktail.feature" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/src/test/resources/io/nimbly/example/cocktail.feature" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/features/step_definitions/google.js" beforeDir="false" afterPath="$PROJECT_DIR$/features/step_definitions/google.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,12 +51,15 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/Maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie",
+    "last_opened_file_path": "/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+    "nodejs.cucumber.cucumber_node_package_dir": "/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie/node_modules/cucumber",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -72,7 +72,7 @@
       <recent name="$PROJECT_DIR$/features" />
     </key>
   </component>
-  <component name="RunManager" selected="Cucumber Java.Scenario: Creating an empty order">
+  <component name="RunManager" selected="Cucumber.js.google.feature">
     <configuration name="Scenario: Creating an empty order" type="CucumberJavaRunConfigurationType" factoryName="Cucumber java" temporary="true" nameIsGenerated="true">
       <option name="CUCUMBER_CORE_VERSION" value="1" />
       <option name="FILE_PATH" value="$PROJECT_DIR$/features/cocktail.feature" />
@@ -92,36 +92,40 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Scenario Outline: Sending a message with an o... - Example #1" type="cucumber+.js" factoryName="Cucumber+.js" temporary="true">
-      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature:27" />
-      <option name="myNameFilter" value="^Sending a message with an order$" />
+    <configuration name="base.feature" type="cucumber.js" factoryName="Cucumber.js" temporary="true">
+      <option name="myFilePath" value="$PROJECT_DIR$/features/base.feature" />
+      <option name="myNameFilter" />
       <option name="cucumberJsArguments" value="" />
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="Scenario Outline: Sending a message with an o... - Example #2" type="cucumber+.js" factoryName="Cucumber+.js" temporary="true">
-      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature:28" />
-      <option name="myNameFilter" value="^Sending a message with an order$" />
+    <configuration name="cocktail.feature" type="cucumber.js" factoryName="Cucumber.js" temporary="true">
+      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature" />
+      <option name="myNameFilter" />
       <option name="cucumberJsArguments" value="" />
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="Scenario Outline: Sending a message with an o... - Example #3" type="cucumber+.js" factoryName="Cucumber+.js" temporary="true">
-      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature:29" />
-      <option name="myNameFilter" value="^Sending a message with an order$" />
+    <configuration name="github.feature" type="cucumber.js" factoryName="Cucumber.js" temporary="true">
+      <option name="myFilePath" value="$PROJECT_DIR$/features/github.feature" />
+      <option name="myNameFilter" />
       <option name="cucumberJsArguments" value="" />
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="Scenario Outline: Sending a message with an o... - Example #2" type="cucumber.js" factoryName="Cucumber.js" temporary="true">
-      <option name="myFilePath" value="$PROJECT_DIR$/features/cocktail.feature:28" />
-      <option name="myNameFilter" value="^Sending a message with an order$" />
+    <configuration name="google.feature" type="cucumber.js" factoryName="Cucumber.js" temporary="true">
+      <option name="myFilePath" value="$PROJECT_DIR$/features/google.feature" />
+      <option name="myNameFilter" />
       <option name="cucumberJsArguments" value="" />
       <option name="workingDirectory" value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Cucumber.js.google.feature" />
+        <item itemvalue="Cucumber.js.cocktail.feature" />
+        <item itemvalue="Cucumber.js.github.feature" />
+        <item itemvalue="Cucumber.js.base.feature" />
         <item itemvalue="Cucumber Java.Scenario: Creating an empty order" />
       </list>
     </recent_temporary>
@@ -177,20 +181,39 @@
       <workItem from="1639514141133" duration="106000" />
       <workItem from="1639514310237" duration="10000" />
       <workItem from="1650958688177" duration="823000" />
+      <workItem from="1712176128255" duration="1308000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/features/step_definitions/github.js</url>
+          <line>28</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/features/step_definitions/google.js</url>
+          <line>16</line>
+          <properties lambdaOrdinal="-1" />
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__2.ic" NAME="Scenario: Sending a message with an order - Example #2 Coverage Results" MODIFIED="1622903530079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>cucumber.cli.*</FILTER>
+    </SUITE>
     <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__1.ic" NAME="Scenario: Sending a message with an order - Example #1 Coverage Results" MODIFIED="1622904095845" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>cucumber.cli.*</FILTER>
     </SUITE>
     <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order.ic" NAME="Scenario: Sending a message with an order Coverage Results" MODIFIED="1622927757175" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
-      <FILTER>cucumber.cli.*</FILTER>
-    </SUITE>
-    <SUITE FILE_PATH="coverage/javascript_easy_as_pie$Scenario__Sending_a_message_with_an_order___Example__2.ic" NAME="Scenario: Sending a message with an order - Example #2 Coverage Results" MODIFIED="1622903530079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
       <FILTER>cucumber.cli.*</FILTER>
     </SUITE>
   </component>

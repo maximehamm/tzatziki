@@ -74,6 +74,31 @@ val notes by extra {"""
      */
 }
 
+//    const val PLATFORM_TYPE_ANDROID_STUDIO = "AI"
+//    const val PLATFORM_TYPE_CLION = "CL"
+//    const val PLATFORM_TYPE_GATEWAY = "GW"
+//    const val PLATFORM_TYPE_GOLAND = "GO"
+//    const val PLATFORM_TYPE_INTELLIJ_COMMUNITY = "IC"
+//    const val PLATFORM_TYPE_INTELLIJ_ULTIMATE = "IU"
+//    const val PLATFORM_TYPE_PHPSTORM = "PS"
+//    const val PLATFORM_TYPE_PYCHARM = "PY"
+//    const val PLATFORM_TYPE_PYCHARM_COMMUNITY = "PC"
+//    const val PLATFORM_TYPE_RIDER = "RD"
+//    const val PLATFORM_TYPE_RUSTROVER = "RR"
+//    const val PLATFORM_TYPE_FLEET = "FLIJ"
+
+//val versions by extra {
+//    mapOf(
+//        "intellij-version" to "IU-2022.3.1",
+//        "cucumberJavascript" to "223.7571.113", // https://plugins.jetbrains.com/plugin/7418-cucumber-js
+//        "gherkin" to "223.7571.113",            //https://plugins.jetbrains.com/plugin/9164-gherkin/versions
+//        "properties" to "223.7571.117",         //https://plugins.jetbrains.com/plugin/11594-properties/versions
+//        "psiViewer" to "223-SNAPSHOT",          //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
+//        "cucumberJava" to "223.7571.123",       //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+//        "scala" to "2022.3.20",                 //https://plugins.jetbrains.com/plugin/1347-scala/versions
+//    )
+//}
+
 val versions by extra {
     mapOf(
         "intellij-version" to "IU-2022.3.1",
