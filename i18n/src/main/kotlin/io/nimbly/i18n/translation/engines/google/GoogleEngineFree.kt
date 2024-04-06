@@ -27,9 +27,11 @@ import java.net.URLEncoder
 
 class GoogleEngineFree(override val type: EEngine) : IEngine {
 
-    override fun label() = "Google Translate"
-
     override fun needApiKey() = false
+    override fun label() = "Google Translate"
+    override fun documentation() = """<html>
+        Use of simple HTTP query. So far no restrictions.<br/>Google can block requests in case of excessive use.
+    </html>""".trimIndent()
 
     override fun translate(
         targetLanguage: String,

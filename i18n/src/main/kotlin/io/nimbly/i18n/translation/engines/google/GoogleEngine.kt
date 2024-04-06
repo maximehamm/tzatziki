@@ -10,6 +10,10 @@ class GoogleEngine(override val type: EEngine) : IEngine {
         TODO("Not yet implemented")
     }
 
+    override fun documentation() = """<html>
+        See documentation <a href='DOC'>here</a>.
+    </html>""".trimIndent()
+
     override fun label() = "Google Translate API"
 
     override fun needApiKey() = true

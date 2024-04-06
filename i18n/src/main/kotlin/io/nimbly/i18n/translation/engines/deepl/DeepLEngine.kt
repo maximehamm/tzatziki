@@ -1,4 +1,4 @@
-package io.nimbly.i18n.translation.engines.google
+package io.nimbly.i18n.translation.engines.deepl
 
 import com.google.gson.Gson
 import com.google.gson.JsonArray
@@ -8,18 +8,19 @@ import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.Translation
 import io.nimbly.i18n.translation.engines.Lang
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
-class DeepLEngine(override val type: EEngine) : IEngine {
-
-    override fun label() = "DeepL API"
+open class DeepLEngine(override val type: EEngine) : IEngine {
 
     override fun needApiKey() = true
+    override fun label() = "DeepL API Free"
+    override fun documentation() = """<html>
+        Free for developpers. 500 000 character limit / month.<br/>
+        Subscribe <a href='https://www.deepl.com/en/pro#developer'>here</a> and receive an API key !
+    </html>""".trimIndent()
 
     override fun translate(
         targetLanguage: String,
@@ -39,7 +40,7 @@ class DeepLEngine(override val type: EEngine) : IEngine {
 
         val body = Gson().toJson(json).toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
-            .url("https://api-free.deepl.com/v2/translate") // https://api.deepl.com/v2/translate
+            .url("https://${getEndpoint()}/v2/translate") // https://api.deepl.com/v2/translate
             .header("Authorization", "DeepL-Auth-Key $apiKey")
             .header("Content-Type", "application/json")
             .post(body)
@@ -65,5 +66,6 @@ class DeepLEngine(override val type: EEngine) : IEngine {
 
     }
 
-
+    open protected fun getEndpoint()
+        = "api-free.deepl.com"
 }
