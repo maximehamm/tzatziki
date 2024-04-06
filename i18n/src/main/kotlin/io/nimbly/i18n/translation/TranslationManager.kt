@@ -105,11 +105,15 @@ object TranslationManager {
     fun getUsages(): Set<PsiElement> {
         return findUsages?.map { it.first }?.toSet() ?: emptySet()
     }
-}
 
+    fun changeEngine(engine: EEngine) {
+        listeners.forEach { it.onEngineChanged(engine) }
+    }
+}
 interface TranslationListener {
     fun onTranslation(event: TranslationEvent)
     fun onUsagesCollected(origin: PsiElement?, usages: Set<PsiElement>)
+    fun onEngineChanged(engine: EEngine)
 }
 
 class TranslationEvent(

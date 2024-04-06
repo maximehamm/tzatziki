@@ -26,6 +26,9 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
     var useRefactoringPreview: Boolean = true
     var useRefactoringSearchInComment: Boolean = true
 
+    /**
+     * Saving state
+     */
     override fun getState(): State {
         val state = State()
 
@@ -47,6 +50,9 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
         return state
     }
 
+    /**
+     * Loading state
+     */
     override fun loadState(state: State) {
 
         this.activeEngine = state.activeEngine

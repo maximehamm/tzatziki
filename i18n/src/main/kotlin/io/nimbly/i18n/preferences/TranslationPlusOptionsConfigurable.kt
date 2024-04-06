@@ -6,11 +6,11 @@ import com.intellij.openapi.ui.setEmptyState
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPasswordField
-import com.intellij.ui.components.JBTextField
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.GridBag
 import io.nimbly.i18n.TranslationPlusSettings
+import io.nimbly.i18n.translation.TranslationManager
 import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import java.awt.BorderLayout
@@ -21,7 +21,6 @@ import javax.swing.Box
 import javax.swing.JComponent
 import javax.swing.JPanel
 
-// See example : ConsoleConfigurable, AutoImportOptionsConfigurable
 class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.NoScroll {
 
     private var main: JPanel? = null
@@ -40,7 +39,6 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         gridBag.anchor(GridBagConstraints.NORTHWEST).setDefaultAnchor(GridBagConstraints.NORTHWEST)
 
         TranslationEngineFactory.engines().forEach { engine ->
-
             p.add(buildEnginePanel(engine), gridBag.nextLine().next())
             p.add(Box.createHorizontalGlue(), gridBag.next().coverLine())
         }
@@ -110,6 +108,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
     override fun apply() {
         mySettings.activeEngine = this.checkBoxes.first { it.second.isSelected }.first.type
         mySettings.keys = this.keys.map { it.first.type to it.second.text }.toMap()
+
+        TranslationManager.changeEngine(mySettings.activeEngine)
     }
 
     override fun getId(): String {

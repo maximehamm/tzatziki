@@ -44,13 +44,16 @@ import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBFont
+import com.intellij.util.ui.JBHtmlEditorKit
 import com.intellij.util.ui.JBUI
 import icons.ActionI18nIcons
 import icons.ActionI18nIcons.I18N
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.preferences.TranslationPlusOptionsConfigurable
 import io.nimbly.i18n.translation.*
+import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.*
 import java.awt.*
 import java.awt.event.*
@@ -59,6 +62,7 @@ import javax.swing.*
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
 import javax.swing.border.EmptyBorder
+import javax.swing.event.HyperlinkEvent
 
 
 private val ComboBox<Lang>.lang: Lang
@@ -71,6 +75,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     private val panel = JBPanelWithEmptyText()
 
+    private val titlePane: JEditorPane = JEditorPane()
     private lateinit var tSelection: JBTextArea
     private lateinit var tTranslation: JBTextArea
 
@@ -429,22 +434,23 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     private fun initPanel(): JPanel {
 
-//        ShowSettingsUtil.getInstance().editConfigurable(null, "Translation+")
-
         val main = JBPanelWithEmptyText(GridLayoutManager(7, 4))
         main.border = JBUI.Borders.empty()
         main.withEmptyText("")
-        main.add(
-            JBLabel(
-                """<html>
-                Translating text :<br/>
-                 &nbsp; ✓ <b>Select the “input” language or use “auto”</b><br/>
-                 &nbsp; ✓ <b>Select the “output” language</b><br/>
-                 &nbsp; ✓ <b>Select some text in the editor</b> (<i>Gherkin, Java, etc.</i>)<br/>
-                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string literal to translate</b><br/>
-                 <br/>
-                </html>""".trimMargin()
-            ),
+
+        titlePane.editorKit = JBHtmlEditorKit() // HTMLEditorKitBuilder.simple()
+        titlePane.isEditable = false // Set the JEditorPane to be non-editable
+        titlePane.contentType = "text/html" // Set the content type
+        titlePane.cursor = Cursor(Cursor.HAND_CURSOR)
+
+        titlePane.addHyperlinkListener { e ->
+            if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+                ShowSettingsUtil.getInstance().editConfigurable(this, TranslationPlusOptionsConfigurable())
+            }
+        }
+        initTitle()
+
+        main.add(titlePane,
             GridConstraints(
                 0, 0, 1, 4,
                 ANCHOR_NORTHWEST, FILL_BOTH,
@@ -594,6 +600,19 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         return panel
     }
 
+    private fun initTitle() {
+        val activeEngine = TranslationEngineFactory.engine(TranslationPlusSettings.getSettings().activeEngine)
+        titlePane.text =
+            """<html>
+                Translating text using <a href='GO_ENGINE'>${activeEngine.label()}</a><br/>
+                 &nbsp; ✓ <b>Select the “input” language or use “auto”</b><br/>
+                 &nbsp; ✓ <b>Select the “output” language</b><br/>
+                 &nbsp; ✓ <b>Select some text in the editor</b> (<i>Gherkin, Java, etc.</i>)<br/>
+                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>or put cursor into the string literal to translate</b><br/>
+                 <br/>
+                </html>""".trimMargin()
+    }
+
     private fun initRefactoringSetupPanel(refactoringModel: RefactoringSetup): JBPanelWithEmptyText {
 
         refactoring.addActionListener {
@@ -670,6 +689,10 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     override fun onUsagesCollected(origin: PsiElement?, usages: Set<PsiElement>) {
         refactoringText.refresh(usages, origin)
+    }
+
+    override fun onEngineChanged(engine: EEngine) {
+        initTitle()
     }
 }
 
