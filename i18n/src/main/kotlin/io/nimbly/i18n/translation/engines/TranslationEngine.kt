@@ -3,7 +3,6 @@ package io.nimbly.i18n.translation.engines
 import io.nimbly.i18n.translation.engines.EEngine.*
 import io.nimbly.i18n.translation.engines.deepl.DeepLEngine
 import io.nimbly.i18n.translation.engines.deepl.DeepLEnginePro
-import io.nimbly.i18n.translation.engines.google.GoogleEngine
 import io.nimbly.i18n.translation.engines.google.GoogleEngineFree
 import java.io.IOException
 
@@ -49,6 +48,8 @@ interface IEngine {
     fun needApiKey() : Boolean
 
     fun documentation(): String
+
+    fun languages(): Map<String, String>
 }
 
 data class Translation(

@@ -7,10 +7,10 @@ import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.project.DumbAwareAction
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.EFormat
 import io.nimbly.i18n.util.EStyle
 import io.nimbly.i18n.util.TranslationIcons
-import io.nimbly.i18n.util.languagesMap
 
 class TranslateErrorToInputAction : TranslateErrorAction() {
     override fun getLanguage(): String {
@@ -32,6 +32,10 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
 
         val lang = getLanguage()
         val node = event.getData(PlatformCoreDataKeys.SELECTED_ITEM) as? ProblemNode
+
+        val mySettings = TranslationPlusSettings.getSettings()
+        val activeEngine = mySettings.activeEngine
+        val languagesMap = TranslationEngineFactory.engine(activeEngine).languages()
 
         event.presentation.isVisible = lang != Lang.AUTO.code
         event.presentation.isEnabled = node != null

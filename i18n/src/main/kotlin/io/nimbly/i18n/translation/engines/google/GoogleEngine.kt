@@ -17,4 +17,8 @@ class GoogleEngine(override val type: EEngine) : IEngine {
     override fun label() = "Google Translate API"
 
     override fun needApiKey() = true
+
+    override fun languages(): Map<String, String> {
+        TODO("Not yet implemented")
+    }
 }

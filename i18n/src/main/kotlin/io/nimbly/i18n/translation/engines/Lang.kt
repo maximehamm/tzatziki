@@ -1,7 +1,5 @@
 package io.nimbly.i18n.translation.engines
 
-import io.nimbly.i18n.util.languagesMap
-
 data class Lang(val code: String, val name: String) {
 
     override fun toString(): String {
@@ -11,7 +9,7 @@ data class Lang(val code: String, val name: String) {
     fun isAuto() = code == "auto"
 
     companion object {
-        val DEFAULT = Lang("en", languagesMap["en"]!!)
+        val DEFAULT = Lang("en", "English")
         val AUTO = Lang("auto", "Auto")
     }
 }

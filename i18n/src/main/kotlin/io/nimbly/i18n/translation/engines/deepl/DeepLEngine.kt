@@ -68,4 +68,38 @@ open class DeepLEngine(override val type: EEngine) : IEngine {
 
     open protected fun getEndpoint()
         = "api-free.deepl.com"
+
+    override fun languages() = mapOf(
+        "bg" to "Bulgarian",
+        "cs" to "Czech",
+        "da" to "Danish",
+        "de" to "German",
+        "el" to "Greek",
+        "en-gb" to "English (British)",
+        "en-us" to "English (American)",
+        "es" to "Spanish",
+        "et" to "Estonian",
+        "fi" to "Finnish",
+        "fr" to "French",
+        "hu" to "Hungarian",
+        "id" to "Indonesian",
+        "it" to "Italian",
+        "ja" to "Japanese",
+        "ko" to "Korean",
+        "lt" to "Lithuanian",
+        "lv" to "Latvian",
+        "nb" to "Norwegian (Bokmål)",
+        "nl" to "Dutch",
+        "pl" to "Polish",
+        "pt-br" to "Portuguese (Brazilian)",
+        "pt-pt" to "Portuguese (European)",
+        "ro" to "Romanian",
+        "ru" to "Russian",
+        "sk" to "Slovak",
+        "sl" to "Slovenian",
+        "sv" to "Swedish",
+        "tr" to "Turkish",
+        "uk" to "Ukrainian",
+        "zh" to "Chinese (simplified)"
+    )
 }

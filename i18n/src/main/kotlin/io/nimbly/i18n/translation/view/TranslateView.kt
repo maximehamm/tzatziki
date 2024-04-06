@@ -66,10 +66,11 @@ import javax.swing.event.HyperlinkEvent
 
 
 private val ComboBox<Lang>.lang: Lang
-    get() = this.selectedItem as Lang
+    get() = (this.selectedItem ?: Lang.DEFAULT) as Lang
 
 class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
+    private var languagesMap: Map<String, String>? = null
     private var ctxt = Context()
     private val refactoringModel = RefactoringSetup()
 
@@ -158,6 +159,11 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     }.apply { isEnabled = false }
 
     init {
+
+        val mySettings = TranslationPlusSettings.getSettings()
+        val activeEngine = mySettings.activeEngine
+        this.languagesMap = TranslationEngineFactory.engine(activeEngine).languages()
+
         setContent(initPanel())
 
         EditorFactory.getInstance()
@@ -193,7 +199,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             }
         })
 
-        val isoCodes = languagesMap.map { Lang(it.key, it.value) }.sortedBy { it.name }
+        val isoCodes = languagesMap!!.map { Lang(it.key, it.value) }.sortedBy { it.name }
 
         val settings = TranslationPlusSettings.getSettings()
         val input = settings.input
@@ -336,7 +342,15 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     }
 
     fun swapLanguages() {
-        val input = if (this.inputLanguage.lang.isAuto()) Lang.DEFAULT else this.inputLanguage.lang
+        val input =
+            if (this.inputLanguage.lang.isAuto()) {
+                val model = this.inputLanguage.model as CollectionComboBoxModel<Lang>
+                model.items.find { it.code == Lang.DEFAULT.code }
+                    ?: model.items.find { it.code.startsWith(Lang.DEFAULT.code) }
+                        ?: Lang.DEFAULT
+            } else {
+                this.inputLanguage.lang
+            }
         val output = this.outputLanguage.lang
 
         this.inputLanguage.selectedItem = output
@@ -697,6 +711,25 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
     override fun onEngineChanged(engine: EEngine) {
         initTitle()
+
+        this.languagesMap = TranslationEngineFactory.engine(engine).languages()
+        val isoCodes = languagesMap!!.map { Lang(it.key, it.value) }.sortedBy { it.name }
+
+        fun refresh(combo: ComboBox<Lang>, auto: Boolean) {
+            val model = combo.model as CollectionComboBoxModel<Lang>
+            val selection = model.selected?.code
+            model.removeAll()
+            if (auto)
+                model.add(Lang.AUTO)
+            model.add(isoCodes)
+            model.selectedItem =
+                model.items.find { it.code == selection }
+                    ?: model.items.find { it.code.startsWith(Lang.DEFAULT.code) }
+                        ?: Lang.DEFAULT
+        }
+
+        refresh(this.inputLanguage, true)
+        refresh(this.outputLanguage, false)
     }
 }
 
