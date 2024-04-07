@@ -12,7 +12,6 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
-import io.nimbly.tzatziki.view.features.FeaturePanel
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
@@ -80,7 +79,7 @@ class TzBreakpointListener : StartupActivity {
                         } else {
                             refreshCode(breakpoint, action)
                         }
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         LOG.warn("Refresh issue", e)
                     }
                 }
