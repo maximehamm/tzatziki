@@ -15,6 +15,7 @@
 package io.nimbly.i18n.util
 
 import com.intellij.openapi.util.IconLoader
+import com.intellij.ui.JBColor
 import com.intellij.util.IconUtil
 import java.awt.Color
 import javax.swing.Icon
@@ -23,12 +24,13 @@ interface TranslationIcons {
 
     companion object {
 
-        fun getFlag(locale: String, scaleRatio: Double = 0.8): Icon? {
+        fun getFlag(locale: String, scaleRatio: Double = 0.8): ZIcon {
+
             var icon = FLAGS[locale + scaleRatio]
             if (icon != null) return icon
 
-            icon = FLAGS[locale.substringBefore("-") + scaleRatio]
-            if (icon != null) return icon
+//            icon = FLAGS[locale.substringBefore("-") + scaleRatio]
+//            if (icon != null) return icon
 
             try {
                 var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$locale.png", TranslationIcons::class.java)
@@ -38,17 +40,25 @@ interface TranslationIcons {
                         throw NullPointerException()
                     }
                 }
-                if (ico != null)
-                    ico = IconUtil.scale(ico, scaleRatio)
-                icon = ico
+                if (ico == null)
+                    throw NullPointerException()
+                ico = IconUtil.scale(ico, scaleRatio)
+                icon = ZIcon(locale, ico, true)
             } catch (ignored: Throwable) {
-                icon = textToIcon(locale.uppercase(), (scaleRatio * 11f).toFloat(), -1, Color.GRAY)
+                val ticon = textToIcon(locale.uppercase(), (scaleRatio * 11f).toFloat(), -1, JBColor.GRAY)
+                icon = ZIcon(locale, ticon, false)
             }
-            FLAGS[locale + scaleRatio] = icon
+            FLAGS[locale + scaleRatio] = icon!!
 
             return icon
         }
 
-        private val FLAGS: MutableMap<String, Icon?> = HashMap()
+        private val FLAGS: MutableMap<String, ZIcon?> = HashMap()
     }
 }
+
+class ZIcon(
+    val locale: String,
+    icon: Icon,
+    val flag: Boolean = true
+) : Icon by icon

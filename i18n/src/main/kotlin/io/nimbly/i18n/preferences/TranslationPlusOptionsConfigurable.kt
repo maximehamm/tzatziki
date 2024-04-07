@@ -1,13 +1,12 @@
 package io.nimbly.i18n.preferences
 
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.SearchableConfigurable
-import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.ui.panel.ComponentPanelBuilder
-import com.intellij.ui.components.JBCheckBox
-import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBPasswordField
+import com.intellij.ui.JBColor
+import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
 import com.intellij.uiDesigner.core.GridLayoutManager
@@ -19,10 +18,13 @@ import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.TranslationManager
 import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
+import io.nimbly.i18n.util.TranslationIcons
 import java.awt.*
+import java.awt.FlowLayout.LEFT
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 import javax.swing.plaf.LabelUI
+import kotlin.math.ceil
 
 class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.NoScroll {
 
@@ -75,7 +77,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     private fun buildEnginePanel(engine: IEngine): JPanel {
 
-        val p = JPanel(GridLayoutManager(2, 2, JBInsets(0, 0, 5, 5), 5, 0))
+        val p = JPanel(GridLayoutManager(3, 2, JBInsets(0, 5, 8 , 5), 5, 0))
+        p.border = BorderFactory.createMatteBorder(0, 1, 0, 0, CommentLabel("").foreground)
 
         val check = JBCheckBox(engine.label(), false)
         p.add(check, GridConstraints(
@@ -118,13 +121,31 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                 BrowserUtil.browse(e.url)
             }
         }
-
         p.add(doc, GridConstraints(
             1, 1, 1, 1,
             ANCHOR_NORTHWEST, FILL_HORIZONTAL,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
             SIZEPOLICY_CAN_SHRINK,
             null, null, null, 1
+        ))
+
+        val langs = JBPanelWithEmptyText(BorderLayout())
+        langs.layout = FlowLayout(LEFT, 5, 5)
+        langs.border = JBUI.Borders.emptyTop(10)
+
+        engine.languages()
+            .map { TranslationIcons.getFlag(it.key) }
+            .sortedBy { (if (it.flag) "A" else "Z") + "#" + it.locale }
+            .forEach { flag ->
+                langs.add(JBLabel(flag).apply { toolTipText = flag.locale })
+            }
+        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12)
+        p.add(langs, GridConstraints(
+            2, 0, 1, 2,
+            ANCHOR_NORTHWEST, FILL_NONE,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+            null, dimension,  dimension,2
         ))
 
         check.addActionListener { event ->
