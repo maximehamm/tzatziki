@@ -22,7 +22,8 @@
     <description><![CDATA[
 
     <b>Translate anything to 83 languages !</b><br/>
-    <b>No proxy problem, no API key ! Works with all Jetbrains products !</b><br/>
+    <b>Choose the free “Google Translate” or “DeepL” engine!</b><br/>
+    <b>Works with all Jetbrains products !</b><br/>
     <br/>
       • Select some text to localize inside editor<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
@@ -97,6 +98,14 @@
        <li>Select anything in editor (javascript, gherki, text...)</li>
        <li>Go to “Dictionary” view</li>
        <li>Click “Search definition”</li>
+    </ul>
+
+    <br/><br/>
+    <b>Settings : </b><br/><br/>
+    <ul>
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ef52ce13-f5e1-4025-a567-5e1f9bc58041"
+              alt="Dictionary view" width="690" height="388"></p>
+       <li>Choose “Google Translate”, “DeepL”, ...</li>
     </ul>
 
     <br/><br/>

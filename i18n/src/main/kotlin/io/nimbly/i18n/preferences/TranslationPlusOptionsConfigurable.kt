@@ -1,11 +1,9 @@
 package io.nimbly.i18n.preferences
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.actionSystem.Separator
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.ui.panel.ComponentPanelBuilder
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
@@ -36,8 +34,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun createComponent(): JComponent? {
 
-//         if (main != null)
-//             return main
+         if (main != null)
+             return main
 
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()
@@ -77,7 +75,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     private fun buildEnginePanel(engine: IEngine): JPanel {
 
-        val p = JPanel(GridLayoutManager(3, 2, JBInsets(0, 5, 8 , 5), 5, 0))
+        val p = JPanel(GridLayoutManager(3, 2, JBInsets(0, 5, 10 , 5), 5, 0))
         p.border = BorderFactory.createMatteBorder(0, 1, 0, 0, CommentLabel("").foreground)
 
         val check = JBCheckBox(engine.label(), false)
@@ -139,7 +137,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             .forEach { flag ->
                 langs.add(JBLabel(flag).apply { toolTipText = flag.locale })
             }
-        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 15)
+        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12 + 3)
         p.add(langs, GridConstraints(
             2, 0, 1, 2,
             ANCHOR_NORTHWEST, FILL_NONE,
