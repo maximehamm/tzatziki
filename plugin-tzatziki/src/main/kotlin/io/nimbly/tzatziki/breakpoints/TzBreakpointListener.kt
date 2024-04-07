@@ -32,7 +32,7 @@ class TzBreakpointListener : StartupActivity {
             .subscribe(XBreakpointListener.TOPIC, object : XBreakpointListener<XBreakpoint<*>> {
 
                 override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
-                    if (!TOGGLE_CUCUMBER_PL)
+                    if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
                         return
                     if (changeInProgress)
                         return
@@ -45,7 +45,7 @@ class TzBreakpointListener : StartupActivity {
                 }
 
                 override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
-                    if (!TOGGLE_CUCUMBER_PL)
+                    if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
                         return
                     if (addInProgress)
                         return
@@ -58,7 +58,7 @@ class TzBreakpointListener : StartupActivity {
                 }
 
                 override fun breakpointRemoved(breakpoint: XBreakpoint<*>) {
-                    if (!TOGGLE_CUCUMBER_PL)
+                    if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
                         return
                     if (removeInProgress)
                         return

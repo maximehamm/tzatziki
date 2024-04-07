@@ -15,11 +15,10 @@
 
 package io.nimbly.tzatziki.util
 
-import com.intellij.vcs.log.history.removeTrivialMerges
+import com.intellij.debugger.engine.JavaDebugProcess
 import java.lang.reflect.Field
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import javax.swing.Icon
 
 object JavaUtil {
 
@@ -60,6 +59,15 @@ object JavaUtil {
     }
 }
 
+fun isJavaPresent(): Boolean {
+    return try {
+        val clz: Class<JavaDebugProcess> = JavaDebugProcess::class.java
+        clz.toString()
+        true
+    } catch (e: NoClassDefFoundError) {
+        false
+    }
+}
 fun <E> MutableList<E>.push(element: E) = add(element)
 
 fun <E> MutableList<E>.peek() = this.lastOrNull()

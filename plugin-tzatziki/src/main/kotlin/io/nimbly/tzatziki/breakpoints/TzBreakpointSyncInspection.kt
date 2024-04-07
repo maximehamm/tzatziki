@@ -39,7 +39,7 @@ class TzBreakpointSyncInspection : GherkinInspection() {
 
             override fun visitFile(file: PsiFile) {
 
-                if (!TOGGLE_CUCUMBER_PL)
+                if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
                     return
 
                 // Remove orphan breakpoints

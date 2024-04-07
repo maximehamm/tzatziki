@@ -37,11 +37,10 @@ class TzRunCodeListener : StartupActivity {
                 override fun processStarted(debugProcess: XDebugProcess) {
 
                     LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
-                    if (debugProcess !is JavaDebugProcess) return
-
-                    if (!TOGGLE_CUCUMBER_PL)
+                    if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
                         return
 
+                    if (debugProcess !is JavaDebugProcess) return
                     debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
                         override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
@@ -111,6 +110,9 @@ class TzRunCodeListener : StartupActivity {
                 }
 
                 override fun processStopped(debugProcess: XDebugProcess) {
+
+                    if (!TOGGLE_CUCUMBER_PL)
+                        return
 
                     LOG.info("C+ XDebuggerManager.TOPIC - processStopped : " + debugProcess::class.java)
                     project.cucumberExecutionTracker().removeHighlighters()
