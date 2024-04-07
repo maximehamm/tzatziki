@@ -4,6 +4,7 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.ui.panel.ComponentPanelBuilder
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
 import com.intellij.uiDesigner.core.GridConstraints.*
@@ -15,10 +16,15 @@ import com.intellij.util.ui.JBUI
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.TranslationManager
 import io.nimbly.i18n.translation.engines.IEngine
+import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.TranslationIcons
+import io.nimbly.i18n.util.ZIcon
 import java.awt.*
 import java.awt.FlowLayout.LEFT
+import java.awt.event.ActionEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 import javax.swing.plaf.LabelUI
@@ -31,11 +37,12 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
     private val keys: MutableList<Pair<IEngine, JBPasswordField>> = mutableListOf()
 
     private val mySettings = TranslationPlusSettings.getSettings()
+    private var testAction: AbstractAction? = null
 
     override fun createComponent(): JComponent? {
 
-         if (main != null)
-             return main
+//         if (main != null)
+//             return main
 
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()
@@ -48,7 +55,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             p.add(buildEnginePanel(engine), gridBag.nextLine().next().insetBottom(10))
         }
 
-        main = JPanel(GridLayoutManager(2, 1))
+        main = JPanel(GridLayoutManager(3, 1))
 
         main!!.add(
             JBLabel("""<html>
@@ -66,11 +73,71 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             1, 0, 1, 1,
             ANCHOR_NORTHWEST, FILL_NONE,
             SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-            SIZEPOLICY_CAN_GROW,
+            SIZEPOLICY_CAN_SHRINK,
           null, null, null
         ))
 
+        main!!.add(buildTestPanel(), GridConstraints(
+                2, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_GROW,
+                null, null, null
+            ))
+
         return main
+    }
+
+    private fun buildTestPanel(): JPanel {
+
+        var text = "Happy new Year !"
+        val testLabel = JBLabel(text)
+        val foreground = testLabel.foreground
+        val p = JPanel(GridLayoutManager(1, 2, JBInsets(0, 5, 10 , 5), 10, 0))
+
+        testAction = object : AbstractAction("Test", TranslationIcons.getFlag("fr")) {
+            override fun actionPerformed(e: ActionEvent) {
+
+                val engine = checkBoxes.firstOrNull { it.second.isSelected }?.first ?: return
+                val lang = (testAction!!.getValue(SMALL_ICON) as ZIcon).locale
+                testLabel.foreground = foreground
+                try {
+                    val translation = engine.translate(
+                        lang,
+                        Lang.AUTO.code,
+                        text
+                    )
+                    if (translation != null) {
+                        text = translation.translated
+                        testLabel.text = text
+                        val newLang = engine.languages().keys.filter { it != lang }.random()
+                        testAction!!.putValue(SMALL_ICON, TranslationIcons.getFlag(newLang))
+                        testAction!!.putValue(SHORT_DESCRIPTION, "Translate to " + engine.languages()[newLang])
+                    }
+                } catch (e: Exception) {
+                    testLabel.text = e.message
+                    testLabel.foreground = JBColor.RED
+                }
+            }
+        }
+        testAction!!.putValue(Action.SHORT_DESCRIPTION, "Translate to French")
+
+        p.add(JButton(testAction), GridConstraints(
+                0, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_GROW,
+                null, null, null
+            ))
+        p.add(testLabel, GridConstraints(
+                0, 1, 1, 1,
+                ANCHOR_WEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_GROW,
+                null, null, null
+            ))
+
+        return p
     }
 
     private fun buildEnginePanel(engine: IEngine): JPanel {
@@ -132,10 +199,18 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         langs.border = JBUI.Borders.emptyTop(10)
 
         engine.languages()
-            .map { TranslationIcons.getFlag(it.key) }
-            .sortedBy { (if (it.flag) "A" else "Z") + "#" + it.locale }
-            .forEach { flag ->
-                langs.add(JBLabel(flag).apply { toolTipText = flag.locale })
+            .map { TranslationIcons.getFlag(it.key) to it.value }
+            .sortedBy { (if (it.first.flag) "A" else "Z") + "#" + it.second }
+            .forEach { (flag, lang) ->
+                langs.add(JBLabel(flag).apply {
+                    toolTipText = "$lang (${flag.locale.uppercase()})"
+                    addMouseListener(object : MouseAdapter() {
+                        override fun mouseClicked(e: MouseEvent?) {
+                            testAction!!.putValue(AbstractAction.SMALL_ICON, flag)
+                            testAction!!.putValue(AbstractAction.SHORT_DESCRIPTION, "Translate to " + engine.languages()[flag.locale])
+                        }
+                    })
+                })
             }
         val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12 + 3)
         p.add(langs, GridConstraints(
@@ -150,6 +225,12 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             key?.isEnabled = check.isSelected
             if (check.isSelected)
                 checkBoxes.filter { it.second != check }.forEach { it.second.isSelected = false }
+            else
+                checkBoxes.first().second.isSelected = true
+
+            val selectedEngine = checkBoxes.first{ it.second.isSelected }.first
+            val newLang = selectedEngine.languages().keys.random()
+            testAction!!.putValue(AbstractAction.SMALL_ICON, TranslationIcons.getFlag(newLang))
         }
 
         check.isSelected = engine.type == mySettings.activeEngine

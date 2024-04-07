@@ -41,11 +41,15 @@ object TranslationManager {
         val engine = TranslationEngineFactory.engine(activeEngine)
 
         val translation =
-            if (format.preserveQuotes && translationText.surroundedWith("\n"))
-                engine.translate(targetLanguage, sourceLanguage, translationText.removeSurrounding("\""))
-                    ?.apply { this.translated = this.translated.surround("\"")}
-            else
-                engine.translate(targetLanguage, sourceLanguage, translationText)
+            try {
+                if (format.preserveQuotes && translationText.surroundedWith("\n"))
+                    engine.translate(targetLanguage, sourceLanguage, translationText.removeSurrounding("\""))
+                        ?.apply { this.translated = this.translated.surround("\"")}
+                else
+                    engine.translate(targetLanguage, sourceLanguage, translationText)
+            } catch (e: Exception) {
+                null
+            }
 
 
         if (translation != null) {

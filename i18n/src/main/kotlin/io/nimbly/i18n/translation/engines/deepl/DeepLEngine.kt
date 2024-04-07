@@ -4,10 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.nimbly.i18n.TranslationPlusSettings
-import io.nimbly.i18n.translation.engines.EEngine
-import io.nimbly.i18n.translation.engines.IEngine
-import io.nimbly.i18n.translation.engines.Translation
-import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.*
+import io.nimbly.i18n.util.nullIfEmpty
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -61,7 +59,9 @@ open class DeepLEngine(override val type: EEngine) : IEngine {
             return Translation(translatedText, detectedSourceLanguage)
 
         } else {
-            return null
+            val msg = response.message.nullIfEmpty()
+                ?: (if (response.code == 403) "Forbidden" else "Http error")
+            throw TranslationException("${response.code}: $msg")
         }
 
     }

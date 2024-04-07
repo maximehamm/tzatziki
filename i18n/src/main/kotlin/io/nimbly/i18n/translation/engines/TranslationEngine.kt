@@ -6,13 +6,12 @@ import io.nimbly.i18n.translation.engines.deepl.DeepLEnginePro
 import io.nimbly.i18n.translation.engines.google.GoogleEngineFree
 import java.io.IOException
 
-enum class EEngine { GOOGLE_FREE, GOOGLE, DEEPL, DEEPL_PRO }
+enum class EEngine { GOOGLE_FREE, DEEPL, DEEPL_PRO }
 
 object TranslationEngineFactory {
 
     private val engines = listOf(
         GoogleEngineFree(GOOGLE_FREE),
-        //GoogleEngine(GOOGLE),
         DeepLEngine(DEEPL),
         DeepLEnginePro(DEEPL_PRO),
     )
@@ -56,3 +55,5 @@ data class Translation(
     var translated: String,
     val sourceLanguageIndentified: String
 )
+
+class TranslationException(msg: String) : Exception(msg)
