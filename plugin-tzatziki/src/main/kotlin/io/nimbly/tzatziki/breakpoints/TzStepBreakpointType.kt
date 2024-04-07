@@ -19,14 +19,19 @@ class TzStepBreakpointType: TzBreakpointType("tzatziki.gherkin.step", "Cucumber+
 
     override fun canPutAt(vfile: VirtualFile, line: Int, project: Project): Boolean {
 
-        val file = vfile.getFile(project) ?: return false
-        val doc = file.getDocument() ?: return false
-        val lineRange = doc.getLineRange(line).shrink(1, 1)
-        val step = file.findElementsOfTypeInRange(lineRange, GherkinStep::class.java).firstOrNull()
-        if (step != null && line == step.getDocumentLine())
-            return true
+        try {
+            val file = vfile.getFile(project) ?: return false
+            val doc = file.getDocument() ?: return false
+            val lineRange = doc.getLineRange(line).shrink(1, 1)
+            val step = file.findElementsOfTypeInRange(lineRange, GherkinStep::class.java).firstOrNull()
+            if (step != null && line == step.getDocumentLine())
+                return true
 
-        return false
+            return false
+        } catch (e: NoClassDefFoundError) {
+            // Happed if Jetbrain product does dot support Java at all
+            return false
+        }
     }
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?)
@@ -38,17 +43,23 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
 
     override fun canPutAt(vfile: VirtualFile, line: Int, project: Project): Boolean {
 
-        val file = vfile.getFile(project) ?: return false
-        val doc = file.getDocument() ?: return false
-        val lineRange = doc.getLineRange(line).shrink(1, 1)
+        try {
+            val file = vfile.getFile(project) ?: return false
+            val doc = file.getDocument() ?: return false
+            val lineRange = doc.getLineRange(line).shrink(1, 1)
 
-        val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
-        if (row != null && row !is GherkinTableHeaderRowImpl) {
-            val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
-            return examples != null
+            val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
+            if (row != null && row !is GherkinTableHeaderRowImpl) {
+                val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
+                return examples != null
+            }
+
+            return false
+
+        } catch (e: NoClassDefFoundError) {
+            // Happed if Jetbrain product does dot support Java at all
+            return false
         }
-
-        return false
     }
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?): String {
