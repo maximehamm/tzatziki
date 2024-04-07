@@ -15,6 +15,7 @@
 package io.nimbly.i18n.dictionary
 
 import com.intellij.codeInsight.daemon.impl.HintRenderer
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -28,8 +29,9 @@ import icons.ActionI18nIcons
 import io.nimbly.i18n.util.*
 import io.nimbly.i18n.util.EHint.DEFINITION
 
-@Suppress("MissingActionUpdateThread")
 open class DictionaryAction : AnAction() , DumbAware {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun update(event: AnActionEvent) {
         val editor = event.getData(CommonDataKeys.EDITOR)
@@ -167,8 +169,7 @@ open class DictionaryAction : AnAction() , DumbAware {
         inlayModel.addInlineElement<HintRenderer>(startOffset, p, renderer)
     }
 
-    override fun isDumbAware()
-        = true
+    override fun isDumbAware() = true
 }
 
 private fun String.removeStartParenthesis(): String {

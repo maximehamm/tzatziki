@@ -17,6 +17,7 @@ package io.nimbly.i18n.translation
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.ide.util.PropertiesComponent
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.Editor
@@ -44,8 +45,9 @@ import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Translation
 import io.nimbly.i18n.util.*
 
-@Suppress("MissingActionUpdateThread")
 open class TranslateAction : DumbAwareAction()  {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun update(event: AnActionEvent) {
         doUpdate(event, null)

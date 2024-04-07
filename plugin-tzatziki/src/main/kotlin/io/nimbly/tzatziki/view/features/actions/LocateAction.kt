@@ -2,11 +2,13 @@ package io.nimbly.tzatziki.view.features.actions
 
 import io.nimbly.tzatziki.view.features.FeaturePanel
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 
-@Suppress("MissingActionUpdateThread")
 class LocateAction(val panel: FeaturePanel) : AnAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     init {
         this.templatePresentation.text = "Select opened file"
@@ -16,7 +18,4 @@ class LocateAction(val panel: FeaturePanel) : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         panel.selectFromEditor()
     }
-
-    // Compatibility : introduced 2022.2.4
-    //override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }

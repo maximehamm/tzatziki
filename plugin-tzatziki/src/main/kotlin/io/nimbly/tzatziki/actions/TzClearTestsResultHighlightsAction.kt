@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -7,8 +8,9 @@ import io.nimbly.tzatziki.run.cucumberExecutionTracker
 import io.nimbly.tzatziki.testdiscovery.ClearAnnotationsFix
 import io.nimbly.tzatziki.testdiscovery.TzTestRegistry
 
-@Suppress("MissingActionUpdateThread")
 class TzClearTestsResultHighlightsAction : AnAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun actionPerformed(e: AnActionEvent) {
 

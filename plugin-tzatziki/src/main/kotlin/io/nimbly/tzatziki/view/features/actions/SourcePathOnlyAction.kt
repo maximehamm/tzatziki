@@ -1,14 +1,15 @@
 package io.nimbly.tzatziki.view.features.actions
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.ui.IconManager
 import io.nimbly.tzatziki.services.tzFileService
 import io.nimbly.tzatziki.view.features.FeaturePanel
 
-@Suppress("MissingActionUpdateThread")
 class SourcePathOnlyAction(val panel: FeaturePanel) : ToggleAction() {
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
     init {
         this.templatePresentation.text = "Source and resource path only"
         this.templatePresentation.icon = AllIcons.Modules.ResourcesRoot
@@ -20,7 +21,4 @@ class SourcePathOnlyAction(val panel: FeaturePanel) : ToggleAction() {
         panel.sourcePathOnly(state)
         panel.project.tzFileService().sourcePathOnly = state
     }
-
-    // Compatibility : introduced 2022.2.4
-    //override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }

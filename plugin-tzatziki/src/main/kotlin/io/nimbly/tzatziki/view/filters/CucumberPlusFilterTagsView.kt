@@ -14,10 +14,7 @@
  */
 package io.nimbly.tzatziki.view.filters
 
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.actionSystem.ToggleAction
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -246,8 +243,8 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
     }
 }
 
-@Suppress("MissingActionUpdateThread")
 class FilterItAction(val project: Project) : ToggleAction() {
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
     init {
         this.templatePresentation.text = "Filter per tags"
         this.templatePresentation.icon = ActionIcons.FILTER
@@ -269,7 +266,4 @@ class FilterItAction(val project: Project) : ToggleAction() {
         tzService.filterByTags = state
         tzService.updateTagsFilter(exp)
     }
-
-    // Compatibility : introduced 2022.2.4
-    //override fun getActionUpdateThread() = ActionUpdateThread.BGT
 }

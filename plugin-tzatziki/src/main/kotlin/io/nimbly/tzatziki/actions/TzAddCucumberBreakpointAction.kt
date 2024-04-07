@@ -1,5 +1,6 @@
 package io.nimbly.tzatziki.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.editor.LogicalPosition
@@ -13,8 +14,9 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
-@Suppress("MissingActionUpdateThread")
 class TzAddCucumberBreakpointAction : DumbAwareAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getRequiredData(CommonDataKeys.PROJECT)

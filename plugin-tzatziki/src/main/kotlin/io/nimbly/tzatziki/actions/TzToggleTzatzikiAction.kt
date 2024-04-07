@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ToggleAction
@@ -43,4 +44,7 @@ class TzToggleTzatzikiAction : ToggleAction(), DumbAware {
 
     override fun isDumbAware()
         = true
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+
 }

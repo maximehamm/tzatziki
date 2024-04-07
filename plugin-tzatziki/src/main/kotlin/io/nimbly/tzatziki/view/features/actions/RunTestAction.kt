@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.view.features.actions
 
 import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.execution.runners.ExecutionUtil
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import icons.ActionIcons
@@ -15,8 +16,9 @@ import javax.swing.tree.DefaultMutableTreeNode
 
 private const val PRESENTATION_TEXT = "Run Cucumber..."
 
-@Suppress("MissingActionUpdateThread")
 class RunTestAction(val panel: FeaturePanel) : AnAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
 
     init {
         this.templatePresentation.text = PRESENTATION_TEXT

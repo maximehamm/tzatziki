@@ -61,7 +61,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("212")    // 2021.2.4
+        sinceBuild.set("222")    // 2021.2.4
         untilBuild.set("241.*")  // 2024.EAP (241)
 
         changeNotes.set(notes)
