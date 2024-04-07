@@ -57,7 +57,16 @@ fun Project.cucumberExecutionTracker(): TzExecutionCucumberListener.TzExecutionT
 class TzExecutionCucumberListener : StartupActivity {
 
     private val LOG = logger<TzExecutionCucumberListener>()
-    private val REGEX = Regex(" locationHint = '(?:file://)?([^:]+):(\\d+)'(?: name = 'Example #(\\d+)')?")
+
+    /*
+     Windows :
+       ##teamcity[testStarted timestamp = '2024-04-03T06:52:43.058+0000' locationHint = 'file:///C:/projects/cucumber-discovery/src/test/resources/org/maxime/cucumber/Wallet.feature:9' captureStandardOutput = 'true' name = 'Je créé un portefeuille avec 100.0 €']
+     MacOS :
+       ##teamcity[testSuiteStarted timestamp = '2024-04-03T07:14:18.444+0000' locationHint = 'file:///Users/maxime/Development/projects-nimbly/cucumber-discovery/src/test/resources/org/maxime/cucumber/Wallet.feature:1' name = 'Manipulation d|'un portefeuille']
+
+     */
+
+    private val REGEX = Regex(" locationHint = '(?:file:///)?((?:[A-Z]:|/)?[^:]+):(\\d+)'(?: name = 'Example #(\\d+)')?")
 
     data class TzExecutionTracker(
 
@@ -102,8 +111,8 @@ class TzExecutionCucumberListener : StartupActivity {
 
         fun findFile(): VirtualFile? {
             var p = featurePath ?: return null
-            if (p.matches("^/[A-Z]:.*".toRegex()))
-                p = p.substring(1)
+            if (!p.matches("^[A-Z]:.*".toRegex()))
+                p = "/$p"
             val toPath = p.toPath()
             return LocalFileSystem.getInstance().findFileByNioFile(toPath)
         }
@@ -148,7 +157,7 @@ class TzExecutionCucumberListener : StartupActivity {
                             val values = REGEX.find(event.text)?.groupValues
                                 ?:return
 
-                            println(event.text)
+                            // println(event.text)
                             LOG.debug("C+ ExecutionManager.EXECUTION_TOPIC - onTextAvailable - " + event.text)
 
                             val path = values[1].trim()
