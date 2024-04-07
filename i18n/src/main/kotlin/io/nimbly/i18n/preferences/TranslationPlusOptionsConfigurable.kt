@@ -139,7 +139,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             .forEach { flag ->
                 langs.add(JBLabel(flag).apply { toolTipText = flag.locale })
             }
-        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12)
+        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 15)
         p.add(langs, GridConstraints(
             2, 0, 1, 2,
             ANCHOR_NORTHWEST, FILL_NONE,
