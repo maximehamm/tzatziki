@@ -34,7 +34,7 @@ open class DeepLEngine(override val type: EEngine) : IEngine {
         val json = JsonObject()
         json.add("text", JsonArray().also { it.add(textToTranslate) })
         if (!sourceLanguage.equals(Lang.AUTO.code, true)) {
-            json.addProperty("source_lang", sourceLanguage.uppercase())
+            json.addProperty("source_lang", sourceLanguage.uppercase().substringBefore("-"))
         }
         json.addProperty("target_lang", targetLanguage.uppercase())
 
