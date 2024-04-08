@@ -20,11 +20,10 @@ import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.TranslationIcons
 import io.nimbly.i18n.util.ZIcon
+import io.nimbly.i18n.util.nullIfEmpty
 import java.awt.*
 import java.awt.FlowLayout.LEFT
-import java.awt.event.ActionEvent
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import java.awt.event.*
 import javax.swing.*
 import javax.swing.AbstractAction.NAME
 import javax.swing.event.HyperlinkEvent
@@ -40,10 +39,14 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
     private val mySettings = TranslationPlusSettings.getSettings()
     private var testAction: AbstractAction? = null
 
+    private val languageFilterListeners = mutableListOf<IFilterListener>()
+
     override fun createComponent(): JComponent? {
 
          if (main != null)
              return main
+
+        languageFilterListeners.clear()
 
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()
@@ -58,11 +61,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
         main = JPanel(GridLayoutManager(3, 1))
 
-        main!!.add(
-            JBLabel("""<html>
-                Choose your prefered translator engine. Enter the API Key if requested.
-                </html>""".trimMargin()
-        ), GridConstraints(
+
+        main!!.add(buildTitlePanel(), GridConstraints(
             0, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
@@ -87,6 +87,34 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             ))
 
         return main
+    }
+
+    private fun buildTitlePanel(): JPanel {
+        val p = JPanel(GridLayoutManager(1, 2, JBInsets(0, 0, 0 , 0), 10, 0))
+        p.add(JBLabel("""<html>
+                Choose your prefered translator engine. Enter the API Key if requested. Filter languages :
+                </html>""".trimMargin()
+                ), GridConstraints(
+            0, 0, 1, 1,
+            ANCHOR_CENTER, FILL_NONE,
+            SIZEPOLICY_CAN_SHRINK,
+            SIZEPOLICY_CAN_SHRINK,
+            null, null, null
+        ))
+        val filter = JBTextField()
+        filter.addKeyListener(object : KeyAdapter() {
+            override fun keyReleased(e: KeyEvent?) {
+                updateLanguagesFilter(filter.text.trim().nullIfEmpty())
+            }
+        })
+        p.add(filter, GridConstraints(
+            0, 1, 1, 1,
+            ANCHOR_CENTER, FILL_NONE,
+            SIZEPOLICY_CAN_SHRINK,
+            SIZEPOLICY_CAN_SHRINK,
+            null, Dimension(100, 26), null
+        ))
+        return p
     }
 
     private fun buildTestPanel(): JPanel {
@@ -203,7 +231,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             .map { TranslationIcons.getFlag(it.key) to it.value }
             .sortedBy { (if (it.first.flag) "A" else "Z") + "#" + it.second }
             .forEach { (flag, lang) ->
-                langs.add(JBLabel(flag).apply {
+                val flagLabel = FlagLabel(flag)
+                flagLabel.apply {
                     toolTipText = "$lang (${flag.locale.uppercase()})"
                     addMouseListener(object : MouseAdapter() {
                         override fun mouseClicked(e: MouseEvent?) {
@@ -215,7 +244,9 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                             syncCheckboxes(checkBox)
                         }
                     })
-                })
+                }
+                addFilterListener(flagLabel)
+                langs.add(flagLabel)
             }
         val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12 + 3)
         p.add(langs, GridConstraints(
@@ -270,6 +301,34 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun isModified(): Boolean {
         return true
+    }
+
+    private fun addFilterListener(listener: IFilterListener) {
+        this.languageFilterListeners.add(listener)
+    }
+
+    private fun updateLanguagesFilter(filter: String?) {
+        this.languageFilterListeners.forEach {
+            it.filterChanged(filter)
+        }
+    }
+}
+
+interface IFilterListener {
+    fun filterChanged(filter: String?)
+}
+
+class FlagLabel(flag: ZIcon) : JBLabel(flag), IFilterListener {
+    override fun filterChanged(filter: String?) {
+        val visible: Boolean
+        if (filter == null) {
+            visible = true
+        }
+        else {
+            val zIcon = this.icon as ZIcon
+            visible = (zIcon.locale.lowercase().contains(filter.lowercase()))
+        }
+        this.isVisible = visible
     }
 }
 

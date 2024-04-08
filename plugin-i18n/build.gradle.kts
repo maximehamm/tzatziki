@@ -4,13 +4,14 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "7.0.0"
+version = "8.0.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul> 
+         <li><b>8.0.0</b> Adding support of Microsoft Translator API</li>
          <li><b>7.0.0</b> Adding support of DeepL translation API</li>
          <li><b>6.0.0</b> Apply translation by clicking on hint</li>
          <li><b>5.0.0</b> Smart replacement everywhere using refactoring !</li>
