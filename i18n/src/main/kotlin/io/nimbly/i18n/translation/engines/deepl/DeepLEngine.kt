@@ -11,8 +11,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
-open class DeepLEngine(override val type: EEngine) : IEngine {
+open class DeepLEngine : IEngine {
 
+    override val type = EEngine.DEEPL
     override fun needApiKey() = true
     override fun label() = "DeepL API Free"
     override fun documentation() = """<html>
@@ -28,7 +29,6 @@ open class DeepLEngine(override val type: EEngine) : IEngine {
 
         val apiKey = TranslationPlusSettings.getSettings().keys[type]
 
-        val client = OkHttpClient()
         val json = JsonObject()
         json.add("text", JsonArray().also { it.add(textToTranslate) })
         if (!sourceLanguage.equals(Lang.AUTO.code, true)) {
@@ -44,6 +44,7 @@ open class DeepLEngine(override val type: EEngine) : IEngine {
             .post(body)
             .build()
 
+        val client = OkHttpClient()
         val response = client.newCall(request).execute()
         val responseBody = response.body?.string()
 

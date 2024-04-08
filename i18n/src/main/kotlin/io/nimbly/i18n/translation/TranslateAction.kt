@@ -47,7 +47,7 @@ import io.nimbly.i18n.util.*
 
 open class TranslateAction : DumbAwareAction()  {
 
-    override fun getActionUpdateThread() = ActionUpdateThread.BGT
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
 
     override fun update(event: AnActionEvent) {
         doUpdate(event, null)

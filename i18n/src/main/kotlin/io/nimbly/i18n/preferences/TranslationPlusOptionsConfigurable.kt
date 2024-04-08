@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
+import javax.swing.AbstractAction.NAME
 import javax.swing.event.HyperlinkEvent
 import javax.swing.plaf.LabelUI
 import kotlin.math.ceil
@@ -41,8 +42,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun createComponent(): JComponent? {
 
-//         if (main != null)
-//             return main
+         if (main != null)
+             return main
 
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()
@@ -112,7 +113,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                         testLabel.text = text
                         val newLang = engine.languages().keys.filter { it != lang }.random()
                         testAction!!.putValue(SMALL_ICON, TranslationIcons.getFlag(newLang))
-                        testAction!!.putValue(SHORT_DESCRIPTION, "Translate to " + engine.languages()[newLang])
+                        testAction!!.putValue(NAME, "Test translation to " + engine.languages()[newLang])
                     }
                 } catch (e: Exception) {
                     testLabel.text = e.message
@@ -120,7 +121,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                 }
             }
         }
-        testAction!!.putValue(Action.SHORT_DESCRIPTION, "Translate to French")
+        testAction!!.putValue(Action.NAME, "Test translation to French")
 
         p.add(JButton(testAction), GridConstraints(
                 0, 0, 1, 1,
@@ -207,7 +208,11 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                     addMouseListener(object : MouseAdapter() {
                         override fun mouseClicked(e: MouseEvent?) {
                             testAction!!.putValue(AbstractAction.SMALL_ICON, flag)
-                            testAction!!.putValue(AbstractAction.SHORT_DESCRIPTION, "Translate to " + engine.languages()[flag.locale])
+                            testAction!!.putValue(NAME, "Test translation to " + engine.languages()[flag.locale])
+
+                            val checkBox = checkBoxes.first { it.first == engine }.second
+                            checkBox.isSelected = true
+                            syncCheckboxes(checkBox)
                         }
                     })
                 })
@@ -218,15 +223,12 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             ANCHOR_NORTHWEST, FILL_NONE,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
-            null, dimension,  dimension,2
+            dimension, dimension,  dimension,2
         ))
 
         check.addActionListener { event ->
             key?.isEnabled = check.isSelected
-            if (check.isSelected)
-                checkBoxes.filter { it.second != check }.forEach { it.second.isSelected = false }
-            else
-                checkBoxes.first().second.isSelected = true
+            syncCheckboxes(check)
 
             val selectedEngine = checkBoxes.first{ it.second.isSelected }.first
             val newLang = selectedEngine.languages().keys.random()
@@ -242,6 +244,13 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             keys.add(engine to key)
 
         return p
+    }
+
+    private fun syncCheckboxes(check: JBCheckBox) {
+        if (check.isSelected)
+            checkBoxes.filter { it.second != check }.forEach { it.second.isSelected = false }
+        else
+            checkBoxes.first().second.isSelected = true
     }
 
     override fun apply() {

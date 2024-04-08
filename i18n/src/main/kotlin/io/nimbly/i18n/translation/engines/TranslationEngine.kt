@@ -4,16 +4,18 @@ import io.nimbly.i18n.translation.engines.EEngine.*
 import io.nimbly.i18n.translation.engines.deepl.DeepLEngine
 import io.nimbly.i18n.translation.engines.deepl.DeepLEnginePro
 import io.nimbly.i18n.translation.engines.google.GoogleEngineFree
+import io.nimbly.i18n.translation.engines.microsoft.MicrosoftEngineFree
 import java.io.IOException
 
-enum class EEngine { GOOGLE_FREE, DEEPL, DEEPL_PRO }
+enum class EEngine { GOOGLE, DEEPL, MICROSOFT, DEEPL_PRO }
 
 object TranslationEngineFactory {
 
     private val engines = listOf(
-        GoogleEngineFree(GOOGLE_FREE),
-        DeepLEngine(DEEPL),
-        DeepLEnginePro(DEEPL_PRO),
+        GoogleEngineFree(),
+        DeepLEngine(),
+        DeepLEnginePro(),
+        MicrosoftEngineFree(),
     )
 
     fun engines()

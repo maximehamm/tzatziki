@@ -2,7 +2,9 @@ package io.nimbly.i18n.translation.engines.deepl
 
 import io.nimbly.i18n.translation.engines.EEngine
 
-class DeepLEnginePro(type: EEngine) : DeepLEngine(type) {
+class DeepLEnginePro : DeepLEngine() {
+
+    override val type = EEngine.DEEPL_PRO
 
     override fun needApiKey() = true
 

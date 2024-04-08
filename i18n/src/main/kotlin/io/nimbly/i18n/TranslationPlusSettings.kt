@@ -16,7 +16,7 @@ import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 @State(name = "TranslationPlusSettings", storages = [Storage("translationPlus.xml")], category = SettingsCategory.CODE)
 class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings.State?> {
 
-    var activeEngine: EEngine = EEngine.GOOGLE_FREE
+    var activeEngine: EEngine = EEngine.GOOGLE
     var keys: Map<EEngine, String> = mutableMapOf()
 
     var input: String = Lang.AUTO.code
@@ -82,7 +82,7 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
 
     class State {
 
-        var activeEngine: EEngine = EEngine.GOOGLE_FREE
+        var activeEngine: EEngine = EEngine.GOOGLE
 
         var input: String = Lang.AUTO.code
         var output: String = Lang.DEFAULT.code
