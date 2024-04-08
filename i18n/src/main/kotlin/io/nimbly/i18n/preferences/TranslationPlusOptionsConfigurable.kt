@@ -30,7 +30,7 @@ import javax.swing.event.HyperlinkEvent
 import javax.swing.plaf.LabelUI
 import kotlin.math.ceil
 
-class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.NoScroll {
+class TranslationPlusOptionsConfigurable : SearchableConfigurable {
 
     private var main: JPanel? = null
     private val checkBoxes: MutableList<Pair<IEngine, JBCheckBox>> = mutableListOf()
@@ -248,7 +248,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                 addFilterListener(flagLabel)
                 langs.add(flagLabel)
             }
-        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 12 + 3)
+        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 14 + 3)
         p.add(langs, GridConstraints(
             2, 0, 1, 2,
             ANCHOR_NORTHWEST, FILL_NONE,

@@ -29,15 +29,18 @@ interface TranslationIcons {
             var icon = FLAGS[locale + scaleRatio]
             if (icon != null) return icon
 
-//            icon = FLAGS[locale.substringBefore("-") + scaleRatio]
-//            if (icon != null) return icon
-
             try {
-                var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$locale.png", TranslationIcons::class.java)
+                var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/$locale.svg", TranslationIcons::class.java)
                 if ((ico?.iconWidth ?: 0) < 16) {
-                    ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/${locale.substringBefore("-")}.png", TranslationIcons::class.java)
+                    ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/${locale.substringBefore("-")}.svg", TranslationIcons::class.java)
                     if ((ico?.iconWidth ?: 0) < 16) {
-                        throw NullPointerException()
+                        ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$locale.png", TranslationIcons::class.java)
+                        if ((ico?.iconWidth ?: 0) < 16) {
+                            ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/${locale.substringBefore("-")}.png", TranslationIcons::class.java)
+                            if ((ico?.iconWidth ?: 0) < 16) {
+                                throw NullPointerException()
+                            }
+                        }
                     }
                 }
                 if (ico == null)
