@@ -21,8 +21,8 @@
     </vendor>
     <description><![CDATA[
 
-    <b>Translate anything to 83 languages !</b><br/>
-    <b>Choose the free “Google Translate” or “DeepL” engine!</b><br/>
+    <b>Translate anything to 64+ languages !</b><br/>
+    <b>Choose a free engine: Google Translate, DeepL, or Microsoft Translator!</b><br/>
     <b>Works with all Jetbrains products !</b><br/>
     <br/>
       • Select some text to localize inside editor<br/>
@@ -35,6 +35,7 @@
 
     <br/>
     <b>TIPS:</b><br/>
+    <b>&nbsp;• Works even without API key (i.e Google Translate)</b><br/>
     <b>&nbsp;• Supports file encoding for: HTML, JSON, CSV, XML, PROPERTIES</b><br/>
     <b>&nbsp;• Supports styles: “CamelCase”, “SNAKE_CASE”, “snake_case” !</b><br/>
     <b>&nbsp;• Smart replacement everywhere using refactoring :) </b><br/>
@@ -103,22 +104,20 @@
     <br/><br/>
     <b>Settings : </b><br/><br/>
     <ul>
-       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_ef52ce13-f5e1-4025-a567-5e1f9bc58041"
-              alt="Dictionary view" width="690" height="388"></p>
+       <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_37d32488-f3c2-4e6d-bea0-7174227abc44"
+              alt="Settings view" width="690" height="388"></p>
        <li>Choose “Google Translate”, “DeepL”, ...</li>
     </ul>
 
     <br/><br/>
     <b>All supported languages/localizations :</b><br/><br/>
-    Afrikaans, Irish, Albanian, Italian, Arabic, Japanese, Azerbaijani, Kannada,<br/>
-    Basque, Korean, Bengali, Latin, Belarusian, Latvian, Bulgarian, Lithuanian,<br/>
-    Catalan, Macedonian, Chinese Simplified, Malay, Chinese Traditional, Maltese,<br/>
-    Croatian, Norwegian, Czech, Persian, Danish, Polish, Dutch, Portuguese,<br/>
-    English, Romanian, Esperanto, Russian, Estonian, Serbian, Filipino, Slovak,<br/>
-    Finnish, Slovenian, French, Spanish, Galician, Swahili, Georgian, Swedish,<br/>
-    German, Tamil, Greek, Telugu, Gujarati, Thai, Haitian Creole, Turkish, Hebrew,<br/>
-    Ukrainian, Hindi, Urdu, Hungarian, Vietnamese, Icelandic, Welsh, Indonesian,<br/>
-    Yiddish.<br/>
+    Afrikaans, Albanian, Arabic, Azerbaijani, Basque, Belarusian, Bengali, Bulgarian, Catalan, <br/>
+    Chinese Simplified, Chinese Traditional, Croatian, Czech, Danish, Dutch, English, Esperanto,<br/>
+    Estonian, Filipino, Finnish, French, Galician, Georgian, German, Greek, Gujarati, Haitian Creole,<br/>
+    Hebrew, Hindi, Hungarian, Icelandic, Indonesian, Irish, Italian, Japanese, Kannada, Korean, Latin,<br/>
+    Latvian, Lithuanian, Macedonian, Malay, Maltese, Norwegian, Persian, Polish, Portuguese, Romanian,<br/>
+    Russian, Serbian, Slovak, Slovenian, Spanish, Swahili, Swedish, Tamil, Telugu, Thai, Turkish,<br/>
+    Ukrainian, Urdu, Vietnamese, Welsh, Yiddish<br/>
 
     <!-- Internationalization, Internationalization, Internationalization, Internationalization, Internationalization -->
     <!-- Localization, Localization, Localization, Localization, Localization, Localization, Localization, Localization -->
