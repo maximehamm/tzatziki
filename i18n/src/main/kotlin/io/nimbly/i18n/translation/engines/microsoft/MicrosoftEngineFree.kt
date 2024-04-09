@@ -6,6 +6,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.*
+import io.nimbly.i18n.util.extractMessage
 import io.nimbly.i18n.util.nullIfEmpty
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -63,24 +64,6 @@ open class MicrosoftEngineFree : IEngine {
             throw TranslationException("${response.code}: $msg")
         }
 
-    }
-
-    fun String.extractMessage(): String? {
-        val jsonObject = JsonParser.parseString(this).asJsonObject
-
-        fun findMessage(jsonObj: JsonObject): String? {
-            for ((key, value) in jsonObj.entrySet()) {
-                if (value.isJsonObject) {
-                    val message = findMessage(value.asJsonObject)
-                    if (message != null) return message
-                } else if (key == "message") {
-                    return value.asString
-                }
-            }
-            return null
-        }
-
-        return findMessage(jsonObject)
     }
 
     override fun languages() = mapOf(

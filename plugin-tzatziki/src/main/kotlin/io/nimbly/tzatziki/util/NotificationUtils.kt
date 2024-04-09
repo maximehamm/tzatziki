@@ -18,6 +18,7 @@ package io.nimbly.tzatziki.util
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationListener
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
@@ -68,6 +69,7 @@ fun Project.notificationAction(
 
     actions.forEach { (actionText, function) ->
         notif.addAction(object : AnAction(actionText) {
+            override fun getActionUpdateThread() = ActionUpdateThread.BGT
             override fun actionPerformed(e: AnActionEvent) {
                 function()
                 notif.expire();

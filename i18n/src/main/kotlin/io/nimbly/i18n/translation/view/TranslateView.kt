@@ -15,6 +15,7 @@
 package io.nimbly.i18n.translation.view
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
@@ -519,6 +520,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         languages.add(
             ActionButton(object : AnAction(ActionI18nIcons.SWAP) {
+                override fun getActionUpdateThread() = ActionUpdateThread.BGT
                 override fun actionPerformed(e: AnActionEvent) {
                     swapLanguages()
                 }

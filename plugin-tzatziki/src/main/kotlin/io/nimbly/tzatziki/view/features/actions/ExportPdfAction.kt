@@ -13,6 +13,7 @@ import io.nimbly.tzatziki.view.features.nodes.GherkinTagNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
@@ -23,6 +24,9 @@ import com.intellij.util.ui.tree.TreeUtil
 import io.nimbly.tzatziki.services.findAllGerkinsFiles
 
 class ExportPdfAction(val panel: FeaturePanel) : AnAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.EDT
+
     init {
         this.templatePresentation.text = "Export selected features to pdf..."
         this.templatePresentation.icon = ActionIcons.PDF

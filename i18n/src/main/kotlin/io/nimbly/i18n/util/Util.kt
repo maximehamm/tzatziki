@@ -14,6 +14,8 @@
  */
 package io.nimbly.i18n.util
 
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.intellij.codeInsight.completion.CompletionUtilCore
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.ide.DataManager
@@ -235,3 +237,31 @@ class CustomTraversalPolicy(private vararg val order: Component) : FocusTraversa
 
 val Number?.plural: String
     get() = if ((this?.toInt() ?: 0) > 1) "s" else ""
+
+fun String.extractMessage(): String? {
+    val jsonObject = JsonParser.parseString(this).asJsonObject
+
+    fun findMessage(jsonObj: JsonObject): String? {
+        for ((key, value) in jsonObj.entrySet()) {
+            if (value.isJsonObject) {
+                val message = findMessage(value.asJsonObject)
+                if (message != null) return message
+            } else if (key == "message") {
+                return value.asString
+            }
+        }
+        return null
+    }
+
+    return findMessage(jsonObject)
+        ?.substringBefore("\n")
+        ?.trimIfExceedsLimit(80)
+}
+
+fun String.trimIfExceedsLimit(maxLength: Int): String {
+    if (length > maxLength) {
+        return substring(0, maxLength) + "..."
+    }
+    return this
+}
+

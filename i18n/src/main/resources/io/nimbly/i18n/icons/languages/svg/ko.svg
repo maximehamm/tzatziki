@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:cc="http://web.resource.org/cc/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:ns1="http://sozi.baierouge.fr"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    id="svg2"
+    sodipodi:modified="true"
+    sodipodi:docname="flag_kor.svg"
+    viewBox="0 0 300 200"
+    sodipodi:version="0.32"
+    version="1.0"
+    inkscape:output_extension="org.inkscape.output.svg.inkscape"
+    inkscape:version="0.45pre1"
+    sodipodi:docbase="F:\langs\Korean\image"
+  >
+  <sodipodi:namedview
+      id="base"
+      gridspacingy="0.16px"
+      gridspacingx="0.16px"
+      inkscape:showpageshadow="false"
+      gridempcolor="#f03fff"
+      inkscape:zoom="1"
+      height="200px"
+      borderopacity="1.0"
+      inkscape:current-layer="layer2"
+      inkscape:cx="148.80843"
+      inkscape:cy="88.681818"
+      showgrid="false"
+      width="300px"
+      inkscape:document-units="px"
+      bordercolor="#666666"
+      inkscape:window-x="328"
+      guidetolerance="10"
+      objecttolerance="10"
+      inkscape:window-y="241"
+      inkscape:window-width="973"
+      inkscape:pageopacity="0.0"
+      inkscape:pageshadow="2"
+      pagecolor="#ffffff"
+      gridtolerance="10000"
+      gridempspacing="13"
+      gridempopacity="0.37647059"
+      showguides="false"
+      inkscape:window-height="660"
+      showborder="false"
+  />
+  <g
+      id="layer1"
+      inkscape:label="border"
+      inkscape:groupmode="layer"
+    >
+    <rect
+        id="rect2160"
+        style="stroke:#000000;fill:#ffffff"
+        height="200"
+        width="300"
+        y="-5.6843e-14"
+        x="0"
+    />
+  </g
+  >
+  <g
+      id="layer2"
+      style="display:none"
+      inkscape:label="diaganal guides"
+      inkscape:groupmode="layer"
+    >
+    <path
+        id="path3182"
+        style="stroke:#000000;stroke-width:1px;fill:none"
+        d="m0-2.8422e-14l300 200"
+    />
+    <path
+        id="path3184"
+        style="stroke:#000000;stroke-width:1px;fill:none"
+        d="m300-2.8422e-14l-300 200"
+    />
+    <path
+        id="path6076"
+        style="stroke:#ff00ff;stroke-width:1px;fill:none"
+        d="m87.694 58.447l20.766 13.849"
+    />
+    <path
+        id="path6082"
+        style="stroke:#ff00ff;stroke-width:1px;fill:none"
+        d="m191.66 127.74l20.77 13.85"
+    />
+    <path
+        id="path6084"
+        style="stroke:#ff00ff;stroke-width:1px;display:inline;fill:none"
+        d="m88.06 141.33l20.77-13.85"
+    />
+    <path
+        id="path6086"
+        style="stroke:#ff00ff;stroke-width:1px;display:inline;fill:none"
+        d="m191.29 72.487l20.77-13.849"
+    />
+  </g
+  >
+  <g
+      id="layer5"
+      inkscape:label="taegeuk"
+      inkscape:groupmode="layer"
+    >
+    <path
+        id="path16870"
+        sodipodi:rx="50"
+        sodipodi:ry="50"
+        style="fill-rule:evenodd;fill:#c60c30"
+        sodipodi:type="arc"
+        d="m200 275a50 50 0 1 1 -100 0"
+        sodipodi:open="true"
+        transform="matrix(-.83195 -.55484 .55484 -.83195 122.02 412.35)"
+        sodipodi:cy="275"
+        sodipodi:cx="150"
+        sodipodi:end="3.1415927"
+        sodipodi:start="0"
+    />
+    <path
+        id="path16872"
+        sodipodi:rx="50"
+        sodipodi:ry="50"
+        style="fill-rule:evenodd;fill:#003478"
+        sodipodi:type="arc"
+        d="m325 325a50 50 0 1 1 -100 0"
+        sodipodi:open="true"
+        transform="matrix(.83195 .55484 -.55484 .83195 101.87 -323.3)"
+        sodipodi:cy="325"
+        sodipodi:cx="275"
+        sodipodi:end="3.1415927"
+        sodipodi:start="0"
+    />
+    <path
+        id="path17845"
+        sodipodi:rx="25"
+        sodipodi:ry="25"
+        style="fill-rule:evenodd;fill:#003478"
+        sodipodi:type="arc"
+        d="m100 250a25 25 0 1 1 -50 0"
+        sodipodi:open="true"
+        transform="matrix(-.83195 -.55484 .55484 -.83195 94.258 363.74)"
+        sodipodi:cy="250"
+        sodipodi:cx="75"
+        sodipodi:end="3.1415927"
+        sodipodi:start="0"
+    />
+    <path
+        id="path17847"
+        sodipodi:rx="25"
+        sodipodi:ry="25"
+        style="fill-rule:evenodd;fill:#c60c30"
+        sodipodi:type="arc"
+        d="m175 250a25 25 0 1 1 -50 0"
+        sodipodi:open="true"
+        transform="matrix(.83195 .55484 -.55484 .83195 143.92 -206.21)"
+        sodipodi:cy="250"
+        sodipodi:cx="150"
+        sodipodi:end="3.1415927"
+        sodipodi:start="0"
+    />
+  </g
+  >
+  <g
+      id="layer3"
+      inkscape:label="trigrams"
+      inkscape:groupmode="layer"
+    >
+    <rect
+        id="rect8171"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-80.384"
+        x="-25.014"
+    />
+    <rect
+        id="rect8173"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-105.34"
+        x="-25.014"
+    />
+    <rect
+        id="rect8175"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-92.864"
+        x="-25.014"
+    />
+    <rect
+        id="rect8199"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-276.27"
+        x="-24.987"
+    />
+    <rect
+        id="rect9171"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-276.27"
+        x="2.0531"
+    />
+    <rect
+        id="rect9173"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-288.75"
+        x="-24.987"
+    />
+    <rect
+        id="rect9175"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-263.79"
+        x="-24.987"
+    />
+    <rect
+        id="rect9177"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-263.79"
+        x="2.0531"
+    />
+    <rect
+        id="rect9179"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 .83195 -.83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-288.75"
+        x="2.0531"
+    />
+    <rect
+        id="rect9205"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(.55484 .83195 -.83195 .55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-152.2"
+        x="141.52"
+    />
+    <rect
+        id="rect9207"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(.55484 .83195 -.83195 .55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-152.2"
+        x="168.56"
+    />
+    <rect
+        id="rect9209"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(.55484 .83195 -.83195 .55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-177.16"
+        x="168.56"
+    />
+    <rect
+        id="rect9211"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(.55484 .83195 -.83195 .55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-177.16"
+        x="141.52"
+    />
+    <rect
+        id="rect9213"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(.55484 .83195 -.83195 .55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-164.68"
+        x="141.52"
+    />
+    <rect
+        id="rect9231"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 -.83195 .83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-25.972"
+        x="-191.37"
+    />
+    <rect
+        id="rect9233"
+        style="fill-rule:evenodd;fill:#000000"
+        inkscape:transform-center-x="-6.7142857"
+        inkscape:transform-center-y="-2.2857143"
+        transform="matrix(-.55484 -.83195 .83195 -.55484 0 0)"
+        height="8.32"
+        width="22.88"
+        y="-25.972"
+        x="-164.33"
+    />
+    <rect
+        id="rect9235"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 -.83195 .83195 -.55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-38.452"
+        x="-191.37"
+    />
+    <rect
+        id="rect9237"
+        style="fill-rule:evenodd;fill:#000000"
+        transform="matrix(-.55484 -.83195 .83195 -.55484 0 0)"
+        height="8.32"
+        width="49.92"
+        y="-13.492"
+        x="-191.37"
+    />
+  </g
+  >
+  <metadata
+    >
+    <rdf:RDF
+      >
+      <cc:Work
+        >
+        <dc:format
+          >image/svg+xml</dc:format
+        >
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+        />
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/publicdomain/"
+        />
+        <dc:publisher
+          >
+          <cc:Agent
+              rdf:about="http://openclipart.org/"
+            >
+            <dc:title
+              >Openclipart</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:publisher
+        >
+        <dc:title
+          >South Korean Flag</dc:title
+        >
+        <dc:date
+          >2007-11-08T22:56:42</dc:date
+        >
+        <dc:description
+          >South Korean Flag</dc:description
+        >
+        <dc:source
+          >https://openclipart.org/detail/8034/south-korean-flag-by-jp_draws</dc:source
+        >
+        <dc:creator
+          >
+          <cc:Agent
+            >
+            <dc:title
+              >jp_draws</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:creator
+        >
+        <dc:subject
+          >
+          <rdf:Bag
+            >
+            <rdf:li
+              >flag</rdf:li
+            >
+            <rdf:li
+              >korea</rdf:li
+            >
+            <rdf:li
+              >korean</rdf:li
+            >
+            <rdf:li
+              >south korea</rdf:li
+            >
+            <rdf:li
+              >south korean</rdf:li
+            >
+            <rdf:li
+              >taegeukgi</rdf:li
+            >
+            <rdf:li
+              >taegukgi</rdf:li
+            >
+          </rdf:Bag
+          >
+        </dc:subject
+        >
+      </cc:Work
+      >
+      <cc:License
+          rdf:about="http://creativecommons.org/licenses/publicdomain/"
+        >
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks"
+        />
+      </cc:License
+      >
+    </rdf:RDF
+    >
+  </metadata
+  >
+</svg
+>

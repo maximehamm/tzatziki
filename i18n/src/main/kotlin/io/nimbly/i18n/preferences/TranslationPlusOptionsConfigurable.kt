@@ -225,7 +225,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
         val langs = JBPanelWithEmptyText(BorderLayout())
         langs.layout = FlowLayout(LEFT, 5, 5)
-        langs.border = JBUI.Borders.emptyTop(10)
+        langs.border = JBUI.Borders.emptyTop(3)
 
         engine.languages()
             .map { TranslationIcons.getFlag(it.key) to it.value }

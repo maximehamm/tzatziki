@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.actions
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.command.WriteCommandAction
@@ -37,6 +38,8 @@ class TableShiftUpAction : TableShiftAction(UP)
 class TableShiftDownAction : TableShiftAction(DOWN)
 
 open class TableShiftAction(private val direction: Direction) : TzAction() {
+
+    override fun getActionUpdateThread() = ActionUpdateThread.BGT
 
     override fun actionPerformed(event: AnActionEvent) {
 
