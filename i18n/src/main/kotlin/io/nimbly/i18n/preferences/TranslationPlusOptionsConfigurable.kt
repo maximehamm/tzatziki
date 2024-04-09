@@ -1,6 +1,7 @@
 package io.nimbly.i18n.preferences
 
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.ui.panel.ComponentPanelBuilder
@@ -31,6 +32,8 @@ import javax.swing.plaf.LabelUI
 import kotlin.math.ceil
 
 class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.NoScroll {
+
+    private val LOG = logger<TranslationPlusOptionsConfigurable>()
 
     private var main: JPanel? = null
     private val checkBoxes: MutableList<Pair<IEngine, JBCheckBox>> = mutableListOf()
@@ -127,9 +130,11 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         testAction = object : AbstractAction("Test", TranslationIcons.getFlag("fr")) {
             override fun actionPerformed(e: ActionEvent) {
 
+                apply()
                 val engine = checkBoxes.firstOrNull { it.second.isSelected }?.first ?: return
                 val lang = (testAction!!.getValue(SMALL_ICON) as ZIcon).locale
                 testLabel.foreground = foreground
+
                 try {
                     val translation = engine.translate(
                         lang,
@@ -144,6 +149,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                         testAction!!.putValue(NAME, "Test translation to " + engine.languages()[newLang])
                     }
                 } catch (e: Exception) {
+                    LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + e.message)
                     testLabel.text = e.message
                     testLabel.foreground = JBColor.RED
                 }
@@ -286,7 +292,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun apply() {
         mySettings.activeEngine = this.checkBoxes.first { it.second.isSelected }.first.type
-        mySettings.keys = this.keys.map { it.first.type to it.second.text }.toMap()
+        mySettings.keys = this.keys.map { it.first.type to it.second.text.trim() }.toMap()
 
         TranslationManager.changeEngine(mySettings.activeEngine)
     }

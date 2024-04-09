@@ -53,7 +53,11 @@ open class ChatGPTEngine : IEngine {
         val responseBody = response.body?.string()
 
         if (response.isSuccessful && responseBody != null) {
-            return Translation(responseBody, from)
+
+            val responseDTO = Gson().fromJson(responseBody, TextCompletionResponse::class.java)
+            val text = responseDTO.choices?.firstOrNull()?.text ?: throw TranslationException("Unbale to extract translation")
+
+            return Translation(text.trim(), from)
         } else {
             throw TranslationException(responseBody?.extractMessage() ?: "No translation found")
         }
@@ -95,5 +99,25 @@ open class ChatGPTEngine : IEngine {
         "vi" to "Vietnamese"
     )
 
+    data class TextCompletionResponse(
+        val id: String?,
+        val `object`: String?,
+        val created: Long?,
+        val model: String?,
+        val choices: List<Choice>?,
+        val usage: Usage?
+    )
 
+    data class Choice(
+        val text: String?,
+        val index: Int?,
+        val logprobs: Any?,
+        val finish_reason: String?
+    )
+
+    data class Usage(
+        val prompt_tokens: Int?,
+        val completion_tokens: Int?,
+        val total_tokens: Int?
+    )
 }
