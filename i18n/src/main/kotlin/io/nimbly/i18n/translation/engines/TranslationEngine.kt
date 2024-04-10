@@ -4,27 +4,29 @@ import io.nimbly.i18n.translation.engines.EEngine.*
 import io.nimbly.i18n.translation.engines.deepl.DeepLEngine
 import io.nimbly.i18n.translation.engines.deepl.DeepLEnginePro
 import io.nimbly.i18n.translation.engines.google.GoogleEngineFree
+import io.nimbly.i18n.translation.engines.microsoft.DeepTranslate
 import io.nimbly.i18n.translation.engines.microsoft.MicrosoftEngineFree
 import io.nimbly.i18n.translation.engines.openai.ChatGPTEngine
 import java.io.IOException
 
-enum class EEngine { GOOGLE, DEEPL, MICROSOFT, DEEPL_PRO, CHATGPT }
+enum class EEngine { GOOGLE, DEEPL, MICROSOFT, DEEPL_PRO, CHATGPT, DEEP_TRANSLATE }
 
 object TranslationEngineFactory {
 
     private val engines = listOf(
         GoogleEngineFree(),
         DeepLEngine(),
-        DeepLEnginePro(),
+        //DeepLEnginePro(),
         MicrosoftEngineFree(),
-        //ChatGPTEngine()
+        ChatGPTEngine(),
+        DeepTranslate()
     )
 
     fun engines()
         = engines
 
     fun engine(id: EEngine)
-        = engines.find { it.type == id }!!
+        = engines.find { it.type == id } ?: engines.first()
 }
 
 interface IEngine {

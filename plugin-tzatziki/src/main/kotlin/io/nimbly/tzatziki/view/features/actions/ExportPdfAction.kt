@@ -94,7 +94,7 @@ class ExportPdfAction(val panel: FeaturePanel) : AnAction() {
             isEnabled = true
         }
         else {
-            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+            val editor = FileEditorManager.getInstance(project)?.selectedTextEditor
             val editorFile = (editor?.file as? GherkinFile)
             isEnabled = editorFile is GherkinFile
         }
