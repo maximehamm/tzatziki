@@ -27,6 +27,7 @@ import java.awt.FlowLayout.LEFT
 import java.awt.event.*
 import javax.swing.*
 import javax.swing.AbstractAction.NAME
+import javax.swing.ScrollPaneConstants.*
 import javax.swing.event.HyperlinkEvent
 import javax.swing.plaf.LabelUI
 import kotlin.math.ceil
@@ -51,6 +52,38 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
         languageFilterListeners.clear()
 
+        main = JPanel(GridLayoutManager(3, 1))
+
+        main!!.add(buildTitlePanel(), GridConstraints(
+            0, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK,
+            null, null, null
+        ))
+
+        main!!.add(buildEnginePanel(), GridConstraints(
+                1, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK,
+                null, null, null
+            )
+        )
+
+        main!!.add(buildTestPanel(), GridConstraints(
+                2, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_GROW,
+                null, null, null
+            ))
+
+        return main
+    }
+
+    private fun buildEnginePanel(): JComponent {
+
         val p = JPanel(GridBagLayout())
         val gridBag = GridBag()
         gridBag.anchor(GridBagConstraints.NORTHWEST)
@@ -62,34 +95,11 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             p.add(buildEnginePanel(engine), gridBag.nextLine().next().insetBottom(10))
         }
 
-        main = JPanel(GridLayoutManager(3, 1))
-
-
-        main!!.add(buildTitlePanel(), GridConstraints(
-            0, 0, 1, 1,
-                ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-                SIZEPOLICY_CAN_SHRINK,
-            null, null, null
-        ))
-
-        main!!.add(p, GridConstraints(
-            1, 0, 1, 1,
-            ANCHOR_NORTHWEST, FILL_NONE,
-            SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-            SIZEPOLICY_CAN_SHRINK,
-          null, null, null
-        ))
-
-        main!!.add(buildTestPanel(), GridConstraints(
-                2, 0, 1, 1,
-                ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-                SIZEPOLICY_CAN_GROW,
-                null, null, null
-            ))
-
-        return main
+        return JBScrollPane(
+            p,
+            VERTICAL_SCROLLBAR_AS_NEEDED,
+            HORIZONTAL_SCROLLBAR_NEVER
+        )
     }
 
     private fun buildTitlePanel(): JPanel {

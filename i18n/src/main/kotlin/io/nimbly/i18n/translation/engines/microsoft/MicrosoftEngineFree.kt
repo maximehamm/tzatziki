@@ -3,7 +3,6 @@ package io.nimbly.i18n.translation.engines.microsoft
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.*
 import io.nimbly.i18n.util.extractMessage

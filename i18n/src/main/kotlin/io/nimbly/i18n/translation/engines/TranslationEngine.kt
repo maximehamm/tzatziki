@@ -15,9 +15,9 @@ object TranslationEngineFactory {
     private val engines = listOf(
         GoogleEngineFree(),
         DeepLEngine(),
-//        DeepLEnginePro(),
+        DeepLEnginePro(),
         MicrosoftEngineFree(),
-//        ChatGPTEngine()
+        //ChatGPTEngine()
     )
 
     fun engines()
