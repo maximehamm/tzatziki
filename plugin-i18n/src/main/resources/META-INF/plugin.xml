@@ -21,9 +21,9 @@
     </vendor>
     <description><![CDATA[
 
-    <b>Translate anything to 64+ languages !</b><br/>
-    <b>Choose a free engine: Google Translate, DeepL, or Microsoft Translator!</b><br/>
-    <b>Works with all Jetbrains products !</b><br/>
+    <b>Translate anything to 120+ languages !</b><br/>
+    <b>Choose an API: Google Translate, DeepL, Microsoft Translator, ChatGPT !</b><br/>
+    <b>Works with all Jetbrains products ! No API key request for Google Translate</b><br/>
     <br/>
       • Select some text to localize inside editor<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
@@ -106,7 +106,7 @@
     <ul>
        <p><img src="https://plugins.jetbrains.com/files/23656/screenshot_37d32488-f3c2-4e6d-bea0-7174227abc44"
               alt="Settings view" width="690" height="388"></p>
-       <li>Choose “Google Translate”, “DeepL”, ...</li>
+       <li>Choose Google Translate, DeepL, Microsoft Translator, ChatGPT...</li>
     </ul>
 
     <br/><br/>
