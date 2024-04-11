@@ -45,8 +45,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun createComponent(): JComponent? {
 
-//         if (main != null)
-//             return main
+         if (main != null)
+             return main
 
         languageFilterListeners.clear()
 
@@ -63,7 +63,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         main!!.add(buildEnginePanel(), GridConstraints(
                 1, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
                 SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 null, null, null
             )
@@ -72,7 +72,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         main!!.add(buildTestPanel(), GridConstraints(
                 2, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
                 SIZEPOLICY_CAN_GROW,
                 null, null, null
             ))
@@ -96,7 +96,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
         return JBScrollPane(
             p,
-            VERTICAL_SCROLLBAR_ALWAYS,
+            VERTICAL_SCROLLBAR_AS_NEEDED,
             HORIZONTAL_SCROLLBAR_NEVER
         )
     }
@@ -168,15 +168,15 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
         p.add(JButton(testAction), GridConstraints(
                 0, 0, 1, 1,
-                ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
                 SIZEPOLICY_CAN_GROW,
                 null, null, null
             ))
         p.add(testLabel, GridConstraints(
                 0, 1, 1, 1,
-                ANCHOR_WEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                ANCHOR_WEST, FILL_HORIZONTAL,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
                 SIZEPOLICY_CAN_GROW,
                 null, null, null
             ))
