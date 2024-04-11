@@ -47,8 +47,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     override fun createComponent(): JComponent? {
 
-         if (main != null)
-             return main
+//         if (main != null)
+//             return main
 
         languageFilterListeners.clear()
 
@@ -57,7 +57,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         main!!.add(buildTitlePanel(), GridConstraints(
             0, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+                SIZEPOLICY_CAN_SHRINK,
                 SIZEPOLICY_CAN_SHRINK,
             null, null, null
         ))
@@ -66,7 +66,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                 1, 0, 1, 1,
                 ANCHOR_NORTHWEST, FILL_NONE,
                 SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-                SIZEPOLICY_CAN_SHRINK,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
                 null, null, null
             )
         )
@@ -84,20 +84,21 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     private fun buildEnginePanel(): JComponent {
 
-        val p = JPanel(GridBagLayout())
-        val gridBag = GridBag()
-        gridBag.anchor(GridBagConstraints.NORTHWEST)
-            .setDefaultAnchor(GridBagConstraints.NORTHWEST)
-            .setDefaultFill(GridBagConstraints.HORIZONTAL)
-            .setDefaultPaddingY(0)
+        val p = JPanel(GridLayoutManager(
+            TranslationEngineFactory.engines().size, 1, JBInsets(0, 0, 0 , 0), 0, 15))
 
-        TranslationEngineFactory.engines().forEach { engine ->
-            p.add(buildEnginePanel(engine), gridBag.nextLine().next().insetBottom(10))
+        TranslationEngineFactory.engines().forEachIndexed { index, engine ->
+            p.add(buildEnginePanel(engine), GridConstraints(
+                index, 0, 1, 1,
+                ANCHOR_NORTHWEST, FILL_NONE,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+                null, null, null))
         }
 
         return JBScrollPane(
             p,
-            VERTICAL_SCROLLBAR_AS_NEEDED,
+            VERTICAL_SCROLLBAR_ALWAYS,
             HORIZONTAL_SCROLLBAR_NEVER
         )
     }
@@ -187,14 +188,15 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
     private fun buildEnginePanel(engine: IEngine): JPanel {
 
-        val p = JPanel(GridLayoutManager(3, 2, JBInsets(0, 5, 10 , 5), 5, 0))
+        val p = JPanel(GridLayoutManager(3, 2, JBInsets(0, 5, 0 , 5), 5, 0))
         p.border = BorderFactory.createMatteBorder(0, 1, 0, 0, CommentLabel("").foreground)
 
         val check = JBCheckBox(engine.label(), false)
         p.add(check, GridConstraints(
             0, 0, 2, 1,
             ANCHOR_NORTHWEST, FILL_NONE,
-            SIZEPOLICY_FIXED, SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
+            SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
             null, Dimension(170, 30), null))
 
         var key: JBPasswordField? = null
@@ -203,8 +205,8 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             p.add(key, GridConstraints(
                     0, 1, 1, 1,
                     ANCHOR_NORTHWEST, FILL_NONE,
-                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
-                    SIZEPOLICY_CAN_SHRINK,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW ,
+                SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
                     null, Dimension(300, 30), null
                 ))
         } else {
@@ -233,13 +235,33 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         }
         p.add(doc, GridConstraints(
             1, 1, 1, 1,
-            ANCHOR_NORTHWEST, FILL_HORIZONTAL,
+            ANCHOR_NORTHWEST, FILL_NONE,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW or SIZEPOLICY_WANT_GROW,
             SIZEPOLICY_CAN_SHRINK,
             null, null, null, 1
         ))
 
-        val langs = JBPanelWithEmptyText(BorderLayout())
+        val langs = object : JBPanelWithEmptyText(), IFilterListener {
+            override fun filterChanged(filter: String?) {
+
+                var count = 0
+                this.components
+                    .filterIsInstance<JBLabel>()
+                    .forEach {
+                        val zIcon = it.icon as ZIcon
+                        val visible = filter == null || (zIcon.locale.lowercase().contains(filter.lowercase()))
+                        it.isVisible = visible
+                        count += if (visible) 1 else 0
+                }
+
+                val dimension = Dimension(650, ceil(count.toDouble() / (650/(18+5))).toInt() * (12+6))
+                this.maximumSize = dimension
+                this.preferredSize = dimension
+
+                this.isVisible = count > 0
+                p.isVisible = count > 0
+            }
+        }
         langs.layout = FlowLayout(LEFT, 5, 5)
         langs.border = JBUI.Borders.emptyTop(3)
 
@@ -247,7 +269,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
             .map { TranslationIcons.getFlag(it.key) to it.value }
             .sortedBy { (if (it.first.flag) "A" else "Z") + "#" + it.second }
             .forEach { (flag, lang) ->
-                val flagLabel = FlagLabel(flag)
+                val flagLabel = JBLabel(flag)
                 flagLabel.apply {
                     toolTipText = "$lang (${flag.locale.uppercase()})"
                     addMouseListener(object : MouseAdapter() {
@@ -261,16 +283,20 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                         }
                     })
                 }
-                addFilterListener(flagLabel)
                 langs.add(flagLabel)
             }
-        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / 20).toInt() * 13 + 3)
+        addFilterListener(langs)
+
+        val dimension = Dimension(650, ceil(engine.languages().size.toDouble() / (650/(18+5))).toInt() * (12+6))
+        langs.maximumSize = dimension
+        langs.preferredSize = dimension
+
         p.add(langs, GridConstraints(
             2, 0, 1, 2,
             ANCHOR_NORTHWEST, FILL_NONE,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
             SIZEPOLICY_CAN_SHRINK or SIZEPOLICY_CAN_GROW,
-            dimension, dimension,  dimension,2
+            null, null,  Dimension(650, 10000),2
         ))
 
         check.addActionListener { event ->
@@ -332,20 +358,6 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
 interface IFilterListener {
     fun filterChanged(filter: String?)
-}
-
-class FlagLabel(flag: ZIcon) : JBLabel(flag), IFilterListener {
-    override fun filterChanged(filter: String?) {
-        val visible: Boolean
-        if (filter == null) {
-            visible = true
-        }
-        else {
-            val zIcon = this.icon as ZIcon
-            visible = (zIcon.locale.lowercase().contains(filter.lowercase()))
-        }
-        this.isVisible = visible
-    }
 }
 
 class CommentLabel(text: String) : JBLabel(text) {

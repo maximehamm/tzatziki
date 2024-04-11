@@ -31,13 +31,13 @@ interface TranslationIcons {
 
             try {
                 var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/$locale.svg", TranslationIcons::class.java)
-                if ((ico?.iconWidth ?: 0) < 16) {
+                if (!ico.exists()) {
                     ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/${locale.substringBefore("-")}.svg", TranslationIcons::class.java)
-                    if ((ico?.iconWidth ?: 0) < 16) {
+                    if (!ico.exists()) {
                         ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$locale.png", TranslationIcons::class.java)
-                        if ((ico?.iconWidth ?: 0) < 16) {
+                        if (!ico.exists()) {
                             ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/${locale.substringBefore("-")}.png", TranslationIcons::class.java)
-                            if ((ico?.iconWidth ?: 0) < 16) {
+                            if (!ico.exists()) {
                                 throw NullPointerException()
                             }
                         }
@@ -57,6 +57,17 @@ interface TranslationIcons {
         }
 
         private val FLAGS: MutableMap<String, ZIcon?> = HashMap()
+    }
+}
+
+private fun Icon?.exists(): Boolean {
+    try {
+        if ((this?.iconWidth ?: 0) < 16)
+            return false
+        else
+            return true
+    } catch (e: Exception) {
+        return false
     }
 }
 

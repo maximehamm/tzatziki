@@ -26,10 +26,10 @@ class IsoCodesRenderer : DefaultListCellRenderer() {
             text = value.name
 
             if (value == Lang.AUTO) {
-                originalIcon = TranslationIcons.getFlag(" ")!!
+                originalIcon = TranslationIcons.getFlag(" ")
                 font = font.deriveFont(Font.BOLD)
             } else {
-                originalIcon = TranslationIcons.getFlag(value.code)!!
+                originalIcon = TranslationIcons.getFlag(value.code)
                 font = font.deriveFont(Font.PLAIN)
             }
 
