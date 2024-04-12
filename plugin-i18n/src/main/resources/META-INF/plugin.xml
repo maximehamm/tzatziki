@@ -111,13 +111,17 @@
 
     <br/><br/>
     <b>All supported languages/localizations :</b><br/><br/>
-    Afrikaans, Albanian, Arabic, Azerbaijani, Basque, Belarusian, Bengali, Bulgarian, Catalan, <br/>
-    Chinese Simplified, Chinese Traditional, Croatian, Czech, Danish, Dutch, English, Esperanto,<br/>
-    Estonian, Filipino, Finnish, French, Galician, Georgian, German, Greek, Gujarati, Haitian Creole,<br/>
-    Hebrew, Hindi, Hungarian, Icelandic, Indonesian, Irish, Italian, Japanese, Kannada, Korean, Latin,<br/>
-    Latvian, Lithuanian, Macedonian, Malay, Maltese, Norwegian, Persian, Polish, Portuguese, Romanian,<br/>
-    Russian, Serbian, Slovak, Slovenian, Spanish, Swahili, Swedish, Tamil, Telugu, Thai, Turkish,<br/>
-    Ukrainian, Urdu, Vietnamese, Welsh, Yiddish<br/>
+Afrikaans, Albanian, Amharic, Arabic, Armenian, Azerbaijani, Basque, Belarusian, Bengali, Bosnian, Bulgarian,<br/>
+Catalan, Cebuano, Czech, Chichewa, Chinese (Literary), Chinese (Simplified), Chinese (Traditional), Corsican,<br/>
+Croatian, Danish, Dhivehi, Dutch, English, Esperanto, Estonian, Filipino, Finnish, French, Frisian, Gaelic (Scots),<br/>
+Galician, Georgian, German, Greek, Gujarati, Haitian Creole, Hausa, Hawaiian, Hebrew, Hindi, Hmong, Hungarian, Icelandic,<br/>
+Igbo, Indonesian, Inuinnaqtun, Irish, Italian, Japanese, Javanese, Kannada, Kashmiri, Kazakh, Khmer, Kinyarwanda, <br/>
+Konkani, Korean, Kurdish, Kyrgyz, Lao, Latin, Latvian, Lithuanian, Luganda, Luxembourgish, Macedonian, Malagasy, Malay, <br/>
+Malayalam, Maltese, Maithili, Maori, Marathi, Meiteilon (Manipuri), Mongolian, Myanmar (Burmese), Nepali, Norwegian, <br/>
+Northern Sami, Nyanja, Odia (Oriya), Oromo, Pashto, Persian, Polish, Portuguese (Brazil), Portuguese (Portugal), <br/>
+Punjabi, Quechua, Romanian, Russian, Sindhi, Sinhala, Slovak, Slovenian, Somali, Samoan, Sesotho, Sepedi, Serbian, Shona,<br/>
+Sinhala (Sinhalese), Sundanese, Swahili, Swedish, Swiss German, Tajik, Tamil, Tatar, Telugu, Thai, Tigrinya, Tongan,<br/>
+Tsonga, Turkish, Turkmen, Twi (Akan), Uighur, Ukrainian, Urdu, Uzbek, Vietnamese, Welsh, Xhosa, Yiddish, Yoruba, Zulu<br/>
 
     <!-- Internationalization, Internationalization, Internationalization, Internationalization, Internationalization -->
     <!-- Localization, Localization, Localization, Localization, Localization, Localization, Localization, Localization -->
