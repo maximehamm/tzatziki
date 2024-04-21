@@ -19,7 +19,7 @@ object TranslationEngineFactory {
         //DeepLEnginePro(),
         MicrosoftEngineFree(),
         ChatGPTEngine(),
-        DeepTranslate()
+        //DeepTranslate()
     )
 
     fun engines()
