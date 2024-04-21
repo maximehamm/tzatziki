@@ -57,7 +57,7 @@ open class ChatGPTEngine : IEngine {
             val responseDTO = Gson().fromJson(responseBody, TextCompletionResponse::class.java)
             val text = responseDTO.choices?.firstOrNull()?.text ?: throw TranslationException("Unbale to extract translation")
 
-            return Translation(text.trim(), from)
+            return Translation(text.trim(), sourceLanguage)
         } else {
             throw TranslationException(responseBody?.extractMessage() ?: "No translation found")
         }
