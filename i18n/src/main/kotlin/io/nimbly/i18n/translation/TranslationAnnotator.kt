@@ -42,7 +42,7 @@ class TranslationAnnotator : Annotator {
         //     ?: return
 
         SwingUtilities.invokeLater {
-            val uses = findUsages(element)
+            val uses = findUsages(element, editor)
             if (uses.isNotEmpty()) {
 
                 // val icon = textToIcon("x${uses.size}", 9.0f, -1, Color.GRAY)

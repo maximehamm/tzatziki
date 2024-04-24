@@ -241,7 +241,7 @@ open class TranslateAction : DumbAwareAction()  {
             //
             // Display inlays for references also
             if (file != null) {
-                val targets = findUsages(CommonRefactoringUtil.getElementAtCaret(editor, file))
+                val targets = findUsages(CommonRefactoringUtil.getElementAtCaret(editor, file), editor)
                 targets
                     .forEach {
                         if (element !=null) {

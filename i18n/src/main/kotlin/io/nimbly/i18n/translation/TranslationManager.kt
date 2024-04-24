@@ -69,7 +69,7 @@ object TranslationManager {
             findUsages = null
             updateListenersAfterUsagesCollected(origin.element, project)
             SwingUtilities.invokeLater {
-                findUsages = findUsages(origin.element)
+                findUsages = findUsages(origin.element, origin.editor)
                 updateListenersAfterUsagesCollected(origin.element, project)
             }
         }
