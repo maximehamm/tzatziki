@@ -33,6 +33,7 @@ import com.intellij.openapi.vcs.VcsDataKeys
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
@@ -372,7 +373,7 @@ open class TranslateAction : DumbAwareAction()  {
 
             elt = RenamePsiElementProcessor.forElement(elt).substituteElementToRename(elt, editor)?.findRenamable()  ?: elt
             val rename = RefactoringFactory.getInstance(project)
-                .createRename(elt!!, indented, refactoringSetup.searchInComments, true)
+                .createRename(elt, indented, refactoringSetup.searchInComments, true)
             val usages = rename.findUsages()
             rename.doRefactoring(usages)
         }

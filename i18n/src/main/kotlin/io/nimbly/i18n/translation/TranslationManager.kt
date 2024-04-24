@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.intellij.refactoring.util.CommonRefactoringUtil
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.Translation

@@ -162,8 +162,14 @@ fun findUsages(
     // Remove selected item
     targets.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
 
-    // Remove duplicate items
-    return targets
+    // Remove duplicate references
+    val r = targets
+        .groupBy { it.first.containingFile to it.first.startOffset }
+        .map { it.value.first() }
+        .toSet()
+
+    // Remove duplicate targets
+    return r
         .groupBy { it.first.containingFile to it.second }
         .map { it.value.first() }
         .toSet()
