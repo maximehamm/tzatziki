@@ -104,20 +104,20 @@ fun findUsages(
         targets.add(el to o)
     }
 
-//    val query: Query<PsiReference> = ReferencesSearch.search(el, GlobalSearchScope.projectScope(el.project))
-//    query.forEach { psiReference ->
-//        val element: PsiElement = psiReference.element
-//        if (psiReference != ref)
-//            targets.add(element to element.startOffset)
-//    }
-//
-//    return targets
+    if (!el.containingFile.isWritable)
+        return targets
 
-    val refactoringSetup = RefactoringSetup()
+    val query: Query<PsiReference> = ReferencesSearch.search(el, GlobalSearchScope.projectScope(el.project))
+    query.forEach { psiReference ->
+        val element: PsiElement = psiReference.element
+        if (psiReference != ref)
+            targets.add(element to element.startOffset)
+    }
 
     val elt = RenamePsiElementProcessor.forElement(el).substituteElementToRename(el, editor)?.findRenamable() ?: el
 
     val scope = GlobalSearchScope.projectScope(el.project)
+    val refactoringSetup = RefactoringSetup()
     val rename = RefactoringFactory.getInstance(elt.project)
         .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
     val usages = rename.findUsages()
