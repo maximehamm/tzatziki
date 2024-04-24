@@ -16,7 +16,6 @@ package io.nimbly.i18n.translation
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.HintRenderer
-import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -34,12 +33,12 @@ import com.intellij.openapi.vcs.VcsDataKeys
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.SmartPointerManager
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.RefactoringFactory
 import com.intellij.refactoring.RefactoringUiService
 import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.refactoring.util.CommonRefactoringUtil
 import icons.ActionI18nIcons
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Translation
@@ -242,7 +241,7 @@ open class TranslateAction : DumbAwareAction()  {
             //
             // Display inlays for references also
             if (file != null) {
-                val targets = findUsages(file, startOffset, editor, GlobalSearchScope.projectScope(file.project))
+                val targets = findUsages(CommonRefactoringUtil.getElementAtCaret(editor, file))
                 targets
                     .forEach {
                         if (element !=null) {

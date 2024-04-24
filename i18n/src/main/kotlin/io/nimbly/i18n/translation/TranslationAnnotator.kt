@@ -10,7 +10,6 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiElement
-import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.i18n.util.*
@@ -43,7 +42,7 @@ class TranslationAnnotator : Annotator {
         //     ?: return
 
         SwingUtilities.invokeLater {
-            val uses = findUsages(element, editor, GlobalSearchScope.projectScope(element.project))
+            val uses = findUsages(element)
             if (uses.isNotEmpty()) {
 
                 // val icon = textToIcon("x${uses.size}", 9.0f, -1, Color.GRAY)

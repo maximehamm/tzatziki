@@ -5,17 +5,17 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.impl.NonProjectFileWritingAccessProvider
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
+import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.meta.PsiMetaOwner
 import com.intellij.psi.meta.PsiWritableMetaData
 import com.intellij.psi.search.SearchScope
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiUtilCore
-import com.intellij.refactoring.RefactoringFactory
-import com.intellij.refactoring.rename.RenamePsiElementProcessor
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase.DefaultRenamePsiElementProcessor
 import com.intellij.refactoring.suggested.startOffset
-import com.intellij.refactoring.util.NonCodeUsageInfo
+import com.intellij.refactoring.util.CommonRefactoringUtil
+import com.intellij.util.Query
 import io.nimbly.i18n.TranslationPlusSettings
 
 fun canRename(element: PsiElement?): Boolean {
@@ -85,74 +85,32 @@ class RefactoringSetup {
 }
 
 fun findUsages(
-    file: PsiFile,
-    startOffset: Int,
-    editor: Editor,
-    scope: SearchScope
-): Set<Pair<PsiElement, Int>> {
-    val elt = file.findElementAt(startOffset)
-        ?: return emptySet()
-    return findUsages(elt, editor, scope)
-}
-
-fun findUsages(
-    origin: PsiElement,
-    editor: Editor,
-    scope: SearchScope
+    origin: PsiElement?
 ): Set<Pair<PsiElement, Int>> {
 
-    val element = origin.findRenamable()
-    if (element == null  || !canRename(element))
-        return emptySet()
+    origin ?: return emptySet()
 
-    val targets = mutableSetOf<Pair<PsiElement, Int>>()
+    var el: PsiElement = if (origin is LeafPsiElement) origin.parent else origin
+    if (el.reference != null) {
+        el = el.reference?.resolve()
+            ?: return emptySet()
 
-    val refactoringSetup = RefactoringSetup()
+        el.reference?.resolve()
+    }
+    val o = (el as? PsiNameIdentifierOwner)?.identifyingElement?.startOffset ?: el.startOffset
 
-    val elt = RenamePsiElementProcessor.forElement(element).substituteElementToRename(element, editor)?.findRenamable() ?: element
+    val results = mutableSetOf<Pair<PsiElement, Int>>()
+    results.add(el to o)
 
-    val rename = RefactoringFactory.getInstance(elt.project)
-        .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
-    val usages = rename.findUsages()
-
-    val allRenames = mutableMapOf<PsiElement, String>()
-    allRenames[elt] = "xxx"
-
-    val processors = RenamePsiElementProcessor.allForElement(elt)
-    for (processor in processors) {
-        if (processor.canProcessElement(elt)) {
-            processor.prepareRenaming(elt, "xxx", allRenames)
-        }
+    val query: Query<PsiReference> = ReferencesSearch.search(el)
+    query.forEach { psiReference ->
+        val element: PsiElement = psiReference.element
+        results.add(element to element.startOffset)
     }
 
-    allRenames.forEach { (resolved, renamed) ->
-        if (resolved is PsiNameIdentifierOwner) {
-            val o = resolved.identifyingElement?.startOffset
-            if (o != null && o != elt.startOffset)
-                targets.add(resolved.identifyingElement!! to o)
-        }
-    }
+    results.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
 
-    usages.forEach { usage ->
-        if (usage is NonCodeUsageInfo && scope.contains(usage.element?.containingFile)) {
-            val o = (usage.element?.startOffset ?: -1) + (usage.rangeInElement?.startOffset ?: -1)
-            if (o >= 0)
-                targets.add(usage.element!! to o)
-        } else {
-            val r = usage.reference?.element
-            if (r != null && scope.contains(r.containingFile)) {
-                PsiTreeUtil.collectElements(r) {
-                    if (it is PsiReference && it.resolve() == elt)
-                        targets.add( it to it.startOffset + it.rangeInElement.startOffset)
-                    false
-                }
-            }
-        }
-    }
-
-    targets.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
-
-    return targets
+    return results
 }
 
 private fun SearchScope.contains(file: PsiFile?): Boolean {

@@ -146,22 +146,19 @@ Tsonga, Turkish, Turkmen, Twi (Akan), Uighur, Ukrainian, Urdu, Uzbek, Vietnamese
 
     <extensions defaultExtensionNs="com.intellij">
 
+        <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
+
         <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
         <nameSuggestionProvider implementation="io.nimbly.i18n.translation.TranslationRenamerFactory"/>
 
-        <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
-
-        <iconMapper mappingFile="TranslationIconMappings.json"/>
-
         <projectConfigurable instance="io.nimbly.i18n.preferences.TranslationPlusOptionsConfigurable"
-                             id="io.nimbly.i18n.preferences"
-                             parentId="tools"
-                             groupWeight="1"
-                             displayName="Translation+"/>
+                             displayName="Translation+" id="io.nimbly.i18n.preferences" parentId="tools" groupWeight="1" />
 
         <applicationService serviceImplementation="io.nimbly.i18n.TranslationPlusSettings"/>
+
+        <iconMapper mappingFile="TranslationIconMappings.json"/>
 
         <!--
         <annotator language="" implementationClass="io.nimbly.i18n.translation.TranslationAnnotator"/>

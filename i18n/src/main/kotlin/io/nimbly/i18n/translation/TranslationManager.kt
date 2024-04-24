@@ -4,7 +4,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.search.GlobalSearchScope
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.Translation
@@ -70,7 +69,7 @@ object TranslationManager {
             findUsages = null
             updateListenersAfterUsagesCollected(origin.element, project)
             SwingUtilities.invokeLater {
-                findUsages = findUsages(origin.element, origin.editor, GlobalSearchScope.allScope(origin.element.project))
+                findUsages = findUsages(origin.element)
                 updateListenersAfterUsagesCollected(origin.element, project)
             }
         }

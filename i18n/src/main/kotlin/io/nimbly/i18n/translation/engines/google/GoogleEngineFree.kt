@@ -16,7 +16,6 @@ package io.nimbly.i18n.translation.engines.google
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import com.intellij.util.net.HttpConfigurable
 import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.Translation
@@ -69,7 +68,7 @@ class GoogleEngineFree : IEngine {
                 "&tl=" + URLEncoder.encode(langTo, "UTF-8") +
                 "&dt=t&q=" + URLEncoder.encode(sentence2, "UTF-8")
 
-        val con = HttpConfigurable.getInstance().openConnection(url)
+        val con = com.intellij.util.net.HttpConfigurable.getInstance().openConnection(url)
         con.setRequestProperty("User-Agent", "Mozilla/5.0")
 
         val input = BufferedReader(InputStreamReader(con.getInputStream(), "UTF-8"))
