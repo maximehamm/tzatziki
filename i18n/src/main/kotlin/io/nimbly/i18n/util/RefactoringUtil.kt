@@ -1,20 +1,17 @@
 package io.nimbly.i18n.util
 
 import com.intellij.lang.injection.InjectedLanguageManager
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.impl.NonProjectFileWritingAccessProvider
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.psi.impl.source.tree.LeafPsiElement
 import com.intellij.psi.meta.PsiMetaOwner
 import com.intellij.psi.meta.PsiWritableMetaData
-import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiUtilCore
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase
 import com.intellij.refactoring.rename.RenamePsiElementProcessorBase.DefaultRenamePsiElementProcessor
 import com.intellij.refactoring.suggested.startOffset
-import com.intellij.refactoring.util.CommonRefactoringUtil
 import com.intellij.util.Query
 import io.nimbly.i18n.TranslationPlusSettings
 
@@ -88,34 +85,25 @@ fun findUsages(
     origin: PsiElement?
 ): Set<Pair<PsiElement, Int>> {
 
-    origin ?: return emptySet()
+    val results = mutableSetOf<Pair<PsiElement, Int>>()
+    origin ?: return results
 
     var el: PsiElement = if (origin is LeafPsiElement) origin.parent else origin
-    if (el.reference != null) {
-        el = el.reference?.resolve()
-            ?: return emptySet()
+    val ref = el.reference
+    if (ref != null) {
+        el = ref.resolve() ?: return emptySet()
 
-        el.reference?.resolve()
+        val o = (el as? PsiNameIdentifierOwner)?.identifyingElement?.startOffset ?: el.startOffset
+        results.add(el to o)
     }
-    val o = (el as? PsiNameIdentifierOwner)?.identifyingElement?.startOffset ?: el.startOffset
-
-    val results = mutableSetOf<Pair<PsiElement, Int>>()
-    results.add(el to o)
 
     val query: Query<PsiReference> = ReferencesSearch.search(el)
     query.forEach { psiReference ->
         val element: PsiElement = psiReference.element
-        results.add(element to element.startOffset)
+        if (psiReference != ref)
+            results.add(element to element.startOffset)
     }
-
-    results.removeIf { it.first.containingFile == origin.containingFile && origin.textRange.contains(it.second) }
 
     return results
 }
 
-private fun SearchScope.contains(file: PsiFile?): Boolean {
-    if (file == null)
-        return false
-
-    return this.contains(file.virtualFile)
-}
