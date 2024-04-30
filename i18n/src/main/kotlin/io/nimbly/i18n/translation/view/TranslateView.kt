@@ -30,6 +30,7 @@ import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.TextRange
@@ -56,6 +57,7 @@ import io.nimbly.i18n.translation.engines.EEngine
 import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.*
+import org.jetbrains.ide.RestService
 import java.awt.*
 import java.awt.event.*
 import java.awt.event.ItemEvent.SELECTED
@@ -461,7 +463,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
         titlePane.addHyperlinkListener { e ->
             if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
 
-                ShowSettingsUtil.getInstance().showSettingsDialog(ctxt.project, TranslationPlusOptionsConfigurable::class.java)
+                ShowSettingsUtil.getInstance().showSettingsDialog(ctxt.project, "Translation+")
 
                 // Open as dialog with T+ settings only :
                 // ShowSettingsUtil.getInstance().editConfigurable(this, TranslationPlusOptionsConfigurable())

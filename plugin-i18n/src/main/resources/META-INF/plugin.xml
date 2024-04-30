@@ -21,21 +21,20 @@
     </vendor>
     <description><![CDATA[
 
-    <b>Translate anything to 120+ languages !</b><br/>
-    <b>Choose an API: Google Translate, DeepL, Microsoft Translator, ChatGPT !</b><br/>
-    <b>Works with all Jetbrains products ! No API key request for Google Translate</b><br/>
+    <b>Translate & replace 120+ languages !</b><br/>
+    <b>Choose Google Translate, DeepL, Microsoft Translator, ChatGPT !</b><br/>
+    <b>NO API-KEY for Google Translate !</b><br/>
     <br/>
-      • Select some text to localize inside editor<br/>
+      • Select some text to localize<br/>
         &nbsp;&nbsp;or write a word in your native language and translate it immediatly !<br/>
       • Use “Translation” view to select translation input and ouput language<br/>
       • Use “Dictionary” view to display full definition of selected word (english only)<br/>
     <br/>
     <b>CTRL+T : Ask for translation (or menu “Edit &gt; Translate”)</b><br/>
-    <b>CTRL+ALT : Ask for word definition (or menu “Edit &gt; Search definition”)</b><br/>
 
     <br/>
     <b>TIPS:</b><br/>
-    <b>&nbsp;• Works even without API key (i.e Google Translate)</b><br/>
+    <b>&nbsp;• Works even without API key (Google Translate only)</b><br/>
     <b>&nbsp;• Supports file encoding for: HTML, JSON, CSV, XML, PROPERTIES</b><br/>
     <b>&nbsp;• Supports styles: “CamelCase”, “SNAKE_CASE”, “snake_case” !</b><br/>
     <b>&nbsp;• Smart replacement everywhere using refactoring :) </b><br/>
