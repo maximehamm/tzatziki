@@ -35,12 +35,13 @@ abstract class TranslateErrorAction : DumbAwareAction()  {
 
         val mySettings = TranslationPlusSettings.getSettings()
         val activeEngine = mySettings.activeEngine
-        val languagesMap = TranslationEngineFactory.engine(activeEngine).languages()
+        val engine = TranslationEngineFactory.engine(activeEngine)
+        val languagesMap = engine.languages()
 
         event.presentation.isVisible = lang != Lang.AUTO.code
         event.presentation.isEnabled = node != null
 
-        event.presentation.icon = TranslationIcons.getFlag(lang)
+        event.presentation.icon = TranslationIcons.getFlag(lang, engine = engine)
         event.presentation.text = "Add ${languagesMap[lang] + " tooltip"}"
     }
 

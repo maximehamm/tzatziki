@@ -3,7 +3,9 @@ package io.nimbly.i18n.translation.view
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanelWithEmptyText
 import com.intellij.util.ui.UIUtil
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.TranslationIcons
 import java.awt.BorderLayout
 import java.awt.Component
@@ -34,7 +36,12 @@ class IsoCodesComboBoxEditor : BasicComboBoxEditor() {
     override fun setItem(anObject: Any?) {
         if (anObject is Lang) {
             label.text = anObject.name
-            val originalIcon = TranslationIcons.getFlag(anObject.code)!!
+
+            val mySettings = TranslationPlusSettings.getSettings()
+            val activeEngine = mySettings.activeEngine
+            val engine = TranslationEngineFactory.engine(activeEngine)
+
+            val originalIcon = TranslationIcons.getFlag(anObject.code, engine = engine)
             val image = BufferedImage(18, originalIcon.iconHeight, BufferedImage.TYPE_INT_ARGB)
             val g2d = image.createGraphics()
             originalIcon.paintIcon(this.panel, g2d, 0, 0)

@@ -54,6 +54,7 @@ import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.preferences.TranslationPlusOptionsConfigurable
 import io.nimbly.i18n.translation.*
 import io.nimbly.i18n.translation.engines.EEngine
+import io.nimbly.i18n.translation.engines.IEngine
 import io.nimbly.i18n.translation.engines.Lang
 import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.*
@@ -165,7 +166,8 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         val mySettings = TranslationPlusSettings.getSettings()
         val activeEngine = mySettings.activeEngine
-        this.languagesMap = TranslationEngineFactory.engine(activeEngine).languages()
+        val engine = TranslationEngineFactory.engine(activeEngine)
+        this.languagesMap = engine.languages()
 
         setContent(initPanel())
 
@@ -229,7 +231,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             model.selectedItem = model.items.find { it.code == output }
         }
 
-        outputFlagIcon = TranslationIcons.getFlag(output.lowercase()) ?: I18N
+        outputFlagIcon = TranslationIcons.getFlag(output.lowercase(), engine = engine) ?: I18N
 
         translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
 
@@ -247,7 +249,8 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
             if (e.stateChange == SELECTED) {
                 val lang = e.item as Lang
                 TranslationPlusSettings.getSettings().output = lang.code
-                outputFlagIcon = TranslationIcons.getFlag(lang.code)
+
+                outputFlagIcon = TranslationIcons.getFlag(lang.code, engine = engine)
                 translateAction.putValue(Action.SMALL_ICON, outputFlagIcon)
             }
         }
@@ -623,7 +626,7 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
     }
 
     private fun initTitle() {
-        val activeEngine = TranslationEngineFactory.engine(TranslationPlusSettings.getSettings().activeEngine)
+        val activeEngine: IEngine = TranslationEngineFactory.engine(TranslationPlusSettings.getSettings().activeEngine)
         titlePane.text =
             """<html>
                 Translating text using <a href='GO_ENGINE'>${activeEngine.label()}</a><br/>

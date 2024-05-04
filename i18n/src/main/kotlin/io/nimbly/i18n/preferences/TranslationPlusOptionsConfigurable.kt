@@ -13,6 +13,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager
 import com.intellij.util.ui.JBHtmlEditorKit
 import com.intellij.util.ui.JBInsets
 import com.intellij.util.ui.JBUI
+import com.jetbrains.rd.util.first
+import com.jetbrains.rd.util.firstOrNull
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.TranslationManager
 import io.nimbly.i18n.translation.engines.IEngine
@@ -141,7 +143,11 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
                 apply()
                 val engine = checkBoxes.firstOrNull { it.second.isSelected }?.first ?: return
-                val lang = (testAction!!.getValue(SMALL_ICON) as ZIcon).locale
+                var lang = (testAction!!.getValue(SMALL_ICON) as ZIcon).locale
+                if (engine.languages().get(lang) == null) {
+                    lang = engine.languagesToIso639().filter { it.value == "fr" }.firstOrNull()?.key ?: engine.languages().first().key
+                }
+
                 testLabel.foreground = foreground
 
                 try {
@@ -154,11 +160,11 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
                         text = translation.translated
                         testLabel.text = text
                         val newLang = engine.languages().keys.filter { it != lang }.random()
-                        testAction!!.putValue(SMALL_ICON, TranslationIcons.getFlag(newLang))
+                        testAction!!.putValue(SMALL_ICON, TranslationIcons.getFlag(newLang, engine = engine))
                         testAction!!.putValue(NAME, "Test translation to " + engine.languages()[newLang])
                     }
                 } catch (e: Exception) {
-                    LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + e.message)
+                    LOG.info("Build test panel error : " + e.message)
                     testLabel.text = e.message
                     testLabel.foreground = JBColor.RED
                 }
@@ -290,7 +296,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
         langs.border = JBUI.Borders.emptyTop(3)
 
         engine.languages()
-            .map { TranslationIcons.getFlag(it.key) to it.value }
+            .map { TranslationIcons.getFlag(it.key, engine = engine) to it.value }
             .sortedBy { (if (it.first.flag) "A" else "Z") + "#" + it.second }
             .forEach { (flag, lang) ->
                 val flagLabel = JBLabel(flag)
@@ -338,7 +344,7 @@ class TranslationPlusOptionsConfigurable : SearchableConfigurable, Configurable.
 
             val selectedEngine = checkBoxes.first { it.second.isSelected }.first
             val newLang = selectedEngine.languages().keys.random()
-            testAction!!.putValue(AbstractAction.SMALL_ICON, TranslationIcons.getFlag(newLang))
+            testAction!!.putValue(AbstractAction.SMALL_ICON, TranslationIcons.getFlag(newLang, engine = engine))
         }
 
         check.isSelected = engine.type == mySettings.activeEngine

@@ -226,6 +226,10 @@ open class JavaStepDefinitionCreator : AbstractStepDefinitionCreator() {
         else {
             snippet = generator.getSnippet(createStep(step), TzFunctionNameGenerator(CamelCaseConcatenator()))
         }
+        if (snippet.startsWith("@*")) {
+            snippet = "@When" + snippet.substring(2)
+        }
+
         snippet = snippet.replaceFirst("@".toRegex(), methodAnnotation)
         snippet = processGeneratedStepDefinition(snippet, step)
         val factory = jvmElementFactory(file, step)

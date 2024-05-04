@@ -43,6 +43,7 @@ import com.intellij.refactoring.util.CommonRefactoringUtil
 import icons.ActionI18nIcons
 import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Translation
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.*
 
 open class TranslateAction : DumbAwareAction()  {
@@ -58,8 +59,12 @@ open class TranslateAction : DumbAwareAction()  {
         val editor = editorRef ?: event.editor
         event.presentation.isEnabledAndVisible = editor!=null
 
+        val mySettings = TranslationPlusSettings.getSettings()
+        val activeEngine = mySettings.activeEngine
+        val engine = TranslationEngineFactory.engine(activeEngine)
+
         val output = TranslationPlusSettings.getSettings().output
-        event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase())
+        event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase(), engine = engine)
             ?: ActionI18nIcons.I18N
 
         var readyToApplyTranslation = false

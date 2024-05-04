@@ -7,7 +7,9 @@ import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.psi.PsiElement
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.ui.JBColor
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.TranslationManager
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -58,8 +60,12 @@ class EditorHint(
             val ratio = zoom * 0.8
             val spacing = (zoom * 5).toInt()
 
+            val mySettings = TranslationPlusSettings.getSettings()
+            val activeEngine = mySettings.activeEngine
+            val engine = TranslationEngineFactory.engine(activeEngine)
+
             var icon =
-                this.icon ?: TranslationIcons.getFlag(flag!!, ratio)!!
+                this.icon ?: TranslationIcons.getFlag(flag!!, ratio, engine = engine)
 
             if (secondaryIcon)
                 icon = icon.addVeilToIcon()

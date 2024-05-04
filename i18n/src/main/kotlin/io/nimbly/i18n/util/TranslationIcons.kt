@@ -17,26 +17,32 @@ package io.nimbly.i18n.util
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
 import com.intellij.util.IconUtil
-import java.awt.Color
+import io.nimbly.i18n.translation.engines.IEngine
 import javax.swing.Icon
 
 interface TranslationIcons {
 
     companion object {
 
-        fun getFlag(locale: String, scaleRatio: Double = 0.8): ZIcon {
+        fun getFlag(locale: String, scaleRatio: Double = 0.8, engine: IEngine? = null): ZIcon {
 
-            var icon = FLAGS[locale + scaleRatio]
+            var iso = locale
+            if (engine!=null) {
+                val l = engine.languagesToIso639()[locale]
+                iso = l ?: iso
+            }
+
+            var icon = FLAGS[iso + scaleRatio]
             if (icon != null) return icon
 
             try {
-                var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/$locale.svg", TranslationIcons::class.java)
+                var ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/$iso.svg", TranslationIcons::class.java)
                 if (!ico.exists()) {
-                    ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/${locale.substringBefore("-")}.svg", TranslationIcons::class.java)
+                    ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/svg/${iso.substringBefore("-")}.svg", TranslationIcons::class.java)
                     if (!ico.exists()) {
-                        ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$locale.png", TranslationIcons::class.java)
+                        ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/$iso.png", TranslationIcons::class.java)
                         if (!ico.exists()) {
-                            ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/${locale.substringBefore("-")}.png", TranslationIcons::class.java)
+                            ico = IconLoader.findIcon("io/nimbly/i18n/icons/languages/${iso.substringBefore("-")}.png", TranslationIcons::class.java)
                             if (!ico.exists()) {
                                 throw NullPointerException()
                             }
@@ -51,7 +57,7 @@ interface TranslationIcons {
                 val ticon = textToIcon(locale.uppercase(), (scaleRatio * 11f).toFloat(), -1, JBColor.GRAY)
                 icon = ZIcon(locale, ticon, false)
             }
-            FLAGS[locale + scaleRatio] = icon!!
+            FLAGS[iso + scaleRatio] = icon!!
 
             return icon
         }

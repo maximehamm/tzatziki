@@ -16,10 +16,10 @@ object TranslationEngineFactory {
 
     private val engines = listOf(
         GoogleEngineFree(),
+        BaiduTranslate(),
         DeepLEngine(),
         MicrosoftEngineFree(),
         ChatGPTEngine(),
-        //BaiduTranslate()
         //DeepTranslate()
     )
 
@@ -56,6 +56,8 @@ interface IEngine {
     fun documentation(): String
 
     fun languages(): Map<String, String>
+
+    fun languagesToIso639(): Map<String, String> = emptyMap()
 }
 
 data class Translation(

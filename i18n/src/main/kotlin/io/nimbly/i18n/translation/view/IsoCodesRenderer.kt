@@ -1,7 +1,9 @@
 package io.nimbly.i18n.translation.view
 
 import com.intellij.util.ui.UIUtil
+import io.nimbly.i18n.TranslationPlusSettings
 import io.nimbly.i18n.translation.engines.Lang
+import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 import io.nimbly.i18n.util.TranslationIcons
 import java.awt.Component
 import java.awt.Font
@@ -29,7 +31,12 @@ class IsoCodesRenderer : DefaultListCellRenderer() {
                 originalIcon = TranslationIcons.getFlag(" ")
                 font = font.deriveFont(Font.BOLD)
             } else {
-                originalIcon = TranslationIcons.getFlag(value.code)
+
+                val mySettings = TranslationPlusSettings.getSettings()
+                val activeEngine = mySettings.activeEngine
+                val engine = TranslationEngineFactory.engine(activeEngine)
+
+                originalIcon = TranslationIcons.getFlag(value.code, engine = engine)
                 font = font.deriveFont(Font.PLAIN)
             }
 
