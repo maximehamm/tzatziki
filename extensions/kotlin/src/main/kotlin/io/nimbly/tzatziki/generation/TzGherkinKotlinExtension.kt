@@ -104,7 +104,9 @@ class TzGherkinKotlinExtension : TzGherkinJavaExtension() {
             else {
                 snippet = generator.getSnippet(createStep(step), TzFunctionNameGenerator(CamelCaseConcatenator()))
             }
-
+            if (snippet.startsWith("@*")) {
+                snippet = "@When" + snippet.substring(2)
+            }
             val annotationPackage = AnnotationPackageProvider().getAnnotationPackageFor(step)
             val stepName = step.keyword.text.fixName()
             val importDirective = ktPsiFactory.createImportDirective(ImportPath.fromString("$annotationPackage.$stepName"))
