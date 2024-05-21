@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "10.1.0"
+version = "10.2.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>

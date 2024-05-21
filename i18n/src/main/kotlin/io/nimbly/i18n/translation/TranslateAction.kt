@@ -64,8 +64,7 @@ open class TranslateAction : DumbAwareAction()  {
         val engine = TranslationEngineFactory.engine(activeEngine)
 
         val output = TranslationPlusSettings.getSettings().output
-        event.presentation.icon =  TranslationIcons.getFlag(output.trim().lowercase(), engine = engine)
-            ?: ActionI18nIcons.I18N
+        event.presentation.icon = TranslationIcons.getFlag(output.trim().lowercase(), engine = engine)
 
         var readyToApplyTranslation = false
         editor?.let { ed ->
@@ -79,8 +78,6 @@ open class TranslateAction : DumbAwareAction()  {
         else {
             event.presentation.text = "Translate"
         }
-
-        super.update(event)
     }
 
     override fun actionPerformed(event: AnActionEvent) {
