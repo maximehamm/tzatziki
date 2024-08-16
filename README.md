@@ -3,7 +3,7 @@
 Developped by Maxime HAMM
 _Maxime.HAMM@nimbly-consulting.com_
 
-This plugin is compatible with Jetbrain products
+This plugin is compatible with Jetbrains products
 
 - `plugin` : main plugin code
 - `extensions` : extensions (future use)
@@ -26,7 +26,7 @@ Setup a system variable :
 - Edit `~/.bash_profile` (if you're using bash)
   Then `source ~/.bash_profile`
   Add `export ORG_GRADLE_PROJECT_intellijPublishToken='xxxx'`
-- Or add `-DPublishToken=xxxx` as VM Parameter 
+- Or add `-DPublishToken=xxxx` as VM Parameter
 
 _Token is known by Maxime HAMM :)_
 
@@ -43,7 +43,7 @@ _Token is known by Maxime HAMM :)_
 - Upgrade version in `./build.gradle`
 - Update change note in `./plugin-tzatziki/build.gradle`
 - Update change note in `./plugin-i18n/build.gradle`
-- Publish to marketplace 
+- Publish to marketplace
   - Using task `plugin-tzatziki > Tasks > intellij > publishPlugin`
   - Using task `plugin-i18n > Tasks > intellij > publishPlugin`
 
