@@ -12,11 +12,12 @@ import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.icons.AllIcons
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.project.Project
 
 class GherkinFeatureNode(p: Project, feature: GherkinFeature, exp: Expression?) : AbstractTzPsiElementNode<GherkinFeature>(p, feature, exp),
+
     TzRunnableNode {
 
     override fun update(presentation: PresentationData) {
@@ -44,12 +45,23 @@ class GherkinFeatureNode(p: Project, feature: GherkinFeature, exp: Expression?) 
     }
 
     override fun getRunDataContext(): ConfigurationContext {
-        val context = TzDataContext()
-        context.put(CommonDataKeys.PROJECT, project)
-        context.put(CommonDataKeys.PSI_FILE, value.containingFile)
-        context.put(LangDataKeys.MODULE, value.getModule())
-        context.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
-        return context.configutation()
+
+        val ctx = SimpleDataContext
+            .builder()
+            .add(CommonDataKeys.PROJECT, project)
+            .add(CommonDataKeys.PSI_FILE, value.containingFile)
+            .add(LangDataKeys.MODULE, value.getModule())
+            .add(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
+            .build()
+
+        return  ConfigurationContext.getFromContext(ctx, ActionPlaces.UNKNOWN)
+
+//        val context = TzDataContext()
+//        context.put(CommonDataKeys.PROJECT, project)
+//        context.put(CommonDataKeys.PSI_FILE, value.containingFile)
+//        context.put(LangDataKeys.MODULE, value.getModule())
+//        context.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
+//        return context.configutation()
     }
 
     override fun getRunActionText() = "Run feature..."

@@ -8,8 +8,10 @@ import com.intellij.execution.PsiLocation
 import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.ide.projectView.PresentationData
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleType
 import com.intellij.openapi.project.guessModuleDir
@@ -53,8 +55,8 @@ class ModuleNode(
     }
 
     override fun getRunDataContext(): ConfigurationContext {
-        val dataContext = TzDataContext()
-        dataContext.put(CommonDataKeys.PROJECT, project)
+        val dataContext = SimpleDataContext.builder()
+        dataContext.add(CommonDataKeys.PROJECT, project)
 
         val file = children.filterIsInstance<GherkinFileNode>().firstOrNull()?.file
             ?: return emptyConfigurationContext()
@@ -66,12 +68,13 @@ class ModuleNode(
             val psiDirectory = basePath.toPsiDirectory(project)
             if (psiDirectory != null) {
 
-                dataContext.put(Location.DATA_KEY, PsiLocation.fromPsiElement(psiDirectory))
-                dataContext.put(LangDataKeys.MODULE, fileModule)
+                dataContext.add(Location.DATA_KEY, PsiLocation.fromPsiElement(psiDirectory))
+                dataContext.add(LangDataKeys.MODULE, fileModule)
             }
         }
 
-        return dataContext.configutation()
+        return  ConfigurationContext.getFromContext(dataContext.build(), ActionPlaces.UNKNOWN)
+//        return dataContext.configutation()
     }
 
     override fun getRunActionText() = "Run Cucumber tests in $moduleName..."
