@@ -1,6 +1,6 @@
 package io.nimbly.tzatziki.view.features.nodes
 
-import icons.CucumberIcons
+//import icons.CucumberIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.checkExpression
 import io.nimbly.tzatziki.util.emptyConfigurationContext
@@ -10,12 +10,13 @@ import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.project.Project
+import io.nimbly.tzatziki.util.ActionIcons
 
 class GherkinFileNode(p: Project, val file: GherkinFile, exp: Expression?) : AbstractTzPsiElementNode<GherkinFile>(p, file, exp), TzRunnableNode {
 
     override fun update(presentation: PresentationData) {
         presentation.presentableText = value.name.substringBeforeLast(".")
-        presentation.setIcon(CucumberIcons.Cucumber)
+        presentation.setIcon(ActionIcons.CUCUMBER)
     }
 
     override fun getChildren(): MutableCollection<out AbstractTreeNode<*>> {

@@ -1,7 +1,6 @@
 package io.nimbly.tzatziki.view.features.nodes
 
 import io.cucumber.tagexpressions.Expression
-import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.checkExpression
 import io.nimbly.tzatziki.util.getModule
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature

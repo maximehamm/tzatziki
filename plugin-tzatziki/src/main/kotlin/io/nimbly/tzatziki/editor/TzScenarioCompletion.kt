@@ -30,8 +30,7 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
-import icons.ActionIcons
-import icons.CucumberIcons
+//import icons.CucumberIcons
 import io.nimbly.tzatziki.services.TzFileService
 import io.nimbly.tzatziki.services.getGherkinScope
 import io.nimbly.tzatziki.util.*
@@ -134,13 +133,13 @@ class TzScenarioCompletion: CompletionContributor() {
                 if (lookup is LookupElementBuilder) {
 
                     lookup = lookup
-                        .withIcon(CucumberIcons.Cucumber)
+                        .withIcon(ActionIcons.CUCUMBER)
                         .withPresentableText(lookupString)
                         .withExpensiveRenderer(object : LookupElementRenderer<LookupElement>() {
 
                             override fun renderElement(element: LookupElement, presentation: LookupElementPresentation) {
 
-                                presentation.icon = CucumberIcons.Cucumber
+                                presentation.icon = ActionIcons.CUCUMBER
                                 presentation.itemText = lookupString
                                 presentation.isItemTextBold = false
 

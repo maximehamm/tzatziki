@@ -8,13 +8,11 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.project.Project
 import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.CucumberPlusDataKeys
-import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.getModule
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 
