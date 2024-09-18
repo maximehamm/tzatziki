@@ -36,7 +36,7 @@ object JavaUtil {
             val f1 = `object`.javaClass.getDeclaredField(field)
             f1.isAccessible = true
             @Suppress("DEPRECATION")
-            f1.set(`object`, Integer(inte))
+            f1.set(`object`, Integer.valueOf(inte))
         } catch (ignored: Exception) {
         }
     }
