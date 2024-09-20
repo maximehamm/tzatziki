@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "10.4.0"
+version = "10.5.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
@@ -56,7 +56,7 @@ tasks {
 
         // Check build number here : https://www.jetbrains.com/idea/download/other.html
         sinceBuild.set("222.4554.10")    // 2021.2.4
-        untilBuild.set("242.*")
+        untilBuild.set("243.*")
 
         changeNotes.set(notes)
     }
