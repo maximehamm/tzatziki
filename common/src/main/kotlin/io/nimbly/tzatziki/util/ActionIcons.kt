@@ -20,5 +20,6 @@ import com.intellij.ui.IconManager
 // See Intellij Icons here : https://jetbrains.design/intellij/resources/icons_list/
 object ActionIcons {
 
+    val CUCUMBER = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber.svg", javaClass)
     val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)
 }

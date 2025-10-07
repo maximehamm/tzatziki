@@ -22,6 +22,14 @@ import java.time.format.DateTimeFormatter
 
 object JavaUtil {
 
+    fun Any.invokeMethod(method: String,
+                         argClasses: List<Class<*>>,
+                         args: MutableList<Any?>): Any {
+        val f1 = javaClass.getDeclaredMethod(method, *argClasses.toTypedArray())
+        f1.isAccessible = true
+        return f1.invoke(this, *args.toTypedArray())
+    }
+
     fun updateField(`object`: Any, field: String?, bool: Boolean) {
         try {
             val f1 = `object`.javaClass.getDeclaredField(field)
@@ -36,7 +44,7 @@ object JavaUtil {
             val f1 = `object`.javaClass.getDeclaredField(field)
             f1.isAccessible = true
             @Suppress("DEPRECATION")
-            f1.set(`object`, Integer(inte))
+            f1.set(`object`, Integer.valueOf(inte))
         } catch (ignored: Exception) {
         }
     }

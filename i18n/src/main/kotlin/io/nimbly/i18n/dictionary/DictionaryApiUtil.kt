@@ -1,11 +1,14 @@
 package io.nimbly.i18n.dictionary
 
 import com.google.gson.Gson
-import com.intellij.util.net.HttpConfigurable
+import com.intellij.util.io.HttpRequests
+import com.intellij.util.proxy.CommonProxy
 import io.nimbly.i18n.util.nullIfEmpty
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.net.URL
+import java.net.URLConnection
 import java.net.URLEncoder
 
 fun searchDefinition(
@@ -31,7 +34,7 @@ private fun callUrlAndParseResult(word: String): DefinitionResult {
     val url = "https://api.dictionaryapi.dev/api/v2/entries/en/" +
             URLEncoder.encode(word, "UTF-8")
 
-    val con = HttpConfigurable.getInstance().openConnection(url)
+    val con = openConnection(url)
     con.setRequestProperty("User-Agent", "Mozilla/5.0")
 
     val input = BufferedReader(InputStreamReader(con.getInputStream(), "UTF-8"))
@@ -66,6 +69,35 @@ private fun callUrlAndParseResult(word: String): DefinitionResult {
         result = word,
         shortDefinition = shortDefinition)
 }
+
+@Throws(IOException::class)
+fun openConnection(location: String): URLConnection {
+    val url = URL(location)
+    var urlConnection: URLConnection? = null
+    val proxies = CommonProxy.getInstance().select(url)
+    if (proxies.isEmpty()) {
+        urlConnection = url.openConnection()
+    } else {
+        var exception: IOException? = null
+        for (proxy in proxies) {
+            try {
+                urlConnection = url.openConnection(proxy)
+            } catch (e: IOException) {
+                // continue iteration
+                exception = e
+            }
+        }
+        if (urlConnection == null && exception != null) {
+            throw exception
+        }
+    }
+
+    checkNotNull(urlConnection)
+    urlConnection.readTimeout = HttpRequests.READ_TIMEOUT
+    urlConnection.connectTimeout = HttpRequests.CONNECTION_TIMEOUT
+    return urlConnection
+}
+
 
 fun generateHtml(word: Word): String {
     val sb = StringBuilder()

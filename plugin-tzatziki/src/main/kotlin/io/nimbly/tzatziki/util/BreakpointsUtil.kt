@@ -1,15 +1,17 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
-import com.intellij.xdebugger.impl.XDebuggerUtilImpl
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
+import io.nimbly.tzatziki.util.JavaUtil.invokeMethod
+import org.jetbrains.concurrency.Promise
 import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 import org.jetbrains.plugins.cucumber.psi.GherkinPsiElement
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -34,13 +36,32 @@ fun PsiElement.findBreakpoint(): XBreakpoint<*>? {
 }
 
 fun GherkinPsiElement.toggleGherkinBreakpoint(documentLine: Int) {
-    (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
+    toggleAndReturnLineBreakpoint(
         project,
         containingFile.virtualFile,
         documentLine, false)
         ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>>? ->
             it?.conditionExpression = null
         }
+}
+
+fun toggleAndReturnLineBreakpoint(
+    project: Project,
+    file: VirtualFile,
+    line: Int,
+    temporary: Boolean
+): Promise<XLineBreakpoint<*>>? {
+
+    // Hide to Jetbrain the use of this internal method !
+    // Not a nice solution... but copying hundreds of lines of code from XDebuggerUtil is worth !
+    return XDebuggerUtil.getInstance().invokeMethod("toggleAndReturnLineBreakpoint",
+        listOf(Project::class.java, VirtualFile::class.java, Int::class.java, Boolean::class.java),
+        mutableListOf(project, file, line, temporary)) as Promise<XLineBreakpoint<*>>?
+//    return (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
+//            project,
+//            file,
+//            line,
+//            temporary)
 }
 
 fun GherkinPsiElement.deleteBreakpoints() {
@@ -56,7 +77,7 @@ fun toggleCodeBreakpoint(
     codeElement: Pair<PsiElement, Int>,
     project: Project
 ) {
-    (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
+    toggleAndReturnLineBreakpoint(
         project,
         codeElement.first.containingFile.virtualFile,
         codeElement.second, false

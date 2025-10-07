@@ -6,12 +6,13 @@ import com.intellij.execution.actions.ConfigurationContext
 import com.intellij.execution.actions.RunConfigurationProducer
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ide.util.treeView.AbstractTreeNode
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.project.Project
 import icons.ActionIcons
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.CucumberPlusDataKeys
-import io.nimbly.tzatziki.util.TzDataContext
 import io.nimbly.tzatziki.util.getModule
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
 
@@ -38,12 +39,23 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
     }
 
     override fun getRunDataContext(): ConfigurationContext {
-        val context = TzDataContext()
-        context.put(CommonDataKeys.PROJECT, project)
-        context.put(CommonDataKeys.PSI_FILE, value.containingFile)
-        context.put(CucumberPlusDataKeys.MODULE, value.getModule())
-        context.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
-        return context.configutation()
+
+        val ctx = SimpleDataContext
+            .builder()
+            .add(CommonDataKeys.PROJECT, project)
+            .add(CommonDataKeys.PSI_FILE, value.containingFile)
+            .add(CucumberPlusDataKeys.MODULE, value.getModule())
+            .add(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
+            .build()
+
+        return  ConfigurationContext.getFromContext(ctx, ActionPlaces.UNKNOWN)
+
+//        val context = TzDataContext()
+//        context.put(CommonDataKeys.PROJECT, project)
+//        context.put(CommonDataKeys.PSI_FILE, value.containingFile)
+//        context.put(CucumberPlusDataKeys.MODULE, value.getModule())
+//        context.put(Location.DATA_KEY, PsiLocation.fromPsiElement(value.firstChild))
+//        return context.configutation()
     }
 
     override fun getRunActionText() = "Run scenario..."
