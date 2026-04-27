@@ -12,7 +12,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
-         <li><b>18.5</b> Fix test #118, #119, #80, #99</li>
+         <li><b>18.5</b> Fix #118, #119, #80, #99</li>
          <li><b>18.4</b> Fix test result highlights refresh</li>
          <li><b>18.3</b> Fix breakpoint set and un unset issue</li>
          <li><b>18.2</b> IntelliJ IDEA 2026.1 compatibility</li>
