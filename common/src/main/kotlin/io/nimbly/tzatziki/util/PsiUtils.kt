@@ -42,7 +42,7 @@ import java.io.File
 
 
 fun VirtualFile.getFile(project: Project): PsiFile?
-    = PsiManager.getInstance(project).findFile(this)
+    = if (isValid) PsiManager.getInstance(project).findFile(this) else null
 
 fun Project.getDirectory(): PsiDirectory? {
 
