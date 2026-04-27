@@ -358,7 +358,8 @@
                     id="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
                     text="Add Cucumber+ Breakpoint">
             </action>
-            <add-to-group group-id="EditorGutterPopupMenu.Appearance" anchor="last"/>
+            <!-- EditorGutterPopupMenu.Appearance is absent in Gateway/Remote Dev backend — use parent group -->
+            <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
         </group>
 
         <group id="io.nimbly.tzatziki.execution-progress.group">
@@ -366,7 +367,8 @@
                     id="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuidesAction"
                     text="Show Cucumber+ Execution Guides">
             </action>
-            <add-to-group group-id="EditorGutterPopupMenu.Appearance" anchor="after" relative-to-action="EditorGutterToggleGlobalLineNumbers"/>
+            <!-- EditorGutterPopupMenu.Appearance is absent in Gateway/Remote Dev backend — use parent group -->
+            <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
         </group>
 
 
