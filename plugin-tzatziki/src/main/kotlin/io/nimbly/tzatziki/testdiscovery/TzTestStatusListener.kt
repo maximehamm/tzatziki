@@ -51,6 +51,11 @@ class TzTestStatusListener : TestStatusListener() {
                     val r = findTestSteps(test, project)
                     results.putAll(r)
                 }
+        }
+
+        // Schedule refresh AFTER any pending clearHighlighters() invokeLater from onTextAvailable,
+        // so EDT ordering guarantees: clear → refresh (fixes race on fast test suites)
+        ApplicationManager.getApplication().invokeLater {
             TzTestRegistry.refresh(results)
         }
 

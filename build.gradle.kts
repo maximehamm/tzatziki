@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "18.2.0"
+    version = "18.4.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,8 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>18.4</b> Fix test result highlights refresh</li>
+         <li><b>18.3</b> Fix breakpoint set and un unset issue</li>
          <li><b>18.2</b> IntelliJ IDEA 2026.1 compatibility</li>
          <li><b>18.1</b> IntelliJ IDEA 2025.2 compatibility</li>
          <li><b>18.0</b> IntelliJ IDEA 2025.1.1 compatibility</li>
