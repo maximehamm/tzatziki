@@ -4,13 +4,16 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "10.5.0"
+version = "11.2.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul>
+         <li><b>11.2.0</b> IntelliJ IDEA 2026.1 compatibility</li>
+         <li><b>11.1.0</b> IntelliJ IDEA 2025.2 compatibility</li>
+         <li><b>11.0.0</b> IntelliJ IDEA 2025.1.1 compatibility</li>
          <!--<li><b>11.0.0</b> Adding support of Deep Translate API</li>-->
          <li><b>10.0.0</b> Adding support of Baidu API</li>
          <li><b>9.0.0</b> Adding support of ChatGPT API</li>
@@ -56,7 +59,7 @@ tasks {
 
         // Check build number here : https://www.jetbrains.com/idea/download/other.html
         sinceBuild.set("222.4554.10")    // 2021.2.4
-        untilBuild.set("243.*")
+        untilBuild.set("252.*")
 
         changeNotes.set(notes)
     }
