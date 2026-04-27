@@ -55,8 +55,9 @@ fun Project.getDirectory(): PsiDirectory? {
     return PsiManager.getInstance(this).findDirectory(virtualFile)
 }
 
-fun Project.rootModule()
-    = this.getDirectory()?.getModule()
+// rootModule via modulesTree() to support WSL and remote VFS (VfsUtil.findFileByIoFile fails on non-local paths)
+fun Project.rootModule(): Module?
+    = this.modulesTree()?.value
 
 fun VirtualFile.getDirectory(project: Project): PsiDirectory?
     = PsiManager.getInstance(project).findDirectory(this)
