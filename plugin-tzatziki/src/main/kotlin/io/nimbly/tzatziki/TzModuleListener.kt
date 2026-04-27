@@ -185,8 +185,16 @@ class TzPostStartup : StartupActivity {
             return orginHandler.isEnabled(editor, dataContext)
         }
 
-//        override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?)
-//                = orginHandler.isEnabledForCaret(editor, caret, dataContext)
+        override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
+            // Always allow for Gherkin — our doExecute handles the logic.
+            // For all other file types delegate to the original handler so we don't
+            // intercept actions it considers disabled (e.g. Jupyter cells, consoles — issue #90).
+            // isEnabledForCaret is protected, but the 3-arg isEnabled(editor,caret,dataContext)
+            // is public and delegates to isEnabledForCaret internally.
+            if (dataContext?.gherkin == true)
+                return true
+            return orginHandler.isEnabled(editor, caret, dataContext)
+        }
 
         fun getActionId()
                 = id
