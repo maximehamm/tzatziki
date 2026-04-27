@@ -2,6 +2,8 @@ package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
@@ -38,11 +40,17 @@ class TzBreakpointListener : StartupActivity {
                         return
                     if (changeInProgress)
                         return
-                    try {
-                        changeInProgress = true
-                        refresh(breakpoint, EAction.CHANGED)
-                    } finally {
-                        changeInProgress = false
+                    changeInProgress = true
+                    ApplicationManager.getApplication().executeOnPooledThread {
+                        try {
+                            ProgressManager.getInstance().runProcess({
+                                DumbService.getInstance(project).runReadActionInSmartMode {
+                                    refresh(breakpoint, EAction.CHANGED)
+                                }
+                            }, EmptyProgressIndicator())
+                        } finally {
+                            changeInProgress = false
+                        }
                     }
                 }
 
@@ -51,11 +59,17 @@ class TzBreakpointListener : StartupActivity {
                         return
                     if (addInProgress)
                         return
-                    try {
-                        addInProgress = true
-                        refresh(breakpoint, EAction.ADDED)
-                    } finally {
-                        addInProgress = false
+                    addInProgress = true
+                    ApplicationManager.getApplication().executeOnPooledThread {
+                        try {
+                            ProgressManager.getInstance().runProcess({
+                                DumbService.getInstance(project).runReadActionInSmartMode {
+                                    refresh(breakpoint, EAction.ADDED)
+                                }
+                            }, EmptyProgressIndicator())
+                        } finally {
+                            addInProgress = false
+                        }
                     }
                 }
 
@@ -64,11 +78,17 @@ class TzBreakpointListener : StartupActivity {
                         return
                     if (removeInProgress)
                         return
-                    try {
-                        removeInProgress = true
-                        refresh(breakpoint, EAction.REMOVED)
-                    } finally {
-                        removeInProgress = false
+                    removeInProgress = true
+                    ApplicationManager.getApplication().executeOnPooledThread {
+                        try {
+                            ProgressManager.getInstance().runProcess({
+                                DumbService.getInstance(project).runReadActionInSmartMode {
+                                    refresh(breakpoint, EAction.REMOVED)
+                                }
+                            }, EmptyProgressIndicator())
+                        } finally {
+                            removeInProgress = false
+                        }
                     }
                 }
 
