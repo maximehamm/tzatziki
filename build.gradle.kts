@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "18.5.0"
+    version = "18.6.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,7 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
+         <li><b>18.6</b> Fix #98</li>
          <li><b>18.5</b> Fix #118, #119, #80, #99</li>
          <li><b>18.4</b> Fix test result highlights refresh</li>
          <li><b>18.3</b> Fix breakpoint set and un unset issue</li>

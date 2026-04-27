@@ -56,9 +56,10 @@ object TzTestRegistry {
         // Add new results
         temp.putAll(results)
 
-        // Add highlights
+        // Add highlights (skip stale elements invalidated since last run)
         temp.tests.forEach { (element, test) ->
-            highlighters += highlight(element, results[element])
+            if (element.isValid)
+                highlighters += highlight(element, results[element])
         }
 
         this.activeResults = temp
@@ -163,7 +164,7 @@ object TzTestRegistry {
 
         // Retain all related to not-involved scenarios
         activeResults.tests = activeResults.tests
-            .filter { file != it.value.scenario?.containingFile }
+            .filter { it.value.scenario?.let { s -> s.isValid && s.containingFile != file } != false }
             .toMutableMap()
 
     }
@@ -172,8 +173,7 @@ object TzTestRegistry {
 
     fun hasResults(file: PsiFile): Boolean {
         return activeResults.tests
-            .filter { file != it.value.scenario?.containingFile }
-            .isNotEmpty()
+            .any { it.value.scenario?.let { s -> s.isValid && s.containingFile == file } == true }
     }
 }
 
