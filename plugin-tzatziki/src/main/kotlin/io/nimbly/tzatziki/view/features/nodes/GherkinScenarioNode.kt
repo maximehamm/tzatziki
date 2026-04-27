@@ -29,12 +29,20 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
     }
 
     override fun getRunConfiguration(): RunConfigurationProducer<*>? {
-        try {
+        return try {
             val runConfProds = RunConfigurationProducer.getProducers(project)
-            return runConfProds.find { it.javaClass == org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer::class.java }
-        } catch (e: NoClassDefFoundError) {
-            // Needed to avoid crashed on GoLand, PhpStorm...
-            return null
+            // CucumberJavaScenarioRunConfigurationProducer was removed in cucumber-java 252.25557.23+
+            val cls = runCatching {
+                Class.forName("org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer")
+            }.getOrElse {
+                runCatching {
+                    Class.forName("org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer")
+                }.getOrNull()
+            }
+            runConfProds.find { it.javaClass == cls }
+        } catch (e: Throwable) {
+            // Needed to avoid crashes on GoLand, PhpStorm...
+            null
         }
     }
 
