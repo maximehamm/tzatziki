@@ -239,19 +239,22 @@ fun PsiElement.bestRange(): TextRange {
     if (this is GherkinTableCell)
         return fullRange
 
+    // Work on the first line only — multiline steps (docstrings, inline tables) would
+    // otherwise produce i > length and trigger TextRange.assertProperRange (issue #99)
+    val firstLine = text.substringBefore("\n")
+
     // Start after keyword
-    var i = text.indexOf(" ")
-    if (i<0)
+    var i = firstLine.indexOf(" ")
+    if (i < 0)
         return textRange
 
-    val t = text.substring(i)
+    val t = firstLine.substring(i)
     val j = t.indexOfFirst { it != ' ' }
-    if (j>0)
-        i += j
+    if (j > 0) i += j
 
-    // End at end ok line
-    var length = text.indexOf("\n")
-    if (length < 0) length = text.length
+    val length = firstLine.length
+    if (length <= i)
+        return textRange
 
     return TextRange(textRange.startOffset + i, textRange.startOffset + length)
 }
