@@ -133,22 +133,30 @@ class TzPostStartup : StartupActivity {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
 
             if (CommonDataKeys.EDITOR.getData(dataContext) == null) {
-                super.doExecute(editor, null, dataContext)
+                doDefault(editor, caret, dataContext)
+                return
+            }
+
+            // Non-Gherkin files: delegate straight to the original handler with the real caret.
+            // Passing null would trigger executeForAllCarets, which breaks injected-language
+            // fragment range recalculoation (IllegalArgumentException: Invalid range).
+            if (!dataContext.gherkin) {
+                doDefault(editor, caret, dataContext)
                 return
             }
 
             val offset = editor.caretModel.offset
-            if (dataContext.gherkin && editor.smartPaste(dataContext))
+            if (editor.smartPaste(dataContext))
                 return
 
             blockSelectionSwitch()
             try {
-                super.doExecute(editor, null, dataContext)
+                doDefault(editor, null, dataContext)
             } finally {
                 releaseSelectionSwitch()
             }
 
-            if (dataContext.gherkin && editor.caretModel.caretCount > 1) {
+            if (editor.caretModel.caretCount > 1) {
 
                 PsiDocumentManager.getInstance(editor.project!!).commitDocument(editor.document)
 
