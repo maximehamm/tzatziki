@@ -35,6 +35,10 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         val method = element as? PsiMethod
             ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
             ?: return false
+        // Skip Kotlin light wrappers — the Kotlin extension reads the Kotlin source
+        // directly to avoid stale cached isDeprecated on the wrapper.
+        val fileType = method.containingFile?.fileType?.name.orEmpty()
+        if (fileType.equals("kotlin", ignoreCase = true)) return false
         return method.isDeprecated || method.containingClass?.isDeprecated == true
     }
 
