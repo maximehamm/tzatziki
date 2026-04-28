@@ -29,7 +29,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.unscramble.AnalyzeStacktraceUtil
+import com.intellij.execution.filters.Filter
+import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.run.cucumberExecutionTracker
 import io.nimbly.tzatziki.editor.TEST_IGNORED
@@ -127,6 +129,27 @@ class TzTestsResultsAnnotator : Annotator {
     }
 }
 
+private fun showStacktrace(project: com.intellij.openapi.project.Project, stacktrace: String) {
+    // AnalyzeStacktraceUtil.addConsole is marked @ApiStatus.Internal in 2025.3+.
+    // Invoke via reflection to preserve the clickable-stacktrace console behaviour,
+    // and fall back to a plain notification if the internal API ever disappears.
+    try {
+        val clazz = Class.forName("com.intellij.unscramble.AnalyzeStacktraceUtil")
+        val filtersArrayClass = Array<Filter>::class.java
+        val method = clazz.getMethod("addConsole",
+            com.intellij.openapi.project.Project::class.java,
+            filtersArrayClass,
+            String::class.java,
+            String::class.java)
+        method.invoke(null, project, null, TZATZIKI_NAME, stacktrace)
+    } catch (_: Throwable) {
+        NotificationGroupManager.getInstance()
+            .getNotificationGroup("Cucumber+")
+            .createNotification(TZATZIKI_NAME, stacktrace, NotificationType.INFORMATION)
+            .notify(project)
+    }
+}
+
 private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) : LocalQuickFixAndIntentionActionOnPsiElement(element) { //}, LocalQuickFix {
 
     override operator fun invoke(
@@ -136,7 +159,7 @@ private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) :
         startElement: PsiElement,
         endElement: PsiElement) {
 
-        AnalyzeStacktraceUtil.addConsole(project, null, TZATZIKI_NAME, stacktrace ?: "")
+        showStacktrace(project, stacktrace ?: "")
     }
 
     override fun getFamilyName() = TZATZIKI_NAME
