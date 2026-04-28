@@ -271,13 +271,18 @@
         // New UI 2023 Icons mapping to "expUI" folder
         <iconMapper mappingFile="TzatzikiIconMappings.json"/>
 
-        <projectActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
-
     </extensions>
+
+    <applicationListeners>
+        <listener class="io.nimbly.tzatziki.TzPostStartup"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
 
     <projectListeners>
         <listener class="io.nimbly.tzatziki.run.TzExecutionCucumberListener"
                   topic="com.intellij.execution.ExecutionListener"/>
+        <listener class="io.nimbly.tzatziki.TzPostStartup$ProjectOpenListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
 
     <depends>com.intellij.modules.platform</depends>
