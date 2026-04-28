@@ -1,6 +1,6 @@
 package io.nimbly.tzatziki.reference
 
-import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
+import io.nimbly.tzatziki.isCucumberJavaAnnotation
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
@@ -30,7 +30,7 @@ class CucumberKotlinReferenceProvider : PsiReferenceProvider() {
         val annotationEntry = PsiTreeUtil.getParentOfType(element, KtAnnotationEntry::class.java)
             ?: return EMPTY_ARRAY
 
-        if (annotationEntry.resolveToDescriptorIfAny()?.fqName?.asString()?.startsWith("io.cucumber.java") != true)
+        if (!annotationEntry.isCucumberJavaAnnotation())
             return EMPTY_ARRAY
 
         val offset = literalTemplate.textRange.startOffset - element.textRange.startOffset

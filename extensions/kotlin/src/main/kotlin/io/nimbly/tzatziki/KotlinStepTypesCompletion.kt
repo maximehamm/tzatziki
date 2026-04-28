@@ -12,7 +12,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
 import io.nimbly.tzatziki.util.TzStepTypesCompletion
 import io.nimbly.tzatziki.util.getLineStart
-import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 
@@ -36,7 +35,7 @@ class KotlinStepTypesCompletion : TzStepTypesCompletion() {
         val project = psiElement.project
         val annotation = PsiTreeUtil.getParentOfType(psiElement, KtAnnotationEntry::class.java)
             ?: return
-        if (annotation.resolveToDescriptorIfAny()?.fqName?.asString()?.startsWith("io.cucumber.java") != true)
+        if (!annotation.isCucumberJavaAnnotation())
             return
 
         val document = parameters.editor.document

@@ -24,9 +24,9 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import io.nimbly.tzatziki.util.*
-import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
+import org.jetbrains.kotlin.psi.KtAnnotated
 import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
+import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
@@ -34,12 +34,25 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     override fun isDeprecated(element: PsiElement): Boolean {
         // In recent cucumber-java versions definition.element is the @Given/@When/@Then
-        // annotation rather than the PsiMethod, so resolve to the enclosing method first.
+        // annotation (light Kotlin wrapper for Kotlin sources).
+        // Light wrappers cache isDeprecated, so prefer reading the Kotlin source directly.
+        val nav = element.navigationElement
+        val ktFunction = nav as? KtNamedFunction
+            ?: PsiTreeUtil.getParentOfType(nav, KtNamedFunction::class.java)
+        if (ktFunction != null) {
+            if (ktFunction.hasDeprecatedAnnotation()) return true
+            val owner = ktFunction.containingClassOrObject
+            return owner != null && owner.hasDeprecatedAnnotation()
+        }
+        // Java fallback
         val method = element as? PsiMethod
             ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
             ?: return false
         return method.isDeprecated || method.containingClass?.isDeprecated == true
     }
+
+    private fun KtAnnotated.hasDeprecatedAnnotation(): Boolean =
+        annotationEntries.any { it.shortName?.asString() == "Deprecated" }
 
     /**
      * Let's do it using java extension
@@ -60,8 +73,7 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         val fcts = PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java)
             ?: return null
 
-        val cucumberAnnotation = fcts.annotationEntries
-            .find { it.resolveToDescriptorIfAny(BodyResolveMode.PARTIAL_NO_ADDITIONAL)?.fqName?.asString()?.startsWith("io.cucumber.java") == true }
+        val cucumberAnnotation = fcts.annotationEntries.find { it.isCucumberJavaAnnotation() }
         if (cucumberAnnotation == null)
             return null
 

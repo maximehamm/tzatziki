@@ -32,14 +32,13 @@ class KotlinTzatzikiUsagesMarker : TzStepsUsagesMarker() {
             .filterIsInstance<LeafPsiElement>()
             .forEach { token ->
 
-                // Check context
-                if (token.up(1) !is KtLiteralStringTemplateEntry) return@forEach
-                if (token.up(2) !is KtStringTemplateExpression) return@forEach
-                if (token.up(3) !is KtValueArgument) return@forEach
-                if (token.up(4) !is KtValueArgumentList) return@forEach
-                if (token.up(5) !is KtAnnotationEntry) return@forEach
-                if (token.up(6) !is KtDeclarationModifierList) return@forEach
-                val namedFunction = token.up(7) as? KtNamedFunction ?: return@forEach
+                // Check context — find the enclosing annotation entry then the named function.
+                val literal = token.parent as? KtLiteralStringTemplateEntry ?: return@forEach
+                val template = literal.parent as? KtStringTemplateExpression ?: return@forEach
+                val argument = template.parent as? KtValueArgument ?: return@forEach
+                argument.parent as? KtValueArgumentList ?: return@forEach
+                val annotationEntry = PsiTreeUtil.getParentOfType(argument, KtAnnotationEntry::class.java) ?: return@forEach
+                val namedFunction = PsiTreeUtil.getParentOfType(annotationEntry, KtNamedFunction::class.java) ?: return@forEach
 
                 // Check class is using cucumber
                 // Not the best way, but I didn't find how to check which class the named function is using...
