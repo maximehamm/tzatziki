@@ -245,7 +245,6 @@
 
         // Breakpoints
         <projectActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"/>
-        <projectActivity implementation="io.nimbly.tzatziki.run.TzExecutionCucumberListener"/>
         <projectActivity implementation="io.nimbly.tzatziki.run.TzRunCodeListener"/>
 
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepBreakpointType"/>
@@ -275,6 +274,11 @@
         <projectActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
 
     </extensions>
+
+    <projectListeners>
+        <listener class="io.nimbly.tzatziki.run.TzExecutionCucumberListener"
+                  topic="com.intellij.execution.ExecutionListener"/>
+    </projectListeners>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
