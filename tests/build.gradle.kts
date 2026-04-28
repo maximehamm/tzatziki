@@ -33,7 +33,10 @@ dependencies {
             "JUnit",
             "com.intellij.properties",
             "org.jetbrains.kotlin",
+            "com.intellij.modules.json",
         )
+        bundledModule("intellij.platform.langInjection")
+        bundledModule("intellij.spellchecker")
         plugins(
             "gherkin:${versions["gherkin"]}",
             "cucumber-java:${versions["cucumberJava"]}",

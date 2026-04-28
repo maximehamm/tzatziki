@@ -15,11 +15,9 @@
 
 package io.nimbly.tzatziki
 
-import com.intellij.ide.AppLifecycleListener
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions.*
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -27,8 +25,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.project.ProjectManagerListener
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.psi.PsiDocumentManager
 import io.nimbly.tzatziki.TzPostStartup.AbstractWriteActionHandler
 import io.nimbly.tzatziki.clipboard.smartCopy
@@ -45,22 +42,16 @@ var TOGGLE_CUCUMBER_PL: Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
-class TzPostStartup : AppLifecycleListener {
+class TzPostStartup : ProjectActivity {
 
     private val LOG = logger<TzPostStartup>()
 
-    override fun appFrameCreated(commandLineArgs: MutableList<String>) {
-        LOG.info("C+ TzPostStartup.appFrameCreated - handlerInitialized=$handlerInitialized")
+    override suspend fun execute(project: Project) {
+        LOG.info("C+ TzPostStartup.execute - handlerInitialized=$handlerInitialized")
         if (!handlerInitialized) {
             initTypedHandler()
-            initMouseListener()
+            initMouseListener(project)
             handlerInitialized = true
-            LOG.info("C+ TzPostStartup.appFrameCreated - handlers registered")
-        }
-    }
-
-    class ProjectOpenListener : ProjectManagerListener {
-        override fun projectOpened(project: Project) {
             askToVote(project)
         }
     }
@@ -82,9 +73,9 @@ class TzPostStartup : AppLifecycleListener {
         actionManager.replaceHandler(PasteHandler())
     }
 
-    private fun initMouseListener() {
+    private fun initMouseListener(project: Project) {
         EditorFactory.getInstance().eventMulticaster.apply {
-            addEditorMouseListener(TZMouseAdapter, ApplicationManager.getApplication())
+            addEditorMouseListener(TZMouseAdapter, project)
         }
     }
 

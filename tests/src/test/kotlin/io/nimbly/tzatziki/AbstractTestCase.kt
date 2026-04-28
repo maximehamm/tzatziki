@@ -49,6 +49,12 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
 
     enum class EXT { java, kt, js }
 
+    override fun setUp() {
+        super.setUp()
+        // Light fixtures don't fire ProjectActivity, so trigger TzPostStartup manually.
+        kotlinx.coroutines.runBlocking { TzPostStartup().execute(myFixture.project) }
+    }
+
     private val LIB_JAVA_CUCUMBER = "/lib/cucumber-java-6.8.1.jar"
     private val LIB_JAVA = "/lib/rt-small.jar"
     private val LIB_KOTLIN = "/lib/kotlin-stdlib-1.4.30.jar"
