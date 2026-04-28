@@ -37,6 +37,7 @@ import io.nimbly.tzatziki.util.*
 import junit.framework.TestCase
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.junit.Assert
+import org.junit.Assert.fail
 import org.junit.Ignore
 import java.awt.datatransfer.DataFlavor
 import java.awt.event.InputEvent

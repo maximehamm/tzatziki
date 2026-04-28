@@ -103,7 +103,7 @@ private fun List<Slice>.toUpper(): String {
         if (it.isInterRange)
             sb.append(it.text)
         else
-            sb.append(it.text.toUpperCase())
+            sb.append(it.text.uppercase())
     }
     return sb.toString()
 }

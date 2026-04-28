@@ -39,6 +39,7 @@ dependencies {
             "cucumber-java:${versions["cucumberJava"]}",
         )
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Plugin.Java)
     }
 }
 
