@@ -1,10 +1,17 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 val versions: Map<String, String> by rootProject.extra
 val notes: String by rootProject.extra
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
 
 dependencies {
     implementation(project(":common"))
@@ -15,8 +22,6 @@ dependencies {
     implementation("com.openhtmltopdf:openhtmltopdf-java2d:1.0.10")
     implementation("com.openhtmltopdf:openhtmltopdf-svg-support:1.0.10")
 
-
-
     implementation("org.freemarker:freemarker:2.3.30")
     implementation("com.github.rjeschke:txtmark:0.13")
     implementation("io.cucumber:tag-expressions:4.1.0")
@@ -24,6 +29,25 @@ dependencies {
     runtimeOnly(project(":extensions:java-cucumber"))
     runtimeOnly(project(":extensions:kotlin"))
     runtimeOnly(project(":extensions:scala"))
+
+    intellijPlatform {
+        intellijIdeaUltimate("2025.3.4")
+        instrumentationTools()
+        bundledPlugins(
+            "com.intellij.java",
+            "JUnit",
+            "com.intellij.properties",
+            "org.jetbrains.kotlin",
+        )
+        plugins(
+            "gherkin:${versions["gherkin"]}",
+            "cucumber-java:${versions["cucumberJava"]}",
+            "org.intellij.scala:${versions["scala"]}",
+            "PsiViewer:${versions["psiViewer"]}",
+        )
+        pluginVerifier()
+        zipSigner()
+    }
 }
 
 configurations.all {
@@ -32,55 +56,33 @@ configurations.all {
     exclude("xml-apis", "xml-apis-ext")
 }
 
-// Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    version.set(versions["intellij-version"])
-
-    plugins.set(listOf(
-        "Gherkin:${versions["gherkin"]}",
-        "Kotlin",
-        "org.intellij.intelliLang",
-        "java",
-        "JUnit",
-        "cucumber-java:${versions["cucumberJava"]}",
-        "org.intellij.scala:${versions["scala"]}",
-        "com.intellij.properties",
-        "PsiViewer:${versions["psiViewer"]}",
-    ))
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "253.28294"
+            untilBuild = "264.*"
+        }
+        changeNotes = notes
+    }
+    pluginVerification {
+        ides {
+            ide("IU", "2025.3.3")
+        }
+    }
+    publishing {
+        token = System.getProperty("PublishToken")
+    }
+    buildSearchableOptions = false
+    instrumentCode = true
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
-
-    patchPluginXml {
-        sinceBuild.set("233")    // 2023.3
-        untilBuild.set("264.*")
-        changeNotes.set(notes)
-    }
-
-    buildSearchableOptions {
-        enabled = false
-    }
-
     jar {
         archiveBaseName.set(rootProject.name)
-    }
-    instrumentedJar {
-         exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
-    }
-
-    runPluginVerifier {
-        ideVersions.set(
-            listOf("IU-2023.3.6"))
-    }
-
-    publishPlugin {
-        val t = System.getProperty("PublishToken")
-        token.set(t)
     }
 }
 

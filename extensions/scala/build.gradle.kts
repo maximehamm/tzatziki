@@ -1,33 +1,37 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform.module") version "2.5.0"
 }
 
 val versions: Map<String, String> by rootProject.extra
 
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
 dependencies {
     implementation(project(":common"))
     implementation(project(":plugin-tzatziki"))
-}
 
-intellij {
-    version.set(versions["intellij-version"])
-
-    plugins.set(listOf(
-        "java",
-        "org.intellij.scala:${versions["scala"]}",
-        "Gherkin:${versions["gherkin"]}",
-    ))
+    intellijPlatform {
+        intellijIdeaUltimate("2025.3.4")
+        instrumentationTools()
+        bundledPlugin("com.intellij.java")
+        plugins(
+            "org.intellij.scala:${versions["scala"]}",
+            "gherkin:${versions["gherkin"]}",
+        )
+    }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
-    buildSearchableOptions {
-        enabled = false
-    }
     jar {
         archiveBaseName.set(rootProject.name + "-" + project.name)
     }

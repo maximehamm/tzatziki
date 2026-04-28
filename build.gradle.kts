@@ -13,7 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
-         <li><b>20.0</b> Minimum version is now 2023.3 - Kotlin 1.9.21 - Fix #94</li>
+         <li><b>20.0</b> Minimum version is now 2025.3.3 - Kotlin 2.0 - Fix #94</li>
         
          <li><b>18.6</b> Fix #98, #102, #112</li>
          <li><b>18.5</b> Fix #118, #119, #80, #99</li>
@@ -111,12 +111,12 @@ val notes by extra {"""
 
 val versions by extra {
     mapOf(
-        "intellij-version" to "IU-2023.3.6",
+        "intellij-version" to "IU-2025.3.3",
 
-        "gherkin" to "233.11799.165",       //https://plugins.jetbrains.com/plugin/9164-gherkin/versions
-        "psiViewer" to "233.2",             //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
-        "cucumberJava" to "233.11799.196",  //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
-        "scala" to "2023.3.30",             //https://plugins.jetbrains.com/plugin/1347-scala/versions
+        "gherkin" to "253.28294.218",       //https://plugins.jetbrains.com/plugin/9164-gherkin/versions
+        "psiViewer" to "252.23892.248",     //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
+        "cucumberJava" to "253.30387.20",   //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+        "scala" to "2025.3.39",             //https://plugins.jetbrains.com/plugin/1347-scala/versions
     )
 }
 

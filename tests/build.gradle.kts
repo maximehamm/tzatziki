@@ -1,19 +1,15 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform.module") version "2.5.0"
 }
 
-intellij {
-    version.set("IU-2021.3.1")
-    plugins.set(listOf(
-        "Gherkin:213.5744.223",
-        "Kotlin",
-        "org.intellij.intelliLang",
-        "java",
-        "JUnit",
-        "cucumber-java:213.5744.125",
-        "com.intellij.properties:213.6461.46"
-    ))
+val versions: Map<String, String> by rootProject.extra
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
@@ -27,17 +23,30 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-api:2.14.1")
     testImplementation("org.apache.logging.log4j:log4j-core:2.14.1")
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine");
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+
+    intellijPlatform {
+        intellijIdeaUltimate("2025.3.4")
+        instrumentationTools()
+        bundledPlugins(
+            "com.intellij.java",
+            "JUnit",
+            "com.intellij.properties",
+            "org.jetbrains.kotlin",
+        )
+        plugins(
+            "gherkin:${versions["gherkin"]}",
+            "cucumber-java:${versions["cucumberJava"]}",
+        )
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+    }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
-    buildSearchableOptions {
-        enabled = false
-    }
     jar {
         archiveBaseName.set(rootProject.name + "-" + project.name)
     }

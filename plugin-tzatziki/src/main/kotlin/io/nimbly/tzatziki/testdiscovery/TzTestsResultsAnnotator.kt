@@ -136,7 +136,7 @@ private class PrintStackTraceFix(element: PsiElement, val stacktrace: String?) :
         startElement: PsiElement,
         endElement: PsiElement) {
 
-        AnalyzeStacktraceUtil.addConsole(project, null, TZATZIKI_NAME, stacktrace)
+        AnalyzeStacktraceUtil.addConsole(project, null, TZATZIKI_NAME, stacktrace ?: "")
     }
 
     override fun getFamilyName() = TZATZIKI_NAME

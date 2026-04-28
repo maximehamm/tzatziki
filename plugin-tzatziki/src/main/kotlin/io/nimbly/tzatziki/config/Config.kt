@@ -337,7 +337,7 @@ fun createConfiguration(
         propertiesFiles.forEach {
             val v = it.getProperty(property, null)
             if (v != null)
-                return "True".toUpperCase() == v.trim()
+                return "True".uppercase() == v.trim()
         }
         return false
     }

@@ -1,6 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 group = "io.nimbly.translation"
@@ -14,7 +14,6 @@ val notes by extra {"""
          <li><b>11.2.0</b> IntelliJ IDEA 2026.1 compatibility</li>
          <li><b>11.1.0</b> IntelliJ IDEA 2025.2 compatibility</li>
          <li><b>11.0.0</b> IntelliJ IDEA 2025.1.1 compatibility</li>
-         <!--<li><b>11.0.0</b> Adding support of Deep Translate API</li>-->
          <li><b>10.0.0</b> Adding support of Baidu API</li>
          <li><b>9.0.0</b> Adding support of ChatGPT API</li>
          <li><b>8.0.0</b> Adding support of Microsoft Translator API</li>
@@ -31,54 +30,49 @@ val notes by extra {"""
       """
 }
 
-val versions by extra {
-    mapOf(
-        "intellij-version" to "IU-2023.3.6",
-    )
-}
-
-intellij {
-    version.set(versions["intellij-version"])
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
     implementation(project(":i18n"))
+
+    intellijPlatform {
+        intellijIdeaUltimate("2025.3.4")
+        instrumentationTools()
+        pluginVerifier()
+        zipSigner()
+    }
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "253.28294"
+            untilBuild = "264.*"
+        }
+        changeNotes = notes
+    }
+    pluginVerification {
+        ides {
+            ide("IU", "2025.3.3")
+        }
+    }
+    publishing {
+        token = System.getProperty("PublishToken")
+    }
+    buildSearchableOptions = false
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
-
-    patchPluginXml {
-
-        // Check build number here : https://www.jetbrains.com/idea/download/other.html
-        sinceBuild.set("222.4554.10")    // 2021.2.4
-        untilBuild.set("252.*")
-
-        changeNotes.set(notes)
-    }
-
-    buildSearchableOptions {
-        enabled = false
-    }
-
     jar {
         archiveBaseName.set("translation")
     }
-    instrumentedJar {
-        // exclude("META-INF/*") // Workaround for runPluginVerifier duplicate plugins...
-    }
-
-    runPluginVerifier {
-        ideVersions.set(
-            listOf("IU-2023.3.6"))
-    }
-
-    publishPlugin {
-        val t = System.getProperty("PublishToken")
-        token.set(t)
-    }
 }
-

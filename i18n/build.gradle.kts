@@ -1,12 +1,15 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.21"
-    id("org.jetbrains.intellij") version "1.13.1"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.intellij.platform.module") version "2.5.0"
 }
 
 val versions: Map<String, String> by rootProject.extra
 
-intellij {
-    version.set(versions["intellij-version"])
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
 dependencies {
@@ -16,16 +19,18 @@ dependencies {
     implementation("org.apache.commons:commons-csv:1.10.0")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("commons-codec:commons-codec:1.15")
+
+    intellijPlatform {
+        intellijIdeaUltimate("2025.3.4")
+        instrumentationTools()
+    }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 tasks {
-    buildSearchableOptions {
-        enabled = false
-    }
     jar {
         archiveBaseName.set(rootProject.name + "-" + project.name)
     }
