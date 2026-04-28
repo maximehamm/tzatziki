@@ -4,6 +4,7 @@ import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.findModuleForFile
 import io.nimbly.tzatziki.util.parent
 import io.nimbly.tzatziki.view.features.FeaturePanel
+import io.nimbly.tzatziki.view.features.nodes.EmptyNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFeatureNode
 import io.nimbly.tzatziki.view.features.nodes.GherkinFileNode
 import io.nimbly.tzatziki.view.features.nodes.ModuleNode
@@ -24,11 +25,11 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
     var filterByTags: Expression? = null
         set(value) {
             field = value
-            root = createModuleNode(panel.project, filterByTags)
+            root = createModuleNode(panel.project, filterByTags) ?: EmptyNode(panel.project)
         }
 
-    private var root: ModuleNode
-        = createModuleNode(panel.project, filterByTags)
+    private var root: AbstractTreeNode<*>
+        = createModuleNode(panel.project, filterByTags) ?: EmptyNode(panel.project)
 
     override fun commit() = Unit
     override fun hasSomethingToCommit() = false

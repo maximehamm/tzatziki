@@ -34,11 +34,8 @@ fun createModuleNode(
     project: Project,
     filterByTags: Expression?,
     fromModule: Module? = null
-): ModuleNode {
+): ModuleNode? {
 
-    val module = fromModule
-        ?: project.rootModule()
-        ?: ModuleManager.getInstance(project).modules.firstOrNull()
-        ?: error("No modules in project '${project.name}'")
+    val module = fromModule ?: project.rootModule() ?: return null
     return ModuleNode(module, module.simpleName, filterByTags)
 }
