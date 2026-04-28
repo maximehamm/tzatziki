@@ -23,13 +23,6 @@ import com.intellij.ide.util.treeView.NodeDescriptor
 abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractTreeStructure() {
 
     var filterByTags: Expression? = null
-        set(value) {
-            field = value
-            root = createModuleNode(panel.project, filterByTags) ?: EmptyNode(panel.project)
-        }
-
-    private var root: AbstractTreeNode<*>
-        = createModuleNode(panel.project, filterByTags) ?: EmptyNode(panel.project)
 
     override fun commit() = Unit
     override fun hasSomethingToCommit() = false
@@ -37,7 +30,8 @@ abstract class GherkinTreeStructure(private val panel: FeaturePanel) : AbstractT
     override fun createDescriptor(element: Any, parent: NodeDescriptor<*>?)
             = element as NodeDescriptor<*>
 
-    override fun getRootElement(): Any = root
+    override fun getRootElement(): Any =
+        createModuleNode(panel.project, filterByTags) ?: EmptyNode(panel.project)
 
     // PROJECT < ... < FILE < FEATURE < SCENARIO
     override fun getParentElement(element: Any): Any? {

@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "18.6.1"
+    version = "20.0.0"
 }
 
 val notes by extra {"""
@@ -12,7 +12,9 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul> 
-         <li><b>19.0</b> Minimum version is now 2023.3 - Kotlin 1.9.21 - Fix #94</li>
+       
+         <li><b>20.0</b> Minimum version is now 2023.3 - Kotlin 1.9.21 - Fix #94</li>
+        
          <li><b>18.6</b> Fix #98, #102, #112</li>
          <li><b>18.5</b> Fix #118, #119, #80, #99</li>
          <li><b>18.4</b> Fix test result highlights refresh</li>

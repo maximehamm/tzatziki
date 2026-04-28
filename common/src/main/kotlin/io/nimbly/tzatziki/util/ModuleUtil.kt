@@ -65,9 +65,6 @@ fun Project.modulesTree(): Node<Module>? {
     return moduleMap.toTree()
 }
 
-    return moduleMap.toTree()
-}
-
 val Project.moduleManager: ModuleManager
     get() = getService(ModuleManager::class.java)
 

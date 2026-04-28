@@ -18,8 +18,10 @@ package io.nimbly.tzatziki.testdiscovery
 import com.intellij.execution.testframework.AbstractTestProxy
 import com.intellij.execution.testframework.TestStatusListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
-import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
+import com.intellij.util.concurrency.AppExecutorUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.psi.cell
 import io.nimbly.tzatziki.psi.findColumnByName
@@ -40,24 +42,20 @@ class TzTestStatusListener : TestStatusListener() {
         if (project==null || root==null || root.children.isEmpty())
             return
 
-        val results = TzTestResult()
+        val tests = root.allTests
+            .filter { it.children.isEmpty() }
+            .filterIsInstance<SMTestProxy>()
+            .filter { it.locationUrl != null }
 
-        ApplicationManager.getApplication().runReadAction {
-            root.allTests
-                .filter { it.children.isEmpty() }
-                .filterIsInstance<SMTestProxy>()
-                .filter { it.locationUrl != null }
-                .forEach { test ->
-                    val r = findTestSteps(test, project)
-                    results.putAll(r)
-                }
-        }
-
-        // Schedule refresh AFTER any pending clearHighlighters() invokeLater from onTextAvailable,
-        // so EDT ordering guarantees: clear → refresh (fixes race on fast test suites)
-        ApplicationManager.getApplication().invokeLater {
+        ReadAction.nonBlocking<TzTestResult> {
+            val results = TzTestResult()
+            tests.forEach { test ->
+                results.putAll(findTestSteps(test, project))
+            }
+            results
+        }.finishOnUiThread(ModalityState.any()) { results ->
             TzTestRegistry.refresh(results)
-        }
+        }.submit(AppExecutorUtil.getAppExecutorService())
 
     }
 
