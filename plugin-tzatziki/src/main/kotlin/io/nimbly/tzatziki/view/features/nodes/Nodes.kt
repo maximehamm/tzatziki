@@ -33,8 +33,8 @@ fun createModuleNode(
     project: Project,
     filterByTags: Expression?,
     fromModule: Module? = null
-): ModuleNode {
+): ModuleNode? {
 
-    val module = fromModule ?: project.rootModule()!!
+    val module = fromModule ?: project.rootModule() ?: return null
     return ModuleNode(module, module.simpleName, filterByTags)
 }
