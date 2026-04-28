@@ -15,6 +15,7 @@ public class Cocktail {
     }
 
     @SuppressWarnings("test")
+    @Deprecated
     @Given("Romeo who wants to buy a drink")
     @When("xx an order is declared for Juliette")
     public void anOrderIsDeclaredForJuliette() {

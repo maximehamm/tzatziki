@@ -53,6 +53,19 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         super.setUp()
         // Light fixtures don't fire ProjectActivity, so trigger TzPostStartup manually.
         kotlinx.coroutines.runBlocking { TzPostStartup().execute(myFixture.project) }
+        // Light fixtures don't auto-load multi-module extension jars; register language extensions manually.
+        registerTzatzikiExtensions()
+    }
+
+    private fun registerTzatzikiExtensions() {
+        com.intellij.testFramework.ExtensionTestUtil.maskExtensions(
+            io.nimbly.tzatziki.Tzatziki.invoke(),
+            listOf(
+                io.nimbly.tzatziki.JavaTzatzikiExtensionPoint(),
+                io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint(),
+            ),
+            testRootDisposable,
+        )
     }
 
     private val LIB_JAVA_CUCUMBER = "/lib/cucumber-java-6.8.1.jar"

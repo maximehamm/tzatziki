@@ -131,6 +131,7 @@ class Cocktail2 {
     fun `theMockBindsTo$`(arg0: Int, arg1: Int) {
     }
 
+    @Deprecated("xxx")
     @And("Romeo pays his order")
     fun romeoPaysHisOrder() {
     }

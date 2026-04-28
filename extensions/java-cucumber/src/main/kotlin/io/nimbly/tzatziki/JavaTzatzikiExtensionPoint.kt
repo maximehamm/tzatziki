@@ -30,8 +30,12 @@ import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     override fun isDeprecated(element: PsiElement): Boolean {
-        return element is PsiMethod
-                && (element.isDeprecated || element.containingClass?.isDeprecated == true)
+        // In recent cucumber-java versions definition.element is the @Given/@When/@Then
+        // annotation rather than the PsiMethod, so resolve to the enclosing method first.
+        val method = element as? PsiMethod
+            ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+            ?: return false
+        return method.isDeprecated || method.containingClass?.isDeprecated == true
     }
 
     override fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean {

@@ -15,6 +15,8 @@ repositories {
 dependencies {
     testImplementation(project(":plugin-tzatziki"))
     testImplementation(project(":common"))
+    testImplementation(project(":extensions:java-cucumber"))
+    testImplementation(project(":extensions:kotlin"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
