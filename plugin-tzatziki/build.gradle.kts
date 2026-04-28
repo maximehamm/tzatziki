@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("org.jetbrains.intellij") version "1.13.1"
 }
 
@@ -45,23 +45,19 @@ intellij {
         "JUnit",
         "cucumber-java:${versions["cucumberJava"]}",
         "org.intellij.scala:${versions["scala"]}",
-        "com.intellij.properties:${versions["properties"]}",
+        "com.intellij.properties",
         "PsiViewer:${versions["psiViewer"]}",
     ))
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 tasks {
 
-    withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
-    }
-
     patchPluginXml {
-        sinceBuild.set("222")    // 2021.2.4
+        sinceBuild.set("233")    // 2023.3
         untilBuild.set("264.*")
         changeNotes.set(notes)
     }
@@ -79,7 +75,7 @@ tasks {
 
     runPluginVerifier {
         ideVersions.set(
-            listOf("IU-2022.3.1"))
+            listOf("IU-2023.3.6"))
     }
 
     publishPlugin {

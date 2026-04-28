@@ -6,7 +6,7 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
@@ -21,11 +21,11 @@ import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
 const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
 
-class TzBreakpointListener : StartupActivity {
+class TzBreakpointListener : ProjectActivity {
 
     val LOG = Logger.getInstance(TzBreakpointListener::class.java);
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
 
         var changeInProgress = false
         var addInProgress = false

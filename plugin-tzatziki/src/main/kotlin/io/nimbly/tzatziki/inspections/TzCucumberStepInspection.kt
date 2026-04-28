@@ -15,6 +15,7 @@
 
 package io.nimbly.tzatziki.inspections
 
+import com.intellij.codeInspection.LocalQuickFix
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import org.jetbrains.plugins.cucumber.CucumberBundle
@@ -50,17 +51,18 @@ class TzCucumberStepInspection : GherkinInspection() {
                 if (definition != null)
                     return
 
-                var fix: CucumberCreateStepFix? = null
-                var allStepsFix: CucumberCreateAllStepsFix? = null
+                var fix: LocalQuickFix? = null
+                var allStepsFix: LocalQuickFix? = null
                 if (CucumberStepHelper.getExtensionCount() > 0) {
                     fix = TzCucumberCreateStepFix()
                     allStepsFix = TzCucumberCreateAllStepsFix()
                 }
+                val fixes = listOfNotNull(fix, allStepsFix).toTypedArray()
                 holder.registerProblem(
                     reference.element,
                     reference.rangeInElement,
                     CucumberBundle.message("cucumber.inspection.undefined.step.msg.name", *arrayOfNulls(0)),
-                    fix, allStepsFix
+                    *fixes
                 )
             }
         }

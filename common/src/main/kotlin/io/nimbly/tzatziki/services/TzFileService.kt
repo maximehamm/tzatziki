@@ -1,6 +1,9 @@
 package io.nimbly.tzatziki.services
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.ServiceManager
@@ -12,6 +15,7 @@ import com.intellij.psi.*
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.*
+import com.intellij.util.concurrency.AppExecutorUtil
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -71,9 +75,13 @@ class TzFileService(val project: Project) : Disposable {
 
     fun getTags(): SortedMap<String, Tag> {
         if (tags == null) {
+            if (ApplicationManager.getApplication().isDispatchThread) {
+                refreshTagsAsync(false)
+                return sortedMapOf()
+            }
             refreshTags(false)
         }
-        return tags!!
+        return tags ?: sortedMapOf()
     }
 
     fun getTagsFilter(): Expression? {
@@ -111,7 +119,7 @@ class TzFileService(val project: Project) : Disposable {
 
     internal fun refreshTags(updateListeners: Boolean = true, force: Boolean = true) {
 
-        // Get all tags
+        // Get all tags (slow — must be called off EDT)
         val tags = findAllTags(project, project.getGherkinScope())
 
         // Check if tags are still the same
@@ -122,6 +130,17 @@ class TzFileService(val project: Project) : Disposable {
             updateTags(tags, tagsUpdated)
         else
             this.tags = tags
+    }
+
+    internal fun refreshTagsAsync(updateListeners: Boolean = true) {
+
+        ReadAction.nonBlocking<SortedMap<String, Tag>> {
+            findAllTags(project, project.getGherkinScope())
+        }.finishOnUiThread(ModalityState.any()) { tags ->
+            val tagsUpdated = (tags == this.tags)
+            if (updateListeners) updateTags(tags, tagsUpdated)
+            else this.tags = tags
+        }.submit(AppExecutorUtil.getAppExecutorService())
     }
 
     companion object {
@@ -278,8 +297,8 @@ private class PsiChangeListener(val service: TzFileService) : PsiTreeChangeListe
 
     fun refresh(structure: Boolean = false) {
         DumbService.getInstance(service.project).smartInvokeLater {
-            PsiDocumentManager.getInstance(service.project).performLaterWhenAllCommitted() {
-                service.refreshTags(true, structure)
+            PsiDocumentManager.getInstance(service.project).performLaterWhenAllCommitted {
+                service.refreshTagsAsync(true)
             }
         }
     }

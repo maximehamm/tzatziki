@@ -21,11 +21,10 @@ import com.intellij.openapi.actionSystem.IdeActions.*
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.psi.PsiDocumentManager
 import io.nimbly.tzatziki.TzPostStartup.AbstractWriteActionHandler
 import io.nimbly.tzatziki.clipboard.smartCopy
@@ -42,9 +41,9 @@ var TOGGLE_CUCUMBER_PL: Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
-class TzPostStartup : StartupActivity {
+class TzPostStartup : ProjectActivity {
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
         if (!handlerInitialized) {
             initTypedHandler()
             initMouseListener(project)

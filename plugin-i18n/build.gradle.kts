@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("org.jetbrains.intellij") version "1.13.1"
 }
 
@@ -33,7 +33,7 @@ val notes by extra {"""
 
 val versions by extra {
     mapOf(
-        "intellij-version" to "IU-2022.3.1",
+        "intellij-version" to "IU-2023.3.6",
     )
 }
 
@@ -45,15 +45,11 @@ dependencies {
     implementation(project(":i18n"))
 }
 
-tasks {
+kotlin {
+    jvmToolchain(17)
+}
 
-    withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
-    }
+tasks {
 
     patchPluginXml {
 
@@ -77,7 +73,7 @@ tasks {
 
     runPluginVerifier {
         ideVersions.set(
-            listOf("IU-2022.3.1"))
+            listOf("IU-2023.3.6"))
     }
 
     publishPlugin {

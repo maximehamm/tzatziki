@@ -11,7 +11,7 @@ import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerManagerListener
@@ -24,11 +24,11 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
-class TzRunCodeListener : StartupActivity {
+class TzRunCodeListener : ProjectActivity {
 
     private val LOG = logger<TzRunCodeListener>()
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
 
         project.messageBus
             .connect()
@@ -67,7 +67,7 @@ class TzRunCodeListener : StartupActivity {
                             LOG.debug("C+ XDebuggerManager.TOPIC - Step found")
 
                             // Check that breakpoint is marked as managed by C+
-                            val codeBreakpoint = newContext.sourcePosition.elementAt.findBreakpoint()
+                            val codeBreakpoint = newContext.sourcePosition?.elementAt?.findBreakpoint()
                             if (codeBreakpoint?.conditionExpression?.expression != CUCUMBER_FAKE_EXPRESSION) {
 
                                 // Highlight ghekin step (and also examples if)

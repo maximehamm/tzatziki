@@ -244,9 +244,9 @@
                                   implementationClass="io.nimbly.tzatziki.run.TzSingleLineRunLineMarkerContributor"/>
 
         // Breakpoints
-        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"/>
-        <postStartupActivity implementation="io.nimbly.tzatziki.run.TzExecutionCucumberListener"/>
-        <postStartupActivity implementation="io.nimbly.tzatziki.run.TzRunCodeListener"/>
+        <projectActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"/>
+        <projectActivity implementation="io.nimbly.tzatziki.run.TzExecutionCucumberListener"/>
+        <projectActivity implementation="io.nimbly.tzatziki.run.TzRunCodeListener"/>
 
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepBreakpointType"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepExampleBreakpointType"/>
@@ -272,7 +272,7 @@
         // New UI 2023 Icons mapping to "expUI" folder
         <iconMapper mappingFile="TzatzikiIconMappings.json"/>
 
-        <postStartupActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
+        <projectActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
 
     </extensions>
 

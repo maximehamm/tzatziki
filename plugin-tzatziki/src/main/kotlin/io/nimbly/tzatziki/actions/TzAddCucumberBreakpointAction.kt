@@ -23,8 +23,8 @@ class TzAddCucumberBreakpointAction : DumbAwareAction() {
         val editor = e.getRequiredData(CommonDataKeys.EDITOR)
         val position = getLineBreakpointPosition(e) ?: return
         XBreakpointUtil.toggleLineBreakpoint( project, position, editor, false, true, true)
-            .onSuccess { bp: XLineBreakpoint<*> ->
-                bp.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+            .onSuccess { bp ->
+                bp?.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
             }
     }
 

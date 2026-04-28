@@ -20,6 +20,8 @@ import com.intellij.ide.util.treeView.AbstractTreeNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbService
@@ -27,6 +29,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.psi.PsiElement
 import com.intellij.ui.TreeSpeedSearch
 import com.intellij.ui.components.JBScrollPane
@@ -98,14 +101,16 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
     private fun forceRefresh() {
         DumbService.getInstance(project).smartInvokeLater {
             PsiDocumentManager.getInstance(project).performWhenAllCommitted {
-
-                // First tag list initialization
                 val tzService = project.tzFileService()
                 val filterActivated = tzService.filterByTags
-                refreshTags(
-                    tzService.getTags(),
-                    if (filterActivated) tzService.getTagsFilter() else null
-                )
+                ReadAction.nonBlocking<Pair<SortedMap<String, Tag>, Expression?>> {
+                    Pair(
+                        tzService.getTags(),
+                        if (filterActivated) tzService.getTagsFilter() else null
+                    )
+                }.finishOnUiThread(ModalityState.any()) { (tags, filter) ->
+                    refreshTags(tags, filter)
+                }.submit(AppExecutorUtil.getAppExecutorService())
             }
         }
     }

@@ -9,7 +9,10 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.project.DumbService
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.openapi.diff.LineStatusMarkerDrawUtil
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
@@ -22,7 +25,7 @@ import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -54,7 +57,7 @@ fun Project.cucumberExecutionTracker(): TzExecutionCucumberListener.TzExecutionT
     return p
 }
 
-class TzExecutionCucumberListener : StartupActivity {
+class TzExecutionCucumberListener : ProjectActivity {
 
     private val LOG = logger<TzExecutionCucumberListener>()
 
@@ -74,6 +77,8 @@ class TzExecutionCucumberListener : StartupActivity {
         var lineNumber: Int? = null,
         var exampleLine: Int? = null,
 
+        var runGeneration: Long = 0L,
+
         val highlighters: MutableList<RangeHighlighter> = mutableListOf(),
         val progressionGuides: MutableList<Pair<MarkupModelEx, RangeHighlighterEx>> = mutableListOf(),
 
@@ -87,11 +92,14 @@ class TzExecutionCucumberListener : StartupActivity {
         }
 
         fun removeProgressionGuides() {
-            ApplicationManager.getApplication().invokeLater {
-                progressionGuides.forEach {
-                    it.first.removeHighlighter(it.second)
-                }
+            if (ApplicationManager.getApplication().isDispatchThread) {
+                progressionGuides.forEach { it.first.removeHighlighter(it.second) }
                 progressionGuides.clear()
+            } else {
+                ApplicationManager.getApplication().invokeLater {
+                    progressionGuides.forEach { it.first.removeHighlighter(it.second) }
+                    progressionGuides.clear()
+                }
             }
         }
 
@@ -118,7 +126,7 @@ class TzExecutionCucumberListener : StartupActivity {
         }
     }
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
 
         project.messageBus
             .connect()
@@ -141,6 +149,8 @@ class TzExecutionCucumberListener : StartupActivity {
                     val tracker = project.cucumberExecutionTracker()
                     tracker.clear()
                     tracker.removeProgressionGuides()
+                    tracker.removeHighlighters()
+                    val generation = ++tracker.runGeneration
 
                     var first = true
 
@@ -191,52 +201,61 @@ class TzExecutionCucumberListener : StartupActivity {
                             if (!isShowProgressionGuide())
                                 return
 
-                            ApplicationManager.getApplication().runReadAction {
-
-                                val file = vfile.getFile(project) ?: return@runReadAction
-                                val offsetStart = file.getDocument()?.getLineStartOffset(line - 1) ?: return@runReadAction
-                                val offsetEnd = file.getDocument()?.getLineEndOffset(line - 1) ?: return@runReadAction
-
-                                val lineStart =
-                                    if (isExample) {
-                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinTableRow::class.java)
-                                            .firstOrNull()
-                                            ?.parentOfTypeIs<GherkinExamplesBlock>()
-                                            ?.getDocumentLine() ?: return@runReadAction
-                                    }
-                                    else {
-                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStepsHolder::class.java)
-                                            .firstOrNull()
-                                            ?.getDocumentLine() ?: return@runReadAction
-                                    }
-                                val lineEnd =
-                                    if (isExample) {
-                                       line
-                                    } else {
-                                        file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStep::class.java)
-                                            .firstOrNull()
-                                            ?.getDocumentEndLine()
-                                            ?.inc() ?: return@runReadAction
-                                    }
-
-
-                                ApplicationManager.getApplication().invokeLater {
-                                    FileEditorManager.getInstance(project)
-                                        .getEditors(vfile)
-                                        .filterIsInstance<TextEditor>()
-                                        .map { it.editor }
-                                        .forEach { editor ->
-
-                                            val markupModel = editor.markupModel as? MarkupModelEx
-                                                ?: return@forEach
-
-                                            if (line == (editor.document.lineCount))
-                                                line++
-
-                                            tracker.progressionGuides += highlightProgression(markupModel, lineStart, lineEnd, isExample)
+                            val captureLine = line
+                            AppExecutorUtil.getAppExecutorService().execute {
+                                if (stopRequested || tracker.runGeneration != generation) return@execute
+                                try {
+                                    val result = DumbService.getInstance(project).runReadActionInSmartMode<Pair<Int, Int>?> {
+                                        val file = vfile.getFile(project) ?: run {
+                                            LOG.warn("C+ progression guide: getFile returned null for $vfile")
+                                            return@runReadActionInSmartMode null
                                         }
+                                        val offsetStart = file.getDocument()?.getLineStartOffset(captureLine - 1) ?: return@runReadActionInSmartMode null
+                                        val offsetEnd = file.getDocument()?.getLineEndOffset(captureLine - 1) ?: return@runReadActionInSmartMode null
+                                        val lineStart =
+                                            if (isExample) {
+                                                file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinTableRow::class.java)
+                                                    .firstOrNull()
+                                                    ?.parentOfTypeIs<GherkinExamplesBlock>()
+                                                    ?.getDocumentLine() ?: return@runReadActionInSmartMode null
+                                            } else {
+                                                file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStepsHolder::class.java)
+                                                    .firstOrNull()
+                                                    ?.getDocumentLine() ?: run {
+                                                    LOG.warn("C+ progression guide: no GherkinStepsHolder at line $captureLine")
+                                                    return@runReadActionInSmartMode null
+                                                }
+                                            }
+                                        val lineEnd =
+                                            if (isExample) {
+                                                captureLine
+                                            } else {
+                                                file.findElementsOfTypeInRange(TextRange(offsetStart, offsetEnd), GherkinStep::class.java)
+                                                    .firstOrNull()
+                                                    ?.getDocumentEndLine()
+                                                    ?.inc() ?: return@runReadActionInSmartMode null
+                                            }
+                                        Pair(lineStart, lineEnd)
+                                    }
+                                    if (result == null || stopRequested || tracker.runGeneration != generation) return@execute
+                                    val (lineStart, lineEnd) = result
+                                    LOG.info("C+ progression guide: lineStart=$lineStart lineEnd=$lineEnd isExample=$isExample")
+                                    ApplicationManager.getApplication().invokeLater({
+                                        if (tracker.runGeneration != generation) return@invokeLater
+                                        (FileEditorManager.getInstance(project).getEditors(vfile).toList() +
+                                            FileEditorManager.getInstance(project).allEditors.filter { it is TextEditor && it.file == vfile })
+                                            .filterIsInstance<TextEditor>()
+                                            .distinctBy { it.editor }
+                                            .map { it.editor }
+                                            .forEach { editor ->
+                                                val markupModel = editor.markupModel as? MarkupModelEx ?: return@forEach
+                                                val adjustedLineEnd = if (captureLine == editor.document.lineCount) lineEnd + 1 else lineEnd
+                                                tracker.progressionGuides += highlightProgression(markupModel, lineStart, adjustedLineEnd, isExample)
+                                            }
+                                    }, ModalityState.any())
+                                } catch (e: Exception) {
+                                    LOG.warn("C+ progression guide error at line $captureLine", e)
                                 }
-
                             }
 
                         }

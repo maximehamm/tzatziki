@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("org.jetbrains.intellij") version "1.13.1"
 }
 
@@ -20,15 +20,11 @@ intellij {
     ))
 }
 
-tasks {
+kotlin {
+    jvmToolchain(17)
+}
 
-    withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
-    }
+tasks {
 
     buildSearchableOptions {
         enabled = false

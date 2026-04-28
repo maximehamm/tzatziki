@@ -15,10 +15,13 @@
 package io.nimbly.tzatziki.view.filters
 
 import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.components.*
 import com.intellij.uiDesigner.core.GridConstraints
@@ -75,13 +78,14 @@ class CucumberPlusFilterTagsView(val project: Project) : SimpleToolWindowPanel(t
         panel.add(blabla, BorderLayout.PAGE_START)
 
         DumbService.getInstance(project).smartInvokeLater {
-            PsiDocumentManager.getInstance(project).performWhenAllCommitted{
-
-                // First tag list initialization
+            PsiDocumentManager.getInstance(project).performWhenAllCommitted {
                 val tzService = project.getService(TzFileService::class.java)
-                val tags = tzService.getTags()
-                tagsPanel = newTagPanel(tags)
-                panel.add(tagsPanel, BorderLayout.CENTER)
+                ReadAction.nonBlocking<SortedMap<String, Tag>> {
+                    tzService.getTags()
+                }.finishOnUiThread(ModalityState.any()) { tags ->
+                    tagsPanel = newTagPanel(tags)
+                    panel.add(tagsPanel, BorderLayout.CENTER)
+                }.submit(AppExecutorUtil.getAppExecutorService())
             }
         }
 

@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.view.features.nodes
 
 import io.cucumber.tagexpressions.Expression
+import com.intellij.openapi.module.ModuleManager
 import io.nimbly.tzatziki.util.rootModule
 import io.nimbly.tzatziki.util.simpleName
 import com.intellij.execution.actions.ConfigurationContext
@@ -35,6 +36,9 @@ fun createModuleNode(
     fromModule: Module? = null
 ): ModuleNode {
 
-    val module = fromModule ?: project.rootModule()!!
+    val module = fromModule
+        ?: project.rootModule()
+        ?: ModuleManager.getInstance(project).modules.firstOrNull()
+        ?: error("No modules in project '${project.name}'")
     return ModuleNode(module, module.simpleName, filterByTags)
 }

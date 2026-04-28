@@ -5,6 +5,7 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.impl.scopes.ModuleWithDependenciesScope
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
 import java.nio.file.Path
@@ -54,8 +55,10 @@ fun Project.modulesTree(): Node<Module>? {
     val moduleMap = mutableMapOf<Path, Module>()
     this.moduleManager.sortedModules.forEach { m ->
         val scope = m.moduleContentScope as? ModuleWithDependenciesScope
-        scope?.roots?.forEach {
-            moduleMap[it.path.toPath()] = m
+        if (scope != null) {
+            scope.roots.forEach { moduleMap[it.path.toPath()] = m }
+        } else {
+            ModuleRootManager.getInstance(m).contentRoots.forEach { moduleMap[it.path.toPath()] = m }
         }
     }
 
