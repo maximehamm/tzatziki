@@ -1,5 +1,25 @@
 # TODO
 
+## Bug: Read access violation in `TzCucumberCreateStepFix` popup icon rendering
+
+When the "Create step" quick-fix popup is shown, IntelliJ crashes with:
+
+```
+RuntimeExceptionWithAttachments: Read access is allowed from inside read-action only
+  at SmartPointerManagerImpl.createSmartPsiElementPointer
+  at ElementBase.computeIcon / getIcon
+  at TzCucumberCreateStepFix.kt:78  (getIconFor)
+```
+
+The popup's `getIconFor` callback calls `element.getIcon()` on the EDT outside a read
+action. Since IntelliJ 2025.x, PSI icon computation (which creates a `SmartPsiElementPointer`)
+requires an explicit read action even on the EDT.
+
+Fix: wrap the `getIconFor` body in `ApplicationManager.getApplication().runReadAction { … }`
+(or use `ReadAction.compute { … }`).
+
+---
+
 ## Make the plugin gracefully handle missing `cucumber-java` plugin
 
 When the user installs Cucumber+ in an IDE that has Java enabled but the
