@@ -16,18 +16,17 @@ Feature: Cocktail Ordering
     Then there is 0 cocktails in the order
     And Romeo pays his order
     Given I have the following books in the store
-      # @header: column
+      | Erik Larson | In the Garden of Beasts              |
       | Erik Larson | The Devil in the White City          |
       | C.S. Lewis  | The Lion, the Witch and the Wardrobe |
-      | Erik Larson | In the Garden of Beasts              |
 
   @Advanced @Chrome
   Scenario: This is the scenario
 
     Given Romeo who wants to buy a drink
-      # @header: row
-      | Valeur 1xxx | Valeur 2 |
-      | Test        | Truc     |
+      # @header: column
+      | Valeur 1 | Valeur 2 |
+      | Test     | Truc     |
 
     Given Bidule trucs
       # @header: column

@@ -1,5 +1,17 @@
 # TODO
 
+## Add row and column insertion from the table popup (not urgent)
+
+Currently the table popup (accessible by hovering the table frame borders) offers
+`@header:` actions and shift up/down/left/right. It should also offer:
+
+- **Insert row above / below** — inserts a blank formatted row at the hovered position
+- **Insert column left / right** — inserts a blank formatted column
+
+These can reuse the existing `format()` logic. Low priority.
+
+---
+
 ## Rounded corners on table borders
 
 Currently the horizontal and vertical border lines are drawn by independent per-line

@@ -21,6 +21,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.editor.TzTableDecorator
 import io.nimbly.tzatziki.mouse.TzSelectionModeManager.disableColumnSelectionMode
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
@@ -33,6 +34,7 @@ class TzToggleTzatzikiAction : ToggleAction(), DumbAware {
         TOGGLE_CUCUMBER_PL = !TOGGLE_CUCUMBER_PL
         if (!TOGGLE_CUCUMBER_PL)
             e.getData(CommonDataKeys.EDITOR)?.disableColumnSelectionMode()
+        TzTableDecorator.refreshAll()
     }
 
     override fun update(event: AnActionEvent) {
