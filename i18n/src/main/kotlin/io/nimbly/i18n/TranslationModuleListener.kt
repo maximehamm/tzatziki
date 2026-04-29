@@ -15,8 +15,10 @@
 
 package io.nimbly.i18n
 
+import com.intellij.ide.AppLifecycleListener
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -25,34 +27,46 @@ import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.project.ProjectManagerListener
 import io.nimbly.i18n.util.clearInlays
 
-class TranslationModuleListener : StartupActivity {
+/**
+ * Fires on application frame creation. Registers the editor action handlers (Escape).
+ * In IntelliJ 2025.3+ ProjectActivity / StartupActivity may not run reliably for this
+ * plugin — AppLifecycleListener always fires, so handler setup is moved here.
+ */
+class TranslationAppStartup : AppLifecycleListener {
+    override fun appFrameCreated(commandLineArgs: MutableList<String>) {
+        TranslationHandlerSetup.initHandlers()
+    }
+}
 
-    override fun runActivity(project: Project) {
-        if (!handlerInitialized) {
-            initTypedHandler()
-            initMouseListener(project)
+/**
+ * Registers the editor mouse listener per project (Disposable = project), so the
+ * listener is auto-removed when the project closes — and, importantly, between tests.
+ *
+ * Lives on com.intellij.openapi.project.ProjectManagerListener (registered via
+ * <applicationListeners>). Replaces the former init-from-StartupActivity path that was
+ * not reliable in IntelliJ 2025.3+.
+ */
+class TranslationProjectMouseListenerInstaller : ProjectManagerListener {
+    override fun projectOpened(project: Project) {
+        EditorFactory.getInstance().eventMulticaster
+            .addEditorMouseListener(TranslationMouseAdapter, project)
+    }
+}
+
+/** One-time setup of the Escape editor action handler. */
+object TranslationHandlerSetup {
+    private var handlerInitialized = false
+
+    fun initHandlers() {
+        if (handlerInitialized) return
+        ApplicationManager.getApplication().invokeAndWait {
+            if (handlerInitialized) return@invokeAndWait
+            EditorActionManager.getInstance().replaceHandler(EscapeHandler())
             handlerInitialized = true
         }
-    }
-
-    private fun initTypedHandler() {
-
-        val actionManager = EditorActionManager.getInstance()
-
-        actionManager.replaceHandler(EscapeHandler())
-    }
-
-    private fun initMouseListener(project: Project) {
-        EditorFactory.getInstance().eventMulticaster.apply {
-            addEditorMouseListener(TranslationMouseAdapter, project)
-        }
-    }
-
-    companion object {
-        private var handlerInitialized = false
     }
 }
 

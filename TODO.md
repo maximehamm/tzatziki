@@ -1,11 +1,5 @@
 # TODO
 
-## Divers 
-
-  - corrige les actions insert/delete... qd il y a des commentaires intercallés, ne pas les perdre
-
-
-
 ## Make the plugin gracefully handle missing `cucumber-java` plugin
 
 When the user installs Cucumber+ in an IDE that has Java enabled but the

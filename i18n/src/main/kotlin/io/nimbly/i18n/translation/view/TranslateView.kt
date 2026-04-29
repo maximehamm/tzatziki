@@ -423,15 +423,29 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                     }
                 }
 
-                val refactoringAvailable = canRename(ctxt.selectedElement.findRenamable())
-                refactoring.isEnabled = refactoringAvailable
-                refactoringPreview.isEnabled = refactoringAvailable
-                refactoringSearchInComments.isEnabled = refactoringAvailable
-
-                val tooltip = if (refactoringAvailable) null else "Select an element that can be renamed !"
-                refactoring.toolTipText = tooltip
-                refactoringPreview.toolTipText = tooltip
-                refactoringSearchInComments.toolTipText = tooltip
+                // canRename triggers stub-index queries (SemElementRenamePsiElementProcessor)
+                // which are slow operations forbidden on EDT in 2025.3+. Compute on a pooled
+                // thread inside a read action, then update UI back on EDT.
+                val renamable = ctxt.selectedElement.findRenamable()
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    val available = try {
+                        com.intellij.openapi.application.ReadAction.compute<Boolean, Throwable> {
+                            canRename(renamable)
+                        }
+                    } catch (_: Throwable) {
+                        false
+                    }
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        refactoring.isEnabled = available
+                        refactoringPreview.isEnabled = available
+                        refactoringSearchInComments.isEnabled = available
+                        val tooltip = if (available) null else "Select an element that can be renamed !"
+                        refactoring.toolTipText = tooltip
+                        refactoringPreview.toolTipText = tooltip
+                        refactoringSearchInComments.toolTipText = tooltip
+                    }
+                }
             }
         }
     }

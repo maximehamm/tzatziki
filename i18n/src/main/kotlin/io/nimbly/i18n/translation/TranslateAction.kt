@@ -19,6 +19,8 @@ import com.intellij.codeInsight.daemon.impl.HintRenderer
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.Inlay
@@ -242,21 +244,34 @@ open class TranslateAction : DumbAwareAction()  {
             displayInlays(element, translation, editor, startOffset, zoom, !withInlineTranslation)
 
             //
-            // Display inlays for references also
+            // Display inlays for references also.
+            // findUsages performs PSI access + ReferencesSearch — slow + read-action only.
+            // Compute on a pooled thread, then push the inlays back on EDT.
             if (file != null) {
-                val targets = findUsages(CommonRefactoringUtil.getElementAtCaret(editor, file), editor)
-                targets
-                    .forEach {
-                        if (element !=null) {
-                            val editors = FileEditorManager.getInstance(project).getAllEditors(it.first.containingFile.virtualFile)
+                val caretElement = CommonRefactoringUtil.getElementAtCaret(editor, file)
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    val targets = try {
+                        ReadAction.compute<Set<Pair<PsiElement, Int>>, Throwable> {
+                            findUsages(caretElement, editor)
+                        }
+                    } catch (_: Throwable) {
+                        emptySet()
+                    }
+                    if (targets.isEmpty() || element == null) return@executeOnPooledThread
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        targets.forEach {
+                            val editors = FileEditorManager.getInstance(project)
+                                .getAllEditors(it.first.containingFile.virtualFile)
                             editors
                                 .filterIsInstance<TextEditor>()
                                 .map { it.editor }
                                 .forEach { ed ->
                                     displayInlays(element, translation, ed, it.second, zoom, true, true)
                                 }
-                            }
+                        }
                     }
+                }
             }
         }
     }

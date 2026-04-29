@@ -17,7 +17,33 @@ import io.nimbly.i18n.translation.engines.TranslationEngineFactory
 class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings.State?> {
 
     var activeEngine: EEngine = EEngine.GOOGLE
-    var keys: Map<EEngine, String> = mutableMapOf()
+
+    private var _keys: Map<EEngine, String> = mutableMapOf()
+
+    /**
+     * Engine API keys. The setter persists to PasswordSafe asynchronously
+     * (off EDT and out of any read-action), because PasswordSafe.set is a
+     * slow non-cancellable operation forbidden inside read actions in 2025.3+.
+     *
+     * Use [setKeysFromStorage] when populating from PasswordSafe to avoid
+     * a redundant write-back.
+     */
+    var keys: Map<EEngine, String>
+        get() = _keys
+        set(value) {
+            _keys = value
+            val snapshot = value.toMap()
+            ApplicationManager.getApplication().executeOnPooledThread {
+                snapshot.forEach { (engine, key) ->
+                    val attributes = createCredentialAttributes(engine)
+                    PasswordSafe.instance.set(attributes, Credentials(engine.name, key))
+                }
+            }
+        }
+
+    private fun setKeysFromStorage(value: Map<EEngine, String>) {
+        _keys = value
+    }
 
     var input: String = Lang.AUTO.code
     var output: String = Lang.DEFAULT.code
@@ -41,12 +67,9 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
         state.useRefactoringPreview = useRefactoringPreview
         state.useRefactoringSearchInComment = useRefactoringSearchInComment
 
-        keys.forEach { k ->
-            val attributes = createCredentialAttributes(k.key)
-            val credentials = Credentials(k.key.name, k.value)
-            PasswordSafe.instance.set(attributes, credentials)
-        }
-
+        // Note: keys are persisted to PasswordSafe via the `keys` setter (off EDT),
+        // not from here. getState() must not trigger slow operations because it is
+        // called from a read action by the configuration store.
         return state
     }
 
@@ -64,13 +87,18 @@ class TranslationPlusSettings : PersistentStateComponent<TranslationPlusSettings
         this.useRefactoringPreview = state.useRefactoringPreview
         this.useRefactoringSearchInComment = state.useRefactoringSearchInComment
 
-        this.keys = TranslationEngineFactory.engines()
-            .map { engine ->
-                val attributes = createCredentialAttributes(engine.type)
-                val credentials = PasswordSafe.instance[attributes]
-                val key = credentials?.getPasswordAsString() ?: ""
-                engine.type to key}
-            .toMap()
+        // Populate keys WITHOUT triggering the setter — otherwise we'd write back to
+        // PasswordSafe what we just read from it.
+        setKeysFromStorage(
+            TranslationEngineFactory.engines()
+                .map { engine ->
+                    val attributes = createCredentialAttributes(engine.type)
+                    val credentials = PasswordSafe.instance[attributes]
+                    val key = credentials?.getPasswordAsString() ?: ""
+                    engine.type to key
+                }
+                .toMap()
+        )
     }
 
     private fun createCredentialAttributes(engine: EEngine): CredentialAttributes {

@@ -4,13 +4,14 @@ plugins {
 }
 
 group = "io.nimbly.translation"
-version = "11.2.0"
+version = "12.0.0"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul>
+         <li><b>12.0.0</b> IntelliJ IDEA 2025.3.4 compatibility — fix editor handlers and mouse listener registration that were tied to the unreliable ProjectActivity / StartupActivity startup path (now wired through AppLifecycleListener and ProjectManagerListener). Fix &quot;Unknown element type: PsiLiteralExpression&quot; fatal error when triggering Translate on a Java string literal.</li>
          <li><b>11.2.0</b> IntelliJ IDEA 2026.1 compatibility</li>
          <li><b>11.1.0</b> IntelliJ IDEA 2025.2 compatibility</li>
          <li><b>11.0.0</b> IntelliJ IDEA 2025.1.1 compatibility</li>
