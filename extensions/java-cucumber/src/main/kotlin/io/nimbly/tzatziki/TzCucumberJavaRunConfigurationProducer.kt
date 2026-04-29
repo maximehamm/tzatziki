@@ -27,13 +27,11 @@ import io.nimbly.tzatziki.psi.table
 import io.nimbly.tzatziki.util.ellipsis
 import io.nimbly.tzatziki.util.findPreviousSiblingsOfType
 import io.nimbly.tzatziki.util.parentOfTypeIs
-import org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
+import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.psi.*
 
-// CucumberJavaScenarioRunConfigurationProducer was removed in cucumber-java 252.25557.23+
-// CucumberJavaFeatureRunConfigurationProducer is its direct parent and still present
-class TzCucumberJavaRunConfigurationProducer : CucumberJavaFeatureRunConfigurationProducer() {
+class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
 
     override fun setupConfigurationFromContext(
         configuration: CucumberJavaRunConfiguration,
