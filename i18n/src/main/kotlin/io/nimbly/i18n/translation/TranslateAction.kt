@@ -276,6 +276,55 @@ open class TranslateAction : DumbAwareAction()  {
         }
     }
 
+    /**
+     * Display the translation inlays in the editor + in the editors of any
+     * usages of [element]. Uses an already-computed [translation] — does NOT
+     * call the engine again. Use this when the translation was triggered from
+     * the side panel (TranslateView) so we don't translate twice and clobber
+     * the panel's text with the translation of whatever the caret happens to
+     * be sitting on.
+     */
+    fun displayTranslationInlays(
+        project: Project,
+        editor: Editor,
+        file: PsiFile?,
+        element: PsiElement?,
+        startOffset: Int,
+        translation: Translation,
+        zoom: Double = 1.0,
+        withInlineTranslation: Boolean = true,
+    ) {
+        EditorFactory.getInstance().clearInlays(project)
+        displayInlays(element, translation, editor, startOffset, zoom, !withInlineTranslation)
+
+        if (file != null) {
+            val caretElement = CommonRefactoringUtil.getElementAtCaret(editor, file)
+            ApplicationManager.getApplication().executeOnPooledThread {
+                val targets = try {
+                    ReadAction.compute<Set<Pair<PsiElement, Int>>, Throwable> {
+                        findUsages(caretElement, editor)
+                    }
+                } catch (_: Throwable) {
+                    emptySet()
+                }
+                if (targets.isEmpty() || element == null) return@executeOnPooledThread
+                ApplicationManager.getApplication().invokeLater {
+                    if (project.isDisposed) return@invokeLater
+                    targets.forEach {
+                        val editors = FileEditorManager.getInstance(project)
+                            .getAllEditors(it.first.containingFile.virtualFile)
+                        editors
+                            .filterIsInstance<TextEditor>()
+                            .map { it.editor }
+                            .forEach { ed ->
+                                displayInlays(element, translation, ed, it.second, zoom, true, true)
+                            }
+                    }
+                }
+            }
+        }
+    }
+
     private fun displayInlays(
         element: PsiElement?,
         translation: Translation,
