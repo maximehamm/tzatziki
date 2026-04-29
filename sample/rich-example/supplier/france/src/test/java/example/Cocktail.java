@@ -12,6 +12,7 @@ public class Cocktail {
 
     @Given("I have the following books in the store")
     public void iHaveTheFollowingBooksInTheStore() {
+        
     }
 
     @SuppressWarnings("test")
