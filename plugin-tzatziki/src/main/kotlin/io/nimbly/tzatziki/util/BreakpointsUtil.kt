@@ -54,7 +54,7 @@ fun toggleAndReturnLineBreakpoint(
 
     // Hide to Jetbrain the use of this internal method !
     // Not a nice solution... but copying hundreds of lines of code from XDebuggerUtil is worth !
-    return XDebuggerUtil.getInstance().invokeMethod("toggleAndReturnLineBreakpoint",
+    return XDebuggerUtil.getInstance().invokeMethod(XDEBUGGER_TOGGLE_METHOD,
         listOf(Project::class.java, VirtualFile::class.java, Int::class.java, Boolean::class.java),
         mutableListOf(project, file, line, temporary)) as Promise<XLineBreakpoint<*>>?
 //    return (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
@@ -88,7 +88,10 @@ fun toggleCodeBreakpoint(
                 // TIPS : Fix for a Kotlin exception is some cases....
                 // Using reflexion because this does no more exists in Intellij newer version
                 // it.lambdaOrdinal =  -1
-                JavaUtil.updateField(it, "myLambdaOrdinal", -1)
+                JavaUtil.updateField(it, JAVA_LINE_BP_LAMBDA_ORDINAL_FIELD, -1)
             }
         }
 }
+
+const val XDEBUGGER_TOGGLE_METHOD           = "toggleAndReturnLineBreakpoint"
+const val JAVA_LINE_BP_LAMBDA_ORDINAL_FIELD = "myLambdaOrdinal"

@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.1.0"
+    version = "21.1.1"
 }
 
 val notes by extra {"""

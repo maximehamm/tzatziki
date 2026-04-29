@@ -134,9 +134,9 @@ private fun showStacktrace(project: com.intellij.openapi.project.Project, stackt
     // Invoke via reflection to preserve the clickable-stacktrace console behaviour,
     // and fall back to a plain notification if the internal API ever disappears.
     try {
-        val clazz = Class.forName("com.intellij.unscramble.AnalyzeStacktraceUtil")
+        val clazz = Class.forName(ANALYZE_STACKTRACE_CLASS)
         val filtersArrayClass = Array<Filter>::class.java
-        val method = clazz.getMethod("addConsole",
+        val method = clazz.getMethod(ANALYZE_STACKTRACE_METHOD,
             com.intellij.openapi.project.Project::class.java,
             filtersArrayClass,
             String::class.java,
@@ -203,3 +203,6 @@ class ClearAnnotationsFix(element: PsiElement) : LocalQuickFixAndIntentionAction
         }
     }
 }
+
+const val ANALYZE_STACKTRACE_CLASS  = "com.intellij.unscramble.AnalyzeStacktraceUtil"
+const val ANALYZE_STACKTRACE_METHOD = "addConsole"
