@@ -1,5 +1,17 @@
 # TODO
 
+## Rounded corners on table borders
+
+Currently the horizontal and vertical border lines are drawn by independent per-line
+renderers (`TableBorderRenderer`, `TableVerticalLineRenderer`). To draw rounded corners,
+a single table-level renderer would need to know the full table extent (first row top Y,
+last row bottom Y, first/last pipe X positions) and draw the whole frame in one pass using
+`g2.draw(RoundRectangle2D.Float(..., arcW, arcH))`.
+
+Requires refactoring from per-line renderers to one global renderer per table.
+
+---
+
 ## Implement visual framing of Gherkin tables (like Markdown rendering)
 
 Add a visual mechanism similar to what `.md` files do for Markdown tables: render

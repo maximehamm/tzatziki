@@ -58,11 +58,11 @@ Feature: Cocktail Ordering
 
   Scenario Outline: Vérifier le score de <Prénom>
 
-    Given l'utilisateur "<Prénom>" a <Âge> ans
+    Given l'utilisateur "<Prenom>" a <Age> ans
     Then son score devrait être <Score>
 
     Examples:
-      | Prénom   | Âge | Score |
-      | Alice    | 28  | 92    |
-      | Bob      | 34  | 87    |
-      | Clara    | 22  | 75    |
+      | Prenom | Age | Score |
+      | Alice  | 28  | 92    |
+      | Bob    | 34  | 87    |
+      | Clara  | 22  | 75    |

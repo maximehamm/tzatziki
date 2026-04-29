@@ -88,6 +88,8 @@ class TzTableDecorator : EditorFactoryListener {
 
             if (!lineText.startsWith("|")) continue
 
+            newHighlighters += verticalLinesHighlighter(markupModel, lineStart, lineEnd)
+
             if (!prevLineIsTable(document, text, line)) {
                 newHighlighters += highlighter(markupModel, lineStart, lineEnd, atTop = true)
             }
@@ -234,6 +236,19 @@ class TzTableDecorator : EditorFactoryListener {
         return null
     }
 
+    private fun verticalLinesHighlighter(
+        markupModel: com.intellij.openapi.editor.markup.MarkupModel,
+        lineStart: Int, lineEnd: Int
+    ): RangeHighlighter {
+        val h = markupModel.addRangeHighlighter(
+            null, lineStart, lineEnd,
+            HighlighterLayer.SYNTAX - 1,
+            HighlighterTargetArea.LINES_IN_RANGE
+        )
+        h.setCustomRenderer(TableVerticalLineRenderer(lineStart, lineEnd))
+        return h
+    }
+
     // ---- Helpers ----
 
     private fun prevLineIsTable(doc: Document, text: CharSequence, line: Int): Boolean {
@@ -248,6 +263,57 @@ class TzTableDecorator : EditorFactoryListener {
         val s = doc.getLineStartOffset(line + 1)
         val e = doc.getLineEndOffset(line + 1)
         return text.subSequence(s, e).toString().trim().startsWith("|")
+    }
+
+    private class TableVerticalLineRenderer(
+        private val lineStart: Int,
+        private val lineEnd: Int
+    ) : CustomHighlighterRenderer {
+
+        override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
+            val text    = editor.document.charsSequence.subSequence(lineStart, lineEnd).toString()
+            val topY    = editor.logicalPositionToXY(editor.offsetToLogicalPosition(lineStart)).y
+            val bottomY = topY + editor.lineHeight
+
+            val g2 = g as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+            val fm        = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
+            val pipeWidth = fm.charWidth('|')
+            val half      = pipeWidth / 2
+            val base      = pipeColor(editor)
+            val thinColor = Color(base.red, base.green, base.blue, (base.alpha * 0.55).toInt().coerceAtLeast(40))
+            val bg        = editor.colorsScheme.defaultBackground
+
+            // Count total pipes to identify first and last
+            val pipePositions = mutableListOf<Int>()
+            var idx = 0
+            while (idx < text.length) {
+                val pipeIdx = text.indexOf('|', idx)
+                if (pipeIdx < 0) break
+                pipePositions += pipeIdx
+                idx = pipeIdx + 1
+            }
+
+            pipePositions.forEachIndexed { i, pipeIdx ->
+                val x = editor.logicalPositionToXY(editor.offsetToLogicalPosition(lineStart + pipeIdx)).x + half
+
+                // Mask the pipe character with the background
+                g2.color = bg
+                g2.fillRect(x - half, topY, pipeWidth, bottomY - topY)
+
+                // Outer borders (first and last pipe) → full opacity
+                // Inner separators → thin + semi-transparent
+                val isOuter = i == 0 || i == pipePositions.lastIndex
+                g2.stroke = if (isOuter) BasicStroke(1.0f) else BasicStroke(0.8f)
+                g2.color  = if (isOuter) base else thinColor
+                g2.drawLine(x, topY, x, bottomY)
+            }
+        }
+
+        private fun pipeColor(editor: Editor): Color =
+            editor.colorsScheme.getAttributes(GherkinHighlighter.PIPE)?.foregroundColor
+                ?: editor.colorsScheme.defaultForeground
     }
 
     private class TableBorderRenderer(

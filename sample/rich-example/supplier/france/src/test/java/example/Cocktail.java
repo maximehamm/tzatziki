@@ -2,6 +2,7 @@ package example;
 
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import java.util.Date;
@@ -40,5 +41,15 @@ public class Cocktail {
 
     @Given("Bidule trucs")
     public void biduleTrucs() {
+    }
+
+
+    @Given("l'utilisateur {string} a {} ans")
+    public void lUtilisateurAAns(String arg0, String arg1, String arg2) {
+        
+    }
+
+    @Then("son score devrait être {}")
+    public void sonScoreDevraitEtre(String arg0) {
     }
 }
