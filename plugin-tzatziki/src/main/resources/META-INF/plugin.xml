@@ -247,9 +247,7 @@
         <runLineMarkerContributor id="cucumberPlusLineMarkerContributor" language="Gherkin"
                                   implementationClass="io.nimbly.tzatziki.run.TzSingleLineRunLineMarkerContributor"/>
 
-        // Breakpoints
-        <projectActivity implementation="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"/>
-        <projectActivity implementation="io.nimbly.tzatziki.run.TzRunCodeListener"/>
+        // Breakpoints (TzBreakpointListener and TzRunCodeListener registered via projectListeners below)
 
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepBreakpointType"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepExampleBreakpointType"/>
@@ -289,6 +287,10 @@
     <projectListeners>
         <listener class="io.nimbly.tzatziki.run.TzExecutionCucumberListener"
                   topic="com.intellij.execution.ExecutionListener"/>
+        <listener class="io.nimbly.tzatziki.breakpoints.TzBreakpointListener"
+                  topic="com.intellij.xdebugger.breakpoints.XBreakpointListener"/>
+        <listener class="io.nimbly.tzatziki.run.TzRunCodeListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
     </projectListeners>
 
     <depends>com.intellij.modules.platform</depends>

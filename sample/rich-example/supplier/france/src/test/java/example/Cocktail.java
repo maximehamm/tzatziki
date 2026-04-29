@@ -44,8 +44,8 @@ public class Cocktail {
     }
 
 
-    @Given("l'utilisateur {string} a {} ans")
-    public void lUtilisateurAAns(String arg0, String arg1, String arg2) {
+    @Given("l'utilisateur {string} a {int} ans")
+    public void lUtilisateurAAns(String prenom, Integer  age) {
         
     }
 

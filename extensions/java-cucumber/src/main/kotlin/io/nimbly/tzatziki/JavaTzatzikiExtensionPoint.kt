@@ -79,9 +79,14 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     override fun findBestPositionToAddBreakpoint(stepDefinitions: List<AbstractStepDefinition>): Pair<PsiElement, Int>? {
 
+        // In recent cucumber-java versions, AbstractStepDefinition.getElement() returns the
+        // @Given/@When/@Then annotation rather than the method itself. Walk up if needed.
         val method = stepDefinitions
             .mapNotNull { it.element }
-            .filterIsInstance<PsiMethod>()
+            .mapNotNull { elt ->
+                elt as? PsiMethod
+                    ?: PsiTreeUtil.getParentOfType(elt, PsiMethod::class.java)
+            }
             .firstOrNull()
             ?: return null
 

@@ -11,9 +11,7 @@ import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.xdebugger.XDebugProcess
-import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerManagerListener
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
@@ -24,100 +22,92 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 
-class TzRunCodeListener : ProjectActivity {
+class TzRunCodeListener(private val project: Project) : XDebuggerManagerListener {
 
     private val LOG = logger<TzRunCodeListener>()
 
-    override suspend fun execute(project: Project) {
+    override fun processStarted(debugProcess: XDebugProcess) {
 
-        project.messageBus
-            .connect()
-            .subscribe(XDebuggerManager.TOPIC, object : XDebuggerManagerListener {
+        LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
+        if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
+            return
 
-                override fun processStarted(debugProcess: XDebugProcess) {
+        if (debugProcess !is JavaDebugProcess) return
+        debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
-                    LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
-                    if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
-                        return
+            override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
 
-                    if (debugProcess !is JavaDebugProcess) return
-                    debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
+                LOG.info("C+ XDebuggerManager.TOPIC - changeEvent = $event")
+                if (event != DebuggerSession.Event.PAUSE)
+                    return
 
-                        override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
+                // Check if running a cucumber test
+                val displayName = RunManager.getInstance(project).selectedConfiguration?.type?.displayName
+                LOG.debug("C+ XDebuggerManager.TOPIC - displayName = $displayName")
+                if ("Cucumber Java" != displayName)
+                    return
 
-                            LOG.info("C+ XDebuggerManager.TOPIC - changeEvent = $event")
-                            if (event != DebuggerSession.Event.PAUSE)
-                                return
+                // Check current cucumber step...
+                val executionPoint = project.cucumberExecutionTracker()
+                if (executionPoint.featurePath == null) return
+                LOG.debug("C+ XDebuggerManager.TOPIC - featurePath = " + executionPoint.featurePath)
 
-                            // Check if running a cucumber test
-                            val displayName = RunManager.getInstance(project).selectedConfiguration?.type?.displayName
-                            LOG.debug("C+ XDebuggerManager.TOPIC - displayName = $displayName")
-                            if ("Cucumber Java" != displayName)
-                                return
+                // Search the step
+                val vfile = executionPoint.findFile() ?: return
+                val step = findStep(vfile, project, executionPoint.lineNumber!!)
+                    ?: return
+                LOG.debug("C+ XDebuggerManager.TOPIC - Step found")
 
-                            // Check current cucumber step...
-                            val executionPoint = project.cucumberExecutionTracker()
-                            if (executionPoint.featurePath == null) return
-                            LOG.debug("C+ XDebuggerManager.TOPIC - featurePath = " + executionPoint.featurePath)
+                // Check that breakpoint is marked as managed by C+
+                val codeBreakpoint = newContext.sourcePosition?.elementAt?.findBreakpoint()
+                if (codeBreakpoint?.conditionExpression?.expression != CUCUMBER_FAKE_EXPRESSION) {
 
-                            // Search the step
-                            val vfile = executionPoint.findFile() ?: return
-                            val step = findStep(vfile, project, executionPoint.lineNumber!!)
-                                ?: return
-                            LOG.debug("C+ XDebuggerManager.TOPIC - Step found")
+                    // Highlight ghekin step (and also examples if)
+                    highlightExecutionPosition(step)
+                    return
+                }
 
-                            // Check that breakpoint is marked as managed by C+
-                            val codeBreakpoint = newContext.sourcePosition?.elementAt?.findBreakpoint()
-                            if (codeBreakpoint?.conditionExpression?.expression != CUCUMBER_FAKE_EXPRESSION) {
+                // Find step's breakpoint
+                val breakpoint = step.findBreakpoint()
+                LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint found")
 
-                                // Highlight ghekin step (and also examples if)
-                                highlightExecutionPosition(step)
-                                return
-                            }
+                // Resume execution if no breakpoint or if deactivated
+                if (breakpoint == null || !breakpoint.isEnabled) {
 
-                            // Find step's breakpoint
-                            val breakpoint = step.findBreakpoint()
-                            LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint found")
+                    LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint enabled " + breakpoint?.isEnabled)
+                    debugProcess.debuggerSession.xDebugSession?.resume()
+                    return
+                }
 
-                            // Resume execution if no breakpoint or if deactivated
-                            if (breakpoint == null || !breakpoint.isEnabled) {
+                // Resume execution if step contains example and if line has no breakpoint or if deactivated
+                val scenarioOutline = step.stepHolder as? GherkinScenarioOutline
+                if (scenarioOutline != null) {
 
-                                LOG.debug("C+ XDebuggerManager.TOPIC - Breakpoint enabled " + breakpoint?.isEnabled)
-                                debugProcess.debuggerSession.xDebugSession?.resume()
-                                return
-                            }
+                    val example = scenarioOutline.getExample(executionPoint.exampleLine)
+                    if (example != null) {
 
-                            // Resume execution if step contains example and if line has no breakpoint or if deactivated
-                            val scenarioOutline = step.stepHolder as? GherkinScenarioOutline
-                            if (scenarioOutline != null) {
-
-                                val example = scenarioOutline.getExample(executionPoint.exampleLine)
-                                if (example != null) {
-
-                                    LOG.debug("C+ XDebuggerManager.TOPIC - Example found")
-                                    val exampleBreakpoint = example.findBreakpoint()
-                                    if (exampleBreakpoint == null || !exampleBreakpoint.isEnabled) {
-                                        debugProcess.debuggerSession.xDebugSession?.resume()
-                                        return
-                                    }
-                                }
-                            }
-
-                            // Highlight ghekin step (and also examples if)
-                            highlightExecutionPosition(step)
+                        LOG.debug("C+ XDebuggerManager.TOPIC - Example found")
+                        val exampleBreakpoint = example.findBreakpoint()
+                        if (exampleBreakpoint == null || !exampleBreakpoint.isEnabled) {
+                            debugProcess.debuggerSession.xDebugSession?.resume()
+                            return
                         }
-                    })
+                    }
                 }
 
-                override fun processStopped(debugProcess: XDebugProcess) {
+                // Highlight ghekin step (and also examples if)
+                highlightExecutionPosition(step)
+            }
+        })
+    }
 
-                    if (!TOGGLE_CUCUMBER_PL)
-                        return
+    override fun processStopped(debugProcess: XDebugProcess) {
 
-                    LOG.info("C+ XDebuggerManager.TOPIC - processStopped : " + debugProcess::class.java)
-                    project.cucumberExecutionTracker().removeHighlighters()
-                }
-            })
+        if (!TOGGLE_CUCUMBER_PL)
+            return
+
+        LOG.info("C+ XDebuggerManager.TOPIC - processStopped : " + debugProcess::class.java)
+        project.cucumberExecutionTracker().removeHighlighters()
     }
 
     private fun highlightExecutionPosition(step: GherkinStep) {
