@@ -33,4 +33,12 @@ public class Cocktail {
     public Date mydate(String date)  {
         return null;
     }
+
+    @Given("the following users and scores:")
+    public void theFollowingUsersAndScores() {
+    }
+
+    @Given("Bidule trucs")
+    public void biduleTrucs() {
+    }
 }

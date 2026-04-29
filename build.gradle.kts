@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "20.0.1"
+    version = "21.1.0"
 }
 
 val notes by extra {"""
@@ -13,6 +13,8 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
+         <li><b>21.1</b> Table renderer: header highlighted — add <code># @header: row</code> or <code># @header: column</code> above a DataTable to mark its first row or first column as a header</li>
+         <li><b>21.0</b> Table renderer to surround tables with lines</li>
          <li><b>20.0</b> Minimum version is now 2025.3.3 - Kotlin 2.0 - Fix #94</li>
         
          <li><b>18.6</b> Fix #98, #102, #112</li>
