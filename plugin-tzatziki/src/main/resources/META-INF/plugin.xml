@@ -282,6 +282,8 @@
     <applicationListeners>
         <listener class="io.nimbly.tzatziki.TzAppStartup"
                   topic="com.intellij.ide.AppLifecycleListener"/>
+        <listener class="io.nimbly.tzatziki.TzProjectMouseListenerInstaller"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 
     <projectListeners>

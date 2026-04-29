@@ -55,6 +55,20 @@ class TzAppStartup : AppLifecycleListener {
     }
 }
 
+/**
+ * Registers the editor mouse listener per project (Disposable = project), so the listener
+ * is auto-removed when the project closes — and, importantly, between tests.
+ *
+ * Lives on com.intellij.openapi.project.ProjectManagerListener (registered via <applicationListeners>).
+ * Replaces the former init-from-ProjectActivity path that was not reliable in IntelliJ 2025.3+.
+ */
+class TzProjectMouseListenerInstaller : com.intellij.openapi.project.ProjectManagerListener {
+    override fun projectOpened(project: com.intellij.openapi.project.Project) {
+        EditorFactory.getInstance().eventMulticaster
+            .addEditorMouseListener(io.nimbly.tzatziki.mouse.TZMouseAdapter, project)
+    }
+}
+
 class TzPostStartup : ProjectActivity {
 
     private val LOG = logger<TzPostStartup>()
@@ -81,13 +95,6 @@ class TzPostStartup : ProjectActivity {
         actionManager.replaceHandler(PasteHandler())
     }
 
-    private fun initMouseListenerGlobal() {
-        // Application-wide registration: covers all editors in all projects.
-        // Disposable scope = application (lives as long as the IDE).
-        EditorFactory.getInstance().eventMulticaster.addEditorMouseListener(
-            TZMouseAdapter, ApplicationManager.getApplication()
-        )
-    }
 
     private class DeletionHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
@@ -216,9 +223,7 @@ class TzPostStartup : ProjectActivity {
             ApplicationManager.getApplication().invokeAndWait {
                 if (handlerInitialized) return@invokeAndWait
                 LOG.info("C+ TzPostStartup.initHandlers - registering keyboard handlers")
-                val instance = TzPostStartup()
-                instance.initTypedHandler()
-                instance.initMouseListenerGlobal()
+                TzPostStartup().initTypedHandler()
                 handlerInitialized = true
             }
         }

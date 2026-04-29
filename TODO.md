@@ -1,18 +1,10 @@
 # TODO
 
-## Add row and column insertion from the table popup 
-
-Currently the table popup (accessible by hovering the table frame borders) offers
-`@header:` actions and shift up/down/left/right. It should also offer:
-
-- **Insert row above / below** — inserts a blank formatted row at the hovered position
-- **Insert column left / right** — inserts a blank formatted column
-
-These can reuse the existing `format()` logic. Low priority.
-
 ## Divers 
 
-  - corrige les actions : qd il y a des commentaires intercallés, ne pas les perdre
+  - corrige les actions insert/delete... qd il y a des commentaires intercallés, ne pas les perdre
+
+
 
 ## Make the plugin gracefully handle missing `cucumber-java` plugin
 
