@@ -40,19 +40,22 @@ Feature: Cocktail Ordering
     Given the following users and scores:
 
       # @header: row
-      | Prénom   | Âge | Nom      | Ville     | Pays      | Score |
-      | Alice    | 28  | Martin   | Paris     | France    | 92    |
-      | Bob      | 34  | Dupont   | Lyon      | France    | 87    |
-      | Clara    | 22  | Rossi    | Rome      | Italie    | 75.5  |
+      | Prénom   | Nom      | Ville     | Âge | Pays      | Score |
+      | Alice    | Martin   | Paris     | 28  | France    | 92    |
+      | Bob      | Dupont   | Lyon      | 34  | France    | 87    |
+      | Clara    | Rossi    | Rome      | 22  | Italie    | 75.5  |
       # test séparartion
-      | David    | 41  | Müller   | Berlin    | Allemagne | 88    |
-      | Eva      | 30  | García   | Madrid    | Espagne   | 95    |
-      | François | 27  | Bernard  | Bordeaux  | France    | 60    |
-      | Grace    | 35  | Kim      | Séoul     | Corée     | 78    |
+      | David    | Müller   | Berlin    | 41  | Allemagne | 88    |
+      | Eva      | García   | Madrid    | 30  | Espagne   | 95    |
+      | François | Bernard  | Bordeaux  | 27  | France    | 60    |
+      | Grace    | Kim      | Séoul     | 35  | Corée     | 78    |
+
       # test séparartion
-      | Hugo     | 29  | Ferreira | Lisbonne  | Portugal  | 82    |
-      | Isabelle | 45  | Dubois   | Bruxelles | Belgique  | 91    |
-      | Julien   | 23  | @Leroy   | Nantes    | France    | 70    |
+      # sdfsdf
+
+      | Hugo     | Ferreira | Lisbonne  | 29  | Portugal  | 82    |
+      | Isabelle | Dubois   | Bruxelles | 45  | Belgique  | 91    |
+      | Julien   | @Leroy   | Nantes    | 23  | France    | 70    |
 
 
   Scenario Outline: Vérifier le score de <Prénom>

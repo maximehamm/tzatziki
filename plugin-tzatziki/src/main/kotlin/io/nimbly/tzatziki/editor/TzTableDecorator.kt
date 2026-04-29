@@ -36,14 +36,8 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.awt.RelativePoint
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.psi.cell
-import io.nimbly.tzatziki.psi.columnCount
-import io.nimbly.tzatziki.psi.format
-import io.nimbly.tzatziki.psi.row
-import io.nimbly.tzatziki.psi.rowCount
-import io.nimbly.tzatziki.util.FEATURE_HEAD
+import io.nimbly.tzatziki.util.TableEditOps
 import io.nimbly.tzatziki.util.findTableAt
-import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinHighlighter
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -334,34 +328,24 @@ class TzTableDecorator : EditorFactoryListener {
         var editAdded = false
         when (zone) {
             HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> {
-                group.add(TableEditAction(editor, geometry, "Add row above", ActionIcons.ROW_ADD, popupCloser) { cells ->
-                    val width = cells.firstOrNull()?.size ?: return@TableEditAction
-                    cells.add(rowIdx, MutableList(width) { " " })
-                })
-                group.add(TableEditAction(editor, geometry, "Add row below", ActionIcons.ROW_ADD, popupCloser) { cells ->
-                    val width = cells.firstOrNull()?.size ?: return@TableEditAction
-                    cells.add(rowIdx + 1, MutableList(width) { " " })
-                })
+                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertRow(rowIdx, above = true),
+                    ActionIcons.ROW_ADD, popupCloser))
+                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertRow(rowIdx, above = false),
+                    ActionIcons.ROW_ADD, popupCloser))
                 if (rowCount > 1) {
-                    group.add(TableEditAction(editor, geometry, "Delete row", ActionIcons.ROW_DELETE, popupCloser) { cells ->
-                        if (cells.size > 1 && rowIdx in cells.indices) cells.removeAt(rowIdx)
-                    })
+                    group.add(TableEditAction(editor, tableLines, TableEditOps.Op.DeleteRow(rowIdx),
+                        ActionIcons.ROW_DELETE, popupCloser))
                 }
                 editAdded = true
             }
             HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER -> {
-                group.add(TableEditAction(editor, geometry, "Add column to left", ActionIcons.COLUMN_ADD, popupCloser) { cells ->
-                    cells.forEach { it.add(colIdx, " ") }
-                })
-                group.add(TableEditAction(editor, geometry, "Add column to right", ActionIcons.COLUMN_ADD, popupCloser) { cells ->
-                    cells.forEach { it.add(colIdx + 1, " ") }
-                })
+                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertColumn(colIdx, before = true),
+                    ActionIcons.COLUMN_ADD, popupCloser))
+                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertColumn(colIdx, before = false),
+                    ActionIcons.COLUMN_ADD, popupCloser))
                 if (columnCount > 1) {
-                    group.add(TableEditAction(editor, geometry, "Delete column", ActionIcons.COLUMN_DELETE, popupCloser) { cells ->
-                        if (cells.firstOrNull()?.size ?: 0 > 1) {
-                            cells.forEach { if (colIdx in it.indices) it.removeAt(colIdx) }
-                        }
-                    })
+                    group.add(TableEditAction(editor, tableLines, TableEditOps.Op.DeleteColumn(colIdx),
+                        ActionIcons.COLUMN_DELETE, popupCloser))
                 }
                 editAdded = true
             }
@@ -481,57 +465,16 @@ class TzTableDecorator : EditorFactoryListener {
 
     private inner class TableEditAction(
         private val editor: Editor,
-        private val geometry: TableGeometry,
-        text: String,
+        private val tableLines: List<Int>,
+        private val op: TableEditOps.Op,
         icon: javax.swing.Icon?,
-        private val closePopup: () -> Unit,
-        private val transform: (cells: MutableList<MutableList<String>>) -> Unit
-    ) : AnAction(text, null, icon) {
+        private val closePopup: () -> Unit
+    ) : AnAction(op.title, null, icon) {
         override fun getActionUpdateThread() = ActionUpdateThread.EDT
         override fun actionPerformed(e: AnActionEvent) {
-            editTableCells(editor, geometry, templatePresentation.text ?: "Edit Table", transform)
+            TableEditOps.apply(editor, tableLines, op)
             closePopup()
         }
-    }
-
-    private fun editTableCells(
-        editor: Editor,
-        geometry: TableGeometry,
-        actionTitle: String,
-        transform: (cells: MutableList<MutableList<String>>) -> Unit
-    ) {
-        val project = editor.project ?: return
-        val doc = editor.document
-        val offset = doc.getLineStartOffset(geometry.firstLine)
-
-        WriteCommandAction.runWriteCommandAction(project, actionTitle, null, {
-            val table = editor.findTableAt(offset) ?: return@runWriteCommandAction
-
-            // Snapshot all cells as text
-            val cells = (0 until table.rowCount).map { y ->
-                (0 until table.columnCount).map { x ->
-                    table.row(y).cell(x).text
-                }.toMutableList()
-            }.toMutableList()
-
-            transform(cells)
-
-            if (cells.isEmpty() || cells.any { it.isEmpty() }) return@runWriteCommandAction
-
-            // Rebuild the table as Gherkin source
-            val s = StringBuilder()
-            cells.forEach { row ->
-                row.forEach { s.append("| ").append(it) }
-                s.append('|').append('\n')
-            }
-
-            // Replace the PSI in place
-            val tempTable = CucumberElementFactory
-                .createTempPsiFile(project, FEATURE_HEAD + s)
-                .children[0].children[0].children[0].children[0]
-            val newTable = table.replace(tempTable) as GherkinTable
-            newTable.format()
-        })
     }
 
     // ---- Header cell coloring ----
