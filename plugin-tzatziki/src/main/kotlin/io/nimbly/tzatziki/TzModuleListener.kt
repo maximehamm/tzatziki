@@ -15,15 +15,18 @@
 
 package io.nimbly.tzatziki
 
+import com.intellij.ide.AppLifecycleListener
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.actionSystem.IdeActions.*
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.actionSystem.EditorActionManager
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.psi.PsiDocumentManager
@@ -42,32 +45,35 @@ var TOGGLE_CUCUMBER_PL: Boolean = true
 
 const val EDITOR_UNINDENT_SELECTION = "EditorUnindentSelection"
 
+/**
+ * Fires on application frame creation — covers the sandbox/runIde case where the project
+ * may already be open before ProjectActivity fires, and guarantees EDT for action handler setup.
+ */
+class TzAppStartup : AppLifecycleListener {
+    override fun appFrameCreated(commandLineArgs: MutableList<String>) {
+        TzPostStartup.initHandlers()
+    }
+}
+
 class TzPostStartup : ProjectActivity {
 
     private val LOG = logger<TzPostStartup>()
 
     override suspend fun execute(project: Project) {
         LOG.info("C+ TzPostStartup.execute - handlerInitialized=$handlerInitialized")
-        if (!handlerInitialized) {
-            initTypedHandler()
-            initMouseListener(project)
-            handlerInitialized = true
-            askToVote(project)
-        }
+        // Fallback for tests: AppLifecycleListener doesn't fire in light fixtures.
+        initHandlers()
+        initMouseListener(project)
+        askToVote(project)
     }
 
     private fun initTypedHandler() {
-
         val actionManager = EditorActionManager.getInstance()
-
         actionManager.replaceHandler(DeletionHandler(ACTION_EDITOR_DELETE))
         actionManager.replaceHandler(DeletionHandler(ACTION_EDITOR_BACKSPACE))
-
         actionManager.replaceHandler(TabHandler(ACTION_EDITOR_TAB))
         actionManager.replaceHandler(TabHandler(EDITOR_UNINDENT_SELECTION))
-
         actionManager.replaceHandler(EnterHandler())
-
         actionManager.replaceHandler(CopyHandler())
         actionManager.replaceHandler(CutHandler())
         actionManager.replaceHandler(PasteHandler())
@@ -110,17 +116,14 @@ class TzPostStartup : ProjectActivity {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
             if (dataContext.gherkin && editor.smartCopy())
                 return
-
             doDefault(editor, caret, dataContext)
         }
     }
 
     private class CutHandler : AbstractWriteActionHandler(ACTION_EDITOR_CUT) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-
             if (dataContext.gherkin && editor.smartCut())
                 return
-
             doDefault(editor, null, dataContext)
             if (dataContext.gherkin) {
                 val table = editor.findTableAt(editor.caretModel.offset)
@@ -160,9 +163,7 @@ class TzPostStartup : ProjectActivity {
             }
 
             if (editor.caretModel.caretCount > 1) {
-
                 PsiDocumentManager.getInstance(editor.project!!).commitDocument(editor.document)
-
                 val table = editor.findTableAt(offset)
                 if (table != null) {
                     editor.caretModel.removeSecondaryCarets()
@@ -189,24 +190,33 @@ class TzPostStartup : ProjectActivity {
         }
 
         override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
-            // Always allow for Gherkin — our doExecute handles the logic.
-            // For all other file types delegate to the original handler so we don't
-            // intercept actions it considers disabled (e.g. Jupyter cells, consoles — issue #90).
-            // isEnabledForCaret is protected, but the 3-arg isEnabled(editor,caret,dataContext)
-            // is public and delegates to isEnabledForCaret internally.
-            if (dataContext?.gherkin == true)
-                return true
-            return orginHandler.isEnabled(editor, caret, dataContext)
+            // Fast path via data context
+            if (dataContext?.gherkin == true) return true
+            // Fallback: data context may not carry PSI_FILE at evaluation time (e.g. in some
+            // IntelliJ 2025.3 action contexts), so also check via the editor's virtual file.
+            val vfile = FileDocumentManager.getInstance().getFile(editor.document)
+            if (GherkinFileType.INSTANCE == vfile?.fileType) return true
+            // Non-Gherkin: respect original handler (issue #90 — Jupyter cells, consoles).
+            return runCatching { orginHandler.isEnabled(editor, caret, dataContext) }.getOrDefault(true)
         }
 
-        fun getActionId()
-                = id
+        fun getActionId() = id
     }
 
     companion object {
+        private val LOG = logger<TzPostStartup>()
         private var handlerInitialized = false
-    }
 
+        fun initHandlers() {
+            if (handlerInitialized) return
+            ApplicationManager.getApplication().invokeAndWait {
+                if (handlerInitialized) return@invokeAndWait
+                LOG.info("C+ TzPostStartup.initHandlers - registering keyboard handlers")
+                TzPostStartup().initTypedHandler()
+                handlerInitialized = true
+            }
+        }
+    }
 }
 
 val DataContext.gherkin: Boolean

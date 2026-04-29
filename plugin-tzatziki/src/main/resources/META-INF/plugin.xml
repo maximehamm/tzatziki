@@ -281,6 +281,11 @@
 
     </extensions>
 
+    <applicationListeners>
+        <listener class="io.nimbly.tzatziki.TzAppStartup"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+
     <projectListeners>
         <listener class="io.nimbly.tzatziki.run.TzExecutionCucumberListener"
                   topic="com.intellij.execution.ExecutionListener"/>
