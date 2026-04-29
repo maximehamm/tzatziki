@@ -26,8 +26,8 @@ Feature: Cocktail Ordering
 
     Given Romeo who wants to buy a drink
       # @header: row
-      | Valeur 1 | Valeur 2 |
-      | Test     | Truc     |
+      | Valeur 1xxx | Valeur 2 |
+      | Test        | Truc     |
 
     Given Bidule trucs
       # @header: column
