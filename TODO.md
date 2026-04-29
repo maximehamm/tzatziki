@@ -1,5 +1,92 @@
 # TODO
 
+## Implement visual framing of Gherkin tables (like Markdown rendering)
+
+Add a visual mechanism similar to what `.md` files do for Markdown tables: render
+Gherkin `| … |` tables with visible cell borders and optional column alignment,
+directly in the editor (custom `EditorCustomElementRenderer` or `Annotator` approach).
+
+Sample table to play with (6 columns × 10 rows):
+
+| Prénom    | Âge | Nom        | Ville         | Pays   | Score |
+|-----------|-----|------------|---------------|--------|-------|
+| Alice     | 28  | Martin     | Paris         | France | 92    |
+| Bob       | 34  | Dupont     | Lyon          | France | 87    |
+| Clara     | 22  | Rossi      | Rome          | Italie | 75    |
+| David     | 41  | Müller     | Berlin        | Allemagne | 88 |
+| Eva       | 30  | García     | Madrid        | Espagne | 95  |
+| François  | 27  | Bernard    | Bordeaux      | France | 60    |
+| Grace     | 35  | Kim        | Séoul         | Corée  | 78    |
+| Hugo      | 29  | Ferreira   | Lisbonne      | Portugal | 82  |
+| Isabelle  | 45  | Dubois     | Bruxelles     | Belgique | 91  |
+| Julien    | 23  | Leroy      | Nantes        | France | 70    |
+
+Equivalent Gherkin — form 1 (`Examples:` in a `Scenario Outline`):
+
+```gherkin
+Feature: Scoring
+
+  Scenario Outline: Check score for <Prénom>
+    Given the user "<Prénom>" "<Nom>" is <Âge> years old
+    And lives in "<Ville>", "<Pays>"
+    Then their score should be <Score>
+
+    Examples:
+      | Prénom   | Âge | Nom      | Ville     | Pays      | Score |
+      | Alice    | 28  | Martin   | Paris     | France    | 92    |
+      | Bob      | 34  | Dupont   | Lyon      | France    | 87    |
+      | Clara    | 22  | Rossi    | Rome      | Italie    | 75    |
+      | David    | 41  | Müller   | Berlin    | Allemagne | 88    |
+      | Eva      | 30  | García   | Madrid    | Espagne   | 95    |
+      | François | 27  | Bernard  | Bordeaux  | France    | 60    |
+      | Grace    | 35  | Kim      | Séoul     | Corée     | 78    |
+      | Hugo     | 29  | Ferreira | Lisbonne  | Portugal  | 82    |
+      | Isabelle | 45  | Dubois   | Bruxelles | Belgique  | 91    |
+      | Julien   | 23  | Leroy    | Nantes    | France    | 70    |
+```
+
+Equivalent Gherkin — form 2 (`DataTable` in a single step):
+
+```gherkin
+Feature: Scoring
+
+  Scenario: Check scores for all users
+    Given the following users and scores:
+      | Prénom    | Âge | Nom        | Ville         | Pays      | Score |
+      | Alice     | 28  | Martin     | Paris         | France    | 92    |
+      | Bob       | 34  | Dupont     | Lyon          | France    | 87    |
+      | Clara     | 22  | Rossi      | Rome          | Italie    | 75    |
+      | David     | 41  | Müller     | Berlin        | Allemagne | 88    |
+      | Eva       | 30  | García     | Madrid        | Espagne   | 95    |
+      | François  | 27  | Bernard    | Bordeaux      | France    | 60    |
+      | Grace     | 35  | Kim        | Séoul         | Corée     | 78    |
+      | Hugo      | 29  | Ferreira   | Lisbonne      | Portugal  | 82    |
+      | Isabelle  | 45  | Dubois     | Bruxelles     | Belgique  | 91    |
+      | Julien    | 23  | Leroy      | Nantes        | France    | 70    |
+
+  Scenario Outline: Vérifier le score de <Prénom>
+    Given l'utilisateur "<Prénom>" a <Âge> ans
+    Then son score devrait être <Score>
+
+    Examples:
+      | Prénom   | Âge | Score |
+      | Alice    | 28  | 92    |
+      | Bob      | 34  | 87    |
+      | Clara    | 22  | 75    |
+```
+
+---
+
+## créer un algorithme pour détecter si la première ligne d'un tableau est un entête
+  
+  Si le tableau est précédés de "Exemples"
+    - 100% si le tableau est précédés de "Exemples"
+  Sinon les réponses vraies permettent d'augmenter la probabilité d'être sur un entête :
+    - si toutes les cellules de la première ligne sans renseignées
+    - si le format de toutes les cellules de l'entête est alphabétique ou Alpha numérique
+    - si le format de certaines cellules est Alpha numérique alors que les valeurs dessous dans la colonne sont numérique ou vide
+    - d'autres idées Claude ?
+
 ## Make the plugin gracefully handle missing `cucumber-java` plugin
 
 When the user installs Cucumber+ in an IDE that has Java enabled but the

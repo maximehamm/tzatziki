@@ -23,6 +23,32 @@ Feature: Cocktail Ordering
   @Advanced @Chrome
   Scenario: This is the scenario
     Given Romeo who wants to buy a drink
-    * this is a test
+      | Valeur 1 | Valeur 2 |
+
+  Scenario: Check scores for all users
+
+    Given the following users and scores:
+      | Prénom    | Âge | Nom        | Ville         | Pays      | Score |
+      | Alice     | 28  | Martin     | Paris         | France    | 92    |
+      | Bob       | 34  | Dupont     | Lyon          | France    | 87    |
+      | Clara     | 22  | Rossi      | Rome          | Italie    | 75    |
+      # test séparartion
+      | David     | 41  | Müller     | Berlin        | Allemagne | 88    |
+      | Eva       | 30  | García     | Madrid        | Espagne   | 95    |
+      | François  | 27  | Bernard    | Bordeaux      | France    | 60    |
+      | Grace     | 35  | Kim        | Séoul         | Corée     | 78    |
+      # test séparartion
+      | Hugo      | 29  | Ferreira   | Lisbonne      | Portugal  | 82    |
+      | Isabelle  | 45  | Dubois     | Bruxelles     | Belgique  | 91    |
+      | Julien    | 23  | Leroy      | Nantes        | France    | 70    |
 
 
+  Scenario Outline: Vérifier le score de <Prénom>
+    Given l'utilisateur "<Prénom>" a <Âge> ans
+    Then son score devrait être <Score>
+
+    Examples:
+      | Prénom   | Âge | Score |
+      | Alice    | 28  | 92    |
+      | Bob      | 34  | 87    |
+      | Clara    | 22  | 75    |

@@ -277,6 +277,8 @@
 
         <projectActivity implementation="io.nimbly.tzatziki.TzPostStartup"/>
 
+        <editorFactoryListener implementation="io.nimbly.tzatziki.editor.TzTableDecorator"/>
+
     </extensions>
 
     <projectListeners>
