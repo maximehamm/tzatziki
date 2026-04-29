@@ -24,15 +24,15 @@ import javax.swing.Icon
 // New UI icons svg : https://www.jetbrains.com/intellij-repository/releases
 object ActionIcons {
 
-    @JvmField val SHIFT_LEFT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-shift-left-16x16.png", javaClass)
-    @JvmField val SHIFT_RIGHT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-shift-right-16x16.png", javaClass)
-    @JvmField val SHIFT_UP = IconLoader.getIcon("/io/nimbly/tzatziki/icons/line-16x16-shift-up.png", javaClass)
-    @JvmField val SHIFT_DOWN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/line-16x16-shift-down.png", javaClass)
+    @JvmField val SHIFT_LEFT  = IconLoader.getIcon("/io/nimbly/tzatziki/icons/shift-left.svg", javaClass)
+    @JvmField val SHIFT_RIGHT = IconLoader.getIcon("/io/nimbly/tzatziki/icons/shift-right.svg", javaClass)
+    @JvmField val SHIFT_UP    = IconLoader.getIcon("/io/nimbly/tzatziki/icons/shift-up.svg", javaClass)
+    @JvmField val SHIFT_DOWN  = IconLoader.getIcon("/io/nimbly/tzatziki/icons/shift-down.svg", javaClass)
 
-    @JvmField val INSERT_LINE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/line-insert-16x16.png", javaClass)
-    @JvmField val INSERT_COLUMN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-insert-16x16.png", javaClass)
-    @JvmField val DELETE_LINE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/line-delete-16x16.png", javaClass)
-    @JvmField val DELETE_COLUMN = IconLoader.getIcon("/io/nimbly/tzatziki/icons/culumn-delete-16x16.png", javaClass)
+    @JvmField val ROW_ADD       = IconLoader.getIcon("/io/nimbly/tzatziki/icons/row-add.svg", javaClass)
+    @JvmField val ROW_DELETE    = IconLoader.getIcon("/io/nimbly/tzatziki/icons/row-delete.svg", javaClass)
+    @JvmField val COLUMN_ADD    = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-add.svg", javaClass)
+    @JvmField val COLUMN_DELETE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-delete.svg", javaClass)
 
     @JvmField val CUCUMBER_PLUS_64 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
     @JvmField val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)

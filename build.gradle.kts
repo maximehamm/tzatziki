@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.1.2"
+    version = "21.2.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
+         <li><b>21.2</b> Table renderer: insert and delete rows/columns directly from the table popup, with modernized shift / add / delete icons. Shift actions are no longer added to the general and right-click menus — they remain available from the table popup and from keyboard shortcuts (<code>Shift+Ctrl+Arrow</code>). IntelliJ IDEA 2025.3.4 compatibility: fix Gherkin&#8596;Java/Kotlin breakpoint synchronization, restore the test execution highlighter, eliminate slow operations on EDT.</li>
          <li><b>21.1</b> Table renderer: header support — add <code># @header: row</code> or <code># @header: column</code> above a DataTable to highlight its first row or column as a header. Hover the table frame to reveal a context menu: toggle header type, shift rows/columns, and toggle Cucumber+</li>
          <li><b>21.0</b> Table renderer: Gherkin tables are now visually framed with rounded-corner borders and subtle column separators directly in the editor</li>
          <li><b>20.0</b> Minimum version is now 2025.3.3 - Kotlin 2.0 - Fix #94</li>

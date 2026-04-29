@@ -62,8 +62,10 @@ class TzPostStartup : ProjectActivity {
     override suspend fun execute(project: Project) {
         LOG.info("C+ TzPostStartup.execute - handlerInitialized=$handlerInitialized")
         // Fallback for tests: AppLifecycleListener doesn't fire in light fixtures.
+        // Note: in IntelliJ 2025.3+ ProjectActivity may not run reliably for this plugin —
+        // the mouse listener and action handlers are now registered from initHandlers()
+        // (called via TzAppStartup.appFrameCreated, which always fires).
         initHandlers()
-        initMouseListener(project)
         askToVote(project)
     }
 
@@ -79,10 +81,12 @@ class TzPostStartup : ProjectActivity {
         actionManager.replaceHandler(PasteHandler())
     }
 
-    private fun initMouseListener(project: Project) {
-        EditorFactory.getInstance().eventMulticaster.apply {
-            addEditorMouseListener(TZMouseAdapter, project)
-        }
+    private fun initMouseListenerGlobal() {
+        // Application-wide registration: covers all editors in all projects.
+        // Disposable scope = application (lives as long as the IDE).
+        EditorFactory.getInstance().eventMulticaster.addEditorMouseListener(
+            TZMouseAdapter, ApplicationManager.getApplication()
+        )
     }
 
     private class DeletionHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
@@ -212,7 +216,9 @@ class TzPostStartup : ProjectActivity {
             ApplicationManager.getApplication().invokeAndWait {
                 if (handlerInitialized) return@invokeAndWait
                 LOG.info("C+ TzPostStartup.initHandlers - registering keyboard handlers")
-                TzPostStartup().initTypedHandler()
+                val instance = TzPostStartup()
+                instance.initTypedHandler()
+                instance.initMouseListenerGlobal()
                 handlerInitialized = true
             }
         }

@@ -1,6 +1,6 @@
 # TODO
 
-## Add row and column insertion from the table popup (not urgent)
+## Add row and column insertion from the table popup 
 
 Currently the table popup (accessible by hovering the table frame borders) offers
 `@header:` actions and shift up/down/left/right. It should also offer:
@@ -12,7 +12,7 @@ These can reuse the existing `format()` logic. Low priority.
 
 ## Divers 
 
-  - Add row and column deletion from the table popup (not urgent)
+  - corrige les actions : qd il y a des commentaires intercallés, ne pas les perdre
 
 ## Make the plugin gracefully handle missing `cucumber-java` plugin
 

@@ -1,9 +1,11 @@
 package example;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.cucumber.java.ro.Dar;
 
 import java.util.Date;
 
@@ -19,8 +21,7 @@ public class Cocktail {
     @SuppressWarnings("test")
     @Deprecated
     @Given("Romeo who wants to buy a drink")
-    @When("xx an order is declared for Juliette")
-    public void anOrderIsDeclaredForJuliette() {
+    public void anOrderIsDeclaredForJuliette(DataTable table) {
         order = 0;
     }
 

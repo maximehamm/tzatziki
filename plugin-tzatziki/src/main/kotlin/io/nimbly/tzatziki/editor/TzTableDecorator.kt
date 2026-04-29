@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.editor
 
 import com.intellij.icons.AllIcons
+import icons.ActionIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -35,6 +36,14 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.awt.RelativePoint
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
+import io.nimbly.tzatziki.psi.cell
+import io.nimbly.tzatziki.psi.columnCount
+import io.nimbly.tzatziki.psi.format
+import io.nimbly.tzatziki.psi.row
+import io.nimbly.tzatziki.psi.rowCount
+import io.nimbly.tzatziki.util.FEATURE_HEAD
+import io.nimbly.tzatziki.util.findTableAt
+import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinHighlighter
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
@@ -317,10 +326,51 @@ class TzTableDecorator : EditorFactoryListener {
         }
         if (shiftAdded) group.addSeparator()
 
-        // 2. Header type — row / column (click selected = toggle off; closes the popup)
+        // 1b. Add / delete row & column (zone-specific)
         val popupRef = arrayOfNulls<JBPopup>(1)
-        group.add(SetHeaderAction(editor, geometry, "row",    "Header: row")    { popupRef[0]?.cancel() })
-        group.add(SetHeaderAction(editor, geometry, "column", "Header: column") { popupRef[0]?.cancel() })
+        val popupCloser: () -> Unit = { popupRef[0]?.cancel() }
+        val rowCount = tableLines.size
+        val columnCount = (pipeXs.size - 1).coerceAtLeast(1)
+        var editAdded = false
+        when (zone) {
+            HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> {
+                group.add(TableEditAction(editor, geometry, "Add row above", ActionIcons.ROW_ADD, popupCloser) { cells ->
+                    val width = cells.firstOrNull()?.size ?: return@TableEditAction
+                    cells.add(rowIdx, MutableList(width) { " " })
+                })
+                group.add(TableEditAction(editor, geometry, "Add row below", ActionIcons.ROW_ADD, popupCloser) { cells ->
+                    val width = cells.firstOrNull()?.size ?: return@TableEditAction
+                    cells.add(rowIdx + 1, MutableList(width) { " " })
+                })
+                if (rowCount > 1) {
+                    group.add(TableEditAction(editor, geometry, "Delete row", ActionIcons.ROW_DELETE, popupCloser) { cells ->
+                        if (cells.size > 1 && rowIdx in cells.indices) cells.removeAt(rowIdx)
+                    })
+                }
+                editAdded = true
+            }
+            HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER -> {
+                group.add(TableEditAction(editor, geometry, "Add column to left", ActionIcons.COLUMN_ADD, popupCloser) { cells ->
+                    cells.forEach { it.add(colIdx, " ") }
+                })
+                group.add(TableEditAction(editor, geometry, "Add column to right", ActionIcons.COLUMN_ADD, popupCloser) { cells ->
+                    cells.forEach { it.add(colIdx + 1, " ") }
+                })
+                if (columnCount > 1) {
+                    group.add(TableEditAction(editor, geometry, "Delete column", ActionIcons.COLUMN_DELETE, popupCloser) { cells ->
+                        if (cells.firstOrNull()?.size ?: 0 > 1) {
+                            cells.forEach { if (colIdx in it.indices) it.removeAt(colIdx) }
+                        }
+                    })
+                }
+                editAdded = true
+            }
+        }
+        if (editAdded) group.addSeparator()
+
+        // 2. Header type — row / column (click selected = toggle off; closes the popup)
+        group.add(SetHeaderAction(editor, geometry, "row",    "Header: row",    popupCloser))
+        group.add(SetHeaderAction(editor, geometry, "column", "Header: column", popupCloser))
         group.addSeparator()
 
         // 3. Toggle Cucumber+ — wrapped to close the popup after toggling
@@ -329,7 +379,7 @@ class TzTableDecorator : EditorFactoryListener {
             override fun isSelected(e: AnActionEvent) = TOGGLE_CUCUMBER_PL
             override fun setSelected(e: AnActionEvent, state: Boolean) {
                 am.getAction("io.nimbly.tzatziki.ToggleTzatziki")?.actionPerformed(e)
-                popupRef[0]?.cancel()
+                popupCloser()
             }
         })
 
@@ -425,6 +475,63 @@ class TzTableDecorator : EditorFactoryListener {
             }
         }
         return -1
+    }
+
+    // ---- Add / delete row & column ----
+
+    private inner class TableEditAction(
+        private val editor: Editor,
+        private val geometry: TableGeometry,
+        text: String,
+        icon: javax.swing.Icon?,
+        private val closePopup: () -> Unit,
+        private val transform: (cells: MutableList<MutableList<String>>) -> Unit
+    ) : AnAction(text, null, icon) {
+        override fun getActionUpdateThread() = ActionUpdateThread.EDT
+        override fun actionPerformed(e: AnActionEvent) {
+            editTableCells(editor, geometry, templatePresentation.text ?: "Edit Table", transform)
+            closePopup()
+        }
+    }
+
+    private fun editTableCells(
+        editor: Editor,
+        geometry: TableGeometry,
+        actionTitle: String,
+        transform: (cells: MutableList<MutableList<String>>) -> Unit
+    ) {
+        val project = editor.project ?: return
+        val doc = editor.document
+        val offset = doc.getLineStartOffset(geometry.firstLine)
+
+        WriteCommandAction.runWriteCommandAction(project, actionTitle, null, {
+            val table = editor.findTableAt(offset) ?: return@runWriteCommandAction
+
+            // Snapshot all cells as text
+            val cells = (0 until table.rowCount).map { y ->
+                (0 until table.columnCount).map { x ->
+                    table.row(y).cell(x).text
+                }.toMutableList()
+            }.toMutableList()
+
+            transform(cells)
+
+            if (cells.isEmpty() || cells.any { it.isEmpty() }) return@runWriteCommandAction
+
+            // Rebuild the table as Gherkin source
+            val s = StringBuilder()
+            cells.forEach { row ->
+                row.forEach { s.append("| ").append(it) }
+                s.append('|').append('\n')
+            }
+
+            // Replace the PSI in place
+            val tempTable = CucumberElementFactory
+                .createTempPsiFile(project, FEATURE_HEAD + s)
+                .children[0].children[0].children[0].children[0]
+            val newTable = table.replace(tempTable) as GherkinTable
+            newTable.format()
+        })
     }
 
     // ---- Header cell coloring ----

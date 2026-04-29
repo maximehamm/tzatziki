@@ -329,32 +329,33 @@
                     text="Hide tests execution highlights">
             </action>
 
-            <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
-                    id="io.nimbly.tzatziki.ShiftUp"
-                    text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
-                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
-            </action>
-            <action class="io.nimbly.tzatziki.actions.TableShiftDownAction"
-                    id="io.nimbly.tzatziki.ShiftDown"
-                    text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN"   >
-                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
-            </action>
-
-            <action class="io.nimbly.tzatziki.actions.TableShiftLeftAction"
-                    id="io.nimbly.tzatziki.ShiftLeft"
-                    text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
-                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
-            </action>
-            <action class="io.nimbly.tzatziki.actions.TableShiftRightAction"
-                    id="io.nimbly.tzatziki.ShiftRight"
-                    text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
-                <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
-            </action>
-
             <add-to-group group-id="CutCopyPasteGroup" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorToggleColumnMode"/>
 
         </group>
+
+        <!-- Shift actions: only used by the table popup (TzTableDecorator) and keyboard shortcuts.
+             Not added to any visible menu group. -->
+        <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
+                id="io.nimbly.tzatziki.ShiftUp"
+                text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
+        </action>
+        <action class="io.nimbly.tzatziki.actions.TableShiftDownAction"
+                id="io.nimbly.tzatziki.ShiftDown"
+                text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN">
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
+        </action>
+        <action class="io.nimbly.tzatziki.actions.TableShiftLeftAction"
+                id="io.nimbly.tzatziki.ShiftLeft"
+                text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
+        </action>
+        <action class="io.nimbly.tzatziki.actions.TableShiftRightAction"
+                id="io.nimbly.tzatziki.ShiftRight"
+                text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
+        </action>
 
         <group id="io.nimbly.tzatziki.export.group">
 
@@ -364,7 +365,7 @@
             </action>
 
             <add-to-group group-id="FileMenu" anchor="after" relative-to-action="PrintExportGroup"/>
-            <add-to-group group-id="io.nimbly.tzatziki.group" anchor="after" relative-to-action="io.nimbly.tzatziki.ShiftRight"/>
+            <add-to-group group-id="io.nimbly.tzatziki.group" anchor="after" relative-to-action="io.nimbly.tzatziki.HideTestResultHighlightsAndGuidesAction"/>
 
         </group>
 

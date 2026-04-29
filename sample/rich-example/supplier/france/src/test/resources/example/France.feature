@@ -52,7 +52,7 @@ Feature: Cocktail Ordering
       # test séparartion
       | Hugo     | 29  | Ferreira | Lisbonne  | Portugal  | 82    |
       | Isabelle | 45  | Dubois   | Bruxelles | Belgique  | 91    |
-      | Julien   | 23  | Leroy    | Nantes    | France    | 70    |
+      | Julien   | 23  | @Leroy   | Nantes    | France    | 70    |
 
 
   Scenario Outline: Vérifier le score de <Prénom>
