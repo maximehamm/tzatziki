@@ -27,13 +27,15 @@ import io.nimbly.tzatziki.psi.table
 import io.nimbly.tzatziki.util.ellipsis
 import io.nimbly.tzatziki.util.findPreviousSiblingsOfType
 import io.nimbly.tzatziki.util.parentOfTypeIs
-import org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.java.run.CucumberJavaRunConfiguration
+import org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer
 import org.jetbrains.plugins.cucumber.psi.*
 
-// CucumberJavaScenarioRunConfigurationProducer was removed in cucumber-java 252.25557.23+
-// CucumberJavaFeatureRunConfigurationProducer is its direct parent and still present
-class TzCucumberJavaRunConfigurationProducer : CucumberJavaFeatureRunConfigurationProducer() {
+// Must extend CucumberJavaScenarioRunConfigurationProducer (not the Feature one):
+// the Feature parent runs the whole feature, ignoring the line filter — so clicking
+// the run gutter on a single Examples row would execute every example. The Scenario
+// producer's setupConfigurationFromContext sets the `--name` filter we need.
+class TzCucumberJavaRunConfigurationProducer : CucumberJavaScenarioRunConfigurationProducer() {
 
     override fun setupConfigurationFromContext(
         configuration: CucumberJavaRunConfiguration,
