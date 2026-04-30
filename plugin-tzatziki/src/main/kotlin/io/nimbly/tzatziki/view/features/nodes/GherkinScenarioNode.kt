@@ -33,10 +33,10 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
             val runConfProds = RunConfigurationProducer.getProducers(project)
             // CucumberJavaScenarioRunConfigurationProducer was removed in cucumber-java 252.25557.23+
             val cls = runCatching {
-                Class.forName("org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer")
+                Class.forName(CUCUMBER_JAVA_SCENARIO_PRODUCER)
             }.getOrElse {
                 runCatching {
-                    Class.forName("org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer")
+                    Class.forName(CUCUMBER_JAVA_FEATURE_PRODUCER)
                 }.getOrNull()
             }
             runConfProds.find { it.javaClass == cls }
@@ -69,3 +69,6 @@ class GherkinScenarioNode(p: Project, scenario: GherkinStepsHolder, exp: Express
     override fun getRunActionText() = "Run scenario..."
 
 }
+
+const val CUCUMBER_JAVA_SCENARIO_PRODUCER = "org.jetbrains.plugins.cucumber.java.run.CucumberJavaScenarioRunConfigurationProducer"
+const val CUCUMBER_JAVA_FEATURE_PRODUCER  = "org.jetbrains.plugins.cucumber.java.run.CucumberJavaFeatureRunConfigurationProducer"

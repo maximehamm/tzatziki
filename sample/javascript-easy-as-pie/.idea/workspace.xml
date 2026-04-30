@@ -5,13 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db661eb3-4a68-4394-986c-91164c924d50" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../.idea/runConfigurations/Run_T_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/runConfigurations/Run_T_.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../../build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../plugin-tzatziki/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../../plugin-tzatziki/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/features/step_definitions/google.js" beforeDir="false" afterPath="$PROJECT_DIR$/features/step_definitions/google.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../common/src/main/kotlin/io/nimbly/tzatziki/util/PsiUtils.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../../common/src/main/kotlin/io/nimbly/tzatziki/util/PsiUtils.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rich-example/customer/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/../rich-example/customer/build.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,22 +45,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.cucumber.cucumber_node_package_dir": "/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie/node_modules/cucumber",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.cucumber.cucumber_node_package_dir&quot;: &quot;/Users/maxime/Development/projects-plugins/Tzatziki/sample/javascript-easy-as-pie/node_modules/cucumber&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/features" />
@@ -72,7 +71,7 @@
       <recent name="$PROJECT_DIR$/features" />
     </key>
   </component>
-  <component name="RunManager" selected="Cucumber.js.google.feature">
+  <component name="RunManager" selected="Cucumber Java.Scenario: Creating an empty order">
     <configuration name="Scenario: Creating an empty order" type="CucumberJavaRunConfigurationType" factoryName="Cucumber java" temporary="true" nameIsGenerated="true">
       <option name="CUCUMBER_CORE_VERSION" value="1" />
       <option name="FILE_PATH" value="$PROJECT_DIR$/features/cocktail.feature" />
@@ -122,10 +121,6 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Cucumber.js.google.feature" />
-        <item itemvalue="Cucumber.js.cocktail.feature" />
-        <item itemvalue="Cucumber.js.github.feature" />
-        <item itemvalue="Cucumber.js.base.feature" />
         <item itemvalue="Cucumber Java.Scenario: Creating an empty order" />
       </list>
     </recent_temporary>
@@ -182,6 +177,7 @@
       <workItem from="1639514310237" duration="10000" />
       <workItem from="1650958688177" duration="823000" />
       <workItem from="1712176128255" duration="1308000" />
+      <workItem from="1777318346951" duration="47000" />
     </task>
     <servers />
   </component>
@@ -194,13 +190,11 @@
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/features/step_definitions/github.js</url>
           <line>28</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="javascript">
           <url>file://$PROJECT_DIR$/features/step_definitions/google.js</url>
           <line>16</line>
-          <properties lambdaOrdinal="-1" />
           <option name="timeStamp" value="11" />
         </line-breakpoint>
       </breakpoints>

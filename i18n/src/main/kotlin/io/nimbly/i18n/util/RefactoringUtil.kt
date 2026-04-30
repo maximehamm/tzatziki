@@ -118,14 +118,29 @@ fun findUsages(
 
     val scope = GlobalSearchScope.projectScope(el.project)
     val refactoringSetup = RefactoringSetup()
-    val rename = RefactoringFactory.getInstance(elt.project)
-        .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
-    val usages = rename.findUsages()
+
+    // Some PSI elements (e.g. PsiLiteralExpression) are not renamable: invoking the
+    // rename refactoring on them triggers a "Unknown element type" fatal error in
+    // RenameUtil.getStringToReplace. Skip the rename block when no specialized
+    // RenamePsiElementProcessor can handle the element, and guard with try/catch
+    // as a defense-in-depth so any other unsupported element doesn't crash the action.
+    val processors = RenamePsiElementProcessor.allForElement(elt)
+    val canRename = elt is PsiNamedElement &&
+        processors.any { it.canProcessElement(elt) && it !is DefaultRenamePsiElementProcessor }
+
+    val usages = if (canRename) {
+        try {
+            RefactoringFactory.getInstance(elt.project)
+                .createRename(elt, "xx", scope, refactoringSetup.searchInComments, true)
+                .findUsages()
+        } catch (_: Throwable) {
+            emptyArray()
+        }
+    } else emptyArray()
 
     val allRenames = mutableMapOf<PsiElement, String>()
     allRenames[elt] = "xxx"
 
-    val processors = RenamePsiElementProcessor.allForElement(elt)
     for (processor in processors) {
         if (processor.canProcessElement(elt)) {
             processor.prepareRenaming(elt, "xxx", allRenames)

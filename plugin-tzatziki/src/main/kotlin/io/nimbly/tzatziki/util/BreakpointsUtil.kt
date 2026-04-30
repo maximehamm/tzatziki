@@ -54,7 +54,7 @@ fun toggleAndReturnLineBreakpoint(
 
     // Hide to Jetbrain the use of this internal method !
     // Not a nice solution... but copying hundreds of lines of code from XDebuggerUtil is worth !
-    return XDebuggerUtil.getInstance().invokeMethod("toggleAndReturnLineBreakpoint",
+    return XDebuggerUtil.getInstance().invokeMethod(XDEBUGGER_TOGGLE_METHOD,
         listOf(Project::class.java, VirtualFile::class.java, Int::class.java, Boolean::class.java),
         mutableListOf(project, file, line, temporary)) as Promise<XLineBreakpoint<*>>?
 //    return (XDebuggerUtil.getInstance() as? XDebuggerUtilImpl)?.toggleAndReturnLineBreakpoint(
@@ -84,11 +84,22 @@ fun toggleCodeBreakpoint(
     )
         ?.then { it: XLineBreakpoint<out XBreakpointProperties<*>>? ->
             it?.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-            (it?.properties as? JavaLineBreakpointProperties)?.let {
-                // TIPS : Fix for a Kotlin exception is some cases....
-                // Using reflexion because this does no more exists in Intellij newer version
-                // it.lambdaOrdinal =  -1
-                JavaUtil.updateField(it, "myLambdaOrdinal", -1)
+            (it?.properties as? JavaLineBreakpointProperties)?.let { props ->
+                // Fix for a Kotlin exception in some lambda cases.
+                // In 2025.3+, myLambdaOrdinal was replaced by setEncodedInlinePosition/NO_LAMBDA.
+                // Try new API first, fall back to old field for older platform builds.
+                val newApiOk = runCatching {
+                    val noLambda = JavaLineBreakpointProperties::class.java.getField("NO_LAMBDA").getInt(null)
+                    JavaLineBreakpointProperties::class.java
+                        .getMethod("setEncodedInlinePosition", Integer::class.java)
+                        .invoke(props, noLambda)
+                }.isSuccess
+                if (!newApiOk) {
+                    JavaUtil.updateField(props, JAVA_LINE_BP_LAMBDA_ORDINAL_FIELD, -1)
+                }
             }
         }
 }
+
+const val XDEBUGGER_TOGGLE_METHOD           = "toggleAndReturnLineBreakpoint"
+const val JAVA_LINE_BP_LAMBDA_ORDINAL_FIELD = "myLambdaOrdinal"

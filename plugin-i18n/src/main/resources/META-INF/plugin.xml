@@ -145,8 +145,6 @@ Tsonga, Turkish, Turkmen, Twi (Akan), Uighur, Ukrainian, Urdu, Uzbek, Vietnamese
 
     <extensions defaultExtensionNs="com.intellij">
 
-        <postStartupActivity implementation="io.nimbly.i18n.TranslationModuleListener"/>
-
         <toolWindow factoryClass="io.nimbly.i18n.TranslationPlusFactory" id="Translation+" anchor="right"
                     icon="ActionI18nIcons.TRANSLATION_PLUS_16"/>
 
@@ -164,6 +162,13 @@ Tsonga, Turkish, Turkmen, Twi (Akan), Uighur, Ukrainian, Urdu, Uzbek, Vietnamese
         -->
 
     </extensions>
+
+    <applicationListeners>
+        <listener class="io.nimbly.i18n.TranslationAppStartup"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+        <listener class="io.nimbly.i18n.TranslationProjectMouseListenerInstaller"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
 
     <depends>com.intellij.modules.platform</depends>
 

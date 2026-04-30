@@ -48,12 +48,33 @@ open class TableShiftAction(private val direction: Direction) : TzAction() {
 
         val file = event.getData(CommonDataKeys.PSI_FILE) ?: return
         val offset = CommonDataKeys.CARET.getData(event.dataContext)?.offset ?: return
-        val editor =  CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
+        val editor = CommonDataKeys.EDITOR.getData(event.dataContext) ?: return
 
         val cell = file.cellAt(offset) ?: return
+        val coordinate = cell.coordinate
 
-        val table = cell.row.table
-        editor.shift(table, cell, direction)
+        // If the visual table region has no interleaved comments/blank lines we keep the
+        // historical PSI-replace path (cursor / highlight match the existing tests).
+        // Otherwise (comments inside the table), we switch to the document-level path so
+        // that comments are preserved.
+        val cursorLine = editor.document.getLineNumber(offset)
+        val tableLines = io.nimbly.tzatziki.util.TableEditOps.collectTableLinesAround(editor, cursorLine)
+        val hasInterleavedNonRow = tableLines.size >= 2 &&
+            (tableLines.last() - tableLines.first() + 1) > tableLines.size
+
+        if (hasInterleavedNonRow) {
+            val rowIdx = tableLines.indexOf(cursorLine).coerceAtLeast(0)
+            val op = when (direction) {
+                UP    -> io.nimbly.tzatziki.util.TableEditOps.Op.ShiftRow(rowIdx, -1)
+                DOWN  -> io.nimbly.tzatziki.util.TableEditOps.Op.ShiftRow(rowIdx, +1)
+                LEFT  -> io.nimbly.tzatziki.util.TableEditOps.Op.ShiftColumn(coordinate.x, -1)
+                RIGHT -> io.nimbly.tzatziki.util.TableEditOps.Op.ShiftColumn(coordinate.x, +1)
+            }
+            io.nimbly.tzatziki.util.TableEditOps.apply(editor, tableLines, op)
+        } else {
+            val table = cell.row.table
+            editor.shift(table, cell, direction)
+        }
     }
 
     override fun update(event: AnActionEvent) {

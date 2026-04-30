@@ -27,7 +27,6 @@ import com.intellij.openapi.editor.event.CaretEvent
 import com.intellij.openapi.editor.event.CaretListener
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
-import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.roots.ui.configuration.ProjectSettingsService
@@ -283,15 +282,20 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
 
         val project = ctxt.project
         val editor = ctxt.editor
-        if (project != null && editor != null) {
-            TranslateAction().doActionPerformed(
+        val startOffset = ctxt.startOffset
+        if (project != null && editor != null && startOffset != null) {
+            // Reuse the translation we just got — must NOT call doActionPerformed,
+            // which would re-translate using the editor's caret element (often a
+            // punctuation leaf like `(`) and overwrite this panel via the
+            // onTranslation listener.
+            TranslateAction().displayTranslationInlays(
                 project = project,
                 editor = editor,
                 file = ctxt.selectedElement?.containingFile,
-                editorImpl = ctxt.editor as? EditorImpl,
-                caret = ctxt.startOffset,
-                isVCS = false,
-                withInlineTranslation = false
+                element = ctxt.selectedElement,
+                startOffset = startOffset,
+                translation = translation,
+                withInlineTranslation = false,
             )
         }
     }
@@ -423,15 +427,29 @@ class TranslateView : SimpleToolWindowPanel(true, false), TranslationListener {
                     }
                 }
 
-                val refactoringAvailable = canRename(ctxt.selectedElement.findRenamable())
-                refactoring.isEnabled = refactoringAvailable
-                refactoringPreview.isEnabled = refactoringAvailable
-                refactoringSearchInComments.isEnabled = refactoringAvailable
-
-                val tooltip = if (refactoringAvailable) null else "Select an element that can be renamed !"
-                refactoring.toolTipText = tooltip
-                refactoringPreview.toolTipText = tooltip
-                refactoringSearchInComments.toolTipText = tooltip
+                // canRename triggers stub-index queries (SemElementRenamePsiElementProcessor)
+                // which are slow operations forbidden on EDT in 2025.3+. Compute on a pooled
+                // thread inside a read action, then update UI back on EDT.
+                val renamable = ctxt.selectedElement.findRenamable()
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    val available = try {
+                        com.intellij.openapi.application.ReadAction.compute<Boolean, Throwable> {
+                            canRename(renamable)
+                        }
+                    } catch (_: Throwable) {
+                        false
+                    }
+                    ApplicationManager.getApplication().invokeLater {
+                        if (project.isDisposed) return@invokeLater
+                        refactoring.isEnabled = available
+                        refactoringPreview.isEnabled = available
+                        refactoringSearchInComments.isEnabled = available
+                        val tooltip = if (available) null else "Select an element that can be renamed !"
+                        refactoring.toolTipText = tooltip
+                        refactoringPreview.toolTipText = tooltip
+                        refactoringSearchInComments.toolTipText = tooltip
+                    }
+                }
             }
         }
     }

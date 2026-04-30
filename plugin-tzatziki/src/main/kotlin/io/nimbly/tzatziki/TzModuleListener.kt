@@ -55,6 +55,20 @@ class TzAppStartup : AppLifecycleListener {
     }
 }
 
+/**
+ * Registers the editor mouse listener per project (Disposable = project), so the listener
+ * is auto-removed when the project closes — and, importantly, between tests.
+ *
+ * Lives on com.intellij.openapi.project.ProjectManagerListener (registered via <applicationListeners>).
+ * Replaces the former init-from-ProjectActivity path that was not reliable in IntelliJ 2025.3+.
+ */
+class TzProjectMouseListenerInstaller : com.intellij.openapi.project.ProjectManagerListener {
+    override fun projectOpened(project: com.intellij.openapi.project.Project) {
+        EditorFactory.getInstance().eventMulticaster
+            .addEditorMouseListener(io.nimbly.tzatziki.mouse.TZMouseAdapter, project)
+    }
+}
+
 class TzPostStartup : ProjectActivity {
 
     private val LOG = logger<TzPostStartup>()
@@ -62,8 +76,10 @@ class TzPostStartup : ProjectActivity {
     override suspend fun execute(project: Project) {
         LOG.info("C+ TzPostStartup.execute - handlerInitialized=$handlerInitialized")
         // Fallback for tests: AppLifecycleListener doesn't fire in light fixtures.
+        // Note: in IntelliJ 2025.3+ ProjectActivity may not run reliably for this plugin —
+        // the mouse listener and action handlers are now registered from initHandlers()
+        // (called via TzAppStartup.appFrameCreated, which always fires).
         initHandlers()
-        initMouseListener(project)
         askToVote(project)
     }
 
@@ -79,11 +95,6 @@ class TzPostStartup : ProjectActivity {
         actionManager.replaceHandler(PasteHandler())
     }
 
-    private fun initMouseListener(project: Project) {
-        EditorFactory.getInstance().eventMulticaster.apply {
-            addEditorMouseListener(TZMouseAdapter, project)
-        }
-    }
 
     private class DeletionHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {

@@ -1,5 +1,7 @@
 package io.nimbly.i18n.translation
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
@@ -69,9 +71,23 @@ object TranslationManager {
         if (origin?.element != null && origin.editor != null) {
             findUsages = null
             updateListenersAfterUsagesCollected(origin.element, project)
-            SwingUtilities.invokeLater {
-                findUsages = findUsages(origin.element, origin.editor)
-                updateListenersAfterUsagesCollected(origin.element, project)
+            // findUsages does PSI access + ReferencesSearch, which is a slow operation
+            // forbidden on EDT in 2025.3+. Run it on a pooled thread inside a read action,
+            // then publish the result back on the EDT.
+            val element = origin.element
+            val editor = origin.editor
+            ApplicationManager.getApplication().executeOnPooledThread {
+                val result = try {
+                    ReadAction.compute<Set<Pair<PsiElement, Int>>, Throwable> {
+                        findUsages(element, editor)
+                    }
+                } catch (_: Throwable) {
+                    emptySet()
+                }
+                ApplicationManager.getApplication().invokeLater {
+                    findUsages = result
+                    updateListenersAfterUsagesCollected(element, project)
+                }
             }
         }
         else {

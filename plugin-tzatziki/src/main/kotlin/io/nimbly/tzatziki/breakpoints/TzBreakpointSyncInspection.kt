@@ -16,11 +16,8 @@
 package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.codeInspection.ProblemsHolder
-import com.intellij.openapi.project.DumbService
 import com.intellij.psi.PsiElementVisitor
-import com.intellij.psi.PsiFile
 import com.intellij.xdebugger.XDebuggerManager
-import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
@@ -36,30 +33,6 @@ class TzBreakpointSyncInspection : GherkinInspection() {
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor {
 
         return object : GherkinElementVisitor() {
-
-            override fun visitFile(file: PsiFile) {
-
-                if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
-                    return
-
-                // Remove orphan breakpoints
-                XDebuggerManager.getInstance(file.project)
-                    .breakpointManager
-                    .allBreakpoints
-                    .filter { it.sourcePosition?.file == file.virtualFile }
-                    .forEach { breakpoint ->
-
-                        val line = breakpoint.sourcePosition?.line ?: return@forEach
-                        val range = file.getDocument()?.getLineRange(line) ?: return@forEach
-                        if (file.findElementsOfTypeInRange(range, GherkinStep::class.java, GherkinTableRow::class.java).isNotEmpty())
-                            return@forEach
-
-                        DumbService.getInstance(file.project).smartInvokeLater {
-                            XDebuggerUtil.getInstance().removeBreakpoint(file.project, breakpoint)
-                        }
-                    }
-            }
-
 
             override fun visitStep(step: GherkinStep) {
 

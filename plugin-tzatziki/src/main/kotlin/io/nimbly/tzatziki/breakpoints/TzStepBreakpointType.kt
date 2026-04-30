@@ -1,6 +1,9 @@
 package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
@@ -19,17 +22,14 @@ class TzStepBreakpointType: TzBreakpointType("tzatziki.gherkin.step", "Cucumber+
 
     override fun canPutAt(vfile: VirtualFile, line: Int, project: Project): Boolean {
 
-        if (!isJavaPresent())
-            return false
+        if (vfile.extension != "feature") return false
+        if (!isJavaPresent()) return false
 
-        val file = vfile.getFile(project) ?: return false
-        val doc = file.getDocument() ?: return false
-        val lineRange = doc.getLineRange(line).shrink(1, 1)
-        val step = file.findElementsOfTypeInRange(lineRange, GherkinStep::class.java).firstOrNull()
-        if (step != null && line == step.getDocumentLine())
-            return true
-
-        return false
+        // Text-based check is the primary guard — immune to transient PSI re-parse.
+        // In 2025.3+ the backend calls canPutAt again ~500ms after creation on a
+        // background thread; PSI may be unavailable at that point.
+        val doc = FileDocumentManager.getInstance().getDocument(vfile) ?: return false
+        return isLikelyStepLine(doc, line)
     }
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?)
@@ -42,20 +42,13 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
     override fun canPutAt(vfile: VirtualFile, line: Int, project: Project): Boolean {
 
         try {
-            val file = vfile.getFile(project) ?: return false
-            val doc = file.getDocument() ?: return false
-            val lineRange = doc.getLineRange(line).shrink(1, 1)
+            if (vfile.extension != "feature") return false
 
-            val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
-            if (row != null && row !is GherkinTableHeaderRowImpl) {
-                val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
-                return examples != null
-            }
-
-            return false
+            val doc = FileDocumentManager.getInstance().getDocument(vfile) ?: return false
+            return isLikelyExampleRowLine(doc, line)
 
         } catch (e: NoClassDefFoundError) {
-            // Happed if Jetbrain product does dot support Java at all
+            // Happens if JetBrains product does not support Java at all
             return false
         }
     }
@@ -64,30 +57,36 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
 
         val text = "Cucumber+ Example"
 
-        val line = breakpoint?.sourcePosition?.line ?: return text
-        val vfile = breakpoint.sourcePosition?.file ?: return text
-        val project = vfile.findProject() ?: return text
-        val file = vfile.getFile(project) ?: return text
-        val doc = file.getDocument() ?: return text
+        // Called from coroutine threads (e.g. BackendXDebuggerManagerApi DTO conversion) in
+        // 2025.3+; PSI access requires a read action there.
+        return ApplicationManager.getApplication().runReadAction<String> {
+            runCatching {
+                val line = breakpoint?.sourcePosition?.line ?: return@runCatching text
+                val vfile = breakpoint.sourcePosition?.file ?: return@runCatching text
+                val project = vfile.findProject() ?: return@runCatching text
+                val file = vfile.getFile(project) ?: return@runCatching text
+                val doc = file.getDocument() ?: return@runCatching text
 
-        val lineRange = doc.getLineRange(line).shrink(1, 1)
-        val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
-            ?: return text
+                val lineRange = doc.getLineRange(line).shrink(1, 1)
+                val row = file.findElementsOfTypeInRange(lineRange, GherkinTableRow::class.java).firstOrNull()
+                    ?: return@runCatching text
 
-        if (row is GherkinTableHeaderRowImpl)
-            return text
+                if (row is GherkinTableHeaderRowImpl)
+                    return@runCatching text
 
-        val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
-            ?: return text
+                val examples = row.parentOfTypeIs<GherkinExamplesBlock>(true)
+                    ?: return@runCatching text
 
-        val scenario = examples.parentOfTypeIs<GherkinScenarioOutline>(true)
-            ?: return text
+                val scenario = examples.parentOfTypeIs<GherkinScenarioOutline>(true)
+                    ?: return@runCatching text
 
-        val index = scenario.allExamples().indexOf(row)
-        if (index < 0)
-            return text
+                val index = scenario.allExamples().indexOf(row)
+                if (index < 0)
+                    return@runCatching text
 
-        return text + " #" + (index+1)
+                text + " #" + (index + 1)
+            }.getOrDefault(text)
+        }
     }
 
     override fun getEnabledIcon()= AllIcons.Debugger.Db_field_breakpoint
@@ -135,6 +134,27 @@ class TzXBreakpointProperties : XBreakpointProperties<Any>() {
     }
     override fun loadState(state: Any) {
     }
+}
 
+private val STRUCTURAL_LINE = Regex(
+    "^(Feature|Scenario|Background|Rule|Examples?|Scenario Outline)\\s*:",
+    RegexOption.IGNORE_CASE
+)
 
+private fun isLikelyStepLine(doc: Document, line: Int): Boolean {
+    if (line < 0 || line >= doc.lineCount) return false
+    val text = doc.charsSequence
+        .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+        .trimStart()
+    if (text.isEmpty() || text.startsWith("#") || text.startsWith("@") || text.startsWith("\"\"\"") || text.startsWith("|"))
+        return false
+    return !STRUCTURAL_LINE.containsMatchIn(text.subSequence(0, minOf(40, text.length)))
+}
+
+private fun isLikelyExampleRowLine(doc: Document, line: Int): Boolean {
+    if (line < 0 || line >= doc.lineCount) return false
+    val text = doc.charsSequence
+        .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+        .trimStart()
+    return text.startsWith("|")
 }
