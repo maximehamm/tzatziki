@@ -174,7 +174,14 @@ fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection
 
 fun findStepUsages(element: PsiElement): List<PsiReference> {
 
-    val scope = CucumberStepSearchUtil.restrictScopeToGherkinFiles(GlobalSearchScope.projectScope(element.project))
+    val project = element.project
+    // Issue #104: when AUTO scope is on, narrow the search to the step-def's own
+    // anchor directory. We use the *step definition's* anchor (not the feature's) since
+    // we are searching usages of this definition.
+    val baseScope = io.nimbly.tzatziki.services.StepScope
+        .searchScopeFor(project, element.containingFile?.virtualFile)
+        ?: GlobalSearchScope.projectScope(project)
+    val scope = CucumberStepSearchUtil.restrictScopeToGherkinFiles(baseScope)
     val search = ReferencesSearch.search(element, scope, false)
 
     val references = mutableListOf<PsiReference>()

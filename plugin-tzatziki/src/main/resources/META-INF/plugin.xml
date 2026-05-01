@@ -225,10 +225,11 @@
         // Tag completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzTagCompletion" order="first"/>
 
-        // Step references
-        <!-- BUG : Performance issue
+        // Step references — gated by step-scope (issue #104). Replaces the Gherkin plugin's
+        // default CucumberStepReference so we can filter step-definition resolution by scope.
+        // Historically disabled for "performance issue" — reactivated with the scope filter on top
+        // (cached via ResolveCache + PsiModificationTracker).
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>
-        -->
 
         //TODO Remove after Gherkin plugin will fix issue IDEA-269898
         <annotator language="Gherkin"
@@ -269,6 +270,13 @@
         // Project settings
 <!--        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzPersistenceStateService"/>-->
 <!--        <projectService serviceImplementation="io.nimbly.tzatziki.services.TzFileService"/>-->
+
+        // Settings → Tools → Cucumber+ (issue #104 — step-scope toggle)
+        <projectConfigurable
+            instance="io.nimbly.tzatziki.settings.TzCucumberPlusConfigurable"
+            id="io.nimbly.tzatziki.settings.cucumberPlus"
+            displayName="Cucumber+"
+            parentId="tools"/>
 
         // New UI 2023 Icons mapping to "expUI" folder
         <iconMapper mappingFile="TzatzikiIconMappings.json"/>

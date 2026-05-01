@@ -31,6 +31,8 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.psi.util.PsiTreeUtil
+import io.nimbly.tzatziki.services.StepScope
+import io.nimbly.tzatziki.services.TzScopeAdvisor
 import org.jetbrains.plugins.cucumber.CucumberJvmExtensionPoint
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
@@ -152,7 +154,21 @@ class TzCucumberStepReference(private val myStep: PsiElement, private val myRang
                 }
             }
         }
-        return resolved
+
+        // Issue #104 — apply step-scope filter when AUTO mode is on. We keep only
+        // step definitions located in the same anchor as the .feature file.
+        // If filtering would drop everything, fall back to the unfiltered set so the
+        // user is never left with zero matches because of the heuristic.
+        val featureVf = featureFile.virtualFile
+        val filtered = resolved.filter { def ->
+            StepScope.isInSameScope(featureVf, def.containingFile?.virtualFile, myStep.project)
+        }
+        val finalSet = if (filtered.isEmpty() && resolved.isNotEmpty()) resolved else filtered
+
+        // Advise the user about .cucumber-scope when ambiguity remains.
+        TzScopeAdvisor.maybeAdviseAboutCucumberScope(myStep.project, finalSet.size)
+
+        return finalSet
             .map { PsiElementResolveResult(it) }
             .toTypedArray()
     }

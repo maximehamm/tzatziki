@@ -32,6 +32,7 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.ProcessingContext
 //import icons.CucumberIcons
 import io.nimbly.tzatziki.services.TzFileService
+import io.nimbly.tzatziki.services.StepScope
 import io.nimbly.tzatziki.services.getGherkinScope
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -57,9 +58,14 @@ class TzScenarioCompletion: CompletionContributor() {
 
         val tzService = project.getService(TzFileService::class.java)
 
+        // Issue #104 — restrict completion sources to the step-scope anchor when AUTO is on.
+        val originVf = step.containingFile?.virtualFile
+        val scopeOverride = StepScope.searchScopeFor(project, originVf)
+        val searchScope = scopeOverride?.intersectWith(module.getGherkinScope()) ?: module.getGherkinScope()
+
         val allSteps = mutableSetOf<Step>()
         FilenameIndex
-            .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, module.getGherkinScope())
+            .getAllFilesByExt(project, GherkinFileType.INSTANCE.defaultExtension, searchScope)
             .map { vfile -> vfile.getFile(project) }
             .filterIsInstance<GherkinFile>()
             .filter { it.checkExpression(tzService.getTagsFilter()) }
