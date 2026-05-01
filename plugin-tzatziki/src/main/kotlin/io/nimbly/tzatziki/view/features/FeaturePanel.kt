@@ -65,6 +65,12 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
         structure = GherkinTreeTagStructure(this).apply {
             this.groupTag = tzService.groupTag == true
         }
+        // Note: we keep StructureTreeModel's default Invoker (with implicit read action).
+        // An Invoker.forBackgroundThreadWithoutReadAction would seem ideal to reduce
+        // read/write lock contention, but the platform's own AbstractTreeNode update path
+        // (computeBackgroundColor, FilePresentationServiceImpl.getFileBackgroundColor,
+        // PsiElement.isValid…) requires a read action — without one, the tree throws
+        // "Read access is allowed from inside read-action only" on every node update.
         model = StructureTreeModel(structure, this)
         tree = DnDAwareTree(AsyncTreeModel(model, this))
 

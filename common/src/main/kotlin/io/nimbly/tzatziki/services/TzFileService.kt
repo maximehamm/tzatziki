@@ -16,6 +16,8 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.*
 import com.intellij.util.concurrency.AppExecutorUtil
+import com.intellij.util.ui.update.MergingUpdateQueue
+import com.intellij.util.ui.update.Update
 import io.cucumber.tagexpressions.Expression
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
@@ -33,11 +35,39 @@ class TzFileService(val project: Project) : Disposable {
     private val tagsListeners = mutableListOf<TagsEventListener>()
     private val tagsFilterListeners = mutableListOf<TagsFilterEventListener>()
 
+    /**
+     * Coalesces bursts of PSI change events into a single tag refresh.
+     *
+     * Without this queue, every keystroke in any .feature file scheduled a full
+     * project-wide tag rescan (FilenameIndex.getAllFilesByExt + PSI walk). On a
+     * slow filesystem (WSL UNC, network drives) this multiplies the contention
+     * with JetBrains' own background read actions and contributes to UI freezes.
+     */
+    private val refreshQueue = MergingUpdateQueue(
+        "TzCucumber.RefreshTagsQueue",
+        300,
+        true,
+        null,
+        DisposalService.getInstance(project)
+    )
+
     init {
         PsiManager.getInstance(project).addPsiTreeChangeListener(
             PsiChangeListener(this),
             DisposalService.getInstance(project)
         )
+    }
+
+    internal fun scheduleRefresh() {
+        refreshQueue.queue(object : Update("refresh-tags") {
+            override fun run() {
+                DumbService.getInstance(project).smartInvokeLater {
+                    PsiDocumentManager.getInstance(project).performLaterWhenAllCommitted {
+                        refreshTagsAsync(true)
+                    }
+                }
+            }
+        })
     }
 
     var sourcePathOnly: Boolean
@@ -296,11 +326,7 @@ private class PsiChangeListener(val service: TzFileService) : PsiTreeChangeListe
     }
 
     fun refresh(structure: Boolean = false) {
-        DumbService.getInstance(service.project).smartInvokeLater {
-            PsiDocumentManager.getInstance(service.project).performLaterWhenAllCommitted {
-                service.refreshTagsAsync(true)
-            }
-        }
+        service.scheduleRefresh()
     }
 }
 
