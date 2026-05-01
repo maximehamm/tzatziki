@@ -65,26 +65,26 @@ Demander :
 
 Attendre confirmation explicite (O/oui). Tout autre réponse → stopper.
 
-## Étape 7 — publishPlugin
-
-Le token doit être disponible dans `~/.gradle/gradle.properties` sous la clé `publishToken`,
-ou passé via `-Dpublish.token=xxx`. Vérifier sa présence avant de lancer :
+## Étape 7 — git push
 
 ```bash
-grep -q "publishToken" ~/.gradle/gradle.properties \
-  && echo "Token OK" \
-  || echo "⚠️ publishToken absent de ~/.gradle/gradle.properties — publication manuelle requise"
+cd /Users/maxime/Development/projects-plugins/Tzatziki && git push origin master 2>&1 | tail -5
 ```
 
-Si le token est présent :
-```bash
-cd /Users/maxime/Development/projects-plugins/Tzatziki && ./gradlew :plugin-tzatziki:publishPlugin 2>&1 | tail -10
-```
+Si le commit de version n'est pas encore créé, le faire avant de push.
 
-Si absent → indiquer à l'utilisateur de publier manuellement via l'IDE ou le Marketplace, puis confirmer.
+## Étape 8 — publishPlugin (manuel — l'utilisateur s'en charge)
 
-## Étape 8 — Résumé final
+**Ne PAS lancer `publishPlugin` automatiquement.** L'utilisateur publie lui-même via Gradle/IDE.
+Indiquer le ZIP prêt :
 
 ```
-✅ Cucumber+ vX.Y.Z publié sur le JetBrains Marketplace.
+ZIP prêt : plugin-tzatziki/build/distributions/plugin-tzatziki-X.Y.Z.zip
+À publier manuellement : ./gradlew :plugin-tzatziki:publishPlugin -DPublishToken=…
+```
+
+## Étape 9 — Résumé final
+
+```
+✅ Cucumber+ vX.Y.Z buildé, vérifié et poussé. Publication Marketplace à faire manuellement.
 ```
