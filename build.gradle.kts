@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.4.0"
+    version = "21.5.0"
 }
 
 val notes by extra {"""
@@ -13,7 +13,8 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
-         <li><b>21.4.0</b> Fix #104 — per-app step indexing scope: drop a <code>.cucumber-scope</code> file at the root of an app folder and Cucumber+ narrows step resolution, completion and Find Usages to that folder. Cucumber+ now uses a dedicated breakpoint type with a green badge on the gutter (Java/Kotlin) and a green disc (Gherkin) — no more fake <code>"Cucumber+"!=null</code> condition. Goto Declaration on a Gherkin step honours the scope filter and auto-promotion turns a Java line breakpoint set on a step-def body into a Cucumber+ breakpoint synced with Gherkin.</li>
+         <li><b>21.5.0</b> Custom Cucumber+ breakpoint type — green disc on Gherkin, green badge over the standard red dot on Java/Kotlin — replacing the legacy <code>"Cucumber+"!=null</code> condition trick. Plain Java line breakpoints on step-def body lines are auto-promoted and synced with Gherkin.</li>
+         <li><b>21.4.0</b> Fix #104 — per-app step indexing scope: drop a <code>.cucumber-scope</code> file at the root of an app folder and Cucumber+ narrows step resolution, completion and Find Usages to that folder. Goto Declaration on a Gherkin step honours the scope filter.</li>
          <li><b>21.3.0</b> Fix #103 — step-usages popup shows feature file, line, scenario name and step text; richer gutter tooltip when there is a single usage.</li>
          <li><b>21.2.5</b> Cucumber+ tool window: coalesce tag-tree refreshes. Reduces contention on slow filesystems (WSL UNC, network drives) and improves responsiveness on large projects.</li>
          <li><b>21.2.4</b> Fix #120 — regression introduced in 21.2.3: clicking the run gutter on a Scenario Outline example was running every example instead of only the clicked one.</li>
