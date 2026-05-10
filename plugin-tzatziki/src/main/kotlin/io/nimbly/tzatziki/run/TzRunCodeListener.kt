@@ -58,9 +58,10 @@ class TzRunCodeListener(private val project: Project) : XDebuggerManagerListener
                     ?: return
                 LOG.debug("C+ XDebuggerManager.TOPIC - Step found")
 
-                // Check that breakpoint is marked as managed by C+
+                // Check that the breakpoint is one Cucumber+ owns (now identified by type,
+                // see TzCucumberCodeBreakpointType — replaces the legacy fake-condition check).
                 val codeBreakpoint = newContext.sourcePosition?.elementAt?.findBreakpoint()
-                if (codeBreakpoint?.conditionExpression?.expression != CUCUMBER_FAKE_EXPRESSION) {
+                if (codeBreakpoint?.isCucumberSyncBreakpoint() != true) {
 
                     // Highlight ghekin step (and also examples if)
                     highlightExecutionPosition(step)

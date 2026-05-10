@@ -27,8 +27,12 @@ import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
 class TzCucumberReferenceContributor : PsiReferenceContributor() {
 
     override fun registerReferenceProviders(registrar: PsiReferenceRegistrar) {
+        // Higher priority than the default JetBrains CucumberReferenceContributor so
+        // PsiElement.findReferenceAt() picks our scope-aware reference first.
         registrar.registerReferenceProvider(
-            PlatformPatterns.psiElement(GherkinStepImpl::class.java), TzCucumberStepReferenceProvider()
+            PlatformPatterns.psiElement(GherkinStepImpl::class.java),
+            TzCucumberStepReferenceProvider(),
+            PsiReferenceRegistrar.HIGHER_PRIORITY
         )
     }
 }

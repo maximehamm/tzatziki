@@ -1,5 +1,9 @@
 # TODO
 
+## Divers 
+
+- drag nd drop de colonne / ligne !
+
 ## Bug: Read access violation in `TzCucumberCreateStepFix` popup icon rendering
 
 When the "Create step" quick-fix popup is shown, IntelliJ crashes with:

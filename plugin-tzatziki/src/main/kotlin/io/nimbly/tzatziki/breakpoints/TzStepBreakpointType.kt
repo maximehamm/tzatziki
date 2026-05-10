@@ -10,6 +10,7 @@ import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider
+import icons.ActionIcons
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline
@@ -33,7 +34,21 @@ class TzStepBreakpointType: TzBreakpointType("tzatziki.gherkin.step", "Cucumber+
     }
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?)
-            = "Cucumber+ Step"
+            = "Cucumber+ Step breakpoint"
+
+    // Cucumber+ themed icons across all states so the Gherkin side keeps its identity.
+    //
+    // Note: TzBreakpointType hides the suspend-policy panel ({@link getVisibleStandardPanels}
+    // returns an empty set), which means Cucumber+ Gherkin breakpoints effectively run with
+    // SuspendPolicy.NONE. As a consequence IntelliJ asks getSuspendNoneIcon() — NOT
+    // getEnabledIcon() — to render the gutter glyph for an active breakpoint. We map both
+    // to the same filled green disc so the user always sees the proper "active" Cucumber+
+    // glyph, regardless of which getter the platform queries.
+    override fun getEnabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER
+    override fun getDisabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_DISABLED
+    override fun getMutedEnabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER
+    override fun getMutedDisabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_DISABLED
+    override fun getSuspendNoneIcon() = ActionIcons.BREAKPOINT_CUCUMBER
 }
 
 

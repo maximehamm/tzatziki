@@ -154,8 +154,22 @@ fun PsiElement.isDeprecated(): Boolean {
 fun GherkinStep.findCucumberStepReference(): CucumberStepReference?
     = findCucumberStepReferences().firstOrNull()
 
+/**
+ * A Gherkin step receives a {@link CucumberStepReference} from JetBrains' built-in contributor
+ * AND from Cucumber+'s own (TzCucumberReferenceContributor — registered with HIGHER priority
+ * since #104 to enable scope filtering). Both cover the same text range, so {@code references}
+ * returns two entries.
+ *
+ * For step-definition resolution we want a single reference — the higher-priority one (ours,
+ * which applies the scope filter). Otherwise downstream code that flat-maps over all refs
+ * (e.g. breakpoint sync) gets the union of filtered + unfiltered defs and ends up targeting
+ * step defs from the wrong scope.
+ *
+ * IntelliJ orders {@code references} by registration priority, so taking the first match is
+ * sufficient.
+ */
 fun GherkinStep.findCucumberStepReferences(): List<CucumberStepReference>
-    = references.filterIsInstance<CucumberStepReference>()
+    = listOfNotNull(references.filterIsInstance<CucumberStepReference>().firstOrNull())
 
 fun GherkinStep.findCucumberStepDefinitions(): List<AbstractStepDefinition>
     = this.findCucumberStepReferences().flatMap { it.resolveToDefinitions() }

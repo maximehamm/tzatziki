@@ -34,6 +34,26 @@ object ActionIcons {
     @JvmField val COLUMN_ADD    = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-add.svg", javaClass)
     @JvmField val COLUMN_DELETE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/column-delete.svg", javaClass)
 
+    /** Gherkin-side breakpoint icons (full green disc / hollow ring for disabled). */
+    @JvmField val BREAKPOINT_CUCUMBER = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber.svg", javaClass)
+    @JvmField val BREAKPOINT_CUCUMBER_DISABLED = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-disabled.svg", javaClass)
+
+    /** Tiny green badge layered on top of the standard JetBrains breakpoint icons
+     *  to identify Cucumber+'s code-side breakpoints (Java/Kotlin). */
+    @JvmField val BREAKPOINT_CUCUMBER_BADGE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-badge.svg", javaClass)
+
+    /** Java/Kotlin code-side: standard breakpoint icon + Cucumber+ green badge overlay (all states). */
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_ENABLED: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_set_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_DISABLED: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_disabled_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_MUTED_ENABLED: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_muted_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_MUTED_DISABLED: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_muted_disabled_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_NO_SUSPEND: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_no_suspend_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+
     @JvmField val CUCUMBER_PLUS_64 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
     @JvmField val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)
     @JvmField val CUCUMBER_PLUS = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)

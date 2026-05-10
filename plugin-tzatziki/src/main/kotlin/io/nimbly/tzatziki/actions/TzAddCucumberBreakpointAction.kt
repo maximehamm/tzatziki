@@ -3,15 +3,17 @@ package io.nimbly.tzatziki.actions
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.ex.EditorGutterComponentEx
 import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.xdebugger.XDebuggerManager
+import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.XSourcePosition
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.impl.XSourcePositionImpl
-import com.intellij.xdebugger.impl.breakpoints.XBreakpointUtil
-import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
-import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
+import io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointType
+import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 
 class TzAddCucumberBreakpointAction : DumbAwareAction() {
@@ -20,12 +22,32 @@ class TzAddCucumberBreakpointAction : DumbAwareAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.getRequiredData(CommonDataKeys.PROJECT)
-        val editor = e.getRequiredData(CommonDataKeys.EDITOR)
         val position = getLineBreakpointPosition(e) ?: return
-        XBreakpointUtil.toggleLineBreakpoint( project, position, editor, false, true, true)
-            .onSuccess { bp ->
-                bp?.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+        val type = XDebuggerUtil.getInstance()
+            .findBreakpointType(TzCucumberCodeBreakpointType::class.java) ?: return
+        val manager = XDebuggerManager.getInstance(project).breakpointManager
+
+        val file = position.file
+        val line = position.line
+
+        // Toggle: if a Cucumber+ code breakpoint already exists at this file/line → remove it,
+        // else create one (idempotent and self-contained, no fake condition needed).
+        val existing = manager.allBreakpoints
+            .filterIsInstance<XLineBreakpoint<*>>()
+            .firstOrNull { bp ->
+                bp.type === type
+                    && bp.fileUrl == file.url
+                    && bp.line == line
             }
+
+        WriteAction.run<Throwable> {
+            if (existing != null) {
+                manager.removeBreakpoint(existing)
+            } else {
+                // Properties must be non-null — JavaBreakpointsUsageCollector NPEs otherwise.
+                manager.addLineBreakpoint(type, file.url, line, JavaLineBreakpointProperties())
+            }
+        }
     }
 
     override fun update(e: AnActionEvent) {

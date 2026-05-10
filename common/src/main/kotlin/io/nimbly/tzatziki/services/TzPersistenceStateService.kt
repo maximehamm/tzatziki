@@ -35,6 +35,13 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
     internal var groupTag: Boolean? = null
     internal var filterByTags: Boolean? = null
 
+    /**
+     * Step-scoping (issue #104) is now driven solely by the presence of a `.cucumber-scope`
+     * marker file — there's no toggle anymore. Only this single per-project flag remains:
+     * the "drop a .cucumber-scope file" balloon hint is shown at most once per project.
+     */
+    var stepScopeBalloonShown: Boolean = false
+
     override fun getState(): TzPersistenceStateService {
         return this
     }
@@ -45,6 +52,7 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
         this.groupTag = state.groupTag
         this.filterByTags = state.filterByTags
         this.sourcePathOnly = state.sourcePathOnly
+        this.stepScopeBalloonShown = state.stepScopeBalloonShown
     }
 
     fun tagExpression(): Expression? {
@@ -64,3 +72,4 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
         }
     }
 }
+

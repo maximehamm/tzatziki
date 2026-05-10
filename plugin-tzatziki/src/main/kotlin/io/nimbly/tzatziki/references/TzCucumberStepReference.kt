@@ -14,160 +14,106 @@
  */
 package io.nimbly.tzatziki.references
 
-import com.intellij.codeInsight.daemon.impl.IdentifierHighlighterPass
-import com.intellij.debugger.SourcePosition
-import com.intellij.debugger.impl.DebuggerContextImpl
-import com.intellij.debugger.impl.PositionUtil
-import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.module.ModuleUtilCore
-import com.intellij.openapi.progress.EmptyProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
-import com.intellij.psi.impl.source.resolve.ResolveCache
-import com.intellij.psi.util.CachedValueProvider
-import com.intellij.psi.util.CachedValuesManager
-import com.intellij.psi.util.PsiModificationTracker
-import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementResolveResult
+import com.intellij.psi.ResolveResult
+import io.nimbly.tzatziki.services.StepScope
+import io.nimbly.tzatziki.services.TzScopeAdvisor
 import org.jetbrains.plugins.cucumber.CucumberJvmExtensionPoint
-import org.jetbrains.plugins.cucumber.psi.impl.GherkinStepImpl
+import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
-import org.jetbrains.plugins.cucumber.steps.CucumberStepHelper
-import java.util.*
-import java.util.stream.Collectors
+import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
-
-val LAST_VALID = Key<Array<ResolveResult>>("LAST_VALID")
-
-// Cf. https://github.com/JetBrains/intellij-plugins/blob/master/cucumber/src/org/jetbrains/plugins/cucumber/steps/reference/CucumberStepReference.java
-class TzCucumberStepReference(private val myStep: PsiElement, private val myRange: TextRange) : PsiPolyVariantReference {
+/**
+ * Cucumber+ extension of the standard JetBrains [CucumberStepReference] that adds:
+ *
+ *  1. **Step-scope filtering** (issue #104): when a `.cucumber-scope` marker file is found
+ *     by walking up from the .feature file, only step definitions located in the same anchor
+ *     directory are kept. If filtering would drop everything, we fall back to the unfiltered
+ *     set so the user is never left with zero matches because of the heuristic.
+ *
+ *  2. **Last-valid result fallback**: when the current resolution is empty (e.g. a transient
+ *     PSI hiccup or a renamed step def), reuse the last non-empty result we cached on the
+ *     step PSI element via copyable user data.
+ *
+ * This class deliberately **extends** the JetBrains class (rather than re-implementing
+ * [com.intellij.psi.PsiPolyVariantReference]) so the many `ref is CucumberStepReference`
+ * checks scattered across both Cucumber+ and the cucumber-jvm plugin keep working — they
+ * accept our subclass naturally.
+ */
+class TzCucumberStepReference(step: PsiElement, range: TextRange) : CucumberStepReference(step, range) {
 
     override fun multiResolve(incompleteCode: Boolean): Array<ResolveResult> {
 
-        val resolved = ResolveCache.getInstance(element.project)
-            .resolveWithCaching(this, RESOLVER, false, incompleteCode)
-
-        if (resolved.isEmpty()) {
-            val lastValid = element.getCopyableUserData(LAST_VALID)
-            if (lastValid !=null)
-                return lastValid
-        }
-
-        element.putCopyableUserData(LAST_VALID, resolved)
-        return resolved
-    }
-
-    override fun getElement(): PsiElement {
-        return myStep
-    }
-
-    override fun getRangeInElement(): TextRange {
-        return myRange
-    }
-
-    override fun resolve(): PsiElement? {
-        val result = multiResolve(true)
-        return if (result.size == 1) result[0].element else null
-    }
-
-    override fun getCanonicalText(): String {
-        return myStep.text
-    }
-
-    override fun handleElementRename(newElementName: String): PsiElement {
-        return myStep
-    }
-
-    override fun bindToElement(element: PsiElement): PsiElement {
-        return myStep
-    }
-
-    override fun isReferenceTo(element: PsiElement): Boolean {
-        val resolvedResults = multiResolve(false)
-        for (rr in resolvedResults) {
-            try {
-                if (getElement().manager.areElementsEquivalent(rr.element, element)) {
-                    return true
-                }
-            } catch (ignored: PsiInvalidElementAccessException) {
-            }
-        }
-        return false
-    }
-
-    override fun isSoft(): Boolean {
-        return false
-    }
-
-    fun resolveToDefinition(): AbstractStepDefinition? {
-        val definitions = this.resolveToDefinitions()
-        return if (definitions.isEmpty()) null
-            else definitions.iterator().next()
-    }
-
-    private fun resolveToDefinitions(): Collection<AbstractStepDefinition?> {
-        return CucumberStepHelper.findStepDefinitions(
-            myStep.containingFile, (myStep as GherkinStepImpl))
-    }
-    internal fun multiResolveInner(): Array<ResolveResult> {
-
-        val module = ModuleUtilCore.findModuleForPsiElement(myStep)
-            ?: return ResolveResult.EMPTY_ARRAY
-
-        val frameworks = CucumberJvmExtensionPoint.EP_NAME.extensionList
-        val stepVariants: Collection<String?> =
-            frameworks.stream().map { e: CucumberJvmExtensionPoint -> e.getStepName(myStep) }
-                .filter { obj: String? -> Objects.nonNull(obj) }.collect(Collectors.toSet())
-        if (stepVariants.isEmpty())
-            return ResolveResult.EMPTY_ARRAY
-
-        val featureFile = myStep.containingFile
-        val stepDefinitions = CachedValuesManager.getCachedValue(featureFile) {
-            val allStepDefinition: MutableList<AbstractStepDefinition> = ArrayList()
-            for (e in frameworks) {
-                val def = e.loadStepsFor(featureFile, module)
-                if (def != null) {
-                    allStepDefinition.addAll(def.filterNotNull())
-                }
-            }
-            CachedValueProvider.Result.create<List<AbstractStepDefinition>>(
-                allStepDefinition,
-                PsiModificationTracker.MODIFICATION_COUNT
-            )
-        }
-
-        val resolved = mutableSetOf<PsiElement>()
-
-        for (stepDefinition in stepDefinitions) {
-            if (stepDefinition.supportsStep(myStep)) {
-                for (stepVariant in stepVariants) {
-                    val element = stepDefinition.element
-                    ProgressManager.checkCanceled()
-                    if (stepDefinition.matches(stepVariant!!) && element != null && !resolved.contains(element)) {
-                        resolved.add(element)
-                        break
-                    }
-                }
-            }
-        }
-        return resolved
-            .map { PsiElementResolveResult(it) }
+        // Derive multiResolve from our own resolveToDefinitions so both paths are guaranteed
+        // to be consistent. Calling super.multiResolve() goes through a private multiResolveInner
+        // and a separate ResolveCache, which can drift out of sync with our filter (e.g. stale
+        // cache or different dedup semantics).
+        val results = resolveToDefinitions()
+            .mapNotNull { it.element }
+            .distinct()
+            .map { PsiElementResolveResult(it) as ResolveResult }
             .toTypedArray()
+
+        // Suggest dropping a `.cucumber-scope` file when ambiguity remains (one-shot per project).
+        TzScopeAdvisor.maybeAdviseAboutCucumberScope(element.project, results.size)
+
+        // Last-valid fallback so navigation keeps working through transient empty resolutions.
+        if (results.isEmpty()) {
+            val lastValid = element.getCopyableUserData(LAST_VALID)
+            if (lastValid != null) return lastValid
+        } else {
+            element.putCopyableUserData(LAST_VALID, results)
+        }
+        return results
     }
 
-    private class MyResolver : ResolveCache.PolyVariantResolver<TzCucumberStepReference> {
-        override fun resolve(ref: TzCucumberStepReference, incompleteCode: Boolean): Array<ResolveResult> {
+    /**
+     * Re-implements [resolveToDefinitions] without delegating to the parent — JetBrains'
+     * {@code CucumberStepHelper.findStepDefinitions} de-duplicates step defs *by class*
+     * ({@code Map<Class, AbstractStepDefinition>}). When two step defs share both the same
+     * class (e.g. {@code JavaAnnotatedStepDefinition}) AND the same regex (the #104
+     * homonym case), only the first one encountered survives — which is wrong: we lose
+     * the legitimate alternative living in another app folder.
+     *
+     * Iterating {@code loadStepsFor} ourselves preserves all matching definitions, then
+     * we apply the scope filter on top. This path is used by breakpoint synchronization,
+     * the Gherkin annotator, the undefined-step inspection, etc.
+     */
+    override fun resolveToDefinitions(): Collection<AbstractStepDefinition> {
+        val step = element as? GherkinStep ?: return super.resolveToDefinitions()
+        val module = ModuleUtilCore.findModuleForPsiElement(step) ?: return emptyList()
+        val featureFile = step.containingFile ?: return emptyList()
 
-            return ProgressManager.getInstance().runProcess<Array<ResolveResult>>({
-                    ref.multiResolveInner()
-                }, EmptyProgressIndicator()
-            )
+        // Collect every framework's matching step definitions, deduped by their PsiElement
+        // (i.e. by the actual @Given/@When method) — NOT by class.
+        val matched = LinkedHashMap<PsiElement, AbstractStepDefinition>()
+        for (extension in CucumberJvmExtensionPoint.EP_NAME.extensionList) {
+            val name = extension.getStepName(step) ?: continue
+            extension.loadStepsFor(featureFile, module)
+                ?.filterNotNull()
+                ?.filter { it.supportsStep(step) && it.matches(name) }
+                ?.forEach { def ->
+                    val key = def.element ?: return@forEach
+                    matched.putIfAbsent(key, def)
+                }
         }
+        val all = matched.values.toList()
+
+        // Apply scope filter (no-op when no `.cucumber-scope` anchor is found).
+        val featureVf = featureFile.virtualFile
+        val project = element.project
+        val filtered = all.filter { def ->
+            val candidateVf = def.element?.containingFile?.virtualFile
+            StepScope.isInSameScope(featureVf, candidateVf, project)
+        }
+        return if (filtered.isEmpty() && all.isNotEmpty()) all else filtered
     }
 
     companion object {
-        private val RESOLVER = MyResolver()
+        private val LAST_VALID = Key<Array<ResolveResult>>("LAST_VALID")
     }
 }

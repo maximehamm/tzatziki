@@ -225,10 +225,15 @@
         // Tag completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzTagCompletion" order="first"/>
 
-        // Step references
-        <!-- BUG : Performance issue
+        // Step references — gated by step-scope (issue #104). Replaces the Gherkin plugin's
+        // default CucumberStepReference so we can filter step-definition resolution by scope.
+        // Historically disabled for "performance issue" — reactivated with the scope filter on top
+        // (cached via ResolveCache + PsiModificationTracker).
         <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.references.TzCucumberReferenceContributor"/>
-        -->
+
+        // Goto-Declaration handler for Gherkin steps (issue #104). Takes precedence over the
+        // standard reference-based goto so the popup shows ONLY scope-filtered step defs.
+        <gotoDeclarationHandler implementation="io.nimbly.tzatziki.references.TzCucumberGotoDeclarationHandler"/>
 
         //TODO Remove after Gherkin plugin will fix issue IDEA-269898
         <annotator language="Gherkin"
@@ -251,6 +256,11 @@
 
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepBreakpointType"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepExampleBreakpointType"/>
+        <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointType"/>
+
+        <!-- Disable IntelliJ's inline-breakpoint picker (the in-editor mini-icons row) for any
+             file that already owns a Cucumber+ code breakpoint — see TzInlineBreakpointsDisabler. -->
+        <xdebugger.inlineBreakpointsDisabler implementation="io.nimbly.tzatziki.breakpoints.TzInlineBreakpointsDisabler"/>
 
         <!--<debugger.sourcePositionHighlighter implementation="io.nimbly.tzatziki.run.TzSourcePositionHighlighter"/>-->
         <!--<debugger.sourcePositionProvider implementation="io.nimbly.tzatziki.run.TzSourcePositionProvider"/>-->
@@ -294,6 +304,15 @@
         <listener class="io.nimbly.tzatziki.run.TzRunCodeListener"
                   topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
     </projectListeners>
+
+    <actions>
+        <!-- Override Goto-Declaration so that on Gherkin steps we control the popup
+             (filter via .cucumber-scope + footer hint, issue #104). For non-Gherkin
+             contexts the action delegates to the original GotoDeclarationAction. -->
+        <action id="GotoDeclaration"
+                class="io.nimbly.tzatziki.references.TzGotoStepDefAction"
+                overrides="true"/>
+    </actions>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
@@ -372,14 +391,10 @@
         </group>
 
 
-        <group id="io.nimbly.tzatziki.breakpoint.group">
-            <action class="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
-                    id="io.nimbly.tzatziki.actions.TzAddCucumberBreakpointAction"
-                    text="Add Cucumber+ Breakpoint">
-            </action>
-            <!-- EditorGutterPopupMenu.Appearance is absent in Gateway/Remote Dev backend — use parent group -->
-            <add-to-group group-id="EditorGutterPopupMenu" anchor="last"/>
-        </group>
+        <!-- The "Add Cucumber+ Breakpoint" gutter action is no longer registered:
+             the standard "Add Breakpoint" is enough — Cucumber+ auto-promotes any
+             Java/Kotlin line breakpoint placed on a step-def body line into a
+             TzCucumberCodeBreakpointType (see TzBreakpointListener.refreshCode). -->
 
         <group id="io.nimbly.tzatziki.execution-progress.group">
             <action class="io.nimbly.tzatziki.actions.TzToggleShowProgressionGuidesAction"

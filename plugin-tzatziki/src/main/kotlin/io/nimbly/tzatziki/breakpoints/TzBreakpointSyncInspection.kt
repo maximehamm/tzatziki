@@ -18,7 +18,6 @@ package io.nimbly.tzatziki.breakpoints
 import com.intellij.codeInspection.ProblemsHolder
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.xdebugger.XDebuggerManager
-import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
@@ -65,11 +64,8 @@ class TzBreakpointSyncInspection : GherkinInspection() {
                     )
                 }?.second?.nullIfEmpty()
 
-                // Mark all code breakpoint
-                codeBreakpoints?.forEach {
-                    if (it.conditionExpression == null)
-                        it.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-                }
+                // Code breakpoints are now identified by their TzCucumberCodeBreakpointType
+                // (no more fake `"Cucumber+"!=null` condition).
 
                 // Compare
                 if (gherkinBreakpoints != null && codeBreakpoints == null && stepDefinitions != null) {

@@ -20,15 +20,12 @@ import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 import org.jetbrains.plugins.cucumber.steps.reference.CucumberStepReference
 
 fun getCucumberStepDefinition(element: PsiElement): AbstractStepDefinition? {
+    // TzCucumberStepReference now extends CucumberStepReference, so a single is-check covers both.
     element.references.forEach { ref ->
-        val def = when (ref) {
-            is CucumberStepReference -> ref.resolveToDefinition()
-            is TzCucumberStepReference -> ref.resolveToDefinition()
-            else -> null
+        if (ref is CucumberStepReference) {
+            val def = ref.resolveToDefinition()
+            if (def != null) return def
         }
-
-        if (def!=null)
-            return def
     }
     return null
 }
