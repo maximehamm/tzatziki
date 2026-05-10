@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+  <!-- Cucumber+ green badge sized to be clearly visible on top of the standard
+       JetBrains red breakpoint disc (Java/Kotlin code side). -->
+  <circle cx="10" cy="4" r="4.2" fill="#00A917" stroke="#1e1f22" stroke-width="0.7"/>
+</svg>

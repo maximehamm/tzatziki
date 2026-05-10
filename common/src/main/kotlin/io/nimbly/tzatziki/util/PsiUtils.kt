@@ -186,8 +186,8 @@ fun findStepUsages(element: PsiElement): List<PsiReference> {
 
     val references = mutableListOf<PsiReference>()
     search.forEach(Processor { ref: PsiReference ->
-        val elt = ref.element
-        if (elt is GherkinStep && ref is CucumberStepReference)
+        // TzCucumberStepReference extends CucumberStepReference, so this check accepts both.
+        if (ref.element is GherkinStep && ref is CucumberStepReference)
             references.add(ref)
         true
     })

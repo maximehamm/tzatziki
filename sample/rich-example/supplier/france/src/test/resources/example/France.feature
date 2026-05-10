@@ -23,6 +23,7 @@ Feature: Cocktail Ordering
   @Advanced @Chrome
   Scenario: This is the scenario
 
+  #  Then there is 2 cocktails in the order
     Given Romeo who wants to buy a drink
       # @header: column
       | Valeur 1 | Valeur 2 |

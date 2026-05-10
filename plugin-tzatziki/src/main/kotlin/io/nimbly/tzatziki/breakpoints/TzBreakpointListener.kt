@@ -17,6 +17,10 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
+// Cucumber+ uses a dedicated [TzCucumberCodeBreakpointType] to identify the code-side
+// breakpoints it creates (see #cucumber-scope feature branch). The previous
+// {@code "Cucumber+"!=null} fake-condition trick has been removed.
+@Deprecated("Replaced by isCucumberSyncBreakpoint() — kept as compile-time stub for any external reference.")
 const val CUCUMBER_FAKE_EXPRESSION = "\"Cucumber+\"!=null"
 
 class TzBreakpointListener(private val project: Project) : XBreakpointListener<XBreakpoint<*>> {
@@ -151,12 +155,11 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         )
 
         if (action == EAction.ADDED) {
-            if (allCodeBreakpoints?.second?.isEmpty() == true) {
-                toggleCodeBreakpoint(codeElement, project)
+            if (allCodeBreakpoints?.second?.none { it.isCucumberSyncBreakpoint() } == true) {
+                ensureCucumberCodeBreakpoint(codeElement, project)
             }
-            allCodeBreakpoints?.second?.forEach { b ->
-                b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-            }
+            // Existing code-side breakpoints are now identified by their TzCucumberCodeBreakpointType.
+            // No more fake `"Cucumber+"!=null` condition to mark them.
 
             val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
             if (scenario != null) {
@@ -186,10 +189,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             }
         }
         else if (action == EAction.CHANGED && gherkinBreakpoint != null) {
-            allCodeBreakpoints?.second?.forEach { b ->
-                b.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
-            }
-
+            // Code-side breakpoints are now identified by type — nothing to mark.
             val state = gherkinBreakpoint.isEnabled
             val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
             if (scenario != null) {
@@ -206,6 +206,10 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
 
     private fun refreshCode(breakpoint: XBreakpoint<*>, action: EAction) {
 
+        // Cucumber+ only deals with LINE breakpoints. Method/field/exception breakpoints are
+        // out of scope — leave them alone to avoid promoting/syncing the wrong type.
+        if (breakpoint !is com.intellij.xdebugger.breakpoints.XLineBreakpoint<*>) return
+
         val pair = Tzatziki().extensionList.firstNotNullOfOrNull {
             it.findStepsAndBreakpoints(
                 breakpoint.sourcePosition?.file,
@@ -214,27 +218,41 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
 
         val steps = pair.first
         val codeBreakpoints = pair.second
-        val createdFromCode = breakpoint.conditionExpression == null
+        val isAlreadyOurType = breakpoint.isCucumberSyncBreakpoint()
 
-        if (steps.isNotEmpty() && breakpoint.conditionExpression == null)
-            breakpoint.conditionExpression = XExpressionImpl.fromText(CUCUMBER_FAKE_EXPRESSION)
+        if (action == EAction.ADDED && steps.isNotEmpty() && !isAlreadyOurType) {
+            // Only promote when the user's breakpoint sits at the EXACT body line that
+            // Cucumber+ would itself sync from a Gherkin step. Clicks on the method
+            // declaration line, on a Javadoc line, or anywhere else inside the method
+            // body remain plain Java/Kotlin breakpoints (they keep the standard red
+            // dot / red diamond gutter icon).
+            val stepDefs = steps.flatMap { it.findCucumberStepDefinitions() }
+            val bestLine = Tzatziki().extensionList
+                .firstNotNullOfOrNull { it.findBestPositionToAddBreakpoint(stepDefs) }
+                ?.second
+            if (bestLine != null && breakpoint.line == bestLine) {
+                promoteToCucumberType(breakpoint, project)
+            }
+            return
+        }
 
         steps.forEach { step ->
             val documentLine = step.getDocumentLine() ?: return@forEach
 
-            if (action == EAction.ADDED && codeBreakpoints.size == 1) {
-                if (createdFromCode) {
-                    val oldStepBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
-                        .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
-                        .filter { it.sourcePosition?.line == step.getDocumentLine() }
+            if (action == EAction.ADDED) {
+                // Always make sure each linked step has a Gherkin breakpoint. Whether the
+                // event is the original user click (now our type after promotion) or the
+                // result of a Gherkin → code sync, we only ADD when there is none yet.
+                val oldStepBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
+                    .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
+                    .filter { it.sourcePosition?.line == step.getDocumentLine() }
 
-                    if (oldStepBreakpoints.isEmpty()) {
-                        step.toggleGherkinBreakpoint(documentLine)
-                        step.updatePresentation(codeBreakpoints)
-                    }
+                if (oldStepBreakpoints.isEmpty()) {
+                    step.toggleGherkinBreakpoint(documentLine)
                 }
+                step.updatePresentation(codeBreakpoints)
             }
-            else if (action == EAction.REMOVED && codeBreakpoints.size == 0) {
+            else if (action == EAction.REMOVED && codeBreakpoints.isEmpty()) {
                 step.deleteBreakpoints()
             }
             else {

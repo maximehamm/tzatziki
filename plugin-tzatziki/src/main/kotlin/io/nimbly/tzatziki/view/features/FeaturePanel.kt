@@ -89,7 +89,6 @@ class FeaturePanel(val project: Project) : SimpleToolWindowPanel(true), Disposab
             it.add(GroupByModuleAction(this))
             it.add(GroupByTagAction(this))
             it.add(FilterTagAction(this))
-            it.add(StepScopeAction(this))
             it.addSeparator(" ")
             it.add(RunTestAction(this))
             it.add(ExportPdfAction(this))

@@ -36,15 +36,10 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
     internal var filterByTags: Boolean? = null
 
     /**
-     * Step-indexing scope (issue #104). When AUTO, Cucumber+ narrows step
-     * resolution and completion to the "app folder" containing the .feature file
-     * — auto-detected by walking up from the feature looking for a marker file
-     * (.cucumber-scope > package.json > pom.xml > build.gradle*).
-     * When OFF, behaves as before (project-wide indexing).
+     * Step-scoping (issue #104) is now driven solely by the presence of a `.cucumber-scope`
+     * marker file — there's no toggle anymore. Only this single per-project flag remains:
+     * the "drop a .cucumber-scope file" balloon hint is shown at most once per project.
      */
-    var stepScope: StepScopeMode = StepScopeMode.AUTO
-
-    /** True once the "drop a .cucumber-scope file" balloon has been shown for this project. */
     var stepScopeBalloonShown: Boolean = false
 
     override fun getState(): TzPersistenceStateService {
@@ -57,7 +52,6 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
         this.groupTag = state.groupTag
         this.filterByTags = state.filterByTags
         this.sourcePathOnly = state.sourcePathOnly
-        this.stepScope = state.stepScope
         this.stepScopeBalloonShown = state.stepScopeBalloonShown
     }
 
@@ -79,9 +73,3 @@ class TzPersistenceStateService : PersistentStateComponent<TzPersistenceStateSer
     }
 }
 
-enum class StepScopeMode {
-    /** Auto-detect the step indexing scope per .feature file (default). */
-    AUTO,
-    /** No scoping — project-wide indexing (legacy behavior). */
-    OFF
-}

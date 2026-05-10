@@ -33,14 +33,16 @@ import io.nimbly.tzatziki.util.notification
 object TzScopeAdvisor {
 
     /**
-     * Call when a Gherkin step still has [matchCount] step-definition candidates
-     * after scope filtering. No-op unless AUTO scope is enabled, [matchCount] > 1,
-     * and the balloon hasn't been shown for this project yet.
+     * Call when a Gherkin step has [matchCount] step-definition candidates.
+     * No-op when [matchCount] <= 1 or the balloon has already been shown for this project.
+     *
+     * The hint is independent of the current scope mode: it fires whenever ambiguity
+     * exists, since that is exactly the moment when discovering the `.cucumber-scope`
+     * mechanism is most useful.
      */
     fun maybeAdviseAboutCucumberScope(project: Project, matchCount: Int) {
         if (matchCount <= 1) return
         val state = project.getService(TzPersistenceStateService::class.java)
-        if (state.stepScope != StepScopeMode.AUTO) return
         if (state.stepScopeBalloonShown) return
 
         // Mark immediately to avoid races when several lookups fire on opening a file.

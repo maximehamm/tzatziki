@@ -80,6 +80,14 @@ class TzPostStartup : ProjectActivity {
         // the mouse listener and action handlers are now registered from initHandlers()
         // (called via TzAppStartup.appFrameCreated, which always fires).
         initHandlers()
+
+        // One-shot migration of pre-#cucumber-scope breakpoints (regular JavaLineBreakpoint
+        // with the fake `"Cucumber+"!=null` condition) into our typed
+        // TzCucumberCodeBreakpointType. Idempotent.
+        com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater({
+            io.nimbly.tzatziki.util.migrateLegacyCucumberCodeBreakpoints(project)
+        }, com.intellij.openapi.application.ModalityState.nonModal())
+
         askToVote(project)
     }
 

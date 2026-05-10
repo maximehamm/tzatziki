@@ -23,42 +23,27 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.GlobalSearchScopesCore
 
 /**
- * Step-indexing scope helpers — see [TzPersistenceStateService.stepScope] and issue #104.
+ * Step-indexing scope helpers — issue #104.
  *
- * The auto-detection rule walks up from the .feature file's directory and stops at
- * the first marker file:
- *   1. `.cucumber-scope`           (explicit user-defined anchor — wins)
- *   2. `package.json`              (typical JS/TS workspace)
- *   3. `pom.xml`                   (Maven module)
- *   4. `build.gradle.kts` / `build.gradle` (Gradle module)
+ * Activation rule (no toggle): we ONLY filter when an explicit `.cucumber-scope` marker
+ * file is found by walking up from the .feature file. Without that file, no filtering
+ * takes place — and if the project is properly configured into multiple IntelliJ modules,
+ * native module isolation already does the right thing.
  *
- * The directory containing the marker becomes the *anchor*. Step definitions
- * outside this anchor are filtered out from completion / Cmd+Click resolution
- * / Find Usages.
- *
- * If no marker is found up to the project root, no filtering is applied.
+ * The directory containing `.cucumber-scope` becomes the *anchor*. Step definitions
+ * outside this anchor are filtered out from completion / Cmd+Click resolution / Find Usages.
  */
 object StepScope {
 
-    /** Marker filenames, in priority order. */
-    private val SCOPE_ANCHOR_FILES = listOf(
-        ".cucumber-scope",
-        "package.json",
-        "pom.xml",
-        "build.gradle.kts",
-        "build.gradle",
-    )
+    /** The single explicit scope marker filename. */
+    private const val SCOPE_ANCHOR_FILE = ".cucumber-scope"
 
     /**
      * Returns the scope anchor [VirtualFile] (a directory) for the given file,
-     * or `null` when no anchor is found.
-     *
-     * Always returns `null` if the user disabled scoping (`OFF` mode).
+     * or `null` when no `.cucumber-scope` marker is found in any ancestor directory.
      */
     fun anchorFor(project: Project, file: VirtualFile?): VirtualFile? {
         if (file == null) return null
-        val state = project.getService(TzPersistenceStateService::class.java)
-        if (state.stepScope != StepScopeMode.AUTO) return null
         return walkUpForAnchor(project, file)
     }
 
@@ -104,13 +89,11 @@ object StepScope {
         val projectRoot = project.guessProjectDir()
         var dir: VirtualFile? = if (start.isDirectory) start else start.parent
         while (dir != null) {
-            for (markerName in SCOPE_ANCHOR_FILES) {
-                val marker = dir.findChild(markerName)
-                if (marker != null && !marker.isDirectory) {
-                    return dir
-                }
+            val marker = dir.findChild(SCOPE_ANCHOR_FILE)
+            if (marker != null && !marker.isDirectory) {
+                return dir
             }
-            // Stop at project root inclusive (we still check it for markers).
+            // Stop at project root inclusive (we still check it for the marker).
             if (projectRoot != null && dir == projectRoot) break
             dir = dir.parent
         }
