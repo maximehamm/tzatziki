@@ -80,10 +80,17 @@ class ExportPdf(private val paths: List<VirtualFile>, val project: Project) {
             files = allFiles
         }
 
-        // Get project root
+        // Get project root.
+        // Refresh the VFS for the temp dir before looking it up — on Windows / sandboxed
+        // setups the JDK creates the directory under a path the IntelliJ VFS hasn't
+        // scanned yet, so plain findFileByIoFile returns null and the PDF export aborts
+        // with "Unable to create temporary file" (#100).
         val tempDir = FileUtilRt.createTempDirectory("Cucumber+", null, true)
-        val outputDirectory = LocalFileSystem.getInstance().findFileByIoFile(tempDir)
-            ?: throw TzatzikiException("Unable to create temporary file")
+        val outputDirectory = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(tempDir)
+            ?: throw TzatzikiException(
+                "Unable to create temporary file (${tempDir.absolutePath}). " +
+                "Check that the system temp directory is writable and reachable by the IDE."
+            )
 
         // Load config
         val config = loadConfig(paths, project)
