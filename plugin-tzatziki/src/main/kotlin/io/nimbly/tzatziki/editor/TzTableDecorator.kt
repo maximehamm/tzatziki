@@ -1,20 +1,8 @@
 package io.nimbly.tzatziki.editor
 
-import com.intellij.icons.AllIcons
-import icons.ActionIcons
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.ex.ActionUtil
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.ide.DataManager
-import com.intellij.openapi.actionSystem.DefaultActionGroup
-import com.intellij.openapi.actionSystem.Separator
-import com.intellij.openapi.actionSystem.ToggleAction
-import com.intellij.openapi.actionSystem.Toggleable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -23,18 +11,14 @@ import com.intellij.openapi.editor.event.EditorMouseListener
 import com.intellij.openapi.editor.event.EditorMouseMotionListener
 import com.intellij.openapi.editor.event.EditorFactoryEvent
 import com.intellij.openapi.editor.event.EditorFactoryListener
-import com.intellij.openapi.editor.markup.CustomHighlighterRenderer
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.ui.popup.JBPopup
-import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.ui.awt.RelativePoint
 import org.jetbrains.plugins.cucumber.psi.GherkinExamplesBlock
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.util.TableEditOps
@@ -42,15 +26,10 @@ import io.nimbly.tzatziki.util.findTableAt
 import org.jetbrains.plugins.cucumber.psi.GherkinFile
 import org.jetbrains.plugins.cucumber.psi.GherkinHighlighter
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
-import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Cursor
-import java.awt.Graphics
-import java.awt.Graphics2D
 import java.awt.Point
-import java.awt.RenderingHints
 import java.awt.event.MouseEvent
-import java.awt.geom.RoundRectangle2D
 
 /**
  * Draws a rounded-corner grid around Gherkin tables and handles hover + popup interactions.
@@ -65,6 +44,17 @@ class TzTableDecorator : EditorFactoryListener {
     private val editorDisposables  = mutableMapOf<Editor, com.intellij.openapi.Disposable>()
     private val editorGeometries   = mutableMapOf<Editor, List<TableGeometry>>()
     private val editorHover        = mutableMapOf<Editor, HoverState?>()
+    private val editorDrag         = mutableMapOf<Editor, DragState?>()
+    private val editorPostDropFlash = mutableMapOf<Editor, PostDropFlash?>()
+    /** Indicator painted while the table popup menu is open. Cleared on popup close. */
+    private val editorMenuTarget    = mutableMapOf<Editor, MenuTargetIndicator?>()
+    /** One-shot flag: when set, the next mouseClicked is swallowed (avoids the trailing popup
+     *  after a drag-release on the same point that fired the press). */
+    private val editorSkipNextClick = mutableSetOf<Editor>()
+    /** Caret offset captured before a drag gesture — restored on release so the user never
+     *  sees the caret jump to the press position (which would be visually distracting,
+     *  especially right at the pipe boundary of the frame click). */
+    private val editorPreDragCaret  = mutableMapOf<Editor, Int>()
 
     companion object {
         private var instance: TzTableDecorator? = null
@@ -72,6 +62,38 @@ class TzTableDecorator : EditorFactoryListener {
             val dec = instance ?: return
             dec.editorHighlighters.keys.toList().forEach { dec.scheduleRefresh(it) }
         }
+        /** Schedule the 1-second orange flash over [columnIndex] of the table starting at
+         *  [tableFirstLine]. Called by shift-left / shift-right to mirror the drag-and-drop UX. */
+        fun flashColumn(editor: Editor, tableFirstLine: Int, columnIndex: Int) {
+            val dec = instance ?: return
+            dec.postFlash(editor, PostDropFlash(tableFirstLine, columnIndex = columnIndex))
+        }
+        /** Schedule the 1-second orange flash over the row at editor line [rowLine] inside the
+         *  table starting at [tableFirstLine]. Called by shift-up / shift-down. */
+        fun flashRow(editor: Editor, tableFirstLine: Int, rowLine: Int) {
+            val dec = instance ?: return
+            dec.postFlash(editor, PostDropFlash(tableFirstLine, rowLine = rowLine))
+        }
+        /** Show the persistent menu-target indicator on a column (dashed orange on top border). */
+        fun showMenuTargetColumn(editor: Editor, tableFirstLine: Int, columnIndex: Int) {
+            val dec = instance ?: return
+            dec.editorMenuTarget[editor] = MenuTargetIndicator(tableFirstLine, columnIndex = columnIndex)
+            editor.contentComponent.repaint()
+        }
+        /** Show the persistent menu-target indicator on a row (solid orange on left border). */
+        fun showMenuTargetRow(editor: Editor, tableFirstLine: Int, rowLine: Int) {
+            val dec = instance ?: return
+            dec.editorMenuTarget[editor] = MenuTargetIndicator(tableFirstLine, rowLine = rowLine)
+            editor.contentComponent.repaint()
+        }
+        /** Clear the menu-target indicator (call on popup close). */
+        fun clearMenuTarget(editor: Editor) {
+            val dec = instance ?: return
+            if (dec.editorMenuTarget.remove(editor) != null) {
+                editor.contentComponent.repaint()
+            }
+        }
+        private const val DRAG_THRESHOLD = 4
     }
 
     init { instance = this }
@@ -94,6 +116,9 @@ class TzTableDecorator : EditorFactoryListener {
         val mouseHandler = object : EditorMouseListener, EditorMouseMotionListener {
             override fun mouseMoved(e: EditorMouseEvent)   = handleMouseMove(editor, e)
             override fun mouseClicked(e: EditorMouseEvent) = handleMouseClick(editor, e)
+            override fun mousePressed(e: EditorMouseEvent) = handleMousePressed(editor, e)
+            override fun mouseDragged(e: EditorMouseEvent) = handleMouseDragged(editor, e)
+            override fun mouseReleased(e: EditorMouseEvent) = handleMouseReleased(editor, e)
         }
         editor.addEditorMouseListener(mouseHandler, disposable)
         editor.addEditorMouseMotionListener(mouseHandler, disposable)
@@ -107,6 +132,11 @@ class TzTableDecorator : EditorFactoryListener {
         editorHighlighters.remove(editor)
         editorGeometries.remove(editor)
         editorHover.remove(editor)
+        editorDrag.remove(editor)
+        editorPostDropFlash.remove(editor)
+        editorMenuTarget.remove(editor)
+        editorSkipNextClick.remove(editor)
+        editorPreDragCaret.remove(editor)
     }
 
     private fun scheduleRefresh(editor: Editor) {
@@ -171,7 +201,7 @@ class TzTableDecorator : EditorFactoryListener {
                 HighlighterLayer.SYNTAX - 1,
                 HighlighterTargetArea.LINES_IN_RANGE
             )
-            h.setCustomRenderer(TableFrameRenderer(editor, geometry, firstLineStart, lastLineEnd, pipeOffsets, headerLineStart))
+            h.setCustomRenderer(TableFrameRenderer(editor, geometry, firstLineStart, lastLineEnd, pipeOffsets, headerLineStart, renderState))
             newHighlighters += h
 
             for (line in firstLine..lastLine) {
@@ -212,274 +242,255 @@ class TzTableDecorator : EditorFactoryListener {
     private fun handleMouseMove(editor: Editor, e: EditorMouseEvent) {
         val hover = findHover(editor, e.mouseEvent.point)
         if (hover != editorHover[editor]) {
+            val wasDraggable = editorHover[editor]?.zone in setOf(
+                HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER
+            )
             editorHover[editor] = hover
+            // The hand cursor signals "draggable" — restrict it to zones where a drag
+            // gesture makes sense (column on TOP_BORDER, row on LEFT/RIGHT_BORDER).
+            // Header separator is click-only (toggle header), so keep the default cursor.
+            val draggable = hover?.zone in setOf(
+                HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER
+            )
             editor.contentComponent.cursor =
-                if (hover != null) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                if (draggable) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
                 else Cursor.getDefaultCursor()
+            // Hide the caret PROACTIVELY as soon as the cursor enters a draggable border —
+            // this beats IntelliJ's mouse-press handler that would otherwise paint the caret
+            // at the press position before our handleMousePressed had a chance to hide it.
+            // Restored when the cursor leaves the draggable zone.
+            if (draggable != wasDraggable) {
+                (editor as? EditorEx)?.setCaretVisible(!draggable)
+            }
+            // Hint the user about both gestures available on the frame. TOP_BORDER is only
+            // exposed when click is meaningful (sub-tables preceded by a comment never get
+            // a TOP_BORDER hover), so we no longer need to branch the message.
+            editor.contentComponent.toolTipText = when (hover?.zone) {
+                HoverZone.TOP_BORDER ->
+                    "Click to open the table menu, or drag to reorder this column"
+                HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER ->
+                    "Click to open the table menu, or drag to reorder this row"
+                else -> null
+            }
             editor.contentComponent.repaint()
         }
     }
 
     private fun handleMouseClick(editor: Editor, e: EditorMouseEvent) {
         if (e.mouseEvent.button != MouseEvent.BUTTON1) return
+        // Skip the popup if a drag has just completed (mousePressed → mouseDragged → mouseReleased
+        // doesn't fire mouseClicked unless the press point and release point coincide; some
+        // platforms still fire mouseClicked anyway, so we double-check the drag state).
+        if (editorSkipNextClick.remove(editor)) {
+            return
+        }
         val hover = findHover(editor, e.mouseEvent.point) ?: return
         showTablePopup(editor, hover.geometry, hover.zone, e.mouseEvent)
     }
 
-    private fun findHover(editor: Editor, point: Point): HoverState? {
-        val geometries = editorGeometries[editor] ?: return null
-        val T = 5  // pixel tolerance
-        val fm   = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
-        val half = fm.charWidth('|') / 2
+    // ---- Drag-and-drop: row/column reorder ----
 
-        for (geom in geometries) {
-            if (geom.pipeOffsets.size < 2) continue
-            val doc  = editor.document
-            val firstX = editor.logicalPositionToXY(editor.offsetToLogicalPosition(geom.pipeOffsets.first())).x + half
-            val lastX  = editor.logicalPositionToXY(editor.offsetToLogicalPosition(geom.pipeOffsets.last())).x + half
-            val topY   = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.firstLine))).y
-            val bottomY = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.lastLine))).y + editor.lineHeight
-            val mx = point.x; val my = point.y
-            val inXRange = mx >= firstX - T && mx <= lastX + T
-            val inYRange = my >= topY - T && my <= bottomY + T
-
-            // Outer frame borders
-            if (inXRange && my in topY - T .. topY + T)    return HoverState(geom, HoverZone.TOP_BORDER)
-            if (inXRange && my in bottomY - T .. bottomY + T) return HoverState(geom, HoverZone.BOTTOM_BORDER)
-            if (inYRange && mx in firstX - T .. firstX + T)  return HoverState(geom, HoverZone.LEFT_BORDER)
-            if (inYRange && mx in lastX - T .. lastX + T)    return HoverState(geom, HoverZone.RIGHT_BORDER)
-
-            // Header separator
-            geom.headerLine?.let { hl ->
-                val hy = editor.logicalPositionToXY(
-                    editor.offsetToLogicalPosition(doc.getLineStartOffset(hl))).y + editor.lineHeight - 1
-                if (inXRange && my in hy - T .. hy + T)
-                    return HoverState(geom, HoverZone.HEADER_SEPARATOR)
+    private fun handleMousePressed(editor: Editor, e: EditorMouseEvent) {
+        if (e.mouseEvent.button != MouseEvent.BUTTON1) return
+        val hover = findHover(editor, e.mouseEvent.point) ?: return
+        when (hover.zone) {
+            HoverZone.LEFT_BORDER -> {
+                val rowIdx = computeRowIdxAt(editor, hover.geometry, e.mouseEvent.y)
+                editorDrag[editor] = DragState(
+                    zone = HoverZone.LEFT_BORDER,
+                    geom = hover.geometry,
+                    sourceIndex = rowIdx,
+                    startX = e.mouseEvent.x,
+                    startY = e.mouseEvent.y
+                )
+                onDragGestureStart(editor)
             }
+            HoverZone.TOP_BORDER -> {
+                val colIdx = computeColIdxAt(editor, hover.geometry, e.mouseEvent.x)
+                editorDrag[editor] = DragState(
+                    zone = HoverZone.TOP_BORDER,
+                    geom = hover.geometry,
+                    sourceIndex = colIdx,
+                    startX = e.mouseEvent.x,
+                    startY = e.mouseEvent.y
+                )
+                onDragGestureStart(editor)
+            }
+            else -> editorDrag.remove(editor)
         }
-        return null
     }
 
-    // ---- Popup ----
-
-    private fun showTablePopup(editor: Editor, geometry: TableGeometry, zone: HoverZone, mouseEvent: MouseEvent) {
-        val am  = ActionManager.getInstance()
-        val doc = editor.document
-        val group = DefaultActionGroup()
-
-        // Pipe X centres (used for column detection)
-        val fm = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
-        val half = fm.charWidth('|') / 2
-        val pipeXs = geometry.pipeOffsets.map {
-            editor.logicalPositionToXY(editor.offsetToLogicalPosition(it)).x + half
+    /**
+     * Called as soon as the user presses on a draggable border. We
+     *  - hide the caret right away (it would otherwise jump to wherever the press
+     *    landed inside the cell next to the pipe — visually distracting),
+     *  - force the hand cursor (the hover-based update via mouseMoved can be stale just
+     *    after a previous drop, especially the moment scheduleRefresh has rebuilt the
+     *    geometries but no mouseMoved has fired yet to re-evaluate findHover).
+     *
+     * Note: we deliberately do not consume the press event. Consuming the
+     * EditorMouseEvent suppresses the trailing mouseClicked notification, which we still
+     * need so a pure click on the frame opens the table popup.
+     */
+    private fun onDragGestureStart(editor: Editor) {
+        // Remember where the caret was BEFORE the editor moves it on the press, so we can
+        // restore the pre-gesture position on release. The user therefore never sees the
+        // caret pin itself just after the pipe.
+        val pre = editor.caretModel.offset
+        editorPreDragCaret[editor] = pre
+        (editor as? EditorEx)?.setCaretVisible(false)
+        editor.contentComponent.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        // The editor's default mouse-press handler runs AFTER our listener and moves the
+        // caret to the press position — even when the caret renders invisibly, the
+        // selection model still drifts. Schedule a restore for the very next EDT tick so
+        // the caret position never visibly drags toward the pipe.
+        ApplicationManager.getApplication().invokeLater {
+            if (!editor.isDisposed && editorPreDragCaret[editor] == pre) {
+                editor.caretModel.moveToOffset(pre.coerceIn(0, editor.document.textLength))
+            }
         }
+    }
 
-        // Table rows (lines that start with |)
-        val tableLines = (geometry.firstLine..geometry.lastLine).filter { line ->
-            doc.charsSequence.subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+    private fun restoreCaretAfterGesture(editor: Editor) {
+        editorPreDragCaret.remove(editor)?.let { offset ->
+            editor.caretModel.moveToOffset(offset.coerceIn(0, editor.document.textLength))
+        }
+        (editor as? EditorEx)?.setCaretVisible(true)
+    }
+
+    private fun handleMouseDragged(editor: Editor, e: EditorMouseEvent) {
+        val state = editorDrag[editor] ?: return
+        state.currentX = e.mouseEvent.x
+        state.currentY = e.mouseEvent.y
+        val dx = Math.abs(state.currentX - state.startX)
+        val dy = Math.abs(state.currentY - state.startY)
+        if (!state.active && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
+            state.active = true
+            editor.contentComponent.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        }
+        if (state.active) {
+            // Block the editor's selection handler from extending the selection on this
+            // drag tick — consuming the EditorMouseEvent prevents downstream listeners
+            // (including IntelliJ's text-selection handler) from running.
+            e.consume()
+            // Belt-and-braces: clear any stray selection that may have leaked through
+            // (e.g. extended during the threshold movement before we marked active).
+            if (editor.selectionModel.hasSelection()) editor.selectionModel.removeSelection()
+            // Repaint the dragged table's frame area so the renderer overlays follow the cursor.
+            editor.contentComponent.repaint()
+        }
+    }
+
+    private fun handleMouseReleased(editor: Editor, e: EditorMouseEvent) {
+        val state = editorDrag[editor] ?: return
+        // Restore the caret to its pre-drag position regardless of pure-click vs drag.
+        restoreCaretAfterGesture(editor)
+        if (!state.active) {
+            // Pure click → leave the state in place; handleMouseClick will pop up the menu.
+            return
+        }
+        editor.contentComponent.cursor = Cursor.getDefaultCursor()
+        when (state.zone) {
+            HoverZone.LEFT_BORDER -> {
+                val targetRowIdx = computeRowIdxAt(editor, state.geom, e.mouseEvent.y)
+                // Same no-op semantics as columns: drop on self or next neighbour collapses
+                // back (effectiveTo == source). Skip the write + skip the flash.
+                if (!isNoopRowDrop(state.sourceIndex, targetRowIdx)) {
+                    applyDragOp(editor, state.geom, TableEditOps.Op.MoveRow(state.sourceIndex, targetRowIdx))
+                    // Flash the dropped row's left segment for 1s so the user sees where it landed.
+                    val landedIdx = if (state.sourceIndex < targetRowIdx) targetRowIdx - 1 else targetRowIdx
+                    val pipeLines = pipeRowLines(editor, state.geom)
+                    pipeLines.getOrNull(landedIdx)?.let { rowLine ->
+                        triggerPostRowFlash(editor, state.geom, rowLine)
+                    }
+                }
+            }
+            HoverZone.TOP_BORDER -> {
+                val targetColIdx = computeColIdxAt(editor, state.geom, e.mouseEvent.x)
+                // No-op drops:
+                //   - target == source           (drop on itself)
+                //   - target == source + 1       (insert BEFORE the right neighbor → same place)
+                if (!isNoopColumnDrop(state.sourceIndex, targetColIdx)) {
+                    applyDragOp(editor, state.geom, TableEditOps.Op.MoveColumn(state.sourceIndex, targetColIdx))
+                    // Flash the dropped column's top segment for 1s so the user sees where it landed.
+                    // Removing source[i] before inserting before target[j] shifts the landing
+                    // index left by 1 when i < j (matches TableEditOps.computeEffectiveTo).
+                    val landedIdx = if (state.sourceIndex < targetColIdx) targetColIdx - 1 else targetColIdx
+                    triggerPostDropFlash(editor, state.geom, landedIdx)
+                }
+            }
+            else -> Unit
+        }
+        // Clear the drag state immediately so the renderer stops drawing source/target/cursor
+        // overlays on subsequent repaints. The PostDropFlash now drives the landing highlight.
+        editorDrag.remove(editor)
+        // Forget the previous hover so the next mouseMoved tick re-evaluates findHover and
+        // restores the hand cursor.
+        editorHover.remove(editor)
+        // Re-evaluate hover at the release point so the user immediately sees the hand
+        // cursor again if they're still over a draggable border — without this, we'd
+        // have to wait for the next mouseMoved event before the cursor updates.
+        handleMouseMove(editor, e)
+        // Swallow the trailing mouseClicked event (some platforms fire it after a drag).
+        editorSkipNextClick += editor
+        editor.contentComponent.repaint()
+    }
+
+    /**
+     * Column drop is a no-op when:
+     *   - target == source           (drop on itself)
+     *   - target == source + 1       (insert BEFORE the right neighbor → same effective position)
+     */
+    private fun isNoopColumnDrop(source: Int, target: Int): Boolean =
+        target == source || target == source + 1
+
+    /** Row drop is a no-op for the exact same reason — drop on self or on the next row. */
+    private fun isNoopRowDrop(source: Int, target: Int): Boolean =
+        target == source || target == source + 1
+
+    /** List of physical document line numbers that contain a pipe row inside [geom]. */
+    private fun pipeRowLines(editor: Editor, geom: TableGeometry): List<Int> {
+        val doc = editor.document
+        return (geom.firstLine..geom.lastLine).filter { line ->
+            doc.charsSequence
+                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
                 .toString().trim().startsWith("|")
         }
-
-        // Which column is the mouse over (by X)?
-        val colIdx = pipeXs.zipWithNext()
-            .indexOfFirst { (a, b) -> mouseEvent.x >= a && mouseEvent.x <= b }
-            .coerceAtLeast(0)
-        val isFirstColumn = colIdx == 0
-        val isLastColumn  = colIdx >= pipeXs.size - 2
-
-        // Which row is nearest to the mouse (by Y centre distance)?
-        val rowIdx = tableLines.indices.minByOrNull { i ->
-            val lineY = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(tableLines[i]))).y
-            Math.abs(mouseEvent.y - (lineY + editor.lineHeight / 2))
-        } ?: 0
-        val isFirstRow = rowIdx == 0
-        val isLastRow  = rowIdx >= tableLines.size - 1
-
-        // Move caret into the target cell so Shift actions pass their enabled check
-        moveCaretToTableCell(editor, doc, tableLines, pipeXs,
-            when (zone) {
-                HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> rowIdx to 0
-                HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER                             -> 0 to colIdx
-            }
-        )
-
-        // 1. Shift actions (zone-specific, position-filtered)
-        fun safeAdd(id: String) { am.getAction(id)?.let { group.add(it) } }
-        val shiftAdded = when (zone) {
-            HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> {
-                var added = false
-                if (!isFirstRow) { safeAdd("io.nimbly.tzatziki.ShiftUp");   added = true }
-                if (!isLastRow)  { safeAdd("io.nimbly.tzatziki.ShiftDown"); added = true }
-                added
-            }
-            HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER -> {
-                var added = false
-                if (!isFirstColumn) { safeAdd("io.nimbly.tzatziki.ShiftLeft");  added = true }
-                if (!isLastColumn)  { safeAdd("io.nimbly.tzatziki.ShiftRight"); added = true }
-                added
-            }
-        }
-        if (shiftAdded) group.addSeparator()
-
-        // 1b. Add / delete row & column (zone-specific)
-        val popupRef = arrayOfNulls<JBPopup>(1)
-        val popupCloser: () -> Unit = { popupRef[0]?.cancel() }
-        val rowCount = tableLines.size
-        val columnCount = (pipeXs.size - 1).coerceAtLeast(1)
-        var editAdded = false
-        when (zone) {
-            HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> {
-                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertRow(rowIdx, above = true),
-                    ActionIcons.ROW_ADD, popupCloser))
-                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertRow(rowIdx, above = false),
-                    ActionIcons.ROW_ADD, popupCloser))
-                if (rowCount > 1) {
-                    group.add(TableEditAction(editor, tableLines, TableEditOps.Op.DeleteRow(rowIdx),
-                        ActionIcons.ROW_DELETE, popupCloser))
-                }
-                editAdded = true
-            }
-            HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER -> {
-                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertColumn(colIdx, before = true),
-                    ActionIcons.COLUMN_ADD, popupCloser))
-                group.add(TableEditAction(editor, tableLines, TableEditOps.Op.InsertColumn(colIdx, before = false),
-                    ActionIcons.COLUMN_ADD, popupCloser))
-                if (columnCount > 1) {
-                    group.add(TableEditAction(editor, tableLines, TableEditOps.Op.DeleteColumn(colIdx),
-                        ActionIcons.COLUMN_DELETE, popupCloser))
-                }
-                editAdded = true
-            }
-        }
-        if (editAdded) group.addSeparator()
-
-        // 2. Header type — row / column (click selected = toggle off; closes the popup)
-        group.add(SetHeaderAction(editor, geometry, "row",    "Header: row",    popupCloser))
-        group.add(SetHeaderAction(editor, geometry, "column", "Header: column", popupCloser))
-        group.addSeparator()
-
-        // 3. Toggle Cucumber+ — wrapped to close the popup after toggling
-        group.add(object : ToggleAction("Toggle Cucumber+") {
-            override fun getActionUpdateThread() = ActionUpdateThread.EDT
-            override fun isSelected(e: AnActionEvent) = TOGGLE_CUCUMBER_PL
-            override fun setSelected(e: AnActionEvent, state: Boolean) {
-                // Do not call AnAction.actionPerformed(e) directly: it is @ApiStatus.OverrideOnly.
-                // Route through ActionUtil so listeners + telemetry get notified properly.
-                am.getAction("io.nimbly.tzatziki.ToggleTzatziki")?.let { toggle ->
-                    ActionUtil.performAction(toggle, e)
-                }
-                popupCloser()
-            }
-        })
-
-        val dataContext = DataManager.getInstance().getDataContext(editor.contentComponent)
-        val popup = JBPopupFactory.getInstance()
-            .createActionGroupPopup(null, group, dataContext, JBPopupFactory.ActionSelectionAid.MNEMONICS, false)
-        popupRef[0] = popup
-        popup.show(RelativePoint(mouseEvent))
     }
 
-    // Moves the caret into a specific cell (rowIdx, colIdx) of the table
-    // so that Shift actions pass their "caret is in a cell" enabled check.
-    private fun moveCaretToTableCell(
-        editor: Editor, doc: com.intellij.openapi.editor.Document,
-        tableLines: List<Int>, pipeXs: List<Int>, cell: Pair<Int, Int>
-    ) {
-        val (rowIdx, colIdx) = cell
-        val line = tableLines.getOrElse(rowIdx) { tableLines.firstOrNull() ?: return }
-        val ls = doc.getLineStartOffset(line)
-        val lineText = doc.charsSequence.subSequence(ls, doc.getLineEndOffset(line)).toString()
-        var pipeCount = -1
-        var offset = ls
-        var idx = 0
-        while (idx < lineText.length) {
-            val p = lineText.indexOf('|', idx)
-            if (p < 0) break
-            pipeCount++
-            if (pipeCount == colIdx) { offset = ls + p + 1; break }
-            idx = p + 1
+    private fun applyDragOp(editor: Editor, geom: TableGeometry, op: TableEditOps.Op) {
+        val doc = editor.document
+        val tableLines = (geom.firstLine..geom.lastLine).filter { line ->
+            doc.charsSequence
+                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+                .toString().trim().startsWith("|")
         }
-        editor.caretModel.moveToOffset(offset.coerceAtMost(doc.textLength - 1))
+        if (tableLines.isEmpty()) return
+        TableEditOps.apply(editor, tableLines, op)
     }
 
-    // ---- @header document actions ----
-
-    private inner class SetHeaderAction(
-        private val editor: Editor,
-        private val geometry: TableGeometry,
-        private val headerType: String,  // "row" or "column"
-        text: String,
-        private val closePopup: () -> Unit
-    ) : ToggleAction(text) {
-
-        override fun getActionUpdateThread() = ActionUpdateThread.EDT
-
-        override fun isSelected(e: AnActionEvent): Boolean {
-            val current = tableAnnotation(editor.document, editor.document.charsSequence, geometry.firstLine)
-            return current == headerType
+    private fun postFlash(editor: Editor, flash: PostDropFlash) {
+        editorPostDropFlash[editor] = flash
+        val timer = javax.swing.Timer(1000) {
+            editorPostDropFlash.remove(editor)
+            if (!editor.isDisposed) editor.contentComponent.repaint()
         }
-
-        override fun setSelected(e: AnActionEvent, state: Boolean) {
-            val project = editor.project ?: return
-            WriteCommandAction.runWriteCommandAction(project, "Set Table Header", null, {
-                val doc         = editor.document
-                val commentLine = findHeaderCommentLine(doc, geometry.firstLine)
-                val current     = tableAnnotation(doc, doc.charsSequence, geometry.firstLine)
-                if (!state || current == headerType) {
-                    // Toggle off: remove the comment
-                    if (commentLine >= 0) {
-                        val start = doc.getLineStartOffset(commentLine)
-                        val end   = if (commentLine + 1 < doc.lineCount)
-                            doc.getLineStartOffset(commentLine + 1)
-                        else
-                            doc.getLineEndOffset(commentLine)
-                        doc.deleteString(start, end)
-                    }
-                } else {
-                    val firstRowStart = doc.getLineStartOffset(geometry.firstLine)
-                    val indent = doc.charsSequence
-                        .subSequence(firstRowStart, doc.getLineEndOffset(geometry.firstLine))
-                        .toString().takeWhile { it == ' ' || it == '\t' }
-                    val comment = "$indent# @header: $headerType"
-                    if (commentLine >= 0) {
-                        doc.replaceString(doc.getLineStartOffset(commentLine), doc.getLineEndOffset(commentLine), comment)
-                    } else {
-                        doc.insertString(firstRowStart, "$comment\n")
-                    }
-                }
-            })
-            closePopup()
-        }
+        timer.isRepeats = false
+        timer.start()
+        editor.contentComponent.repaint()
     }
 
-    // Returns the line index of the existing "# @header: ..." comment above the table, or -1.
-    private fun findHeaderCommentLine(doc: com.intellij.openapi.editor.Document, tableLine: Int): Int {
-        var line = tableLine - 1
-        while (line >= 0) {
-            val t = doc.charsSequence.subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line)).toString().trim()
-            when {
-                t.isEmpty() -> line--
-                t.matches(Regex("#\\s*@header:.*")) -> return line
-                else -> return -1
-            }
-        }
-        return -1
-    }
+    private fun triggerPostDropFlash(editor: Editor, geom: TableGeometry, columnIndex: Int) =
+        postFlash(editor, PostDropFlash(geom.firstLine, columnIndex = columnIndex))
 
-    // ---- Add / delete row & column ----
+    private fun triggerPostRowFlash(editor: Editor, geom: TableGeometry, rowLine: Int) =
+        postFlash(editor, PostDropFlash(geom.firstLine, rowLine = rowLine))
 
-    private inner class TableEditAction(
-        private val editor: Editor,
-        private val tableLines: List<Int>,
-        private val op: TableEditOps.Op,
-        icon: javax.swing.Icon?,
-        private val closePopup: () -> Unit
-    ) : AnAction(op.title, null, icon) {
-        override fun getActionUpdateThread() = ActionUpdateThread.EDT
-        override fun actionPerformed(e: AnActionEvent) {
-            TableEditOps.apply(editor, tableLines, op)
-            closePopup()
-        }
+    /** Thin adapter: pull the list of geometries for [editor] and delegate to the
+     *  stateless [io.nimbly.tzatziki.editor.findHover] in TzTableHover.kt. */
+    private fun findHover(editor: Editor, point: Point): HoverState? {
+        val geoms = editorGeometries[editor] ?: return null
+        return findHover(editor, geoms, point)
     }
 
     // ---- Header cell coloring ----
@@ -542,128 +553,20 @@ class TzTableDecorator : EditorFactoryListener {
         return result
     }
 
-    private fun tableAnnotation(doc: com.intellij.openapi.editor.Document, text: CharSequence, tableLine: Int): String? {
-        var line = tableLine - 1
-        while (line >= 0) {
-            val s = doc.getLineStartOffset(line); val e = doc.getLineEndOffset(line)
-            val t = text.subSequence(s, e).toString().trim()
-            when {
-                t.isEmpty() -> line--
-                t.matches(Regex("#\\s*@header:\\s*row\\s*"))    -> return "row"
-                t.matches(Regex("#\\s*@header:\\s*column\\s*")) -> return "column"
-                else -> return null
-            }
-        }
-        return null
+
+    // ---- Frame renderer state accessor (consumed by TableFrameRenderer) ----
+
+    /** Implementation of TableRenderState — exposes the mutable per-editor maps as a
+     *  narrow read-only view so the renderer (in TzTableFrameRenderer.kt) stays decoupled. */
+    private val renderState = object : TableRenderState {
+        override fun hover(editor: Editor) = editorHover[editor]
+        override fun drag(editor: Editor)  = editorDrag[editor]
+        override fun flash(editor: Editor) = editorPostDropFlash[editor]
+        override fun menuTarget(editor: Editor) = editorMenuTarget[editor]
+        override fun isNoopColumnDrop(source: Int, target: Int) =
+            this@TzTableDecorator.isNoopColumnDrop(source, target)
+        override fun isNoopRowDrop(source: Int, target: Int) =
+            this@TzTableDecorator.isNoopRowDrop(source, target)
     }
 
-    // ---- Data classes ----
-
-    data class TableGeometry(
-        val firstLine: Int,
-        val lastLine: Int,
-        val pipeOffsets: List<Int>,
-        val headerLine: Int?
-    )
-
-    enum class HoverZone { LEFT_BORDER, RIGHT_BORDER, TOP_BORDER, BOTTOM_BORDER, HEADER_SEPARATOR }
-
-    data class HoverState(val geometry: TableGeometry, val zone: HoverZone)
-
-    // ---- Frame renderer (hover-aware) ----
-
-    private inner class TableFrameRenderer(
-        private val editor: Editor,
-        private val geometry: TableGeometry,
-        private val tableStart: Int,
-        private val tableEnd: Int,
-        private val pipeOffsets: List<Int>,
-        private val headerLineStart: Int?
-    ) : CustomHighlighterRenderer {
-
-        override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
-            if (pipeOffsets.size < 2) return
-
-            val hover       = editorHover[editor]
-            val isHovered   = hover?.geometry == geometry
-            val hoverZone   = if (isHovered) hover?.zone else null
-
-            val g2 = g as Graphics2D
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-            val fm        = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
-            val pipeWidth = fm.charWidth('|')
-            val half      = pipeWidth / 2
-            val base      = pipeColor(editor)
-            val thinColor = Color(base.red, base.green, base.blue, (base.alpha * 0.55).toInt().coerceAtLeast(40))
-            val bg        = editor.colorsScheme.defaultBackground
-            val borderColor = base.lightenTowards(bg, 0.35f)
-
-            val pipeXs  = pipeOffsets.map { editor.logicalPositionToXY(editor.offsetToLogicalPosition(it)).x + half }
-            val firstX  = pipeXs.first()
-            val lastX   = pipeXs.last()
-            val topY    = editor.logicalPositionToXY(editor.offsetToLogicalPosition(tableStart)).y
-            val bottomY = editor.logicalPositionToXY(editor.offsetToLogicalPosition(tableEnd)).y + editor.lineHeight
-            val arc = 5f
-
-            // 1. Mask pipe characters
-            g2.color = bg
-            for (x in pipeXs) g2.fillRect(x - half, topY, pipeWidth, bottomY - topY)
-
-            // 2. Inner vertical separators
-            g2.stroke = BasicStroke(0.8f)
-            g2.color  = thinColor
-            for (x in pipeXs.drop(1).dropLast(1)) g2.drawLine(x, topY, x, bottomY)
-
-            // 3. Header separator — thicker on hover
-            if (headerLineStart != null) {
-                val hy = editor.logicalPositionToXY(editor.offsetToLogicalPosition(headerLineStart)).y + editor.lineHeight - 1
-                g2.stroke = if (hoverZone == HoverZone.HEADER_SEPARATOR) BasicStroke(2.0f) else BasicStroke(0.8f)
-                g2.color  = if (hoverZone == HoverZone.HEADER_SEPARATOR) borderColor else thinColor
-                g2.drawLine(firstX, hy, lastX, hy)
-            }
-
-            // 4. Outer rounded rectangle (thin always)
-            g2.stroke = BasicStroke(1.0f)
-            g2.color  = borderColor
-            g2.draw(RoundRectangle2D.Float(
-                firstX.toFloat(), topY.toFloat(),
-                (lastX - firstX).toFloat(), (bottomY - topY).toFloat(),
-                arc, arc
-            ))
-
-            // 5. Hovered segment overlay (thick, on top of the thin rect)
-            val halfArc = (arc / 2).toInt()
-            when (hoverZone) {
-                HoverZone.TOP_BORDER    -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX + halfArc, topY, lastX - halfArc, topY)
-                }
-                HoverZone.BOTTOM_BORDER -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX + halfArc, bottomY, lastX - halfArc, bottomY)
-                }
-                HoverZone.LEFT_BORDER   -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX, topY + halfArc, firstX, bottomY - halfArc)
-                }
-                HoverZone.RIGHT_BORDER  -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(lastX, topY + halfArc, lastX, bottomY - halfArc)
-                }
-                else -> {}
-            }
-        }
-
-        private fun pipeColor(editor: Editor): Color =
-            editor.colorsScheme.getAttributes(GherkinHighlighter.PIPE)?.foregroundColor
-                ?: editor.colorsScheme.defaultForeground
-
-        private fun Color.lightenTowards(target: Color, factor: Float) = Color(
-            (red   + (target.red   - red)   * factor).toInt().coerceIn(0, 255),
-            (green + (target.green - green) * factor).toInt().coerceIn(0, 255),
-            (blue  + (target.blue  - blue)  * factor).toInt().coerceIn(0, 255),
-            alpha
-        )
-    }
 }

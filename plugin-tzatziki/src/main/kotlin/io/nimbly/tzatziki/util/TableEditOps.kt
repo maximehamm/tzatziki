@@ -38,6 +38,12 @@ object TableEditOps {
             : Op(if (delta < 0) "Shift row up" else "Shift row down")
         class ShiftColumn(val atIndex: Int, val delta: Int)
             : Op(if (delta < 0) "Shift column left" else "Shift column right")
+        /** Move a row from [fromIndex] to land BEFORE the row currently at [beforeIndex]. */
+        class MoveRow(val fromIndex: Int, val beforeIndex: Int)
+            : Op("Move row")
+        /** Move a column from [fromIndex] to land BEFORE the column currently at [beforeIndex]. */
+        class MoveColumn(val fromIndex: Int, val beforeIndex: Int)
+            : Op("Move column")
     }
 
     fun apply(editor: Editor, tableLines: List<Int>, op: Op) {
@@ -51,9 +57,9 @@ object TableEditOps {
             // Row operations only affect the caller's fragment (the user's intent is
             // local to where the popup was opened).
             val effectiveLines: List<Int> = when (op) {
-                is Op.InsertColumn, is Op.DeleteColumn -> {
-                    // Expand outward from the fragment's first row to cover the whole
-                    // logical table that may span interleaved comments / blank lines.
+                is Op.InsertColumn, is Op.DeleteColumn, is Op.MoveColumn -> {
+                    // Column-wide operations must affect the WHOLE logical table — including
+                    // rows separated from the caller's fragment by comments or blank lines.
                     collectTableLinesAround(editor, tableLines.first())
                         .ifEmpty { tableLines }
                 }
@@ -153,6 +159,41 @@ object TableEditOps {
                         doc.replaceString(doc.getLineStartOffset(line), doc.getLineEndOffset(line), newLine)
                     }
                 }
+                is Op.MoveRow -> {
+                    val from = op.fromIndex
+                    val before = op.beforeIndex
+                    if (from !in rows.indices || from == before) return@runWriteCommandAction
+                    // Drop semantic: source ends up immediately BEFORE what was originally
+                    // at `before`. After removing source, the destination index is shifted
+                    // by 1 when from < before.
+                    val effectiveTo = computeEffectiveTo(from, before, rows.size)
+                    if (effectiveTo == from) return@runWriteCommandAction
+                    val reordered = rows.toMutableList().apply {
+                        val item = removeAt(from)
+                        add(effectiveTo.coerceIn(0, size), item)
+                    }
+                    // Rewrite each line's CONTENT in place (line positions unchanged).
+                    tableLines.forEachIndexed { idx, line ->
+                        val cells = parseRowCells(reordered[idx])
+                        val newLine = buildRowLine(cells, rows[idx])
+                        doc.replaceString(doc.getLineStartOffset(line), doc.getLineEndOffset(line), newLine)
+                    }
+                }
+                is Op.MoveColumn -> {
+                    val from = op.fromIndex
+                    val before = op.beforeIndex
+                    if (from == before) return@runWriteCommandAction
+                    tableLines.zip(rows).reversed().forEach { (line, original) ->
+                        val cells = parseRowCells(original).toMutableList()
+                        if (from !in cells.indices) return@forEach
+                        val effectiveTo = computeEffectiveTo(from, before, cells.size)
+                        if (effectiveTo == from) return@forEach
+                        val item = cells.removeAt(from)
+                        cells.add(effectiveTo.coerceIn(0, cells.size), item)
+                        val newLine = buildRowLine(cells, original)
+                        doc.replaceString(doc.getLineStartOffset(line), doc.getLineEndOffset(line), newLine)
+                    }
+                }
             }
 
             // Re-format each distinct GherkinTable in the region (handles cases where
@@ -221,6 +262,21 @@ object TableEditOps {
         cells.forEach { sb.append("| ").append(it.trim()).append(' ') }
         sb.append('|')
         return sb.toString()
+    }
+
+    /**
+     * Drop semantics: the moved item ends up at the position just BEFORE [before] in the
+     * post-removal list. When [from] < [before], the destination index is shifted by 1
+     * because removing [from] makes everything to its right slide down by one.
+     *
+     * Examples (4 cells [A, B, C, D]):
+     *  - move from=0 to before=2 → [B, A, C, D] (effectiveTo = 1)
+     *  - move from=3 to before=1 → [A, D, B, C] (effectiveTo = 1)
+     *  - move from=0 to before=size → effectiveTo = size-1 → appended at the end
+     */
+    fun computeEffectiveTo(from: Int, before: Int, size: Int): Int {
+        val clamped = before.coerceIn(0, size)
+        return if (from < clamped) clamped - 1 else clamped
     }
 
     fun buildEmptyRow(indent: String, cellCount: Int): String {

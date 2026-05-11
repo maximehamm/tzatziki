@@ -889,6 +889,164 @@ class TableEditTests : AbstractTestCase() {
             """)
     }
 
+    // ------------------------------------------------------------------
+    // Move row / column (drag-and-drop)
+    // ------------------------------------------------------------------
+
+    fun testMoveRowDownByDrop() {
+
+        // language=feature
+        feature("""
+            Feature: Test
+              Scenario: Move down
+                Given the table:
+                  | A | B |
+                  | 1 | 2 |
+                  | 3 | 4 |
+                  | 5 | 6 |
+            """)
+        setCursor("| A | B |")
+
+        // Drag row 0 (header), drop on row 2 → row 0 lands BEFORE original row 2
+        // → [1/2, 3/4, A/B, 5/6]
+        moveRow(from = 0, before = 2)
+
+        // language=feature
+        checkContent("""
+            Feature: Test
+              Scenario: Move down
+                Given the table:
+                  | 1 | 2 |
+                  | A | B |
+                  | 3 | 4 |
+                  | 5 | 6 |
+            """)
+    }
+
+    fun testMoveRowUpByDrop() {
+
+        // language=feature
+        feature("""
+            Feature: Test
+              Scenario: Move up
+                Given the table:
+                  | A | B |
+                  | 1 | 2 |
+                  | 3 | 4 |
+                  | 5 | 6 |
+            """)
+        setCursor("| A | B |")
+
+        // Drag row 3 (5/6), drop on row 1 → 5/6 lands BEFORE original row 1
+        // → [A/B, 5/6, 1/2, 3/4]
+        moveRow(from = 3, before = 1)
+
+        checkContent("""
+            Feature: Test
+              Scenario: Move up
+                Given the table:
+                  | A | B |
+                  | 5 | 6 |
+                  | 1 | 2 |
+                  | 3 | 4 |
+            """)
+    }
+
+    fun testMoveRowSamePositionIsNoOp() {
+
+        feature("""
+            Feature: Test
+              Scenario: NoOp
+                Given the table:
+                  | A | B |
+                  | 1 | 2 |
+            """)
+        setCursor("| A | B |")
+        moveRow(from = 0, before = 0)
+
+        checkContent("""
+            Feature: Test
+              Scenario: NoOp
+                Given the table:
+                  | A | B |
+                  | 1 | 2 |
+            """)
+    }
+
+    fun testMoveColumnRightByDrop() {
+
+        // language=feature
+        feature("""
+            Feature: Test
+              Scenario: Move col
+                Given the table:
+                  | A | B | C | D |
+                  | 1 | 2 | 3 | 4 |
+            """)
+        setCursor("| A |")
+
+        // Drag col 0, drop on col 2 → col 0 lands BEFORE original col 2 → [B, A, C, D]
+        moveColumn(from = 0, before = 2)
+
+        checkContent("""
+            Feature: Test
+              Scenario: Move col
+                Given the table:
+                  | B | A | C | D |
+                  | 2 | 1 | 3 | 4 |
+            """)
+    }
+
+    fun testMoveColumnLeftByDrop() {
+
+        feature("""
+            Feature: Test
+              Scenario: Move col
+                Given the table:
+                  | A | B | C | D |
+                  | 1 | 2 | 3 | 4 |
+            """)
+        setCursor("| A |")
+
+        // Drag col 3 (D), drop on col 1 (B) → D lands BEFORE B → [A, D, B, C]
+        moveColumn(from = 3, before = 1)
+
+        checkContent("""
+            Feature: Test
+              Scenario: Move col
+                Given the table:
+                  | A | D | B | C |
+                  | 1 | 4 | 2 | 3 |
+            """)
+    }
+
+    fun testMoveColumnPreservesInterleavedComment() {
+
+        feature("""
+            Feature: Test
+              Scenario: With comment
+                Given the table:
+                  | A | B | C |
+                  | 1 | 2 | 3 |
+                  # mid-table comment
+                  | 4 | 5 | 6 |
+            """)
+        setCursor("| A | B | C |")
+
+        // Drag col 0, drop on col 2 → [B, A, C], applied across the WHOLE logical table
+        moveColumn(from = 0, before = 2)
+
+        checkContent("""
+            Feature: Test
+              Scenario: With comment
+                Given the table:
+                  | B | A | C |
+                  | 2 | 1 | 3 |
+                  # mid-table comment
+                  | 5 | 4 | 6 |
+            """)
+    }
+
     fun testDeleteColumnPreservesInterleavedComment() {
 
         // language=feature
@@ -927,6 +1085,8 @@ class TableEditTests : AbstractTestCase() {
     private fun addColumnLeft()  = applyOp(TableEditOps.Op.InsertColumn(colIdxAtCursor(), before = true))
     private fun addColumnRight() = applyOp(TableEditOps.Op.InsertColumn(colIdxAtCursor(), before = false))
     private fun deleteColumn()   = applyOp(TableEditOps.Op.DeleteColumn(colIdxAtCursor()))
+    private fun moveRow(from: Int, before: Int)    = applyOp(TableEditOps.Op.MoveRow(from, before))
+    private fun moveColumn(from: Int, before: Int) = applyOp(TableEditOps.Op.MoveColumn(from, before))
 
     private fun applyOp(op: TableEditOps.Op) {
         val editor = myFixture.editor
