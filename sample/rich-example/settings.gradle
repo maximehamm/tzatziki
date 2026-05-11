@@ -4,6 +4,7 @@ include 'customer'
 include 'supplier'
 include 'supplier:france'
 include 'supplier:worldwide'
+include 'supplier:chinese'
 
 // findProject(':supplier:france')?.name = 'france'
 // findProject(':supplier:worldwide')?.name = 'worldwide'
