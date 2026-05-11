@@ -26,9 +26,22 @@ import com.intellij.debugger.engine.JavaBreakpointHandlerFactory
  *    installs the JDI breakpoint request just like it does for plain Java line BPs.
  */
 class TzCucumberCodeBreakpointHandlerFactory : JavaBreakpointHandlerFactory {
-    override fun createHandler(process: DebugProcessImpl): JavaBreakpointHandler =
-        TzCucumberCodeBreakpointHandler(process)
+    private val log = com.intellij.openapi.diagnostic.Logger.getInstance(
+        "io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointHandlerFactory")
+    override fun createHandler(process: DebugProcessImpl): JavaBreakpointHandler {
+        log.info("C+ createHandler called for process=$process")
+        return TzCucumberCodeBreakpointHandler(process)
+    }
 }
 
 private class TzCucumberCodeBreakpointHandler(process: DebugProcessImpl)
-    : JavaBreakpointHandler(TzCucumberCodeBreakpointType::class.java, process)
+    : JavaBreakpointHandler(TzCucumberCodeBreakpointType::class.java, process) {
+
+    private val log = com.intellij.openapi.diagnostic.Logger.getInstance(
+        "io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointHandler")
+
+    override fun registerBreakpoint(breakpoint: com.intellij.xdebugger.breakpoints.XBreakpoint<*>) {
+        log.info("C+ registerBreakpoint: ${breakpoint.type?.id} at ${breakpoint.sourcePosition?.file?.path}:${breakpoint.sourcePosition?.line}")
+        super.registerBreakpoint(breakpoint)
+    }
+}

@@ -103,14 +103,22 @@ class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
         val start = m.getDocumentLine() ?:return null
         val end = m.getDocumentEndLine() ?:return null
 
-        var line = start
+        // Walk the function body looking for an executable line — that's where the JVM
+        // line table will have an entry our breakpoint can match against a class prepare.
         val xutil = XDebuggerUtil.getInstance()
+        var line = -1
         for (l in start + 1..end) {
             if (xutil.canPutBreakpointAt(m.project, m.containingFile.virtualFile, l)) {
                 line = l
                 break
             }
         }
+        // Fallback for empty / single-statement bodies that canPutBreakpointAt rejects on
+        // every body line: target the CLOSING brace (`}` line) — Kotlin's compiler attaches
+        // the line number of the closing brace to the implicit RETURN, so a JDI breakpoint
+        // there fires when the function exits. The previous fallback to the `fun`
+        // declaration line was silent because that line has no bytecode line entry.
+        if (line < 0) line = if (end > start) end else start
 
         return m to line
     }

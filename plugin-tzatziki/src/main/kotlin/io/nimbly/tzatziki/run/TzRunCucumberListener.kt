@@ -58,7 +58,46 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
        ##teamcity[testSuiteStarted timestamp = '2024-04-03T07:14:18.444+0000' locationHint = 'file:///Users/maxime/Development/projects-nimbly/cucumber-discovery/src/test/resources/org/maxime/cucumber/Wallet.feature:1' name = 'Manipulation d|'un portefeuille']
      */
 
-    private val REGEX = Regex(" locationHint = '(?:file:///)?((?:[A-Z]:|/)?[^:]+):(\\d+)'(?: name = 'Example #(\\d+)')?")
+    private val LOC_REGEX  = Regex("locationHint = '(?:file:///)?((?:[A-Z]:|/)?[^:]+):(\\d+)'")
+    private val NAME_REGEX = Regex("name = '([^']+)'")
+
+    /**
+     * True when the line at index [lineIndex] (0-based) of the `.feature` file tracked by
+     * [tracker] is a Gherkin scenario-header line. Uses the PSI — `GherkinScenario` /
+     * `GherkinScenarioOutline` — so any of Gherkin's ~70 supported localizations works
+     * without us having to maintain a keyword regex per language.
+     *
+     * Used to detect the OUTERMOST scenario suite from a TeamCity `testSuiteStarted` event
+     * whose `name` attribute is just the scenario title without its `Scenario:` /
+     * `Scenario Outline:` prefix (or its translation).
+     */
+    private fun isScenarioHeaderLine(tracker: TzExecutionTracker, lineIndex: Int): Boolean {
+        if (lineIndex < 0) return false
+        val vfile = tracker.findFile() ?: return false
+        return com.intellij.openapi.application.ReadAction.compute<Boolean, RuntimeException> {
+            val psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(vfile)
+                ?: return@compute false
+            val doc = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance()
+                .getDocument(vfile) ?: return@compute false
+            if (lineIndex >= doc.lineCount) return@compute false
+            val offset = doc.getLineStartOffset(lineIndex)
+            // Walk the leaf at the line start up to its closest scenario / outline parent.
+            // `findElementAt` returns null for whitespace at the start of the line; skip
+            // to the first non-whitespace char if needed.
+            val lineEnd = doc.getLineEndOffset(lineIndex)
+            var probe = offset
+            while (probe < lineEnd && doc.charsSequence[probe].isWhitespace()) probe++
+            val element = psiFile.findElementAt(probe) ?: return@compute false
+            val owner = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
+                element,
+                org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline::class.java,
+                org.jetbrains.plugins.cucumber.psi.GherkinScenario::class.java
+            ) ?: return@compute false
+            // The element must be ON the header line itself, not nested inside one of the
+            // scenario's steps / examples block.
+            doc.getLineNumber(owner.textRange.startOffset) == lineIndex
+        }
+    }
 
     private var stopRequested = false
 
@@ -68,6 +107,11 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
         var lineNumber: Int? = null,
         var exampleLine: Int? = null,
         var lastSuiteLine: Int? = null,
+        // Line of the OUTERMOST scenario currently being executed — `Scenario:` or
+        // `Scenario Outline:` header. Stays stable across the inner suites of an outline
+        // (`Examples`, `Example #N`, …) so the gutter progression bar can anchor itself
+        // at the scenario header instead of jumping to each row of the examples table.
+        var scenarioStartLine: Int? = null,
 
         var runGeneration: Long = 0L,
 
@@ -82,6 +126,7 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
             lineNumber = null
             exampleLine = null
             lastSuiteLine = null
+            scenarioStartLine = null
         }
 
         fun removeProgressionGuides() {
@@ -153,18 +198,28 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
                 if (!isSuiteEvent && !isTestEvent)
                     return
 
-                val values = REGEX.find(text)?.groupValues ?: return
-
-                val path = values[1].trim()
-                val line = values[2].toInt()
-                val isExample = values[3].isNotEmpty()
+                val loc = LOC_REGEX.find(text) ?: return
+                val path = loc.groupValues[1].trim()
+                val line = loc.groupValues[2].toInt()
+                val name = NAME_REGEX.find(text)?.groupValues?.get(1).orEmpty()
+                val isExample = name.startsWith("Example #")
 
                 if (!isExample) {
-                    LOG.info("C+ onTextAvailable suite=$isSuiteEvent path=$path line=$line")
+                    LOG.info("C+ onTextAvailable suite=$isSuiteEvent path=$path line=$line name='$name'")
                     tracker.featurePath = path
                     tracker.lineNumber = line - 1
                     if (isSuiteEvent) {
                         tracker.lastSuiteLine = line - 1
+                        // Anchor the progression bar at the OUTERMOST scenario header.
+                        // Cucumber emits the suite NAME without its Gherkin prefix
+                        // ("Vérifier le score" instead of "Scenario Outline: Vérifier…")
+                        // so we look at the actual line content in the .feature file
+                        // instead. Lines starting with `Scenario:` / `Scenario Outline:`
+                        // (or their localized equivalents) anchor the bar; Feature lines,
+                        // Examples blocks and Example #N rows never do.
+                        if (isScenarioHeaderLine(tracker, line - 1)) {
+                            tracker.scenarioStartLine = line - 1
+                        }
                     }
                 } else {
                     LOG.info("C+ onTextAvailable example line=$line")
@@ -190,10 +245,22 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
                     return
                 }
 
-                val lineStart = tracker.lastSuiteLine ?: run {
-                    LOG.warn("C+ guide: lastSuiteLine unknown")
-                    return
-                }
+                // Prefer the OUTERMOST scenario line as the bar anchor so it doesn't
+                // jump to each Example #N row of an outline. Fall back to lastSuiteLine
+                // for simple scenarios where scenarioStartLine wasn't set (e.g. older
+                // cucumber-jvm output that emits a different suite-name format).
+                val lineStart = tracker.scenarioStartLine
+                    ?: tracker.lastSuiteLine
+                    ?: run {
+                        LOG.warn("C+ guide: scenarioStartLine / lastSuiteLine unknown")
+                        return
+                    }
+                // `lineStart` is stored 0-indexed (line - 1 at the suite event) while
+                // `lineEnd` is left 1-indexed on purpose: paintSimpleRange treats line2 as
+                // an EXCLUSIVE upper bound, so passing the 1-indexed line number makes the
+                // bar cover line2-1 (the current step) inclusively. Aligning both to
+                // 0-indexed dropped the last covered line and visually shortened the bar
+                // by one row.
                 val lineEnd = line
 
                 val captureGeneration = generation
@@ -256,10 +323,16 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
 }
 
 class MyGutterRenderer(
-    private val myLine1: Int,
-    private val myLine2: Int,
+    line1: Int,
+    line2: Int,
     private val myColor: Color,
     private val myTooltip: String) : ActiveGutterRenderer {
+    // Scenario Outline can emit (lineStart, lineEnd) with lineEnd < lineStart while the
+    // current example row sits above the outline header — paintSimpleRange does not draw
+    // anything for an inverted range, which is why the progress bar disappeared on
+    // outlines. Normalise here so the gutter always gets a valid (top, bottom) pair.
+    private val myLine1: Int = minOf(line1, line2)
+    private val myLine2: Int = maxOf(line1, line2)
     override fun paint(editor: Editor, g: Graphics, r: Rectangle) {
         LineStatusMarkerDrawUtil.paintSimpleRange(g, editor, myLine1, myLine2, myColor)
     }

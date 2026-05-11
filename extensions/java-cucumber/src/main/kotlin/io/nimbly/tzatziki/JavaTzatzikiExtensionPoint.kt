@@ -91,17 +91,33 @@ class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             ?: return null
 
         val m = method
-        val start = m.getDocumentLine() ?:return null
         val end = m.getDocumentEndLine() ?:return null
 
-        var line = start
+        // Start scanning AFTER the opening `{` of the method body — not at the method
+        // declaration line. For Kotlin, KtLightMethod.getDocumentLine() returns the line
+        // of the @Annotation (or `fun` declaration), and canPutBreakpointAt happily
+        // returns true for the `fun foo() {` line itself even though that line has no
+        // bytecode entry. A breakpoint set there is silently dropped by the JVM and the
+        // user sees no break. Fall back to the method declaration line only when no
+        // executable body line was found at all.
+        val body = m.body
+        val bodyStartLine = body?.lBrace?.getDocumentLine()
+            ?: m.getDocumentLine()
+            ?: return null
+
         val xutil = XDebuggerUtil.getInstance()
-        for (l in start + 1..end) {
+        var line = -1
+        for (l in bodyStartLine + 1..end) {
             if (xutil.canPutBreakpointAt(m.project, m.containingFile.virtualFile, l)) {
                 line = l
                 break
             }
         }
+        // Empty / single-statement bodies that canPutBreakpointAt rejects on every body
+        // line: target the CLOSING brace (`}`). Both Java and Kotlin compilers attach the
+        // line of the closing brace to the implicit RETURN, so a JDI breakpoint there
+        // fires when the method exits.
+        if (line < 0) line = end
 
         return m to line
     }

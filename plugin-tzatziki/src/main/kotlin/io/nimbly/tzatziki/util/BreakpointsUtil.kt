@@ -150,8 +150,19 @@ fun ensureCucumberCodeBreakpoint(
         if (stillMissing) {
             // Use a non-null JavaLineBreakpointProperties — Breakpoint.getProperties() is @NotNull
             // and JavaBreakpointsUsageCollector NPEs in the breakpointAdded MessageBus pump if it isn't.
-            val props = JavaLineBreakpointProperties().applyNoLambda()
-            log.info("C+ ensureCucumberCodeBreakpoint: addLineBreakpoint(${type.id}, ${file.url}, line=$line)")
+            //
+            // For JAVA files we pin to the method body via NO_LAMBDA so the JVM does not
+            // target a lambda on the same source line. For KOTLIN files we MUST leave
+            // encodedInlinePosition null, otherwise JavaLineBreakpointType.matchesPosition
+            // hits its `Logger.assertTrue(lang.isKindOf(JavaLanguage), …)` check, returns
+            // false (Kotlin's getContainingMethod returns null in the Java-side code path)
+            // and the JDI request is silently skipped — the breakpoint never fires.
+            // With encodedInlinePosition == null, isAllPositions() returns true and
+            // matchesPosition short-circuits to `return true`, letting Kotlin's own
+            // PositionManager install the JDI request correctly.
+            val props = JavaLineBreakpointProperties()
+            if (file.extension == "java") props.applyNoLambda()
+            log.info("C+ ensureCucumberCodeBreakpoint: addLineBreakpoint(${type.id}, ${file.url}, line=$line, noLambda=${file.extension == "java"})")
             val created = manager.addLineBreakpoint(type, file.url, line, props)
             log.info("C+ ensureCucumberCodeBreakpoint: created=$created")
         } else {
