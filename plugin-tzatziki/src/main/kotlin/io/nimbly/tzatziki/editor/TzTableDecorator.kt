@@ -66,12 +66,28 @@ class TzTableDecorator : EditorFactoryListener {
     private val editorGeometries   = mutableMapOf<Editor, List<TableGeometry>>()
     private val editorHover        = mutableMapOf<Editor, HoverState?>()
     private val editorDrag         = mutableMapOf<Editor, DragState?>()
+    private val editorPostDropFlash = mutableMapOf<Editor, PostDropFlash?>()
+    /** One-shot flag: when set, the next mouseClicked is swallowed (avoids the trailing popup
+     *  after a drag-release on the same point that fired the press). */
+    private val editorSkipNextClick = mutableSetOf<Editor>()
 
     companion object {
         private var instance: TzTableDecorator? = null
         fun refreshAll() {
             val dec = instance ?: return
             dec.editorHighlighters.keys.toList().forEach { dec.scheduleRefresh(it) }
+        }
+        /** Schedule the 1-second orange flash over [columnIndex] of the table starting at
+         *  [tableFirstLine]. Called by shift-left / shift-right to mirror the drag-and-drop UX. */
+        fun flashColumn(editor: Editor, tableFirstLine: Int, columnIndex: Int) {
+            val dec = instance ?: return
+            dec.postFlash(editor, PostDropFlash(tableFirstLine, columnIndex = columnIndex))
+        }
+        /** Schedule the 1-second orange flash over the row at editor line [rowLine] inside the
+         *  table starting at [tableFirstLine]. Called by shift-up / shift-down. */
+        fun flashRow(editor: Editor, tableFirstLine: Int, rowLine: Int) {
+            val dec = instance ?: return
+            dec.postFlash(editor, PostDropFlash(tableFirstLine, rowLine = rowLine))
         }
         private const val DRAG_THRESHOLD = 4
     }
@@ -113,6 +129,8 @@ class TzTableDecorator : EditorFactoryListener {
         editorGeometries.remove(editor)
         editorHover.remove(editor)
         editorDrag.remove(editor)
+        editorPostDropFlash.remove(editor)
+        editorSkipNextClick.remove(editor)
     }
 
     private fun scheduleRefresh(editor: Editor) {
@@ -219,9 +237,25 @@ class TzTableDecorator : EditorFactoryListener {
         val hover = findHover(editor, e.mouseEvent.point)
         if (hover != editorHover[editor]) {
             editorHover[editor] = hover
+            // The hand cursor signals "draggable" — restrict it to zones where a drag
+            // gesture makes sense (column on TOP_BORDER, row on LEFT/RIGHT_BORDER).
+            // Header separator is click-only (toggle header), so keep the default cursor.
+            val draggable = hover?.zone in setOf(
+                HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER
+            )
             editor.contentComponent.cursor =
-                if (hover != null) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                if (draggable) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
                 else Cursor.getDefaultCursor()
+            // Hint the user about both gestures available on the frame. TOP_BORDER is only
+            // exposed when click is meaningful (sub-tables preceded by a comment never get
+            // a TOP_BORDER hover), so we no longer need to branch the message.
+            editor.contentComponent.toolTipText = when (hover?.zone) {
+                HoverZone.TOP_BORDER ->
+                    "Click to open the table menu, or drag to reorder this column"
+                HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER ->
+                    "Click to open the table menu, or drag to reorder this row"
+                else -> null
+            }
             editor.contentComponent.repaint()
         }
     }
@@ -231,8 +265,7 @@ class TzTableDecorator : EditorFactoryListener {
         // Skip the popup if a drag has just completed (mousePressed → mouseDragged → mouseReleased
         // doesn't fire mouseClicked unless the press point and release point coincide; some
         // platforms still fire mouseClicked anyway, so we double-check the drag state).
-        if (editorDrag[editor]?.applied == true) {
-            editorDrag.remove(editor)
+        if (editorSkipNextClick.remove(editor)) {
             return
         }
         val hover = findHover(editor, e.mouseEvent.point) ?: return
@@ -254,6 +287,11 @@ class TzTableDecorator : EditorFactoryListener {
                     startX = e.mouseEvent.x,
                     startY = e.mouseEvent.y
                 )
+                // Note: we deliberately do not consume the press event here. Consuming it
+                // (even just the IntelliJ EditorMouseEvent) suppresses the trailing
+                // mouseClicked notification — which we need to open the table popup on a
+                // pure click. The editor's selection that may start on press is cleared
+                // continuously in handleMouseDragged() once the drag becomes active.
             }
             HoverZone.TOP_BORDER -> {
                 val colIdx = computeColIdxAt(editor, hover.geometry, e.mouseEvent.x)
@@ -264,6 +302,11 @@ class TzTableDecorator : EditorFactoryListener {
                     startX = e.mouseEvent.x,
                     startY = e.mouseEvent.y
                 )
+                // Note: we deliberately do not consume the press event here. Consuming it
+                // (even just the IntelliJ EditorMouseEvent) suppresses the trailing
+                // mouseClicked notification — which we need to open the table popup on a
+                // pure click. The editor's selection that may start on press is cleared
+                // continuously in handleMouseDragged() once the drag becomes active.
             }
             else -> editorDrag.remove(editor)
         }
@@ -271,13 +314,20 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun handleMouseDragged(editor: Editor, e: EditorMouseEvent) {
         val state = editorDrag[editor] ?: return
-        val dx = Math.abs(e.mouseEvent.x - state.startX)
-        val dy = Math.abs(e.mouseEvent.y - state.startY)
+        state.currentX = e.mouseEvent.x
+        state.currentY = e.mouseEvent.y
+        val dx = Math.abs(state.currentX - state.startX)
+        val dy = Math.abs(state.currentY - state.startY)
         if (!state.active && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
             state.active = true
-            editor.contentComponent.cursor = Cursor.getPredefinedCursor(
-                if (state.zone == HoverZone.TOP_BORDER) Cursor.W_RESIZE_CURSOR else Cursor.N_RESIZE_CURSOR
-            )
+            editor.contentComponent.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        }
+        if (state.active) {
+            // The editor's selection handler extends a selection on drag — clear it on
+            // every tick so the user only sees our drag visuals.
+            if (editor.selectionModel.hasSelection()) editor.selectionModel.removeSelection()
+            // Repaint the dragged table's frame area so the renderer overlays follow the cursor.
+            editor.contentComponent.repaint()
         }
     }
 
@@ -297,15 +347,35 @@ class TzTableDecorator : EditorFactoryListener {
             }
             HoverZone.TOP_BORDER -> {
                 val targetColIdx = computeColIdxAt(editor, state.geom, e.mouseEvent.x)
-                if (targetColIdx != state.sourceIndex) {
+                // No-op drops:
+                //   - target == source           (drop on itself)
+                //   - target == source + 1       (insert BEFORE the right neighbor → same place)
+                if (!isNoopColumnDrop(state.sourceIndex, targetColIdx)) {
                     applyDragOp(editor, state.geom, TableEditOps.Op.MoveColumn(state.sourceIndex, targetColIdx))
+                    // Flash the dropped column's top segment for 1s so the user sees where it landed.
+                    // Removing source[i] before inserting before target[j] shifts the landing
+                    // index left by 1 when i < j (matches TableEditOps.computeEffectiveTo).
+                    val landedIdx = if (state.sourceIndex < targetColIdx) targetColIdx - 1 else targetColIdx
+                    triggerPostDropFlash(editor, state.geom, landedIdx)
                 }
             }
             else -> Unit
         }
-        // Mark as applied so the trailing mouseClicked event (if any) skips the popup.
-        state.applied = true
+        // Clear the drag state immediately so the renderer stops drawing source/target/cursor
+        // overlays on subsequent repaints. The PostDropFlash now drives the landing highlight.
+        editorDrag.remove(editor)
+        // Swallow the trailing mouseClicked event (some platforms fire it after a drag).
+        editorSkipNextClick += editor
+        editor.contentComponent.repaint()
     }
+
+    /**
+     * Column drop is a no-op when:
+     *   - target == source           (drop on itself)
+     *   - target == source + 1       (insert BEFORE the right neighbor → same effective position)
+     */
+    private fun isNoopColumnDrop(source: Int, target: Int): Boolean =
+        target == source || target == source + 1
 
     private fun applyDragOp(editor: Editor, geom: TableGeometry, op: TableEditOps.Op) {
         val doc = editor.document
@@ -335,6 +405,36 @@ class TzTableDecorator : EditorFactoryListener {
         }
     }
 
+    /**
+     * True when [firstLine] is the second (or later) half of a logical Gherkin table that
+     * was split by an interleaved comment / blank line. In that case the top edge must
+     * stay inert: the visual top border of the sub-table sits under a `# comment` line
+     * and any drag / menu affordance there would clash with the comment text.
+     *
+     * Detected by [TableEditOps.collectTableLinesAround]: if the logical table reaches
+     * further up than [firstLine], we're in a continuation. A comment placed ABOVE a
+     * standalone table (documentation comment) reads as a single contiguous logical
+     * table starting at [firstLine] — top border stays active.
+     */
+    private fun isContinuationOfLargerTable(editor: Editor, firstLine: Int): Boolean {
+        val tableLines = TableEditOps.collectTableLinesAround(editor, firstLine)
+        return tableLines.isNotEmpty() && tableLines.first() < firstLine
+    }
+
+    /**
+     * True when the editor line under pixel [y] (within [geom]'s span) is a real table row
+     * (starts with `|`) — i.e. NOT an interleaved comment / blank line. Used to suppress
+     * the hand cursor over comment lines that may live between table rows.
+     */
+    private fun isPipeLineAtY(editor: Editor, geom: TableGeometry, y: Int): Boolean {
+        val doc = editor.document
+        val logicalLine = editor.xyToLogicalPosition(Point(0, y)).line
+        if (logicalLine !in geom.firstLine..geom.lastLine) return false
+        val start = doc.getLineStartOffset(logicalLine)
+        val end   = doc.getLineEndOffset(logicalLine)
+        return doc.charsSequence.subSequence(start, end).toString().trim().startsWith("|")
+    }
+
     /** Map an X pixel to a column index inside [geom]. */
     private fun computeColIdxAt(editor: Editor, geom: TableGeometry, x: Int): Int {
         if (geom.pipeOffsets.size < 2) return 0
@@ -348,19 +448,60 @@ class TzTableDecorator : EditorFactoryListener {
         }
     }
 
+    /**
+     * Brief highlight after a column drop or a shift action: solid orange segment over the
+     * affected column (top border) or row (left border).
+     *
+     * We key the flash by [tableFirstLine] rather than a full TableGeometry — after the move,
+     * scheduleRefresh() rebuilds editorGeometries with new pipe offsets (column widths can
+     * change), so a stored geometry would never match the freshly-painted one. The first line
+     * is stable because TableEditOps only rewrites existing lines via replaceString().
+     *
+     * Exactly one of [columnIndex] / [rowLine] is set per flash.
+     */
+    private data class PostDropFlash(
+        val tableFirstLine: Int,
+        val columnIndex: Int? = null,
+        val rowLine: Int? = null
+    )
+
+    private fun postFlash(editor: Editor, flash: PostDropFlash) {
+        editorPostDropFlash[editor] = flash
+        val timer = javax.swing.Timer(1000) {
+            editorPostDropFlash.remove(editor)
+            if (!editor.isDisposed) editor.contentComponent.repaint()
+        }
+        timer.isRepeats = false
+        timer.start()
+        editor.contentComponent.repaint()
+    }
+
+    private fun triggerPostDropFlash(editor: Editor, geom: TableGeometry, columnIndex: Int) =
+        postFlash(editor, PostDropFlash(geom.firstLine, columnIndex = columnIndex))
+
     private data class DragState(
         val zone: HoverZone,
         val geom: TableGeometry,
         val sourceIndex: Int,
         val startX: Int,
         val startY: Int,
-        var active: Boolean = false,
-        var applied: Boolean = false
+        var currentX: Int = startX,
+        var currentY: Int = startY,
+        var active: Boolean = false
     )
 
     private fun findHover(editor: Editor, point: Point): HoverState? {
         val geometries = editorGeometries[editor] ?: return null
-        val T = 5  // pixel tolerance
+        // Tolerances tuned per zone:
+        //  - TOP    : generous upward — but contained within ~12px so the activation zone
+        //             never bleeds onto a comment / blank line preceding the table. Those
+        //             lines must keep their normal editor behaviour (no hand cursor,
+        //             no tooltip, no popup, no drop target).
+        //  - EDGE   : a touch larger than before to give the left/right borders some room.
+        val tTopUp     = 12
+        val tTopDown   = 4
+        val tEdge      = 8
+        val tRange     = tEdge  // used for the inXRange / inYRange bounding box
         val fm   = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
         val half = fm.charWidth('|') / 2
 
@@ -372,22 +513,33 @@ class TzTableDecorator : EditorFactoryListener {
             val topY   = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.firstLine))).y
             val bottomY = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.lastLine))).y + editor.lineHeight
             val mx = point.x; val my = point.y
-            val inXRange = mx >= firstX - T && mx <= lastX + T
-            val inYRange = my >= topY - T && my <= bottomY + T
+            val inXRange = mx >= firstX - tRange && mx <= lastX + tRange
+            val inYRange = my >= topY - tRange && my <= bottomY + tRange
 
-            // Outer frame borders
-            if (inXRange && my in topY - T .. topY + T)    return HoverState(geom, HoverZone.TOP_BORDER)
-            if (inXRange && my in bottomY - T .. bottomY + T) return HoverState(geom, HoverZone.BOTTOM_BORDER)
-            if (inYRange && mx in firstX - T .. firstX + T)  return HoverState(geom, HoverZone.LEFT_BORDER)
-            if (inYRange && mx in lastX - T .. lastX + T)    return HoverState(geom, HoverZone.RIGHT_BORDER)
-
-            // Header separator
-            geom.headerLine?.let { hl ->
-                val hy = editor.logicalPositionToXY(
-                    editor.offsetToLogicalPosition(doc.getLineStartOffset(hl))).y + editor.lineHeight - 1
-                if (inXRange && my in hy - T .. hy + T)
-                    return HoverState(geom, HoverZone.HEADER_SEPARATOR)
+            // Outer frame borders.
+            // - BOTTOM_BORDER is intentionally not exposed as a hover zone: the top border is
+            //   the single entry point for column actions; the bottom would just duplicate it.
+            // - LEFT/RIGHT only activate when the cursor sits on a real pipe-row line — never
+            //   on an interleaved comment / blank line that may appear between rows.
+            // - TOP_BORDER is suppressed when this geometry is the continuation of a logical
+            //   Gherkin table split by an interleaved comment / blank line — never on a
+            //   standalone table that merely has a doc-comment above it.
+            if (inXRange && my in topY - tTopUp .. topY + tTopDown &&
+                !isContinuationOfLargerTable(editor, geom.firstLine)) {
+                return HoverState(geom, HoverZone.TOP_BORDER)
             }
+            if (inYRange && (mx in firstX - tEdge .. firstX + tEdge || mx in lastX - tEdge .. lastX + tEdge)) {
+                if (isPipeLineAtY(editor, geom, my)) {
+                    return HoverState(
+                        geom,
+                        if (mx in firstX - tEdge .. firstX + tEdge) HoverZone.LEFT_BORDER else HoverZone.RIGHT_BORDER
+                    )
+                }
+            }
+
+            // Header separator (thin line under the first row) is intentionally NOT a hover
+            // zone: it must remain a plain editor area — no hand cursor, no tooltip, no
+            // popup, no thicker stroke on hover.
         }
         return null
     }
@@ -764,26 +916,104 @@ class TzTableDecorator : EditorFactoryListener {
                 arc, arc
             ))
 
-            // 5. Hovered segment overlay (thick, on top of the thin rect)
+            // 5. Hovered segment overlay (thick, on top of the thin rect).
+            //    Skip it when a column drag is in progress on this table — the drag visuals
+            //    below take over the top border entirely.
+            val drag = editorDrag[editor]
+            val isColumnDrag = drag?.active == true &&
+                               drag.geom == geometry &&
+                               drag.zone == HoverZone.TOP_BORDER
             val halfArc = (arc / 2).toInt()
-            when (hoverZone) {
-                HoverZone.TOP_BORDER    -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX + halfArc, topY, lastX - halfArc, topY)
+            if (!isColumnDrag) {
+                when (hoverZone) {
+                    HoverZone.TOP_BORDER    -> {
+                        g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                        g2.drawLine(firstX + halfArc, topY, lastX - halfArc, topY)
+                    }
+                    HoverZone.BOTTOM_BORDER -> {
+                        g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                        g2.drawLine(firstX + halfArc, bottomY, lastX - halfArc, bottomY)
+                    }
+                    HoverZone.LEFT_BORDER   -> {
+                        g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                        g2.drawLine(firstX, topY + halfArc, firstX, bottomY - halfArc)
+                    }
+                    HoverZone.RIGHT_BORDER  -> {
+                        g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                        g2.drawLine(lastX, topY + halfArc, lastX, bottomY - halfArc)
+                    }
+                    else -> {}
                 }
-                HoverZone.BOTTOM_BORDER -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX + halfArc, bottomY, lastX - halfArc, bottomY)
+            }
+
+            // 6. Column drag-and-drop visuals (top border only — row DnD comes later).
+            if (isColumnDrag && pipeXs.size >= 2 && drag!!.sourceIndex in 0 until pipeXs.size - 1) {
+                val accent = Color(0x00, 0xA9, 0x17)            // Cucumber+ green
+                val sourceColor = Color(0xE5, 0x71, 0x00)       // Contrasting orange = "lifted from here"
+
+                // (a) Source column — strong dashed orange line on the top border so the user
+                //     keeps track of where the dragged column came from.
+                val srcX1 = pipeXs[drag.sourceIndex]
+                val srcX2 = pipeXs[drag.sourceIndex + 1]
+                g2.stroke = BasicStroke(
+                    3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND,
+                    1f, floatArrayOf(6f, 4f), 0f
+                )
+                g2.color = sourceColor
+                g2.drawLine(srcX1 + halfArc, topY, srcX2 - halfArc, topY)
+
+                // Compute the closest column slot under the cursor (drop target).
+                val targetIdx = pipeXs.zipWithNext().indices.minBy { i ->
+                    val mid = (pipeXs[i] + pipeXs[i + 1]) / 2
+                    Math.abs(drag.currentX - mid)
                 }
-                HoverZone.LEFT_BORDER   -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(firstX, topY + halfArc, firstX, bottomY - halfArc)
+
+                // No-op zone (drop on source or on right neighbor) → use gray for target+cursor
+                // so the user understands the drop won't move anything.
+                val dropNoop = isNoopColumnDrop(drag.sourceIndex, targetIdx)
+                val activeColor = if (dropNoop) Color(0x9E, 0x9E, 0x9E) else accent
+
+                // (b) Drop target — thick segment over the column where the cursor sits.
+                val tgtX1 = pipeXs[targetIdx]
+                val tgtX2 = pipeXs[targetIdx + 1]
+                g2.stroke = BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = activeColor
+                g2.drawLine(tgtX1 + halfArc, topY, tgtX2 - halfArc, topY)
+
+                // (c) Floating segment under the cursor — width matches the source column,
+                //     centered on currentX (clamped to the frame).
+                val segWidth = srcX2 - srcX1
+                val cx = drag.currentX.coerceIn(firstX + segWidth / 2, lastX - segWidth / 2)
+                g2.stroke = BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = activeColor
+                g2.drawLine(cx - segWidth / 2 + halfArc, topY, cx + segWidth / 2 - halfArc, topY)
+            }
+
+            // 7. Post-drop flash — brief solid orange segment over the column / row that just
+            //    moved (drag-and-drop, or shift-left / shift-right / shift-up / shift-down).
+            //    Cleared by the Swing Timer in postFlash().
+            val flash = editorPostDropFlash[editor]
+            if (flash != null && flash.tableFirstLine == geometry.firstLine) {
+                val sourceColor = Color(0xE5, 0x71, 0x00)   // Same orange as the source ghost.
+                g2.stroke = BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = sourceColor
+
+                // Column flash → horizontal segment on the top border.
+                val flashCol = flash.columnIndex
+                if (flashCol != null && pipeXs.size >= 2 && flashCol in 0 until pipeXs.size - 1) {
+                    val fx1 = pipeXs[flashCol]
+                    val fx2 = pipeXs[flashCol + 1]
+                    g2.drawLine(fx1 + halfArc, topY, fx2 - halfArc, topY)
                 }
-                HoverZone.RIGHT_BORDER  -> {
-                    g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                    g2.drawLine(lastX, topY + halfArc, lastX, bottomY - halfArc)
+
+                // Row flash → vertical segment on the left border at the row's Y position.
+                val flashRow = flash.rowLine
+                if (flashRow != null && flashRow in geometry.firstLine..geometry.lastLine) {
+                    val rowY = editor.logicalPositionToXY(
+                        editor.offsetToLogicalPosition(editor.document.getLineStartOffset(flashRow))
+                    ).y
+                    g2.drawLine(firstX, rowY + halfArc, firstX, rowY + editor.lineHeight - halfArc)
                 }
-                else -> {}
             }
         }
 

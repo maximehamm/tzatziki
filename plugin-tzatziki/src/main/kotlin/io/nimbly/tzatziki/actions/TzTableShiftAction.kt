@@ -24,6 +24,7 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.psi.SmartPointerManager
 import com.intellij.refactoring.suggested.startOffset
 import io.nimbly.tzatziki.actions.Direction.*
+import io.nimbly.tzatziki.editor.TzTableDecorator
 import io.nimbly.tzatziki.gherkin
 import io.nimbly.tzatziki.psi.*
 import io.nimbly.tzatziki.util.*
@@ -71,9 +72,46 @@ open class TableShiftAction(private val direction: Direction) : TzAction() {
                 RIGHT -> io.nimbly.tzatziki.util.TableEditOps.Op.ShiftColumn(coordinate.x, +1)
             }
             io.nimbly.tzatziki.util.TableEditOps.apply(editor, tableLines, op)
+            // Mirror the drag-and-drop visual cue.
+            flashAfterShift(editor, tableLines, rowIdx, coordinate.x, direction)
         } else {
             val table = cell.row.table
             editor.shift(table, cell, direction)
+            // Mirror the drag-and-drop visual cue.
+            val firstLine = editor.document.getLineNumber(table.textRange.startOffset)
+            flashAfterShift(editor, /*tableLines*/ null, coordinate.y, coordinate.x, direction, firstLine)
+        }
+    }
+
+    /**
+     * Trigger the orange post-shift flash on the destination column / row, mirroring the
+     * drag-and-drop landing highlight. No-op when the shift hits an edge (clamped).
+     */
+    private fun flashAfterShift(
+        editor: Editor,
+        tableLines: List<Int>?,        // doc-level path: list of pipe lines (with possible gaps)
+        rowIdx: Int,
+        colX: Int,
+        direction: Direction,
+        psiFirstLine: Int = -1         // PSI path: editor line of the first table row
+    ) {
+        val firstLine = tableLines?.firstOrNull() ?: psiFirstLine
+        if (firstLine < 0) return
+        when (direction) {
+            LEFT, RIGHT -> {
+                val newCol = colX + direction.toInt()
+                if (newCol < 0) return
+                TzTableDecorator.flashColumn(editor, firstLine, newCol)
+            }
+            UP, DOWN -> {
+                val newRowIdx = rowIdx + direction.toInt()
+                if (newRowIdx < 0) return
+                val rowLine = when {
+                    tableLines != null -> tableLines.getOrNull(newRowIdx) ?: return
+                    else               -> psiFirstLine + newRowIdx     // PSI path: rows are contiguous
+                }
+                TzTableDecorator.flashRow(editor, firstLine, rowLine)
+            }
         }
     }
 
