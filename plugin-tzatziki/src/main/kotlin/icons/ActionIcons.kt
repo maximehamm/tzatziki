@@ -38,6 +38,11 @@ object ActionIcons {
     @JvmField val BREAKPOINT_CUCUMBER = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber.svg", javaClass)
     @JvmField val BREAKPOINT_CUCUMBER_DISABLED = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-disabled.svg", javaClass)
 
+    /** Gherkin-side Scenario Outline example breakpoint — green diamond, distinguishable
+     *  from the step breakpoint (green disc) without leaving the Cucumber+ palette. */
+    @JvmField val BREAKPOINT_CUCUMBER_EXAMPLE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-example.svg", javaClass)
+    @JvmField val BREAKPOINT_CUCUMBER_EXAMPLE_DISABLED = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-example-disabled.svg", javaClass)
+
     /** Tiny green badge layered on top of the standard JetBrains breakpoint icons
      *  to identify Cucumber+'s code-side breakpoints (Java/Kotlin). */
     @JvmField val BREAKPOINT_CUCUMBER_BADGE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-badge.svg", javaClass)
@@ -53,6 +58,14 @@ object ActionIcons {
         com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_muted_disabled_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
     @JvmField val BREAKPOINT_CUCUMBER_CODE_NO_SUSPEND: javax.swing.Icon =
         com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_no_suspend_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+
+    /** Java/Kotlin code-side, "verified" state (debugger has installed the JDI request).
+     *  Layers the Cucumber+ green badge on top of the standard verified icon so the user
+     *  keeps the Cucumber+ identity even when the breakpoint is armed. */
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_VERIFIED: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_verified_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_VERIFIED_NO_SUSPEND: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_verified_no_suspend_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
 
     @JvmField val CUCUMBER_PLUS_64 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus.png", javaClass)
     @JvmField val CUCUMBER_PLUS_16 = IconManager.getInstance().getIcon("/io/nimbly/tzatziki/icons/cucumber-plus-16x16.png", javaClass)

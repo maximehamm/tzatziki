@@ -14,15 +14,16 @@
  */
 package io.nimbly.tzatziki.breakpoints
 
+import com.intellij.debugger.ui.breakpoints.Breakpoint
 import com.intellij.debugger.ui.breakpoints.JavaLineBreakpointType
-import com.intellij.icons.AllIcons
+import com.intellij.debugger.ui.breakpoints.LineBreakpoint
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.xdebugger.XSourcePosition
+import com.intellij.xdebugger.breakpoints.SuspendPolicy
+import com.intellij.xdebugger.breakpoints.XBreakpoint
 import icons.ActionIcons
 import javax.swing.Icon
-import org.jetbrains.concurrency.Promise
-import org.jetbrains.concurrency.resolvedPromise
+import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 
 /**
  * Code-side counterpart of [TzStepBreakpointType] for Java/Kotlin step definition methods.
@@ -62,32 +63,39 @@ class TzCucumberCodeBreakpointType : JavaLineBreakpointType(
     override fun getMutedDisabledIcon(): Icon = ActionIcons.BREAKPOINT_CUCUMBER_CODE_MUTED_DISABLED
     override fun getSuspendNoneIcon(): Icon = ActionIcons.BREAKPOINT_CUCUMBER_CODE_NO_SUSPEND
 
-    /**
-     * Suppress IntelliJ's inline-position picker for Cucumber+ code breakpoints.
-     *
-     * The base [JavaLineBreakpointType.computeVariants] inspects the body line and may
-     * return one variant per "stoppable" expression (the whole line, each method call,
-     * each lambda…). When more than one variant exists, the editor draws inline icons
-     * (the small dots in the editor next to the statement) and lets the user pick one,
-     * which can result in *multiple* breakpoints living on the same line.
-     *
-     * For Cucumber+ breakpoints we always want a single line-level breakpoint pinned to
-     * the method body (NO_LAMBDA). Returning an empty list disables the inline picker
-     * entirely.
-     */
-    override fun computeVariants(
-        project: Project,
-        position: XSourcePosition
-    ): List<JavaBreakpointVariant> = emptyList()
+    // NOTE: we deliberately DO NOT override computeVariants / computeVariantsAsync here.
+    // Returning an empty list — as a previous version did — visually suppresses IntelliJ's
+    // inline-position picker, but it also breaks the JVM debugger: with no variant to
+    // match, JavaLineBreakpointType.createJavaBreakpoint never installs a JDI request,
+    // so the breakpoint never fires. The inline picker is now suppressed per-file by
+    // TzInlineBreakpointsDisabler, which leaves the variant chain intact.
 
     /**
-     * Modern async path used by [com.intellij.xdebugger.impl.breakpoints.InlineBreakpointInlayManager].
-     * The default implementation in [com.intellij.xdebugger.breakpoints.XLineBreakpointType] delegates
-     * to the sync [computeVariants] but on a background thread; depending on the IDE version it may be
-     * the only one queried, so we override both to be safe.
+     * Build the actual Java breakpoint instance. We return a Cucumber+ subclass so the
+     * "verified" state (gutter icon when the JVM has installed the JDI request) gets the
+     * Cucumber+ green badge instead of the plain JetBrains red-dot-with-tick — which
+     * would otherwise lose our identity once the debugger arms the breakpoint.
      */
-    override fun computeVariantsAsync(
+    override fun createJavaBreakpoint(
         project: Project,
-        position: XSourcePosition
-    ): Promise<List<XLineBreakpointVariant>> = resolvedPromise(emptyList())
+        breakpoint: XBreakpoint<JavaLineBreakpointProperties>
+    ): Breakpoint<JavaLineBreakpointProperties> = TzCucumberCodeBreakpoint(project, breakpoint)
+}
+
+/**
+ * Java-side Cucumber+ breakpoint — same JDI behaviour as the platform's [LineBreakpoint]
+ * (which is what JavaLineBreakpointType creates by default), with a custom gutter icon
+ * for the "verified" state so the Cucumber+ green badge survives once the JVM has armed
+ * the breakpoint.
+ */
+private class TzCucumberCodeBreakpoint(
+    project: Project,
+    breakpoint: XBreakpoint<JavaLineBreakpointProperties>
+) : LineBreakpoint<JavaLineBreakpointProperties>(project, breakpoint) {
+
+    override fun getVerifiedIcon(isMuted: Boolean): Icon =
+        if (xBreakpoint.suspendPolicy == SuspendPolicy.NONE)
+            ActionIcons.BREAKPOINT_CUCUMBER_CODE_VERIFIED_NO_SUSPEND
+        else
+            ActionIcons.BREAKPOINT_CUCUMBER_CODE_VERIFIED
 }

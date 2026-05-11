@@ -261,6 +261,13 @@
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepBreakpointType"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzStepExampleBreakpointType"/>
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointType"/>
+        <!-- Required for TzCucumberCodeBreakpointType (a JavaLineBreakpointType subclass)
+             to actually fire at runtime: XDebugger dispatches breakpoint handlers by
+             EXACT class match, so without this factory the Java debug process would
+             create no JDI request for our subclass and the breakpoint would stay
+             silent. See TzCucumberCodeBreakpointHandlerFactory for the full story. -->
+        <debugger.javaBreakpointHandlerFactory
+                implementation="io.nimbly.tzatziki.breakpoints.TzCucumberCodeBreakpointHandlerFactory"/>
 
         <!-- Disable IntelliJ's inline-breakpoint picker (the in-editor mini-icons row) for any
              file that already owns a Cucumber+ code breakpoint — see TzInlineBreakpointsDisabler. -->

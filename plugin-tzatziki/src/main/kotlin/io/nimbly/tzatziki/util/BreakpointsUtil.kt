@@ -111,11 +111,21 @@ fun ensureCucumberCodeBreakpoint(
     codeElement: Pair<PsiElement, Int>,
     project: Project
 ) {
-    val file = codeElement.first.containingFile?.virtualFile ?: return
+    val log = com.intellij.openapi.diagnostic.Logger.getInstance("io.nimbly.tzatziki.util.BreakpointsUtil")
+    val file = codeElement.first.containingFile?.virtualFile
+    if (file == null) {
+        log.info("C+ ensureCucumberCodeBreakpoint: no virtual file — bailing")
+        return
+    }
     val line = codeElement.second
     val manager = XDebuggerManager.getInstance(project).breakpointManager
     val type = XDebuggerUtil.getInstance()
-        .findBreakpointType(TzCucumberCodeBreakpointType::class.java) ?: return
+        .findBreakpointType(TzCucumberCodeBreakpointType::class.java)
+    if (type == null) {
+        log.info("C+ ensureCucumberCodeBreakpoint: TzCucumberCodeBreakpointType not registered — bailing")
+        return
+    }
+    log.info("C+ ensureCucumberCodeBreakpoint: target=${file.path}:$line type=${type.id}")
 
     val existing = manager.allBreakpoints
         .filterIsInstance<XLineBreakpoint<*>>()
@@ -124,7 +134,10 @@ fun ensureCucumberCodeBreakpoint(
                 && bp.fileUrl == file.url
                 && bp.line == line
         }
-    if (existing != null) return
+    if (existing != null) {
+        log.info("C+ ensureCucumberCodeBreakpoint: already exists — no-op")
+        return
+    }
 
     onEdtWrite {
         // Re-check existence on EDT in case another listener already created it between
@@ -138,7 +151,11 @@ fun ensureCucumberCodeBreakpoint(
             // Use a non-null JavaLineBreakpointProperties — Breakpoint.getProperties() is @NotNull
             // and JavaBreakpointsUsageCollector NPEs in the breakpointAdded MessageBus pump if it isn't.
             val props = JavaLineBreakpointProperties().applyNoLambda()
-            manager.addLineBreakpoint(type, file.url, line, props)
+            log.info("C+ ensureCucumberCodeBreakpoint: addLineBreakpoint(${type.id}, ${file.url}, line=$line)")
+            val created = manager.addLineBreakpoint(type, file.url, line, props)
+            log.info("C+ ensureCucumberCodeBreakpoint: created=$created")
+        } else {
+            log.info("C+ ensureCucumberCodeBreakpoint: stillMissing=false on EDT — race resolved by other path")
         }
     }
 }

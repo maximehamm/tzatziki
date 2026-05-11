@@ -78,7 +78,10 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
 
     private fun refresh(breakpoint: XBreakpoint<*>, action: EAction) {
         try {
-            if (breakpoint.sourcePosition?.file?.fileType == GherkinFileType.INSTANCE) {
+            val sp = breakpoint.sourcePosition
+            val ft = sp?.file?.fileType
+            LOG.info("C+ refresh: action=$action type=${breakpoint.type?.id} file=${sp?.file?.path} line=${sp?.line} fileType=$ft")
+            if (ft == GherkinFileType.INSTANCE) {
                 refreshGherkin(breakpoint, action)
             } else {
                 refreshCode(breakpoint, action)
@@ -143,11 +146,20 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
     private fun refreshGherkinStep(step: GherkinStep, gherkinBreakpoint: XBreakpoint<*>?, action: EAction) {
 
         val stepDefinitions = step.findCucumberStepDefinitions()
-        if (stepDefinitions.isEmpty()) return
+        LOG.info("C+ refreshGherkinStep: step='${step.text}' stepDefs=${stepDefinitions.size} action=$action")
+        if (stepDefinitions.isEmpty()) {
+            LOG.info("C+ refreshGherkinStep: no step defs found — bailing (Java BP won't be created)")
+            return
+        }
 
         val codeElement = Tzatziki().extensionList.firstNotNullOfOrNull {
             it.findBestPositionToAddBreakpoint(stepDefinitions)
-        } ?: return
+        }
+        if (codeElement == null) {
+            LOG.info("C+ refreshGherkinStep: no best position found across ${Tzatziki().extensionList.size} extensions — bailing")
+            return
+        }
+        LOG.info("C+ refreshGherkinStep: best position = ${codeElement.first.containingFile?.virtualFile?.path}:${codeElement.second}")
 
         val allCodeBreakpoints = Tzatziki.findStepsAndBreakpoints(
             codeElement.first.containingFile.virtualFile,
@@ -155,7 +167,10 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         )
 
         if (action == EAction.ADDED) {
-            if (allCodeBreakpoints?.second?.none { it.isCucumberSyncBreakpoint() } == true) {
+            val codeBps = allCodeBreakpoints?.second
+            LOG.info("C+ refreshGherkinStep: existing code BPs at this position = ${codeBps?.size ?: 0}, cucumberTypedNone=${codeBps?.none { it.isCucumberSyncBreakpoint() }}")
+            if (codeBps?.none { it.isCucumberSyncBreakpoint() } == true) {
+                LOG.info("C+ refreshGherkinStep: calling ensureCucumberCodeBreakpoint")
                 ensureCucumberCodeBreakpoint(codeElement, project)
             }
             // Existing code-side breakpoints are now identified by their TzCucumberCodeBreakpointType.

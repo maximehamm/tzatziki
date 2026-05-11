@@ -85,8 +85,15 @@ class TzCucumberStepReference(step: PsiElement, range: TextRange) : CucumberStep
      */
     override fun resolveToDefinitions(): Collection<AbstractStepDefinition> {
         val step = element as? GherkinStep ?: return super.resolveToDefinitions()
-        val module = ModuleUtilCore.findModuleForPsiElement(step) ?: return emptyList()
-        val featureFile = step.containingFile ?: return emptyList()
+        // Module-aware path requires both a containing module and a containing file. If
+        // either is missing (test scratch file, file index not yet ready, etc.) fall back
+        // to JetBrains' global resolver so we never strand the breakpoint sync chain —
+        // refreshGherkinStep relies on this returning non-empty to create the linked
+        // Cucumber+ code-side breakpoint.
+        val module = ModuleUtilCore.findModuleForPsiElement(step)
+            ?: return super.resolveToDefinitions()
+        val featureFile = step.containingFile
+            ?: return super.resolveToDefinitions()
 
         // Collect every framework's matching step definitions, deduped by their PsiElement
         // (i.e. by the actual @Given/@When method) — NOT by class.
@@ -103,6 +110,12 @@ class TzCucumberStepReference(step: PsiElement, range: TextRange) : CucumberStep
         }
         val all = matched.values.toList()
 
+        // If the module-aware collector found nothing, fall back to the global resolver
+        // before applying the scope filter — otherwise a step def the platform CAN find
+        // is lost, breaking the auto-sync that creates the linked Cucumber+ code-side
+        // breakpoint when a Gherkin breakpoint is added.
+        val candidates = if (all.isNotEmpty()) all else super.resolveToDefinitions().toList()
+
         // Apply scope filter strictly.
         // - When the feature file is under a `.cucumber-scope` anchor, candidates outside
         //   that anchor are dropped — even if that drops everything (otherwise an undefined
@@ -112,7 +125,7 @@ class TzCucumberStepReference(step: PsiElement, range: TextRange) : CucumberStep
         //   `filtered` == `all`, so nothing changes.
         val featureVf = featureFile.virtualFile
         val project = element.project
-        return all.filter { def ->
+        return candidates.filter { def ->
             val candidateVf = def.element?.containingFile?.virtualFile
             StepScope.isInSameScope(featureVf, candidateVf, project)
         }

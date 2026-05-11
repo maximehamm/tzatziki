@@ -1,6 +1,5 @@
 package io.nimbly.tzatziki.breakpoints
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Document
@@ -35,10 +34,10 @@ class TzStepBreakpointType: TzBreakpointType("tzatziki.gherkin.step", "Cucumber+
         val doc = FileDocumentManager.getInstance().getDocument(vfile) ?: return false
         if (!isLikelyStepLine(doc, line)) return false
 
-        // PSI confirmation: only a real GherkinStep is a valid breakpoint host. This rules
-        // out free-form description text under Feature / Scenario ("Business Need", "As a
-        // user…", etc.) and translated keywords from non-English Gherkin dialects that the
-        // text regex wouldn't recognise. PSI unavailable → trust the text check above.
+        // PSI confirmation: only a real GherkinStep is a valid breakpoint host. Rules out
+        // free-form description text (Business Need / Ability / "As a user…") and translated
+        // step keywords from non-English dialects that the text regex won't list exhaustively.
+        // PSI unavailable → trust the text check above (we never drop a valid breakpoint).
         return isGherkinStepAtLine(project, vfile, doc, line, default = true)
     }
 
@@ -113,11 +112,15 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
         }
     }
 
-    override fun getEnabledIcon()= AllIcons.Debugger.Db_field_breakpoint
-    override fun getDisabledIcon() = AllIcons.Debugger.Db_disabled_field_breakpoint
-    override fun getMutedEnabledIcon() = AllIcons.Debugger.Db_muted_field_breakpoint
-    override fun getMutedDisabledIcon()  = AllIcons.Debugger.Db_muted_disabled_field_breakpoint
-    override fun getSuspendNoneIcon() = AllIcons.Debugger.Db_no_suspend_field_breakpoint
+    // Examples breakpoints: Cucumber+ green diamond — distinguishable from the step BP
+    // (round green disc), still in the Cucumber+ green palette. The platform's
+    // Db_method_breakpoint we tried first was a RED diamond, which clashed with the
+    // green identity; the previous Db_field_breakpoint (a red "eye") was even worse.
+    override fun getEnabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_EXAMPLE
+    override fun getDisabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_EXAMPLE_DISABLED
+    override fun getMutedEnabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_EXAMPLE
+    override fun getMutedDisabledIcon() = ActionIcons.BREAKPOINT_CUCUMBER_EXAMPLE_DISABLED
+    override fun getSuspendNoneIcon() = ActionIcons.BREAKPOINT_CUCUMBER_EXAMPLE
 
     override fun shouldShowInBreakpointsDialog(project: Project): Boolean {
         return false
@@ -174,7 +177,7 @@ private val STRUCTURAL_LINE = Regex(
 /**
  * True when the line at [line] is parsed by the Gherkin PSI as a real [GherkinStep].
  *
- * Robust against free-form description text (e.g. `Business Need:` or `As a user, I want…`)
+ * Robust against free-form description text (Business Need / Ability / "As a user, I want…")
  * which would otherwise fool the text regex into accepting a breakpoint there. When PSI is
  * not available (e.g. canPutAt called on a background thread before reparse completes),
  * returns [default] so we don't drop a freshly-created or migrated breakpoint by accident.

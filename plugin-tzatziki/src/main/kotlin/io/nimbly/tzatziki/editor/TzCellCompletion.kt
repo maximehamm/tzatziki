@@ -96,8 +96,10 @@ class TzCellCompletion: CompletionContributor() {
      */
     private fun completeData(cell: GherkinTableCell, resultSet: CompletionResultSet) {
 
-        // Find column name
-        val columnName = cell.row.table.headerRow?.psiCells?.get(cell.columnNumber)?.text?.trim()
+        // Find column name. `getOrNull` is used because the data row may temporarily have
+        // more cells than the header row (user typing the trailing pipe of a brand new column),
+        // which would otherwise crash with an IndexOutOfBoundsException.
+        val columnName = cell.row.table.headerRow?.psiCells?.getOrNull(cell.columnNumber)?.text?.trim()
             ?: return
 
         // Find all tables
