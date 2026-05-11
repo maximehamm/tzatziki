@@ -448,23 +448,6 @@ class TzTableDecorator : EditorFactoryListener {
         }
     }
 
-    /**
-     * Brief highlight after a column drop or a shift action: solid orange segment over the
-     * affected column (top border) or row (left border).
-     *
-     * We key the flash by [tableFirstLine] rather than a full TableGeometry — after the move,
-     * scheduleRefresh() rebuilds editorGeometries with new pipe offsets (column widths can
-     * change), so a stored geometry would never match the freshly-painted one. The first line
-     * is stable because TableEditOps only rewrites existing lines via replaceString().
-     *
-     * Exactly one of [columnIndex] / [rowLine] is set per flash.
-     */
-    private data class PostDropFlash(
-        val tableFirstLine: Int,
-        val columnIndex: Int? = null,
-        val rowLine: Int? = null
-    )
-
     private fun postFlash(editor: Editor, flash: PostDropFlash) {
         editorPostDropFlash[editor] = flash
         val timer = javax.swing.Timer(1000) {
@@ -478,17 +461,6 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun triggerPostDropFlash(editor: Editor, geom: TableGeometry, columnIndex: Int) =
         postFlash(editor, PostDropFlash(geom.firstLine, columnIndex = columnIndex))
-
-    private data class DragState(
-        val zone: HoverZone,
-        val geom: TableGeometry,
-        val sourceIndex: Int,
-        val startX: Int,
-        val startY: Int,
-        var currentX: Int = startX,
-        var currentY: Int = startY,
-        var active: Boolean = false
-    )
 
     private fun findHover(editor: Editor, point: Point): HoverState? {
         val geometries = editorGeometries[editor] ?: return null
@@ -840,19 +812,6 @@ class TzTableDecorator : EditorFactoryListener {
         }
         return null
     }
-
-    // ---- Data classes ----
-
-    data class TableGeometry(
-        val firstLine: Int,
-        val lastLine: Int,
-        val pipeOffsets: List<Int>,
-        val headerLine: Int?
-    )
-
-    enum class HoverZone { LEFT_BORDER, RIGHT_BORDER, TOP_BORDER, BOTTOM_BORDER, HEADER_SEPARATOR }
-
-    data class HoverState(val geometry: TableGeometry, val zone: HoverZone)
 
     // ---- Frame renderer (hover-aware) ----
 
