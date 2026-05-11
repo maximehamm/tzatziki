@@ -103,14 +103,19 @@ class TzCucumberStepReference(step: PsiElement, range: TextRange) : CucumberStep
         }
         val all = matched.values.toList()
 
-        // Apply scope filter (no-op when no `.cucumber-scope` anchor is found).
+        // Apply scope filter strictly.
+        // - When the feature file is under a `.cucumber-scope` anchor, candidates outside
+        //   that anchor are dropped — even if that drops everything (otherwise an undefined
+        //   step in App A would resolve to App B's identically-named step def, and the
+        //   "missing step" inspection would stay silent).
+        // - When no anchor governs the feature file, `isInSameScope` is permissive and
+        //   `filtered` == `all`, so nothing changes.
         val featureVf = featureFile.virtualFile
         val project = element.project
-        val filtered = all.filter { def ->
+        return all.filter { def ->
             val candidateVf = def.element?.containingFile?.virtualFile
             StepScope.isInSameScope(featureVf, candidateVf, project)
         }
-        return if (filtered.isEmpty() && all.isNotEmpty()) all else filtered
     }
 
     companion object {
