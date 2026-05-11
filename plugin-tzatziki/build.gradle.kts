@@ -51,9 +51,14 @@ dependencies {
 }
 
 configurations.all {
-    // This is important for PDF export
+    // Drop the legacy `xml-apis` (org.w3c.dom) JAR — IntelliJ already ships a copy and
+    // having two on the classpath leads to LinkageError on PDF export.
+    // DO NOT also exclude xml-apis-ext: it provides `org.w3c.dom.svg.SVGDocument` and the
+    // rest of the W3C SVG DOM interfaces that Batik's batik-anim / batik-svg-dom
+    // implementations extend. Neither the JDK nor IntelliJ ships these (only the base
+    // org.w3c.dom is in java.xml), so excluding xml-apis-ext breaks multi-feature PDF
+    // export with `Cannot load class org.apache.batik.anim.dom.SVGOMDocument` (#96).
     exclude("xml-apis", "xml-apis")
-    exclude("xml-apis", "xml-apis-ext")
 }
 
 intellijPlatform {
