@@ -20,6 +20,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.ui.popup.JBPopup
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.ui.popup.JBPopupListener
+import com.intellij.openapi.ui.popup.LightweightWindowEvent
 import com.intellij.ui.awt.RelativePoint
 import icons.ActionIcons
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
@@ -146,7 +148,39 @@ internal fun showTablePopup(editor: Editor, geometry: TableGeometry, zone: Hover
     val popup = JBPopupFactory.getInstance()
         .createActionGroupPopup(null, group, dataContext, JBPopupFactory.ActionSelectionAid.MNEMONICS, false)
     popupRef[0] = popup
-    popup.show(RelativePoint(mouseEvent))
+
+    // Persistent orange target indicator on the affected row / column while the popup is
+    // open — dashed for columns, solid for rows (mirrors the DnD source visual). Cleared
+    // when the popup closes through any path (action chosen, Escape, click outside).
+    val targetFirstLine = tableLines.firstOrNull() ?: geometry.firstLine
+    when (zone) {
+        HoverZone.TOP_BORDER, HoverZone.BOTTOM_BORDER -> {
+            io.nimbly.tzatziki.editor.TzTableDecorator
+                .showMenuTargetColumn(editor, targetFirstLine, colIdx)
+        }
+        HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER, HoverZone.HEADER_SEPARATOR -> {
+            tableLines.getOrNull(rowIdx)?.let { rowLine ->
+                io.nimbly.tzatziki.editor.TzTableDecorator
+                    .showMenuTargetRow(editor, targetFirstLine, rowLine)
+            }
+        }
+    }
+    popup.addListener(object : JBPopupListener {
+        override fun onClosed(event: LightweightWindowEvent) {
+            io.nimbly.tzatziki.editor.TzTableDecorator.clearMenuTarget(editor)
+        }
+    })
+
+    // Offset the popup a few pixels away from the click so the freshly-painted orange
+    // target indicator stays visible underneath / next to the menu.
+    val (dx, dy) = when (zone) {
+        HoverZone.TOP_BORDER                              -> 0 to 10        // push down
+        HoverZone.BOTTOM_BORDER                           -> 0 to -10       // push up
+        HoverZone.LEFT_BORDER, HoverZone.HEADER_SEPARATOR -> 10 to 0        // push right
+        HoverZone.RIGHT_BORDER                            -> -10 to 0       // push left
+    }
+    val showPoint = java.awt.Point(mouseEvent.x + dx, mouseEvent.y + dy)
+    popup.show(RelativePoint(editor.contentComponent, showPoint))
 }
 
 /**
@@ -233,6 +267,23 @@ internal class TableEditAction(
     override fun actionPerformed(e: AnActionEvent) {
         TableEditOps.apply(editor, tableLines, op)
         closePopup()
+        // Flash the freshly-inserted row / column so the user sees where it landed —
+        // mirrors the drag-and-drop and shift action landing cue. Delete ops don't get
+        // a flash (nothing to highlight after a removal).
+        when (val o = op) {
+            is TableEditOps.Op.InsertColumn -> {
+                val newColIdx = if (o.before) o.atIndex else o.atIndex + 1
+                io.nimbly.tzatziki.editor.TzTableDecorator
+                    .flashColumn(editor, tableLines.first(), newColIdx)
+            }
+            is TableEditOps.Op.InsertRow -> {
+                val refIdx = o.atIndex.coerceIn(0, tableLines.size - 1)
+                val newRowLine = if (o.above) tableLines[refIdx] else tableLines[refIdx] + 1
+                io.nimbly.tzatziki.editor.TzTableDecorator
+                    .flashRow(editor, tableLines.first(), newRowLine)
+            }
+            else -> { /* DeleteRow / DeleteColumn / Move / Shift → no insert flash */ }
+        }
     }
 }
 

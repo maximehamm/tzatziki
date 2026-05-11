@@ -2,6 +2,7 @@ package io.nimbly.tzatziki.editor
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
@@ -45,9 +46,15 @@ class TzTableDecorator : EditorFactoryListener {
     private val editorHover        = mutableMapOf<Editor, HoverState?>()
     private val editorDrag         = mutableMapOf<Editor, DragState?>()
     private val editorPostDropFlash = mutableMapOf<Editor, PostDropFlash?>()
+    /** Indicator painted while the table popup menu is open. Cleared on popup close. */
+    private val editorMenuTarget    = mutableMapOf<Editor, MenuTargetIndicator?>()
     /** One-shot flag: when set, the next mouseClicked is swallowed (avoids the trailing popup
      *  after a drag-release on the same point that fired the press). */
     private val editorSkipNextClick = mutableSetOf<Editor>()
+    /** Caret offset captured before a drag gesture — restored on release so the user never
+     *  sees the caret jump to the press position (which would be visually distracting,
+     *  especially right at the pipe boundary of the frame click). */
+    private val editorPreDragCaret  = mutableMapOf<Editor, Int>()
 
     companion object {
         private var instance: TzTableDecorator? = null
@@ -66,6 +73,25 @@ class TzTableDecorator : EditorFactoryListener {
         fun flashRow(editor: Editor, tableFirstLine: Int, rowLine: Int) {
             val dec = instance ?: return
             dec.postFlash(editor, PostDropFlash(tableFirstLine, rowLine = rowLine))
+        }
+        /** Show the persistent menu-target indicator on a column (dashed orange on top border). */
+        fun showMenuTargetColumn(editor: Editor, tableFirstLine: Int, columnIndex: Int) {
+            val dec = instance ?: return
+            dec.editorMenuTarget[editor] = MenuTargetIndicator(tableFirstLine, columnIndex = columnIndex)
+            editor.contentComponent.repaint()
+        }
+        /** Show the persistent menu-target indicator on a row (solid orange on left border). */
+        fun showMenuTargetRow(editor: Editor, tableFirstLine: Int, rowLine: Int) {
+            val dec = instance ?: return
+            dec.editorMenuTarget[editor] = MenuTargetIndicator(tableFirstLine, rowLine = rowLine)
+            editor.contentComponent.repaint()
+        }
+        /** Clear the menu-target indicator (call on popup close). */
+        fun clearMenuTarget(editor: Editor) {
+            val dec = instance ?: return
+            if (dec.editorMenuTarget.remove(editor) != null) {
+                editor.contentComponent.repaint()
+            }
         }
         private const val DRAG_THRESHOLD = 4
     }
@@ -108,7 +134,9 @@ class TzTableDecorator : EditorFactoryListener {
         editorHover.remove(editor)
         editorDrag.remove(editor)
         editorPostDropFlash.remove(editor)
+        editorMenuTarget.remove(editor)
         editorSkipNextClick.remove(editor)
+        editorPreDragCaret.remove(editor)
     }
 
     private fun scheduleRefresh(editor: Editor) {
@@ -214,6 +242,9 @@ class TzTableDecorator : EditorFactoryListener {
     private fun handleMouseMove(editor: Editor, e: EditorMouseEvent) {
         val hover = findHover(editor, e.mouseEvent.point)
         if (hover != editorHover[editor]) {
+            val wasDraggable = editorHover[editor]?.zone in setOf(
+                HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER
+            )
             editorHover[editor] = hover
             // The hand cursor signals "draggable" — restrict it to zones where a drag
             // gesture makes sense (column on TOP_BORDER, row on LEFT/RIGHT_BORDER).
@@ -224,6 +255,13 @@ class TzTableDecorator : EditorFactoryListener {
             editor.contentComponent.cursor =
                 if (draggable) Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
                 else Cursor.getDefaultCursor()
+            // Hide the caret PROACTIVELY as soon as the cursor enters a draggable border —
+            // this beats IntelliJ's mouse-press handler that would otherwise paint the caret
+            // at the press position before our handleMousePressed had a chance to hide it.
+            // Restored when the cursor leaves the draggable zone.
+            if (draggable != wasDraggable) {
+                (editor as? EditorEx)?.setCaretVisible(!draggable)
+            }
             // Hint the user about both gestures available on the frame. TOP_BORDER is only
             // exposed when click is meaningful (sub-tables preceded by a comment never get
             // a TOP_BORDER hover), so we no longer need to branch the message.
@@ -265,11 +303,7 @@ class TzTableDecorator : EditorFactoryListener {
                     startX = e.mouseEvent.x,
                     startY = e.mouseEvent.y
                 )
-                // Note: we deliberately do not consume the press event here. Consuming it
-                // (even just the IntelliJ EditorMouseEvent) suppresses the trailing
-                // mouseClicked notification — which we need to open the table popup on a
-                // pure click. The editor's selection that may start on press is cleared
-                // continuously in handleMouseDragged() once the drag becomes active.
+                onDragGestureStart(editor)
             }
             HoverZone.TOP_BORDER -> {
                 val colIdx = computeColIdxAt(editor, hover.geometry, e.mouseEvent.x)
@@ -280,14 +314,48 @@ class TzTableDecorator : EditorFactoryListener {
                     startX = e.mouseEvent.x,
                     startY = e.mouseEvent.y
                 )
-                // Note: we deliberately do not consume the press event here. Consuming it
-                // (even just the IntelliJ EditorMouseEvent) suppresses the trailing
-                // mouseClicked notification — which we need to open the table popup on a
-                // pure click. The editor's selection that may start on press is cleared
-                // continuously in handleMouseDragged() once the drag becomes active.
+                onDragGestureStart(editor)
             }
             else -> editorDrag.remove(editor)
         }
+    }
+
+    /**
+     * Called as soon as the user presses on a draggable border. We
+     *  - hide the caret right away (it would otherwise jump to wherever the press
+     *    landed inside the cell next to the pipe — visually distracting),
+     *  - force the hand cursor (the hover-based update via mouseMoved can be stale just
+     *    after a previous drop, especially the moment scheduleRefresh has rebuilt the
+     *    geometries but no mouseMoved has fired yet to re-evaluate findHover).
+     *
+     * Note: we deliberately do not consume the press event. Consuming the
+     * EditorMouseEvent suppresses the trailing mouseClicked notification, which we still
+     * need so a pure click on the frame opens the table popup.
+     */
+    private fun onDragGestureStart(editor: Editor) {
+        // Remember where the caret was BEFORE the editor moves it on the press, so we can
+        // restore the pre-gesture position on release. The user therefore never sees the
+        // caret pin itself just after the pipe.
+        val pre = editor.caretModel.offset
+        editorPreDragCaret[editor] = pre
+        (editor as? EditorEx)?.setCaretVisible(false)
+        editor.contentComponent.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        // The editor's default mouse-press handler runs AFTER our listener and moves the
+        // caret to the press position — even when the caret renders invisibly, the
+        // selection model still drifts. Schedule a restore for the very next EDT tick so
+        // the caret position never visibly drags toward the pipe.
+        ApplicationManager.getApplication().invokeLater {
+            if (!editor.isDisposed && editorPreDragCaret[editor] == pre) {
+                editor.caretModel.moveToOffset(pre.coerceIn(0, editor.document.textLength))
+            }
+        }
+    }
+
+    private fun restoreCaretAfterGesture(editor: Editor) {
+        editorPreDragCaret.remove(editor)?.let { offset ->
+            editor.caretModel.moveToOffset(offset.coerceIn(0, editor.document.textLength))
+        }
+        (editor as? EditorEx)?.setCaretVisible(true)
     }
 
     private fun handleMouseDragged(editor: Editor, e: EditorMouseEvent) {
@@ -301,8 +369,12 @@ class TzTableDecorator : EditorFactoryListener {
             editor.contentComponent.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         }
         if (state.active) {
-            // The editor's selection handler extends a selection on drag — clear it on
-            // every tick so the user only sees our drag visuals.
+            // Block the editor's selection handler from extending the selection on this
+            // drag tick — consuming the EditorMouseEvent prevents downstream listeners
+            // (including IntelliJ's text-selection handler) from running.
+            e.consume()
+            // Belt-and-braces: clear any stray selection that may have leaked through
+            // (e.g. extended during the threshold movement before we marked active).
             if (editor.selectionModel.hasSelection()) editor.selectionModel.removeSelection()
             // Repaint the dragged table's frame area so the renderer overlays follow the cursor.
             editor.contentComponent.repaint()
@@ -311,6 +383,8 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun handleMouseReleased(editor: Editor, e: EditorMouseEvent) {
         val state = editorDrag[editor] ?: return
+        // Restore the caret to its pre-drag position regardless of pure-click vs drag.
+        restoreCaretAfterGesture(editor)
         if (!state.active) {
             // Pure click → leave the state in place; handleMouseClick will pop up the menu.
             return
@@ -319,8 +393,16 @@ class TzTableDecorator : EditorFactoryListener {
         when (state.zone) {
             HoverZone.LEFT_BORDER -> {
                 val targetRowIdx = computeRowIdxAt(editor, state.geom, e.mouseEvent.y)
-                if (targetRowIdx != state.sourceIndex) {
+                // Same no-op semantics as columns: drop on self or next neighbour collapses
+                // back (effectiveTo == source). Skip the write + skip the flash.
+                if (!isNoopRowDrop(state.sourceIndex, targetRowIdx)) {
                     applyDragOp(editor, state.geom, TableEditOps.Op.MoveRow(state.sourceIndex, targetRowIdx))
+                    // Flash the dropped row's left segment for 1s so the user sees where it landed.
+                    val landedIdx = if (state.sourceIndex < targetRowIdx) targetRowIdx - 1 else targetRowIdx
+                    val pipeLines = pipeRowLines(editor, state.geom)
+                    pipeLines.getOrNull(landedIdx)?.let { rowLine ->
+                        triggerPostRowFlash(editor, state.geom, rowLine)
+                    }
                 }
             }
             HoverZone.TOP_BORDER -> {
@@ -342,6 +424,13 @@ class TzTableDecorator : EditorFactoryListener {
         // Clear the drag state immediately so the renderer stops drawing source/target/cursor
         // overlays on subsequent repaints. The PostDropFlash now drives the landing highlight.
         editorDrag.remove(editor)
+        // Forget the previous hover so the next mouseMoved tick re-evaluates findHover and
+        // restores the hand cursor.
+        editorHover.remove(editor)
+        // Re-evaluate hover at the release point so the user immediately sees the hand
+        // cursor again if they're still over a draggable border — without this, we'd
+        // have to wait for the next mouseMoved event before the cursor updates.
+        handleMouseMove(editor, e)
         // Swallow the trailing mouseClicked event (some platforms fire it after a drag).
         editorSkipNextClick += editor
         editor.contentComponent.repaint()
@@ -354,6 +443,20 @@ class TzTableDecorator : EditorFactoryListener {
      */
     private fun isNoopColumnDrop(source: Int, target: Int): Boolean =
         target == source || target == source + 1
+
+    /** Row drop is a no-op for the exact same reason — drop on self or on the next row. */
+    private fun isNoopRowDrop(source: Int, target: Int): Boolean =
+        target == source || target == source + 1
+
+    /** List of physical document line numbers that contain a pipe row inside [geom]. */
+    private fun pipeRowLines(editor: Editor, geom: TableGeometry): List<Int> {
+        val doc = editor.document
+        return (geom.firstLine..geom.lastLine).filter { line ->
+            doc.charsSequence
+                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+                .toString().trim().startsWith("|")
+        }
+    }
 
     private fun applyDragOp(editor: Editor, geom: TableGeometry, op: TableEditOps.Op) {
         val doc = editor.document
@@ -379,6 +482,9 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun triggerPostDropFlash(editor: Editor, geom: TableGeometry, columnIndex: Int) =
         postFlash(editor, PostDropFlash(geom.firstLine, columnIndex = columnIndex))
+
+    private fun triggerPostRowFlash(editor: Editor, geom: TableGeometry, rowLine: Int) =
+        postFlash(editor, PostDropFlash(geom.firstLine, rowLine = rowLine))
 
     /** Thin adapter: pull the list of geometries for [editor] and delegate to the
      *  stateless [io.nimbly.tzatziki.editor.findHover] in TzTableHover.kt. */
@@ -456,8 +562,11 @@ class TzTableDecorator : EditorFactoryListener {
         override fun hover(editor: Editor) = editorHover[editor]
         override fun drag(editor: Editor)  = editorDrag[editor]
         override fun flash(editor: Editor) = editorPostDropFlash[editor]
+        override fun menuTarget(editor: Editor) = editorMenuTarget[editor]
         override fun isNoopColumnDrop(source: Int, target: Int) =
             this@TzTableDecorator.isNoopColumnDrop(source, target)
+        override fun isNoopRowDrop(source: Int, target: Int) =
+            this@TzTableDecorator.isNoopRowDrop(source, target)
     }
 
 }

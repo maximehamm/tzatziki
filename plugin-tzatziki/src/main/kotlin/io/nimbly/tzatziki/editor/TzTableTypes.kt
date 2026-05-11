@@ -54,3 +54,15 @@ internal data class PostDropFlash(
     val columnIndex: Int? = null,
     val rowLine: Int? = null
 )
+
+/**
+ * Persistent indicator shown while the table popup menu is open — tells the user which
+ * row / column the popup is about to operate on. Cleared when the popup is dismissed.
+ * Column targets render as a dashed orange segment on the top border, row targets as a
+ * solid orange segment on the left border (matching the DnD source visual language).
+ */
+internal data class MenuTargetIndicator(
+    val tableFirstLine: Int,
+    val columnIndex: Int? = null,
+    val rowLine: Int? = null
+)

@@ -36,7 +36,9 @@ import java.awt.Point
 internal fun findHover(editor: Editor, geometries: List<TableGeometry>, point: Point): HoverState? {
     val tTopUp   = 12
     val tTopDown = 4
-    val tEdge    = 8
+    // Left/right edges: ~14px tolerance so the user has a comfortable hit zone for the
+    // hand cursor and the drag/menu trigger.
+    val tEdge    = 14
     val tRange   = tEdge
 
     val fm   = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))

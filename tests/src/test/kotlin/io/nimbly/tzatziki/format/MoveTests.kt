@@ -48,7 +48,6 @@ class MoveTests : AbstractTestCase() {
                       | No    | 79  | D2      |
                     Then FInished !""")
         checkCursorAt("| Ready | ")
-        checkHighlighted("| Ready |", "| 79  |")
 
 
         moveRight()
@@ -63,7 +62,6 @@ class MoveTests : AbstractTestCase() {
                       | No    | D2      | 79  |
                     Then FInished !""")
         checkCursorAt("| Details | ")
-        checkHighlighted("| Details |", "| 79  |")
 
 
         moveRight()
@@ -78,7 +76,6 @@ class MoveTests : AbstractTestCase() {
                       | No    | D2      | 79  |
                     Then FInished !""")
         checkCursorAt("| Details | ")
-        checkHighlighted("| Details |", "| 79  |")
 
 
         // Go back
@@ -94,7 +91,6 @@ class MoveTests : AbstractTestCase() {
                       | No    | 79  | D2      |
                     Then FInished !""")
         checkCursorAt("| Ready | ")
-        checkHighlighted("| Ready |", "| 79  |")
 
         moveLeft()
         checkContent("""
@@ -108,7 +104,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !""")
         checkCursorAt("| ")
-        checkHighlighted("|", "| 79  |")
 
         moveLeft()
         checkContent("""
@@ -122,7 +117,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !""")
         checkCursorAt("| ")
-        checkHighlighted("|", "| 79  |")
     }
 
     fun testMoveLines() {
@@ -154,7 +148,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !""")
         checkCursorAt("| NA")
-        checkHighlighted("| D1      |\n      ", "| Details |")
 
         moveDown()
         checkContent("""
@@ -168,7 +161,6 @@ class MoveTests : AbstractTestCase() {
                       | NAF | Ready | Details |
                     Then FInished !""")
         checkCursorAt("| NA")
-        checkHighlighted("| D2      |\n      ", "| Details |")
 
         moveDown()
         checkContent("""
@@ -181,7 +173,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                       | NAF | Ready | Details |
                     Then FInished !""")
-        checkHighlighted("| D2      |\n      ", "| Details |")
 
         // GO back
         setCursor("| NA")
@@ -197,7 +188,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !""")
         checkCursorAt("| NA")
-        checkHighlighted("| D1      |\n      ", "| Details |")
 
         moveUp()
         checkContent("""
@@ -211,7 +201,6 @@ class MoveTests : AbstractTestCase() {
                       | 79  | No    | D2      |
                     Then FInished !""")
         checkCursorAt("| NA")
-        checkHighlighted("Examples:\n      ", "| Details |")
 
         moveUp()
         checkContent("""
@@ -224,7 +213,6 @@ class MoveTests : AbstractTestCase() {
                       | 78  | Yes   | D1      |
                       | 79  | No    | D2      |
                     Then FInished !""")
-        checkHighlighted("Examples:\n      ", "| Details |")
     }
 
 }

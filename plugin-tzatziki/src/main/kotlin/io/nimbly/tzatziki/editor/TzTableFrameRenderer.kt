@@ -26,9 +26,12 @@ internal interface TableRenderState {
     fun hover(editor: Editor): HoverState?
     fun drag(editor: Editor): DragState?
     fun flash(editor: Editor): PostDropFlash?
+    fun menuTarget(editor: Editor): MenuTargetIndicator?
     /** True when dropping [target] over [source]'s column would be a no-op (same column or
      *  right-neighbour insertion that collapses back). Drives the gray vs green colour. */
     fun isNoopColumnDrop(source: Int, target: Int): Boolean
+    /** Same predicate for rows — drop on self or on the immediate next row collapses back. */
+    fun isNoopRowDrop(source: Int, target: Int): Boolean
 }
 
 /**
@@ -101,14 +104,17 @@ internal class TableFrameRenderer(
         ))
 
         // 5. Hovered segment overlay (thick, on top of the thin rect).
-        //    Skip it when a column drag is in progress on this table — the drag visuals
-        //    below take over the top border entirely.
+        //    Skip it when a drag is in progress on this table — the drag visuals below
+        //    take over the affected border entirely.
         val drag = state.drag(editor)
         val isColumnDrag = drag?.active == true &&
                            drag.geom == geometry &&
                            drag.zone == HoverZone.TOP_BORDER
+        val isRowDrag    = drag?.active == true &&
+                           drag.geom == geometry &&
+                           drag.zone == HoverZone.LEFT_BORDER
         val halfArc = (arc / 2).toInt()
-        if (!isColumnDrag) {
+        if (!isColumnDrag && !isRowDrag) {
             when (hoverZone) {
                 HoverZone.TOP_BORDER    -> {
                     g2.stroke = BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
@@ -173,29 +179,132 @@ internal class TableFrameRenderer(
             g2.drawLine(cx - segWidth / 2 + halfArc, topY, cx + segWidth / 2 - halfArc, topY)
         }
 
+        // 6b. Row drag-and-drop visuals (left border).
+        if (isRowDrag) {
+            val doc = editor.document
+            val pipeLines = (geometry.firstLine..geometry.lastLine).filter { line ->
+                doc.charsSequence
+                    .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+                    .toString().trim().startsWith("|")
+            }
+            if (pipeLines.size >= 2 && drag!!.sourceIndex in pipeLines.indices) {
+                val rowYs = pipeLines.map { l ->
+                    editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(l))).y
+                }
+                val lineH = editor.lineHeight
+                val accent      = Color(0x00, 0xA9, 0x17)            // Cucumber+ green
+                val sourceColor = Color(0xE5, 0x71, 0x00)            // Same orange as column source
+
+                // Vertical segments are visually thinner than horizontal ones of the same
+                // stroke width — bump the row stroke so the visuals read as cleanly as the
+                // column ones.
+                val rowStroke = BasicStroke(5.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+
+                // (a) Source row — solid orange vertical segment on the left border.
+                //     We don't dash it like the column source: the segment height (~1 line)
+                //     is too short to make dashes legible.
+                val srcY1 = rowYs[drag.sourceIndex]
+                val srcY2 = srcY1 + lineH
+                g2.stroke = rowStroke
+                g2.color = sourceColor
+                g2.drawLine(firstX, srcY1 + halfArc, firstX, srcY2 - halfArc)
+
+                // Closest row under the cursor (drop target).
+                val targetIdx = rowYs.indices.minBy { i ->
+                    val mid = rowYs[i] + lineH / 2
+                    Math.abs(drag.currentY - mid)
+                }
+
+                // No-op zone (drop on source or on its bottom neighbour) → gray.
+                val dropNoop = state.isNoopRowDrop(drag.sourceIndex, targetIdx)
+                val activeColor = if (dropNoop) Color(0x9E, 0x9E, 0x9E) else accent
+
+                // (b) Drop target — thick segment over the row where the cursor sits.
+                val tgtY1 = rowYs[targetIdx]
+                val tgtY2 = tgtY1 + lineH
+                g2.stroke = rowStroke
+                g2.color = activeColor
+                g2.drawLine(firstX, tgtY1 + halfArc, firstX, tgtY2 - halfArc)
+
+                // (c) Floating segment under the cursor — height matches the source row,
+                //     centered on currentY (clamped to the frame).
+                val segH   = lineH
+                val firstY = rowYs.first()
+                val lastY  = rowYs.last() + lineH
+                val cy = drag.currentY.coerceIn(firstY + segH / 2, lastY - segH / 2)
+                g2.stroke = rowStroke
+                g2.color = activeColor
+                g2.drawLine(firstX, cy - segH / 2 + halfArc, firstX, cy + segH / 2 - halfArc)
+            }
+        }
+
         // 7. Post-drop flash — brief solid orange segment over the column / row that just
         //    moved (drag-and-drop, or shift-left / shift-right / shift-up / shift-down).
         //    Cleared by the Swing Timer in TzTableDecorator.postFlash().
+        //
+        //    Matching strategy:
+        //      - Column flash → must match this geometry's firstLine, since column indices
+        //        differ between sub-tables (a logical table split by a `# comment` separator
+        //        renders as multiple geometries with their own pipe layouts).
+        //      - Row flash    → matched by the row's document line being inside this
+        //        geometry's range. That's enough to disambiguate across sub-tables.
         val flash = state.flash(editor)
-        if (flash != null && flash.tableFirstLine == geometry.firstLine) {
+        if (flash != null) {
             val sourceColor = Color(0xE5, 0x71, 0x00)   // Same orange as the source ghost.
-            g2.stroke = BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-            g2.color = sourceColor
 
             // Column flash → horizontal segment on the top border.
             val flashCol = flash.columnIndex
-            if (flashCol != null && pipeXs.size >= 2 && flashCol in 0 until pipeXs.size - 1) {
+            if (flashCol != null &&
+                flash.tableFirstLine == geometry.firstLine &&
+                pipeXs.size >= 2 && flashCol in 0 until pipeXs.size - 1) {
+                g2.stroke = BasicStroke(3.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = sourceColor
                 val fx1 = pipeXs[flashCol]
                 val fx2 = pipeXs[flashCol + 1]
                 g2.drawLine(fx1 + halfArc, topY, fx2 - halfArc, topY)
             }
 
             // Row flash → vertical segment on the left border at the row's Y position.
+            // Vertical strokes need to be thicker than horizontal ones to read the same way.
             val flashRow = flash.rowLine
             if (flashRow != null && flashRow in geometry.firstLine..geometry.lastLine) {
                 val rowY = editor.logicalPositionToXY(
                     editor.offsetToLogicalPosition(editor.document.getLineStartOffset(flashRow))
                 ).y
+                g2.stroke = BasicStroke(5.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = sourceColor
+                g2.drawLine(firstX, rowY + halfArc, firstX, rowY + editor.lineHeight - halfArc)
+            }
+        }
+
+        // 8. Menu-target indicator — persistent orange segment shown while the table popup
+        //    menu is open, so the user sees which row / column the menu acts on. Dashed
+        //    for columns, solid for rows (matches the DnD source visual language).
+        val menu = state.menuTarget(editor)
+        if (menu != null) {
+            val sourceColor = Color(0xE5, 0x71, 0x00)
+
+            val menuCol = menu.columnIndex
+            if (menuCol != null &&
+                menu.tableFirstLine == geometry.firstLine &&
+                pipeXs.size >= 2 && menuCol in 0 until pipeXs.size - 1) {
+                val mx1 = pipeXs[menuCol]
+                val mx2 = pipeXs[menuCol + 1]
+                g2.stroke = BasicStroke(
+                    3.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND,
+                    1f, floatArrayOf(6f, 4f), 0f
+                )
+                g2.color = sourceColor
+                g2.drawLine(mx1 + halfArc, topY, mx2 - halfArc, topY)
+            }
+
+            val menuRow = menu.rowLine
+            if (menuRow != null && menuRow in geometry.firstLine..geometry.lastLine) {
+                val rowY = editor.logicalPositionToXY(
+                    editor.offsetToLogicalPosition(editor.document.getLineStartOffset(menuRow))
+                ).y
+                g2.stroke = BasicStroke(5.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+                g2.color = sourceColor
                 g2.drawLine(firstX, rowY + halfArc, firstX, rowY + editor.lineHeight - halfArc)
             }
         }

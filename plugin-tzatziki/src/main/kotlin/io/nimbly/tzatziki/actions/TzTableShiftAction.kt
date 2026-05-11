@@ -31,7 +31,6 @@ import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.CucumberElementFactory
 import org.jetbrains.plugins.cucumber.psi.GherkinTable
 import org.jetbrains.plugins.cucumber.psi.GherkinTableCell
-import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 
 class TableShiftLeftAction : TableShiftAction(LEFT)
 class TableShiftRightAction : TableShiftAction(RIGHT)
@@ -76,9 +75,12 @@ open class TableShiftAction(private val direction: Direction) : TzAction() {
             flashAfterShift(editor, tableLines, rowIdx, coordinate.x, direction)
         } else {
             val table = cell.row.table
+            // Capture the table's first document line BEFORE editor.shift — the shift path
+            // calls table.replace(tempTable) which invalidates the original PSI element and
+            // its textRange. Line numbers stay stable across the replacement.
+            val firstLine = editor.document.getLineNumber(table.textRange.startOffset)
             editor.shift(table, cell, direction)
             // Mirror the drag-and-drop visual cue.
-            val firstLine = editor.document.getLineNumber(table.textRange.startOffset)
             flashAfterShift(editor, /*tableLines*/ null, coordinate.y, coordinate.x, direction, firstLine)
         }
     }
@@ -178,31 +180,18 @@ private fun Editor.shift(table: GherkinTable, cell: GherkinTableCell, direction:
         // Format table
         newTable.format()
 
-        // Highlist moved column or row
+        // Move caret onto the new position of the moved cell. The visual feedback that
+        // used to live here (full row / column highlight via HighlightManager) has been
+        // dropped — the ephemeral orange bar scheduled by flashAfterShift in
+        // TableShiftAction.actionPerformed is now the single, consistent landing cue
+        // shared with the drag-and-drop path.
         smarTable.element?.let { table ->
-
-            // Move cursor
             val refCell = table.cellAt(coordinate)!!
             val newCaret = when (direction) {
-                LEFT, RIGHT -> refCell.row.cell(coordinate.x + direction.toInt()).previousPipe.startOffset +2
-                UP, DOWN -> logicalPositionToOffset(caret.go(direction))
+                LEFT, RIGHT -> refCell.row.cell(coordinate.x + direction.toInt()).previousPipe.startOffset + 2
+                UP, DOWN    -> logicalPositionToOffset(caret.go(direction))
             }
             caretModel.moveToOffset(newCaret)
-
-            // Highlight section
-            val ref = when (direction) {
-                LEFT, RIGHT -> refCell.row.cell(coordinate.x + direction.toInt())
-                UP, DOWN -> table.row(coordinate.y + direction.toInt())
-            }
-            val startHighlight =
-                if (ref is GherkinTableCell) table.firstRow.cell(ref.columnNumber).previousPipe.startOffset +1
-                else table.row((ref as GherkinTableRow).rowNumber).firstCell!!.previousPipe.startOffset
-
-            val endHighlight =
-                if (ref is GherkinTableCell) table.lastRow.cell(ref.columnNumber).nextPipe.startOffset+1
-                else table.row((ref as GherkinTableRow).rowNumber).lastCell!!.nextPipe.startOffset+1
-
-            highlight(startHighlight, endHighlight)
         }
     }
 
