@@ -53,7 +53,8 @@ class TzCucumberStepInspection : GherkinInspection() {
 
                 var fix: LocalQuickFix? = null
                 var allStepsFix: LocalQuickFix? = null
-                if (CucumberStepHelper.getExtensionCount() > 0) {
+                // Avoid CucumberStepHelper.getExtensionCount() — removed in IDEA 2026.2 EAP.
+                if (CucumberStepHelper.getExtensionMap().isNotEmpty()) {
                     fix = TzCucumberCreateStepFix()
                     allStepsFix = TzCucumberCreateAllStepsFix()
                 }

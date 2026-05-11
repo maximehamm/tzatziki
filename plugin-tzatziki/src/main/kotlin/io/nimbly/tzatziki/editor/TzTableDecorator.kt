@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import icons.ActionIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
+import com.intellij.openapi.actionSystem.ex.ActionUtil
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ide.DataManager
@@ -362,7 +363,11 @@ class TzTableDecorator : EditorFactoryListener {
             override fun getActionUpdateThread() = ActionUpdateThread.EDT
             override fun isSelected(e: AnActionEvent) = TOGGLE_CUCUMBER_PL
             override fun setSelected(e: AnActionEvent, state: Boolean) {
-                am.getAction("io.nimbly.tzatziki.ToggleTzatziki")?.actionPerformed(e)
+                // Do not call AnAction.actionPerformed(e) directly: it is @ApiStatus.OverrideOnly.
+                // Route through ActionUtil so listeners + telemetry get notified properly.
+                am.getAction("io.nimbly.tzatziki.ToggleTzatziki")?.let { toggle ->
+                    ActionUtil.performAction(toggle, e)
+                }
                 popupCloser()
             }
         })

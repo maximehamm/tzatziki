@@ -66,7 +66,11 @@ intellijPlatform {
     }
     pluginVerification {
         ides {
+            // Lower bound — keep the floor we declare in sinceBuild reachable.
             ide("IU", "2025.3.3")
+            // Latest EAP — reproduce locally the Marketplace report against 2026.2 EAP
+            // (IU-262.4852.50 broke 21.5.0 with CucumberStepHelper.getExtensionCount removal).
+            ide("IU", "262.4852.50")
         }
     }
     publishing {
