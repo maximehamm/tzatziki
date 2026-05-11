@@ -366,66 +366,6 @@ class TzTableDecorator : EditorFactoryListener {
         TableEditOps.apply(editor, tableLines, op)
     }
 
-    /** Map a Y pixel to a row index within [geom]'s pipe rows. */
-    private fun computeRowIdxAt(editor: Editor, geom: TableGeometry, y: Int): Int {
-        val doc = editor.document
-        val tableLines = (geom.firstLine..geom.lastLine).filter { line ->
-            doc.charsSequence
-                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
-                .toString().trim().startsWith("|")
-        }
-        if (tableLines.isEmpty()) return 0
-        return tableLines.indices.minBy { i ->
-            val lineY = editor.logicalPositionToXY(
-                editor.offsetToLogicalPosition(doc.getLineStartOffset(tableLines[i]))
-            ).y
-            Math.abs(y - (lineY + editor.lineHeight / 2))
-        }
-    }
-
-    /**
-     * True when [firstLine] is the second (or later) half of a logical Gherkin table that
-     * was split by an interleaved comment / blank line. In that case the top edge must
-     * stay inert: the visual top border of the sub-table sits under a `# comment` line
-     * and any drag / menu affordance there would clash with the comment text.
-     *
-     * Detected by [TableEditOps.collectTableLinesAround]: if the logical table reaches
-     * further up than [firstLine], we're in a continuation. A comment placed ABOVE a
-     * standalone table (documentation comment) reads as a single contiguous logical
-     * table starting at [firstLine] — top border stays active.
-     */
-    private fun isContinuationOfLargerTable(editor: Editor, firstLine: Int): Boolean {
-        val tableLines = TableEditOps.collectTableLinesAround(editor, firstLine)
-        return tableLines.isNotEmpty() && tableLines.first() < firstLine
-    }
-
-    /**
-     * True when the editor line under pixel [y] (within [geom]'s span) is a real table row
-     * (starts with `|`) — i.e. NOT an interleaved comment / blank line. Used to suppress
-     * the hand cursor over comment lines that may live between table rows.
-     */
-    private fun isPipeLineAtY(editor: Editor, geom: TableGeometry, y: Int): Boolean {
-        val doc = editor.document
-        val logicalLine = editor.xyToLogicalPosition(Point(0, y)).line
-        if (logicalLine !in geom.firstLine..geom.lastLine) return false
-        val start = doc.getLineStartOffset(logicalLine)
-        val end   = doc.getLineEndOffset(logicalLine)
-        return doc.charsSequence.subSequence(start, end).toString().trim().startsWith("|")
-    }
-
-    /** Map an X pixel to a column index inside [geom]. */
-    private fun computeColIdxAt(editor: Editor, geom: TableGeometry, x: Int): Int {
-        if (geom.pipeOffsets.size < 2) return 0
-        val pipeXs = geom.pipeOffsets.map {
-            editor.logicalPositionToXY(editor.offsetToLogicalPosition(it)).x
-        }
-        // Each cell is between pipe[i] and pipe[i+1]. Find the first cell whose mid-X is closest to x.
-        return pipeXs.zipWithNext().indices.minBy { i ->
-            val mid = (pipeXs[i] + pipeXs[i + 1]) / 2
-            Math.abs(x - mid)
-        }
-    }
-
     private fun postFlash(editor: Editor, flash: PostDropFlash) {
         editorPostDropFlash[editor] = flash
         val timer = javax.swing.Timer(1000) {
@@ -440,58 +380,11 @@ class TzTableDecorator : EditorFactoryListener {
     private fun triggerPostDropFlash(editor: Editor, geom: TableGeometry, columnIndex: Int) =
         postFlash(editor, PostDropFlash(geom.firstLine, columnIndex = columnIndex))
 
+    /** Thin adapter: pull the list of geometries for [editor] and delegate to the
+     *  stateless [io.nimbly.tzatziki.editor.findHover] in TzTableHover.kt. */
     private fun findHover(editor: Editor, point: Point): HoverState? {
-        val geometries = editorGeometries[editor] ?: return null
-        // Tolerances tuned per zone:
-        //  - TOP    : generous upward — but contained within ~12px so the activation zone
-        //             never bleeds onto a comment / blank line preceding the table. Those
-        //             lines must keep their normal editor behaviour (no hand cursor,
-        //             no tooltip, no popup, no drop target).
-        //  - EDGE   : a touch larger than before to give the left/right borders some room.
-        val tTopUp     = 12
-        val tTopDown   = 4
-        val tEdge      = 8
-        val tRange     = tEdge  // used for the inXRange / inYRange bounding box
-        val fm   = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
-        val half = fm.charWidth('|') / 2
-
-        for (geom in geometries) {
-            if (geom.pipeOffsets.size < 2) continue
-            val doc  = editor.document
-            val firstX = editor.logicalPositionToXY(editor.offsetToLogicalPosition(geom.pipeOffsets.first())).x + half
-            val lastX  = editor.logicalPositionToXY(editor.offsetToLogicalPosition(geom.pipeOffsets.last())).x + half
-            val topY   = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.firstLine))).y
-            val bottomY = editor.logicalPositionToXY(editor.offsetToLogicalPosition(doc.getLineStartOffset(geom.lastLine))).y + editor.lineHeight
-            val mx = point.x; val my = point.y
-            val inXRange = mx >= firstX - tRange && mx <= lastX + tRange
-            val inYRange = my >= topY - tRange && my <= bottomY + tRange
-
-            // Outer frame borders.
-            // - BOTTOM_BORDER is intentionally not exposed as a hover zone: the top border is
-            //   the single entry point for column actions; the bottom would just duplicate it.
-            // - LEFT/RIGHT only activate when the cursor sits on a real pipe-row line — never
-            //   on an interleaved comment / blank line that may appear between rows.
-            // - TOP_BORDER is suppressed when this geometry is the continuation of a logical
-            //   Gherkin table split by an interleaved comment / blank line — never on a
-            //   standalone table that merely has a doc-comment above it.
-            if (inXRange && my in topY - tTopUp .. topY + tTopDown &&
-                !isContinuationOfLargerTable(editor, geom.firstLine)) {
-                return HoverState(geom, HoverZone.TOP_BORDER)
-            }
-            if (inYRange && (mx in firstX - tEdge .. firstX + tEdge || mx in lastX - tEdge .. lastX + tEdge)) {
-                if (isPipeLineAtY(editor, geom, my)) {
-                    return HoverState(
-                        geom,
-                        if (mx in firstX - tEdge .. firstX + tEdge) HoverZone.LEFT_BORDER else HoverZone.RIGHT_BORDER
-                    )
-                }
-            }
-
-            // Header separator (thin line under the first row) is intentionally NOT a hover
-            // zone: it must remain a plain editor area — no hand cursor, no tooltip, no
-            // popup, no thicker stroke on hover.
-        }
-        return null
+        val geoms = editorGeometries[editor] ?: return null
+        return findHover(editor, geoms, point)
     }
 
     // ---- Header cell coloring ----
