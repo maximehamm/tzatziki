@@ -8,6 +8,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
 import com.intellij.openapi.vfs.VirtualFile
+import io.nimbly.tzatziki.services.StepScope
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.plugins.cucumber.CucumberBundle
 import org.jetbrains.plugins.cucumber.inspections.CucumberCreateAllStepsFix
@@ -99,12 +100,18 @@ fun tzAppliFix(descriptor: ProblemDescriptor, fix: TzCucumberCreateStepFixInterf
 
 fun getAndFixStepDefinitionContainers(featureFile: GherkinFile): Set<CucumberStepDefinitionCreationContext> {
 
+    // #104 — when a .cucumber-scope anchor governs the feature file, narrow the
+    // step-def file picker to candidates that live under the same anchor.
+    val originVf = featureFile.virtualFile
+    val project  = featureFile.project
+
     val result = CucumberStepHelper
         .getStepDefinitionContainers(featureFile)
         .filter { (psiFile, frameworkType): CucumberStepDefinitionCreationContext ->
             val ext = CucumberStepHelper.getExtensionMap()[frameworkType]
             ext != null
                     && ext.stepFileType.fileType == psiFile?.fileType
+                    && StepScope.isInSameScope(originVf, psiFile?.virtualFile, project)
         }
 
     return result.toSet()
