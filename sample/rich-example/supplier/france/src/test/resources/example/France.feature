@@ -59,14 +59,16 @@ Feature: Cocktail Ordering
       | Isabelle | Dubois   | Bruxelles | 45  | Belgique  | 91    |
       | Julien   | @Leroy   | Nantes    | 23  | France    | 70    |
 
+    Then Bidule trucs
 
   Scenario Outline: Vérifier le score de <Prénom>
 
     Given l'utilisateur "<Prenom>" a <Age> ans
+    When Bidule trucs
     Then son score devrait être <Score>
 
     Examples:
       | Prenom | Age | Score |
+      | Clara  | 22  | 75    |
       | Alice  | 28  | 92    |
       | Bob    | 34  | 87    |
-      | Clara  | 22  | 75    |
