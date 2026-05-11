@@ -3,11 +3,11 @@ package io.nimbly.tzatziki.inspections
 import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
-import com.intellij.openapi.vfs.VirtualFile
 import io.nimbly.tzatziki.services.StepScope
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.plugins.cucumber.CucumberBundle
@@ -64,19 +64,19 @@ fun tzAppliFix(descriptor: ProblemDescriptor, fix: TzCucumberCreateStepFixInterf
 
                 @NotNull
                 override fun getTextFor(value: CucumberStepDefinitionCreationContext): String {
-                    if (value.psiFile == null) {
-                        return CucumberBundle.message("create.new.file")
+                    val psiFile = value.psiFile ?: return CucumberBundle.message("create.new.file")
+                    // getStepDefinitionFilePath walks the PSI — requires read access.
+                    return ReadAction.compute<String, RuntimeException> {
+                        val stepDefinitionCreator = CucumberStepHelper.getExtensionMap()[value.frameworkType]!!
+                            .stepDefinitionCreator
+                        stepDefinitionCreator.getStepDefinitionFilePath(psiFile)
                     }
-                    val psiFile = value.psiFile
-                    val file: VirtualFile = value.psiFile!!.virtualFile!!
-                    val stepDefinitionCreator = CucumberStepHelper.getExtensionMap()[value.frameworkType]!!
-                        .stepDefinitionCreator
-                    return stepDefinitionCreator.getStepDefinitionFilePath(psiFile!!)
                 }
 
                 override fun getIconFor(value: CucumberStepDefinitionCreationContext): Icon? {
-                    val psiFile = value.psiFile
-                    return if (psiFile == null) AllIcons.Actions.IntentionBulb else psiFile.getIcon(0)
+                    val psiFile = value.psiFile ?: return AllIcons.Actions.IntentionBulb
+                    // PsiFile.getIcon() reaches into the PSI / icon resolver — requires read access.
+                    return ReadAction.compute<Icon?, RuntimeException> { psiFile.getIcon(0) }
                 }
 
                 override fun onChosen(
