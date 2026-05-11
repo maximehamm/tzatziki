@@ -268,6 +268,15 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
 
                 ApplicationManager.getApplication().invokeLater({
                     if (tracker.runGeneration != captureGeneration) return@invokeLater
+                    // Drop every previous progression guide before adding the new one.
+                    // Without this, each event APPENDS a marker over the entire document
+                    // and the visual union only ever grows — so when a Scenario Outline
+                    // moves on to the next example row (lineEnd shrinks back to the first
+                    // outline step), the bar stays stretched to the previous row's
+                    // highest line. Clearing here lets the bar actually rewind.
+                    tracker.progressionGuides.forEach { it.first.removeHighlighter(it.second) }
+                    tracker.progressionGuides.clear()
+
                     val editors = FileEditorManager.getInstance(project).getEditors(vfile)
                         .filterIsInstance<TextEditor>()
                     if (editors.isEmpty()) {
