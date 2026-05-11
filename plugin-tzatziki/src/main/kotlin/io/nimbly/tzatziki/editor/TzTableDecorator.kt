@@ -65,6 +65,7 @@ class TzTableDecorator : EditorFactoryListener {
     private val editorDisposables  = mutableMapOf<Editor, com.intellij.openapi.Disposable>()
     private val editorGeometries   = mutableMapOf<Editor, List<TableGeometry>>()
     private val editorHover        = mutableMapOf<Editor, HoverState?>()
+    private val editorDrag         = mutableMapOf<Editor, DragState?>()
 
     companion object {
         private var instance: TzTableDecorator? = null
@@ -72,6 +73,7 @@ class TzTableDecorator : EditorFactoryListener {
             val dec = instance ?: return
             dec.editorHighlighters.keys.toList().forEach { dec.scheduleRefresh(it) }
         }
+        private const val DRAG_THRESHOLD = 4
     }
 
     init { instance = this }
@@ -94,6 +96,9 @@ class TzTableDecorator : EditorFactoryListener {
         val mouseHandler = object : EditorMouseListener, EditorMouseMotionListener {
             override fun mouseMoved(e: EditorMouseEvent)   = handleMouseMove(editor, e)
             override fun mouseClicked(e: EditorMouseEvent) = handleMouseClick(editor, e)
+            override fun mousePressed(e: EditorMouseEvent) = handleMousePressed(editor, e)
+            override fun mouseDragged(e: EditorMouseEvent) = handleMouseDragged(editor, e)
+            override fun mouseReleased(e: EditorMouseEvent) = handleMouseReleased(editor, e)
         }
         editor.addEditorMouseListener(mouseHandler, disposable)
         editor.addEditorMouseMotionListener(mouseHandler, disposable)
@@ -107,6 +112,7 @@ class TzTableDecorator : EditorFactoryListener {
         editorHighlighters.remove(editor)
         editorGeometries.remove(editor)
         editorHover.remove(editor)
+        editorDrag.remove(editor)
     }
 
     private fun scheduleRefresh(editor: Editor) {
@@ -222,9 +228,135 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun handleMouseClick(editor: Editor, e: EditorMouseEvent) {
         if (e.mouseEvent.button != MouseEvent.BUTTON1) return
+        // Skip the popup if a drag has just completed (mousePressed → mouseDragged → mouseReleased
+        // doesn't fire mouseClicked unless the press point and release point coincide; some
+        // platforms still fire mouseClicked anyway, so we double-check the drag state).
+        if (editorDrag[editor]?.applied == true) {
+            editorDrag.remove(editor)
+            return
+        }
         val hover = findHover(editor, e.mouseEvent.point) ?: return
         showTablePopup(editor, hover.geometry, hover.zone, e.mouseEvent)
     }
+
+    // ---- Drag-and-drop: row/column reorder ----
+
+    private fun handleMousePressed(editor: Editor, e: EditorMouseEvent) {
+        if (e.mouseEvent.button != MouseEvent.BUTTON1) return
+        val hover = findHover(editor, e.mouseEvent.point) ?: return
+        when (hover.zone) {
+            HoverZone.LEFT_BORDER -> {
+                val rowIdx = computeRowIdxAt(editor, hover.geometry, e.mouseEvent.y)
+                editorDrag[editor] = DragState(
+                    zone = HoverZone.LEFT_BORDER,
+                    geom = hover.geometry,
+                    sourceIndex = rowIdx,
+                    startX = e.mouseEvent.x,
+                    startY = e.mouseEvent.y
+                )
+            }
+            HoverZone.TOP_BORDER -> {
+                val colIdx = computeColIdxAt(editor, hover.geometry, e.mouseEvent.x)
+                editorDrag[editor] = DragState(
+                    zone = HoverZone.TOP_BORDER,
+                    geom = hover.geometry,
+                    sourceIndex = colIdx,
+                    startX = e.mouseEvent.x,
+                    startY = e.mouseEvent.y
+                )
+            }
+            else -> editorDrag.remove(editor)
+        }
+    }
+
+    private fun handleMouseDragged(editor: Editor, e: EditorMouseEvent) {
+        val state = editorDrag[editor] ?: return
+        val dx = Math.abs(e.mouseEvent.x - state.startX)
+        val dy = Math.abs(e.mouseEvent.y - state.startY)
+        if (!state.active && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)) {
+            state.active = true
+            editor.contentComponent.cursor = Cursor.getPredefinedCursor(
+                if (state.zone == HoverZone.TOP_BORDER) Cursor.W_RESIZE_CURSOR else Cursor.N_RESIZE_CURSOR
+            )
+        }
+    }
+
+    private fun handleMouseReleased(editor: Editor, e: EditorMouseEvent) {
+        val state = editorDrag[editor] ?: return
+        if (!state.active) {
+            // Pure click → leave the state in place; handleMouseClick will pop up the menu.
+            return
+        }
+        editor.contentComponent.cursor = Cursor.getDefaultCursor()
+        when (state.zone) {
+            HoverZone.LEFT_BORDER -> {
+                val targetRowIdx = computeRowIdxAt(editor, state.geom, e.mouseEvent.y)
+                if (targetRowIdx != state.sourceIndex) {
+                    applyDragOp(editor, state.geom, TableEditOps.Op.MoveRow(state.sourceIndex, targetRowIdx))
+                }
+            }
+            HoverZone.TOP_BORDER -> {
+                val targetColIdx = computeColIdxAt(editor, state.geom, e.mouseEvent.x)
+                if (targetColIdx != state.sourceIndex) {
+                    applyDragOp(editor, state.geom, TableEditOps.Op.MoveColumn(state.sourceIndex, targetColIdx))
+                }
+            }
+            else -> Unit
+        }
+        // Mark as applied so the trailing mouseClicked event (if any) skips the popup.
+        state.applied = true
+    }
+
+    private fun applyDragOp(editor: Editor, geom: TableGeometry, op: TableEditOps.Op) {
+        val doc = editor.document
+        val tableLines = (geom.firstLine..geom.lastLine).filter { line ->
+            doc.charsSequence
+                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+                .toString().trim().startsWith("|")
+        }
+        if (tableLines.isEmpty()) return
+        TableEditOps.apply(editor, tableLines, op)
+    }
+
+    /** Map a Y pixel to a row index within [geom]'s pipe rows. */
+    private fun computeRowIdxAt(editor: Editor, geom: TableGeometry, y: Int): Int {
+        val doc = editor.document
+        val tableLines = (geom.firstLine..geom.lastLine).filter { line ->
+            doc.charsSequence
+                .subSequence(doc.getLineStartOffset(line), doc.getLineEndOffset(line))
+                .toString().trim().startsWith("|")
+        }
+        if (tableLines.isEmpty()) return 0
+        return tableLines.indices.minBy { i ->
+            val lineY = editor.logicalPositionToXY(
+                editor.offsetToLogicalPosition(doc.getLineStartOffset(tableLines[i]))
+            ).y
+            Math.abs(y - (lineY + editor.lineHeight / 2))
+        }
+    }
+
+    /** Map an X pixel to a column index inside [geom]. */
+    private fun computeColIdxAt(editor: Editor, geom: TableGeometry, x: Int): Int {
+        if (geom.pipeOffsets.size < 2) return 0
+        val pipeXs = geom.pipeOffsets.map {
+            editor.logicalPositionToXY(editor.offsetToLogicalPosition(it)).x
+        }
+        // Each cell is between pipe[i] and pipe[i+1]. Find the first cell whose mid-X is closest to x.
+        return pipeXs.zipWithNext().indices.minBy { i ->
+            val mid = (pipeXs[i] + pipeXs[i + 1]) / 2
+            Math.abs(x - mid)
+        }
+    }
+
+    private data class DragState(
+        val zone: HoverZone,
+        val geom: TableGeometry,
+        val sourceIndex: Int,
+        val startX: Int,
+        val startY: Int,
+        var active: Boolean = false,
+        var applied: Boolean = false
+    )
 
     private fun findHover(editor: Editor, point: Point): HoverState? {
         val geometries = editorGeometries[editor] ?: return null
