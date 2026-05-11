@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.5.0"
+    version = "21.5.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
+         <li><b>21.5.1</b> Fix #104 — Create-step picker honours <code>.cucumber-scope</code>, and an unresolved step that only matches a step def outside the scope is now correctly reported. Compatibility fix for IntelliJ IDEA 2026.2 EAP.</li>
          <li><b>21.5.0</b> Custom Cucumber+ breakpoint type — green disc on Gherkin, green badge over the standard red dot on Java/Kotlin — replacing the legacy <code>"Cucumber+"!=null</code> condition trick. Plain Java line breakpoints on step-def body lines are auto-promoted and synced with Gherkin.</li>
          <li><b>21.4.0</b> Fix #104 — per-app step indexing scope: drop a <code>.cucumber-scope</code> file at the root of an app folder and Cucumber+ narrows step resolution, completion and Find Usages to that folder. Goto Declaration on a Gherkin step honours the scope filter.</li>
          <li><b>21.3.0</b> Fix #103 — step-usages popup shows feature file, line, scenario name and step text; richer gutter tooltip when there is a single usage.</li>
