@@ -23,7 +23,12 @@
        <b>The best Cucumber user experience to run, edit, print Gherkin features... and develop with Java, Kotlin, Scala...</b><br/>
        <br/>
 
-       <b><u>NEW</u> : Rewriting breakpoint supports (Java, Kotlin, Scala only)</u></b><br/>
+       <b><u>NEW</u> : Reorder Gherkin table rows and columns by drag-and-drop</b><br/>
+         ✓ Grab the top frame of a table to drag a column to a new position<br/>
+         ✓ Grab the left frame to drag a row up or down<br/>
+       <br/>
+
+       <b><u>NEW</u> : Rewriting breakpoint supports (Java, Kotlin, Scala only)</b><br/>
          ✓ Hightlighting the Gherkin step/example in progress when debugger in pause<br/>
          ✓ Add breakpoint from Gherkin : the debugger will stop only for selected step/example<br/>
          ✓ Add breakpoint from Java, Kotlin, Scala : add a condition « "Cucumber+"!=null » to stop only for Gherkin step's having breakpoints <br/>
@@ -100,9 +105,8 @@
 
           <br/>
           <li><u>Moving rows and colums</u> up/down and left/right :<br/>
-              - Move caret to a table cell<br/>
-              - Press Shift+Ctrl and ▼▲ to move row up or down (or Shift+⌘ on MacOs)<br>
-              - Press Shift+Ctrl and ◀︎▶ to move column left or right (or Shift+⌘ on MacOs)<br>
+              - <b>Drag-and-drop</b> from the top frame for columns, from the left frame for rows<br/>
+              - Or use the Shift actions from the table popup menu (right-click on the frame)<br>
                <p><img src="https://plugins.jetbrains.com/files/16289/screenshot_e5736c06-6104-47b7-944e-7e999a4a4dd9"
                   alt="Cucumber+" width="419" height="233"></p>
           </li>
@@ -355,28 +359,22 @@
 
         </group>
 
-        <!-- Shift actions: only used by the table popup (TzTableDecorator) and keyboard shortcuts.
-             Not added to any visible menu group. -->
+        <!-- Shift actions: only used by the table popup (TzTableDecorator). Default keyboard
+             shortcuts have been removed (fix #109): they clashed with platform / third-party
+             bindings, and drag-and-drop on the table frame is the primary path now. Users
+             who want shortcuts can bind them via Settings → Keymap. -->
         <action class="io.nimbly.tzatziki.actions.TableShiftUpAction"
                 id="io.nimbly.tzatziki.ShiftUp"
-                text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl UP"/>
-        </action>
+                text="Shift up" description="Shift up line" icon="ActionIcons.SHIFT_UP"/>
         <action class="io.nimbly.tzatziki.actions.TableShiftDownAction"
                 id="io.nimbly.tzatziki.ShiftDown"
-                text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl DOWN"/>
-        </action>
+                text="Shift down" description="Shift down line" icon="ActionIcons.SHIFT_DOWN"/>
         <action class="io.nimbly.tzatziki.actions.TableShiftLeftAction"
                 id="io.nimbly.tzatziki.ShiftLeft"
-                text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl LEFT"/>
-        </action>
+                text="Shift left" description="Shift column to the left" icon="ActionIcons.SHIFT_LEFT"/>
         <action class="io.nimbly.tzatziki.actions.TableShiftRightAction"
                 id="io.nimbly.tzatziki.ShiftRight"
-                text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT">
-            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl RIGHT"/>
-        </action>
+                text="Shift right" description="Shift column to the right" icon="ActionIcons.SHIFT_RIGHT"/>
 
         <group id="io.nimbly.tzatziki.export.group">
 

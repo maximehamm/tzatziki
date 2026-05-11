@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.5.1"
+    version = "21.6.0"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul> 
        
+         <li><b>21.6.0</b> Reorder Gherkin table rows and columns by drag-and-drop — grab the top frame for a column, the left frame for a row. An orange marker now also flags the affected row / column on shift, add, and while the table popup is open. Fix #109: shift actions no longer ship with default <code>Shift+Ctrl+Arrow</code> shortcuts (they clashed with platform bindings) — users can rebind them via Settings → Keymap.</li>
          <li><b>21.5.1</b> Fix #104 — Create-step picker honours <code>.cucumber-scope</code>, and an unresolved step that only matches a step def outside the scope is now correctly reported. Compatibility fix for IntelliJ IDEA 2026.2 EAP.</li>
          <li><b>21.5.0</b> Custom Cucumber+ breakpoint type — green disc on Gherkin, green badge over the standard red dot on Java/Kotlin — replacing the legacy <code>"Cucumber+"!=null</code> condition trick. Plain Java line breakpoints on step-def body lines are auto-promoted and synced with Gherkin.</li>
          <li><b>21.4.0</b> Fix #104 — per-app step indexing scope: drop a <code>.cucumber-scope</code> file at the root of an app folder and Cucumber+ narrows step resolution, completion and Find Usages to that folder. Goto Declaration on a Gherkin step honours the scope filter.</li>
