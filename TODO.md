@@ -2,7 +2,8 @@
 
 ## Divers 
 
-- drag nd drop de colonne / ligne !
+- Gestion des breakpoint en Python... cf. https://plugins.jetbrains.com/plugin/16289-cucumber-/reviews#102612
+- 
 
 ## Bug: Read access violation in `TzCucumberCreateStepFix` popup icon rendering
 

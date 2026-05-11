@@ -2,10 +2,13 @@ package io.nimbly.tzatziki.breakpoints
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiManager
 import com.intellij.xdebugger.breakpoints.XBreakpointProperties
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType
@@ -26,11 +29,17 @@ class TzStepBreakpointType: TzBreakpointType("tzatziki.gherkin.step", "Cucumber+
         if (vfile.extension != "feature") return false
         if (!isJavaPresent()) return false
 
-        // Text-based check is the primary guard — immune to transient PSI re-parse.
-        // In 2025.3+ the backend calls canPutAt again ~500ms after creation on a
-        // background thread; PSI may be unavailable at that point.
+        // Text-based fast reject — immune to transient PSI re-parse. In 2025.3+ the backend
+        // calls canPutAt again ~500ms after creation on a background thread; PSI may be
+        // unavailable at that point so this layer always runs first.
         val doc = FileDocumentManager.getInstance().getDocument(vfile) ?: return false
-        return isLikelyStepLine(doc, line)
+        if (!isLikelyStepLine(doc, line)) return false
+
+        // PSI confirmation: only a real GherkinStep is a valid breakpoint host. This rules
+        // out free-form description text under Feature / Scenario ("Business Need", "As a
+        // user…", etc.) and translated keywords from non-English Gherkin dialects that the
+        // text regex wouldn't recognise. PSI unavailable → trust the text check above.
+        return isGherkinStepAtLine(project, vfile, doc, line, default = true)
     }
 
     override fun getDisplayText(breakpoint: XLineBreakpoint<TzXBreakpointProperties>?)
@@ -151,10 +160,50 @@ class TzXBreakpointProperties : XBreakpointProperties<Any>() {
     }
 }
 
+// Recognised Gherkin structural keywords (English aliases included — "Business Need" and
+// "Ability" are valid synonyms for "Feature:" in standard Gherkin, "Example" / "Scenarios"
+// / "Scenario Template" are valid synonyms for "Scenario" / "Examples" / "Scenario Outline").
 private val STRUCTURAL_LINE = Regex(
-    "^(Feature|Scenario|Background|Rule|Examples?|Scenario Outline)\\s*:",
+    "^(Feature|Business Need|Ability|" +
+            "Scenario|Example|" +
+            "Scenario Outline|Scenario Template|" +
+            "Background|Rule|Examples?|Scenarios)\\s*:",
     RegexOption.IGNORE_CASE
 )
+
+/**
+ * True when the line at [line] is parsed by the Gherkin PSI as a real [GherkinStep].
+ *
+ * Robust against free-form description text (e.g. `Business Need:` or `As a user, I want…`)
+ * which would otherwise fool the text regex into accepting a breakpoint there. When PSI is
+ * not available (e.g. canPutAt called on a background thread before reparse completes),
+ * returns [default] so we don't drop a freshly-created or migrated breakpoint by accident.
+ */
+private fun isGherkinStepAtLine(
+    project: Project,
+    vfile: VirtualFile,
+    doc: Document,
+    line: Int,
+    default: Boolean
+): Boolean = runCatching {
+    ReadAction.compute<Boolean, RuntimeException> {
+        val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@compute default
+        val lineStart = doc.getLineStartOffset(line)
+        val lineEnd   = doc.getLineEndOffset(line)
+        val lineText  = doc.charsSequence.subSequence(lineStart, lineEnd)
+        val firstNonWs = lineText.indexOfFirst { !it.isWhitespace() }
+        if (firstNonWs < 0) return@compute false
+        var element: PsiElement? = psiFile.findElementAt(lineStart + firstNonWs)
+        while (element != null) {
+            if (element is GherkinStep) return@compute true
+            // Stop walking once we've climbed beyond the line — any GherkinStep above us
+            // would belong to a different (preceding) line.
+            if (element.textRange.startOffset < lineStart) return@compute false
+            element = element.parent
+        }
+        false
+    }
+}.getOrDefault(default)
 
 private fun isLikelyStepLine(doc: Document, line: Int): Boolean {
     if (line < 0 || line >= doc.lineCount) return false
