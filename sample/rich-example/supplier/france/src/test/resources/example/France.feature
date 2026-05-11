@@ -12,9 +12,10 @@ Feature: Cocktail Ordering
 
   @Production @Chrome
   Scenario: Creating an empty order
-    Given Romeo who wants to buy a drink
-    Then there is 0 cocktails in the order
     And Romeo pays his order
+    Given Romeo who wants to buy a drink
+    Then there is 1 cocktails in the order
+
     Given I have the following books in the store
       | Erik Larson | In the Garden of Beasts              |
       | Erik Larson | The Devil in the White City          |

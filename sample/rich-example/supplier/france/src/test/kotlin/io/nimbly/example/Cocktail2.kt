@@ -134,6 +134,7 @@ class Cocktail2 {
     //@Deprecated("xxx")
     @And("Romeo pays his order")
     fun romeoPaysHisOrder() {
+        println("hit")
     }
 
     @Then("the payment component must be invoked {int} time for \${int}")

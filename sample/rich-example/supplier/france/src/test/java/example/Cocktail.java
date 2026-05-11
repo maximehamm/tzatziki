@@ -14,14 +14,14 @@ public class Cocktail {
     Integer order;
 
     @Given("I have the following books in the store")
-    public void iHaveTheFollowingBooksInTheStore() {
+    public void iHaveTheFollowingBooksInTheStore(DataTable table) {
         
     }
 
     @SuppressWarnings("test")
     @Deprecated
     @Given("Romeo who wants to buy a drink")
-    public void anOrderIsDeclaredForJuliette(DataTable table) {
+    public void anOrderIsDeclaredForJuliette() {
         order = 0;
     }
 
@@ -37,7 +37,7 @@ public class Cocktail {
     }
 
     @Given("the following users and scores:")
-    public void theFollowingUsersAndScores() {
+    public void theFollowingUsersAndScores(DataTable table) {
     }
 
     @Given("Bidule trucs")
@@ -52,5 +52,9 @@ public class Cocktail {
 
     @Then("son score devrait être {}")
     public void sonScoreDevraitEtre(String arg0) {
+        truc();
+    }
+
+    private void truc() {
     }
 }
