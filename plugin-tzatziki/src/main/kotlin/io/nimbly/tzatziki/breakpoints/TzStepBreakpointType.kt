@@ -68,7 +68,12 @@ class TzStepExampleBreakpointType() : TzBreakpointType("tzatziki.gherkin.step.ex
             if (vfile.extension != "feature") return false
 
             val doc = FileDocumentManager.getInstance().getDocument(vfile) ?: return false
-            return isLikelyExampleRowLine(doc, line)
+            if (!isLikelyExampleRowLine(doc, line)) return false
+
+            // PSI confirmation: only rows under a GherkinExamplesBlock (i.e. the table beneath
+            // "Examples:" of a Scenario Outline) accept this breakpoint. Plain data tables
+            // attached to a step (e.g. `Given I have the following books: | … |`) must NOT.
+            return isExamplesRowAtLine(project, vfile, doc, line, default = false)
 
         } catch (e: NoClassDefFoundError) {
             // Happens if JetBrains product does not support Java at all
@@ -217,6 +222,39 @@ private fun isLikelyStepLine(doc: Document, line: Int): Boolean {
         return false
     return !STRUCTURAL_LINE.containsMatchIn(text.subSequence(0, minOf(40, text.length)))
 }
+
+/**
+ * True when the pipe-row at [line] is a `GherkinTableRow` (excluding the header row)
+ * inside a `GherkinExamplesBlock`. Data tables attached to a step return false; the
+ * Examples header row returns false. When PSI is unavailable the result falls back
+ * to [default].
+ */
+private fun isExamplesRowAtLine(
+    project: Project,
+    vfile: VirtualFile,
+    doc: Document,
+    line: Int,
+    default: Boolean
+): Boolean = runCatching {
+    ReadAction.compute<Boolean, RuntimeException> {
+        val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@compute default
+        val lineStart = doc.getLineStartOffset(line)
+        val lineEnd   = doc.getLineEndOffset(line)
+        val firstNonWs = doc.charsSequence.subSequence(lineStart, lineEnd).indexOfFirst { !it.isWhitespace() }
+        if (firstNonWs < 0) return@compute false
+        var element: PsiElement? = psiFile.findElementAt(lineStart + firstNonWs)
+        var row: GherkinTableRow? = null
+        while (element != null) {
+            if (row == null && element is GherkinTableRow) row = element
+            if (element is GherkinExamplesBlock) {
+                // Header row is also a GherkinTableRow → exclude it explicitly.
+                return@compute row != null && row !is GherkinTableHeaderRowImpl
+            }
+            element = element.parent
+        }
+        false
+    }
+}.getOrDefault(default)
 
 private fun isLikelyExampleRowLine(doc: Document, line: Int): Boolean {
     if (line < 0 || line >= doc.lineCount) return false

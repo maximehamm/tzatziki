@@ -34,8 +34,11 @@ import java.awt.Point
  *    a plain editor area.
  */
 internal fun findHover(editor: Editor, geometries: List<TableGeometry>, point: Point): HoverState? {
-    val tTopUp   = 12
-    val tTopDown = 4
+    // Top zone now extends DOWNWARD into the upper half of the header row instead of
+    // bleeding onto the text/comment line above — easier to aim and never conflicts
+    // with editor content sitting just above the table.
+    val tTopUp   = 2
+    val tTopDown = editor.lineHeight / 4
     // Left/right edges: ~14px tolerance so the user has a comfortable hit zone for the
     // hand cursor and the drag/menu trigger.
     val tEdge    = 14

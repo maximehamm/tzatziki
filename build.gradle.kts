@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.6.2"
+    version = "21.6.3"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.6.3</b> Breakpoints on Gherkin tables are now restricted to <code>Examples:</code> rows (excluding the header). Top-border drag zone tightened — no longer bleeds onto the line above.</li>
          <li><b>21.6.2</b> Fix #115 — CJK (Chinese / Japanese / Korean) PDF export: drop a CJK TTF (e.g. Noto Sans SC) at <code>.cucumber+/cucumber+.font.ttf</code> and characters render correctly.</li>
          <li><b>21.6.0</b> Reorder Gherkin table rows and columns by drag-and-drop — grab the top frame for a column, the left frame for a row. An orange marker now also flags the affected row / column on shift, add, and while the table popup is open. Fix #109: shift actions no longer ship with default <code>Shift+Ctrl+Arrow</code> shortcuts (they clashed with platform bindings) — users can rebind them via Settings → Keymap.</li>
          <li><b>21.5.1</b> Fix #104 — Create-step picker honours <code>.cucumber-scope</code>, and an unresolved step that only matches a step def outside the scope is now correctly reported. Compatibility fix for IntelliJ IDEA 2026.2 EAP.</li>
