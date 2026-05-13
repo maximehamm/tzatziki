@@ -66,10 +66,21 @@ class TzDescriptionFoldingBuilder : FoldingBuilderEx(), DumbAware {
         val blocks = mutableListOf<TextRange>()
         var blockStart = -1
         var blockEnd = -1
-        // The header's own outer FEATURE_KEYWORD sits at the parent level (before the header
-        // begins). Seed lastKeywordLine accordingly: anything on the line just above the
-        // header's first offset is considered the keyword line of the first block.
-        var lastKeywordLine = document.getLineNumber(hdr.textRange.startOffset) - 1
+        // The header's preceding FEATURE_KEYWORD sits as a *sibling* in GherkinFeature
+        // (not as a child of the header). Walk hdr.treePrev backwards to find it — its
+        // line marks the start of the keyword line, and the description begins strictly
+        // below. Falling back to (hdr.startLine - 1) handles edge cases where the parser
+        // dropped the keyword token (parse error / partial file).
+        var lastKeywordLine = run {
+            var sib: ASTNode? = hdr.node.treePrev
+            while (sib != null) {
+                if (sib.elementType == GherkinTokenTypes.FEATURE_KEYWORD) {
+                    return@run document.getLineNumber(sib.startOffset)
+                }
+                sib = sib.treePrev
+            }
+            document.getLineNumber(hdr.textRange.startOffset) - 1
+        }
 
         fun flush() {
             if (blockStart in 0 until blockEnd) blocks += TextRange(blockStart, blockEnd)

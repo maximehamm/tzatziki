@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.7.0"
+    version = "21.7.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.7.1</b> Description folding: correctly skip the Feature keyword + name line when <code>Business Need:</code> precedes <code>Feature:</code> on adjacent lines — the fold now starts at the actual prose, not the name.</li>
          <li><b>21.7.0</b> Folding for Gherkin descriptions (Feature / Business Need / Scenario / Scenario Outline / Background / Rule) with one-line teaser and per-file persistence — works across all Gherkin dialects (English, Chinese, French…). The <code># @header: row|column</code> annotation folds to a discreet <code>Header row</code> / <code>Header column</code> placeholder; expands on caret entry and re-collapses on exit. Chinese (zh-CN) sample feature added under <code>sample/rich-example/supplier/chinese</code>.</li>
          <li><b>21.6.3</b> Breakpoints on Gherkin tables are now restricted to <code>Examples:</code> rows (excluding the header). Top-border drag zone tightened — no longer bleeds onto the line above.</li>
          <li><b>21.6.2</b> Fix #115 — CJK (Chinese / Japanese / Korean) PDF export: drop a CJK TTF (e.g. Noto Sans SC) at <code>.cucumber+/cucumber+.font.ttf</code> and characters render correctly.</li>
