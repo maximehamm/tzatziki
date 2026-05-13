@@ -47,6 +47,16 @@ dependencies {
         )
         pluginVerifier()
         zipSigner()
+
+        // MCP Companion — auto-installed into the runIde sandbox for debug introspection
+        // (get_psi_tree, project-aware tools, etc.). Resolves to the latest local build
+        // under sibling project ../mcp-intellij-all/. Skipped silently if not built yet.
+        val mcpDist = rootProject.file("../../mcp-intellij-all/build/distributions")
+        if (mcpDist.isDirectory) {
+            mcpDist.listFiles { f -> f.name.startsWith("mcp-intellij-all-") && f.name.endsWith(".zip") }
+                ?.maxByOrNull { it.name }
+                ?.let { localPlugin(it) }
+        }
     }
 }
 

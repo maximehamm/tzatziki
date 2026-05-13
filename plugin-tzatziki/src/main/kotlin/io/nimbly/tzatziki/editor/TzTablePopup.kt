@@ -14,7 +14,10 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.actionSystem.ex.ActionUtil
+import com.intellij.codeInsight.folding.CodeFoldingManager
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorFontType
@@ -251,6 +254,13 @@ internal class SetHeaderAction(
                 }
             }
         })
+        // Force a folding rebuild so the freshly-inserted `# @header: row|column` comment
+        // is wrapped right away in the "Header row" / "Header column" placeholder — without
+        // this nudge the daemon's debounced rebuild leaves the raw text visible for a beat.
+        PsiDocumentManager.getInstance(project).commitDocument(editor.document)
+        ApplicationManager.getApplication().invokeLater({
+            CodeFoldingManager.getInstance(project).updateFoldRegions(editor)
+        }, project.disposed)
         closePopup()
     }
 }

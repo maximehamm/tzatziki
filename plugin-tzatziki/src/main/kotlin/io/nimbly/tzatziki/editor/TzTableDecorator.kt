@@ -1,6 +1,7 @@
 package io.nimbly.tzatziki.editor
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.colors.EditorFontType
@@ -513,40 +514,68 @@ class TzTableDecorator : EditorFactoryListener {
     private fun findHeaderRowLines(editor: Editor): Set<Int> {
         val project = editor.project ?: return emptySet()
         val document = editor.document
-        val text = document.charsSequence
         val result = mutableSetOf<Int>()
+        // Examples blocks: PSI is dialect-aware and gives the canonical header row.
         ApplicationManager.getApplication().runReadAction {
             val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
-            if (psiFile !is GherkinFile) return@runReadAction
-            PsiTreeUtil.findChildrenOfType(psiFile, GherkinExamplesBlock::class.java).forEach { examples ->
-                val headerRow = examples.table?.headerRow ?: return@forEach
-                result += document.getLineNumber(headerRow.textRange.startOffset)
-            }
-            PsiTreeUtil.findChildrenOfType(psiFile, GherkinTable::class.java).forEach { table ->
-                if (PsiTreeUtil.getParentOfType(table, GherkinExamplesBlock::class.java) != null) return@forEach
-                val firstRow = table.headerRow ?: return@forEach
-                val firstRowLine = document.getLineNumber(firstRow.textRange.startOffset)
-                if (tableAnnotation(document, text, firstRowLine) == "row") result += firstRowLine
+            if (psiFile is GherkinFile) {
+                PsiTreeUtil.findChildrenOfType(psiFile, GherkinExamplesBlock::class.java).forEach { examples ->
+                    val headerRow = examples.table?.headerRow ?: return@forEach
+                    result += document.getLineNumber(headerRow.textRange.startOffset)
+                }
             }
         }
+        // `# @header: row` annotated tables — text scan, dialect-agnostic. The PSI route
+        // used to fall through here, but in localised feature files (zh, fr…) the
+        // cucumber-plugin can fail to attach a `GherkinTable.headerRow` to a step's data
+        // table, so we'd silently drop the annotation. Scanning the document side-steps
+        // that entirely.
+        result += findAnnotatedHeaderLines(document, kind = "row")
         return result
     }
 
     private fun findHeaderColumnLines(editor: Editor): Set<Int> {
-        val project = editor.project ?: return emptySet()
-        val document = editor.document
-        val text = document.charsSequence
+        val document = editor.project?.let { editor.document } ?: return emptySet()
+        // For column mode we highlight every row of the annotated table — first cell is
+        // the "header cell" — so we collect all consecutive pipe lines following the
+        // annotation, not just the first one.
+        return findAnnotatedHeaderLines(document, kind = "column", allRows = true)
+    }
+
+    /**
+     * Locate every `# @header: <kind>` comment in [document] and return the line numbers of
+     * the pipe rows it governs. When [allRows] is true (column mode) every consecutive
+     * pipe row beneath the annotation is returned; otherwise just the first one (row mode).
+     */
+    private fun findAnnotatedHeaderLines(document: Document, kind: String, allRows: Boolean = false): Set<Int> {
+        val chars = document.charsSequence
         val result = mutableSetOf<Int>()
-        ApplicationManager.getApplication().runReadAction {
-            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document)
-            if (psiFile !is GherkinFile) return@runReadAction
-            PsiTreeUtil.findChildrenOfType(psiFile, GherkinTable::class.java).forEach { table ->
-                if (PsiTreeUtil.getParentOfType(table, GherkinExamplesBlock::class.java) != null) return@forEach
-                val firstRow = table.headerRow ?: return@forEach
-                val firstRowLine = document.getLineNumber(firstRow.textRange.startOffset)
-                if (tableAnnotation(document, text, firstRowLine) == "column") {
-                    result += firstRowLine
-                    table.dataRows.forEach { row -> result += document.getLineNumber(row.textRange.startOffset) }
+        val annotation = Regex("^\\s*#\\s*@header:\\s*$kind\\s*$")
+        val lineCount = document.lineCount
+        for (i in 0 until lineCount) {
+            val text = chars.subSequence(document.getLineStartOffset(i), document.getLineEndOffset(i)).toString()
+            if (!annotation.matches(text)) continue
+            // Find the first pipe row strictly below the annotation, skipping blanks and
+            // chained comments. Anything else aborts (the annotation is orphaned).
+            var j = i + 1
+            while (j < lineCount) {
+                val t = chars.subSequence(document.getLineStartOffset(j), document.getLineEndOffset(j)).toString().trimStart()
+                when {
+                    t.isBlank()        -> { j++; continue }
+                    t.startsWith("#")  -> { j++; continue }
+                    t.startsWith("|")  -> {
+                        result += j
+                        if (!allRows) break
+                        // collect remaining contiguous pipe rows (data rows)
+                        var k = j + 1
+                        while (k < lineCount) {
+                            val tk = chars.subSequence(document.getLineStartOffset(k), document.getLineEndOffset(k)).toString().trimStart()
+                            if (tk.startsWith("|")) { result += k; k++ }
+                            else break
+                        }
+                        break
+                    }
+                    else -> break
                 }
             }
         }
