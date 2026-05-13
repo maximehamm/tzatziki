@@ -56,10 +56,16 @@ object TzTestRegistry {
         // Add new results
         temp.putAll(results)
 
-        // Add highlights (skip stale elements invalidated since last run)
-        temp.tests.forEach { (element, test) ->
+        // Wipe the old MarkupModel highlights before painting the merged state. Without
+        // this, re-running a scenario stacks fresh highlights on top of the previous
+        // run's — visually accumulating greens / reds along the same lines and obscuring
+        // the actual outcome. We then repaint everything from the fused `temp` state so
+        // the retained (not-involved) scenarios keep their look.
+        clearHighlighters()
+
+        temp.tests.forEach { (element, _) ->
             if (element.isValid)
-                highlighters += highlight(element, results[element])
+                highlighters += highlight(element, temp[element])
         }
 
         this.activeResults = temp
