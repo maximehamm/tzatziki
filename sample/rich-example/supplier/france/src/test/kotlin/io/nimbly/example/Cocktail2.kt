@@ -140,7 +140,7 @@ class Cocktail2 {
     @Then("the payment component must be invoked {int} time for \${int}")
     fun `thePaymentComponentMustBeInvokedTimeFor$`(arg0: Int, arg1: Int) {
     }
-
+    
     @ParameterType(".*")
     fun any(value: String): String {
         return value
