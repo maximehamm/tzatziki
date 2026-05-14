@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.7.3"
+    version = "21.8.0"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.0</b> Cucumber test tree polish: rename the wrapper category to <code>Cucumber+</code>, show the feature file name + every header (Business Need / Ability / Feature) on the top suite node (e.g. <code>France.feature  /  Cocktail Ordering [toto]</code>), and make double-click on a Feature / Scenario node open the .feature file at that line instead of just toggling the tree expansion.</li>
          <li><b>21.7.3</b> <code># @header: column</code> highlight now spans the whole logical table — comments / blank lines interleaved between rows no longer truncate the coloring.</li>
          <li><b>21.7.2</b> Test result highlights: wipe before repaint so re-running a scenario no longer stacks fresh highlights on top of the previous run.</li>
          <li><b>21.7.1</b> Description folding: correctly skip the Feature keyword + name line when <code>Business Need:</code> precedes <code>Feature:</code> on adjacent lines — the fold now starts at the actual prose, not the name.</li>
