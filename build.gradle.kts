@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.7.2"
+    version = "21.7.3"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.7.3</b> <code># @header: column</code> highlight now spans the whole logical table — comments / blank lines interleaved between rows no longer truncate the coloring.</li>
          <li><b>21.7.2</b> Test result highlights: wipe before repaint so re-running a scenario no longer stacks fresh highlights on top of the previous run.</li>
          <li><b>21.7.1</b> Description folding: correctly skip the Feature keyword + name line when <code>Business Need:</code> precedes <code>Feature:</code> on adjacent lines — the fold now starts at the actual prose, not the name.</li>
          <li><b>21.7.0</b> Folding for Gherkin descriptions (Feature / Business Need / Scenario / Scenario Outline / Background / Rule) with one-line teaser and per-file persistence — works across all Gherkin dialects (English, Chinese, French…). The <code># @header: row|column</code> annotation folds to a discreet <code>Header row</code> / <code>Header column</code> placeholder; expands on caret entry and re-collapses on exit. Chinese (zh-CN) sample feature added under <code>sample/rich-example/supplier/chinese</code>.</li>

@@ -566,12 +566,18 @@ class TzTableDecorator : EditorFactoryListener {
                     t.startsWith("|")  -> {
                         result += j
                         if (!allRows) break
-                        // collect remaining contiguous pipe rows (data rows)
+                        // Collect remaining rows of the logical table — Gherkin treats it
+                        // as one table even when comments / blank lines are interleaved
+                        // (mirror of the hover/menu behaviour in TzTableHover). Stop only
+                        // when we hit a real non-table line.
                         var k = j + 1
                         while (k < lineCount) {
                             val tk = chars.subSequence(document.getLineStartOffset(k), document.getLineEndOffset(k)).toString().trimStart()
-                            if (tk.startsWith("|")) { result += k; k++ }
-                            else break
+                            when {
+                                tk.startsWith("|") -> { result += k; k++ }
+                                tk.isBlank() || tk.startsWith("#") -> k++
+                                else -> break
+                            }
                         }
                         break
                     }
