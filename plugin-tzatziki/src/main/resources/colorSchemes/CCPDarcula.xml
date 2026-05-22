@@ -31,6 +31,13 @@
     </value>
   </option>
 
+  <option name="CCP_MD_CODE">
+    <value>
+      <option name="FOREGROUND" value="A5C261"/>
+      <option name="BACKGROUND" value="2B2B2B"/>
+    </value>
+  </option>
+
   <option name="CCP_DEPRECATED">
     <value>
       <option name="EFFECT_COLOR" value="ffffff" />

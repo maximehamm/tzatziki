@@ -37,6 +37,7 @@ val BREAKPOINT_EXAMPLE =  TextAttributesKey.createTextAttributesKey("CCP_BREAKPO
 // Markdown
 val BOLD = TextAttributesKey.createTextAttributesKey("CCP_MD_BOLD", DefaultLanguageHighlighterColors.STRING)
 val ITALIC = TextAttributesKey.createTextAttributesKey("CCP_MD_ITALIC", DefaultLanguageHighlighterColors.STRING)
+val CODE = TextAttributesKey.createTextAttributesKey("CCP_MD_CODE", DefaultLanguageHighlighterColors.STRING)
 
 // Deprecation
 val DEPRECATED = TextAttributesKey.createTextAttributesKey("CCP_DEPRECATED", DefaultLanguageHighlighterColors.STRING)

@@ -33,6 +33,13 @@
     </value>
   </option>
 
+  <option name="CCP_MD_CODE">
+    <value>
+      <option name="FOREGROUND" value="3A6E22"/>
+      <option name="BACKGROUND" value="EEEEEE"/>
+    </value>
+  </option>
+
   <option name="CCP_DEPRECATED">
     <value>
       <option name="EFFECT_COLOR" value="000000" />

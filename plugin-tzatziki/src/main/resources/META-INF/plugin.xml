@@ -213,6 +213,8 @@
 
         // Markdown and pictures
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzMarkdownAnnotator" order="LAST"/>
+        <lang.foldingBuilder language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzMarkdownSyntaxFoldingBuilder"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.markdown.TzMarkdownSyntaxAutoCollapse"/>
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzUrlAnnotator" order="LAST"/>
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.markdown.TzPictureCompletion"/>
         <!--  <psi.referenceContributor language="Gherkin" implementation="io.nimbly.tzatziki.markdown.TzUrlContributor"/> -->
