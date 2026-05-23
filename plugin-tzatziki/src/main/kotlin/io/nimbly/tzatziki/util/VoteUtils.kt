@@ -16,7 +16,7 @@
 package io.nimbly.tzatziki.util
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.extensions.PluginId
@@ -26,7 +26,7 @@ const val TZATZIKI_PLUGIN = "io.nimbly.tzatziki"
 
 fun askToVoteLinkedIn(project: Project) {
 
-    val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
+    val currentVersion = PluginManager.getInstance().findEnabledPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
 //    if (version != currentVersion) {
@@ -53,7 +53,7 @@ fun askToVoteLinkedIn(project: Project) {
 
 fun askToVote(project: Project) {
 
-    val currentVersion = PluginManagerCore.getPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
+    val currentVersion = PluginManager.getInstance().findEnabledPlugin(PluginId.getId(TZATZIKI_PLUGIN))?.version ?: ""
     val version = PropertiesComponent.getInstance().getValue(TZATZIKI_PLUGIN)
 
     if (version == null) {

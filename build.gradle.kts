@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.0"
+    version = "21.8.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.1</b> Fix #122 — extreme CPU usage in 21.8.0: replaced the global ToolWindowManagerListener that re-traversed the Run/Debug/Services component trees on every UI state change with a per-tool-window ContentManagerListener that scans only newly added test contents. Also drops usage of the internal <code>PluginManagerCore.getPlugin(PluginId)</code> flagged by the Marketplace verifier.</li>
          <li><b>21.8.0</b> Cucumber test tree polish: rename the wrapper category to <code>Cucumber+</code>, show the feature file name + every header (Business Need / Ability / Feature) on the top suite node (e.g. <code>France.feature  /  Cocktail Ordering [toto]</code>), and make double-click on a Feature / Scenario node open the .feature file at that line instead of just toggling the tree expansion.</li>
          <li><b>21.7.3</b> <code># @header: column</code> highlight now spans the whole logical table — comments / blank lines interleaved between rows no longer truncate the coloring.</li>
          <li><b>21.7.2</b> Test result highlights: wipe before repaint so re-running a scenario no longer stacks fresh highlights on top of the previous run.</li>

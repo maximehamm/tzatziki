@@ -12,68 +12,90 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
+import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import com.intellij.ui.content.Content
+import com.intellij.ui.content.ContentManagerEvent
+import com.intellij.ui.content.ContentManagerListener
 import com.intellij.util.ui.UIUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
-import javax.swing.JTree
 import javax.swing.SwingUtilities
 
 /**
  * Makes double-clicking on a Cucumber Feature / Scenario node in the Run / Debug test
  * tree open the .feature file at the corresponding line, instead of just toggling the
- * node's expansion state (the platform default for composite nodes).
+ * node's expansion state.
  *
- * Implementation: every time a tool window changes state we scan its component tree for
- * [SMTRunnerTestTreeView] instances and install a custom [MouseListener]. To make sure
- * our listener runs *before* the platform's `EditSourceOnDoubleClickHandler` (which is
- * the one that decides expand vs navigate), we re-order: detach all current listeners,
- * attach ours, re-attach the originals. Idempotent via a client property so repeated
- * stateChanged callbacks don't pile up listeners.
+ * Performance note (issue #122): the previous implementation hooked into
+ * `ToolWindowManagerListener.stateChanged` and re-traversed Run/Debug/Services tool
+ * window component trees on every fire — which happens **continuously** as the user
+ * interacts with the IDE (focus / tab / content changes). That walk over the deeply
+ * nested Services tool window in particular pinned the CPU at 80-90 %.
+ *
+ * Current design: attach a [ContentManagerListener] to Run/Debug ONLY when their tool
+ * windows become available, and traverse exclusively the newly added [Content] component
+ * tree (typically one [SMTRunnerTestTreeView]). No global polling, no Services
+ * traversal, and the listener fires at most once per test-run content creation.
  */
 class TzCucumberTreeDoubleClick : ProjectActivity {
 
     override suspend fun execute(project: Project) {
-        project.messageBus.connect().subscribe(
-            ToolWindowManagerListener.TOPIC,
-            object : ToolWindowManagerListener {
-                override fun stateChanged(tm: ToolWindowManager) {
-                    ApplicationManager.getApplication().invokeLater { scan(tm) }
-                }
-            }
-        )
-        // Initial pass for already-open Run/Debug tabs at startup.
         ApplicationManager.getApplication().invokeLater {
-            scan(ToolWindowManager.getInstance(project))
+            val tm = ToolWindowManager.getInstance(project)
+
+            // Cover tool windows that already exist (e.g. IDE reopened with prior content).
+            TEST_TOOL_WINDOW_IDS.forEach { id ->
+                tm.getToolWindow(id)?.let { attachContentListener(project, it) }
+            }
+
+            // Cover tool windows that aren't registered yet (typical first-launch case —
+            // "Run" is only created when the first run configuration is launched).
+            project.messageBus.connect().subscribe(
+                ToolWindowManagerListener.TOPIC,
+                object : ToolWindowManagerListener {
+                    override fun toolWindowsRegistered(ids: MutableList<String>, manager: ToolWindowManager) {
+                        ids.filter { it in TEST_TOOL_WINDOW_IDS }.forEach { id ->
+                            manager.getToolWindow(id)?.let { attachContentListener(project, it) }
+                        }
+                    }
+                }
+            )
         }
     }
 
-    private fun scan(tm: ToolWindowManager) {
-        for (id in TEST_TOOL_WINDOW_IDS) {
-            val tw = tm.getToolWindow(id) ?: continue
-            UIUtil.uiTraverser(tw.component)
-                .filterIsInstance(JTree::class.java)
-                .filterIsInstance(SMTRunnerTestTreeView::class.java)
-                .forEach(::install)
-        }
+    private fun attachContentListener(project: Project, tw: ToolWindow) {
+        if (tw.component.getClientProperty(TW_LISTENER_KEY) == true) return
+        tw.component.putClientProperty(TW_LISTENER_KEY, true)
+
+        tw.contentManager.addContentManagerListener(object : ContentManagerListener {
+            override fun contentAdded(event: ContentManagerEvent) {
+                ApplicationManager.getApplication().invokeLater { scanContent(event.content) }
+            }
+        })
+        // Initial pass for content already present in the tool window.
+        tw.contentManager.contents.forEach { scanContent(it) }
+    }
+
+    private fun scanContent(content: Content) {
+        UIUtil.uiTraverser(content.component)
+            .filterIsInstance(SMTRunnerTestTreeView::class.java)
+            .forEach(::install)
     }
 
     private fun install(tree: SMTRunnerTestTreeView) {
         if (tree.getClientProperty(INSTALLED_KEY) == true) return
         tree.putClientProperty(INSTALLED_KEY, true)
 
-        // Detach all existing MouseListeners, attach ours first, re-attach the rest.
-        // This makes our listener fire BEFORE the platform's double-click handler so we
-        // can consume the event and prevent the default expand/collapse toggle.
+        // Detach all existing MouseListeners, attach ours first, re-attach the rest so our
+        // listener fires BEFORE the platform's EditSourceOnDoubleClickHandler.
         val existing: List<MouseListener> = tree.mouseListeners.toList()
         existing.forEach(tree::removeMouseListener)
         tree.addMouseListener(CucumberTreeDoubleClickAdapter(tree))
         existing.forEach(tree::addMouseListener)
-
-        LOG.info("C+ TestTreeView double-click handler installed (${existing.size} listeners reordered)")
     }
 
     private class CucumberTreeDoubleClickAdapter(private val tree: SMTRunnerTestTreeView) : MouseAdapter() {
@@ -83,10 +105,7 @@ class TzCucumberTreeDoubleClick : ProjectActivity {
             val proxy = tree.getSelectedTest(path) as? SMTestProxy ?: return
             val url = proxy.locationUrl ?: return
             if (!url.contains(".feature", ignoreCase = true)) return
-            // Step-level proxies already navigate by default — we only need to intervene
-            // on composite (Feature / Scenario / Outline) nodes where the platform would
-            // otherwise toggle expansion.
-            if (proxy.children.isEmpty()) return
+            if (proxy.children.isEmpty()) return  // leaves already navigate by default
             try {
                 proxy.navigate(true)
                 e.consume()
@@ -99,6 +118,9 @@ class TzCucumberTreeDoubleClick : ProjectActivity {
     companion object {
         private val LOG = Logger.getInstance(TzCucumberTreeDoubleClick::class.java)
         private const val INSTALLED_KEY = "tzatziki.cucumber.dblclick.installed"
-        private val TEST_TOOL_WINDOW_IDS = listOf("Run", "Debug", "Services")
+        private const val TW_LISTENER_KEY = "tzatziki.cucumber.dblclick.tw.listener"
+        // Intentionally NOT including "Services" — its component tree is huge and never
+        // hosts SMTRunnerTestTreeView; scanning it was the perf hog before issue #122.
+        private val TEST_TOOL_WINDOW_IDS = listOf("Run", "Debug")
     }
 }
