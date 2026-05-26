@@ -6,6 +6,8 @@
  */
 package io.nimbly.tzatziki.testdiscovery
 
+import com.intellij.execution.testframework.sm.runner.SMTRunnerEventsAdapter
+import com.intellij.execution.testframework.sm.runner.SMTRunnerEventsListener
 import com.intellij.execution.testframework.sm.runner.SMTestProxy
 import com.intellij.execution.testframework.sm.runner.ui.SMTRunnerTestTreeView
 import com.intellij.openapi.application.ApplicationManager
@@ -65,6 +67,27 @@ class TzCucumberTreeDoubleClick : ProjectActivity {
                 }
             )
         }
+
+        // Also catch tree replacements that happen WITHIN an existing content (the default
+        // "reuse run tab" behaviour creates a new SMTRunnerTestTreeView inside the same
+        // Content, so ContentManager.contentAdded never fires for it). onTestingStarted
+        // gives us the exact moment a fresh tree exists and is ready to scan.
+        project.messageBus.connect().subscribe(
+            SMTRunnerEventsListener.TEST_STATUS,
+            object : SMTRunnerEventsAdapter() {
+                override fun onTestingStarted(rootProxy: com.intellij.execution.testframework.sm.runner.SMTestProxy.SMRootTestProxy) {
+                    ApplicationManager.getApplication().invokeLater {
+                        val tm = ToolWindowManager.getInstance(project)
+                        for (id in TEST_TOOL_WINDOW_IDS) {
+                            val tw = tm.getToolWindow(id) ?: continue
+                            UIUtil.uiTraverser(tw.component)
+                                .filterIsInstance(SMTRunnerTestTreeView::class.java)
+                                .forEach(::install)
+                        }
+                    }
+                }
+            }
+        )
     }
 
     private fun attachContentListener(project: Project, tw: ToolWindow) {
@@ -96,6 +119,7 @@ class TzCucumberTreeDoubleClick : ProjectActivity {
         existing.forEach(tree::removeMouseListener)
         tree.addMouseListener(CucumberTreeDoubleClickAdapter(tree))
         existing.forEach(tree::addMouseListener)
+        LOG.info("C+ TestTreeView dbl-click handler installed (${existing.size} listeners reordered)")
     }
 
     private class CucumberTreeDoubleClickAdapter(private val tree: SMTRunnerTestTreeView) : MouseAdapter() {

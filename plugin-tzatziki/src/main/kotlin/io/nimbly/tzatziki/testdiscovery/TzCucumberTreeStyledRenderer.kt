@@ -113,25 +113,40 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
                 return result
             }
 
-            // Outermost feature suite: file name (grey) + separator + primary (bold) +
-            // optional secondaries (grey italic in brackets).
-            val deco = proxy.getUserData(CUCUMBER_DECORATION_KEY) ?: return result
-            val savedIcon = result.icon
-            result.clear()
-            result.icon = savedIcon
-            result.append(deco.fileName, SimpleTextAttributes.GRAYED_ATTRIBUTES)
-            if (deco.primary != null) {
-                result.append("  /  ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-                result.append(deco.primary, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
-            }
-            if (deco.secondaries.isNotEmpty()) {
-                val sep = if (deco.primary != null) " " else " "
-                result.append("$sep[", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-                deco.secondaries.forEachIndexed { i, s ->
-                    if (i > 0) result.append(", ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
-                    result.append(s, SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+            // Outermost feature suite: file name in default style + separator + primary
+            // (feature label) in grey + optional secondaries (BN/Ability) in grey italic
+            // between brackets.
+            val deco = proxy.getUserData(CUCUMBER_DECORATION_KEY)
+            if (deco != null) {
+                val savedIcon = result.icon
+                result.clear()
+                result.icon = savedIcon
+                result.append(deco.fileName, SimpleTextAttributes.REGULAR_ATTRIBUTES)
+                if (deco.primary != null) {
+                    result.append("  /  ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                    result.append(deco.primary, SimpleTextAttributes.GRAYED_ATTRIBUTES)
                 }
-                result.append("]", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                if (deco.secondaries.isNotEmpty()) {
+                    result.append(" [", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                    deco.secondaries.forEachIndexed { i, s ->
+                        if (i > 0) result.append(", ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                        result.append(s, SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+                    }
+                    result.append("]", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                }
+                // Feature-level tags (e.g. `@global` above the `Feature:` keyword).
+                val featureTags = proxy.getUserData(CUCUMBER_TAGS_KEY)
+                if (featureTags != null && featureTags.isNotBlank()) {
+                    result.append(featureTags, SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                }
+                return result
+            }
+
+            // Scenario-level suite (or any non-outermost test holder with tags): keep the
+            // platform's rendering intact and just append the tags in grey at the end.
+            val tags = proxy.getUserData(CUCUMBER_TAGS_KEY)
+            if (tags != null && tags.isNotBlank()) {
+                result.append(tags, SimpleTextAttributes.GRAYED_ATTRIBUTES)
             }
             return result
         }

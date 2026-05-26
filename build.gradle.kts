@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.2"
+    version = "21.8.3"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.3</b> Cucumber test tree: surface Gherkin tags (e.g. <code>@Production @Chrome</code>) at the end of each suite node in grey — Feature-level tags written above the keyword are surfaced on the top suite, scenario / outline / background tags on their own node. Also catches tree-replacement on test re-runs so double-click-to-navigate keeps working when IntelliJ reuses the run tab.</li>
          <li><b>21.8.2</b> Cucumber test tree styled rendering: the outermost feature suite renders as multi-fragment text — file name in grey, primary header (Feature) in <b>bold</b>, secondary headers (Business Need / Ability) in <i>grey italic</i> between brackets. The "Cucumber+" wrapper node is also bolded. No change to behaviour, just a clearer visual.</li>
          <li><b>21.8.1</b> Fix #122 — extreme CPU usage in 21.8.0: replaced the global ToolWindowManagerListener that re-traversed the Run/Debug/Services component trees on every UI state change with a per-tool-window ContentManagerListener that scans only newly added test contents. Also drops usage of the internal <code>PluginManagerCore.getPlugin(PluginId)</code> flagged by the Marketplace verifier.</li>
          <li><b>21.8.0</b> Cucumber test tree polish: rename the wrapper category to <code>Cucumber+</code>, show the feature file name + every header (Business Need / Ability / Feature) on the top suite node (e.g. <code>France.feature  /  Cocktail Ordering [toto]</code>), and make double-click on a Feature / Scenario node open the .feature file at that line instead of just toggling the tree expansion.</li>

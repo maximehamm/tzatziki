@@ -19,6 +19,8 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
+import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import org.jetbrains.plugins.cucumber.psi.GherkinTag
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 
 /**
@@ -37,6 +39,9 @@ val CUCUMBER_DECORATION_KEY: Key<CucumberSuiteDecoration> =
     Key.create("tzatziki.cucumber.suite.decoration")
 val CUCUMBER_WRAPPER_KEY: Key<Boolean> =
     Key.create("tzatziki.cucumber.suite.wrapper")
+/** Pre-formatted tag string (e.g. " @Production @Chrome") for any scenario-level suite. */
+val CUCUMBER_TAGS_KEY: Key<String> =
+    Key.create("tzatziki.cucumber.suite.tags")
 
 /**
  * Decorates the outermost Cucumber suite node in the Run / Debug tool window so the user
@@ -92,7 +97,19 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         val locationUrl = suite.locationUrl ?: return
         val fileName = featureFileNameOf(locationUrl) ?: return
         val parentUrl = suite.parent?.locationUrl
-        if (parentUrl != null && featureFileNameOf(parentUrl) != null) return
+
+        // 2bis) Scenario-level suite (parent also has a .feature URL): not the outermost,
+        // but a child carrying tags we want to surface. Compute tags via PSI once, store
+        // for the styled renderer, then bail — no name decoration needed at this level.
+        if (parentUrl != null && featureFileNameOf(parentUrl) != null) {
+            if (suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
+                val tags = readScenarioTags(project, locationUrl)
+                if (tags.isNotEmpty()) {
+                    suite.putUserData(CUCUMBER_TAGS_KEY, tags.joinToString(" ", prefix = " "))
+                }
+            }
+            return
+        }
 
         val current = suite.presentableName ?: suite.name
         if (current.startsWith(fileName)) return  // already decorated (replay safety)
@@ -135,6 +152,13 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
             }
         }
         suite.putUserData(CUCUMBER_DECORATION_KEY, decoration)
+        // Feature-level tags (e.g. `@global` above `Feature:`) — surface them too.
+        if (suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
+            val featureTags = readScenarioTags(project, locationUrl)
+            if (featureTags.isNotEmpty()) {
+                suite.putUserData(CUCUMBER_TAGS_KEY, featureTags.joinToString(" ", prefix = " "))
+            }
+        }
         suite.setPresentableName(plain)
         LOG.info("C+ decorate[$phase] '${suite.name}' loc='$locationUrl' -> file='${decoration.fileName}' primary='${decoration.primary}' sec=${decoration.secondaries}")
     }
@@ -178,6 +202,58 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
             }
             walk(feature.node)
             pairs
+        }
+    }
+
+    /**
+     * Read the `@Production @Chrome …` tags of the [GherkinStepsHolder] sitting at the
+     * line encoded in [locationUrl] (`file://…/Foo.feature:NN`). Returns the tag texts
+     * including the leading `@`, in source order. Empty list if the holder has no tags
+     * or the URL doesn't resolve. Runs inside a read action — safe to call from any thread.
+     */
+    private fun readScenarioTags(project: Project, locationUrl: String): List<String> {
+        val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return emptyList()
+        val cleanUrl = match.groupValues[1]
+        val lineNumber = match.groupValues[2].toIntOrNull() ?: return emptyList()
+        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl) ?: return emptyList()
+        return runReadAction {
+            val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
+            val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
+                ?: return@runReadAction emptyList()
+            val lineIdx = (lineNumber - 1).coerceIn(0, document.lineCount - 1)
+            val lineStart = document.getLineStartOffset(lineIdx)
+            val lineEnd = document.getLineEndOffset(lineIdx)
+            // Skip leading whitespace — `findElementAt(lineStart)` would land on the
+            // indentation PsiWhiteSpace, whose parent is the ENCLOSING element (e.g. the
+            // GherkinFeature for a scenario line), not the scenario itself. That gave us
+            // false-positive Feature-level tags on every scenario.
+            val firstNonWs = document.charsSequence
+                .subSequence(lineStart, lineEnd)
+                .indexOfFirst { !it.isWhitespace() }
+            val offset = lineStart + firstNonWs.coerceAtLeast(0)
+            val element = psiFile.findElementAt(offset)
+            val holder = element?.let { PsiTreeUtil.getParentOfType(it, GherkinStepsHolder::class.java, false) }
+                ?: PsiTreeUtil.findChildOfType(psiFile, GherkinFeature::class.java)
+                ?: return@runReadAction emptyList()
+
+            // Collect tags from BOTH locations regardless of holder type:
+            //   1) child GherkinTag of the holder (typical for scenario / background / rule)
+            //   2) preceding-sibling GherkinTag (typical for Feature-level tags written
+            //      above the `Feature:` keyword — they sit at the file root)
+            val tags = mutableListOf<String>()
+            PsiTreeUtil.getChildrenOfType(holder, GherkinTag::class.java)
+                ?.forEach { tags += it.text.trim() }
+            val preceding = mutableListOf<String>()
+            var prev = holder.prevSibling
+            while (prev != null) {
+                when (prev) {
+                    is GherkinTag -> preceding.add(0, prev.text.trim())
+                    is com.intellij.psi.PsiWhiteSpace, is com.intellij.psi.PsiComment -> { /* skip */ }
+                    else -> break
+                }
+                prev = prev.prevSibling
+            }
+            (preceding + tags).filter { it.isNotEmpty() }
         }
     }
 
