@@ -13,12 +13,30 @@ import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiTreeUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+
+/**
+ * Structured decoration attached to a Cucumber+ outermost suite proxy via
+ * [SMTestProxy.putUserData] — consumed by [TzCucumberTreeStyledRenderer] to render
+ * multi-fragment styled cell text (file name in grey, primary header in bold,
+ * secondaries in grey italic).
+ */
+data class CucumberSuiteDecoration(
+    val fileName: String,
+    val primary: String?,
+    val secondaries: List<String>
+)
+
+val CUCUMBER_DECORATION_KEY: Key<CucumberSuiteDecoration> =
+    Key.create("tzatziki.cucumber.suite.decoration")
+val CUCUMBER_WRAPPER_KEY: Key<Boolean> =
+    Key.create("tzatziki.cucumber.suite.wrapper")
 
 /**
  * Decorates the outermost Cucumber suite node in the Run / Debug tool window so the user
@@ -63,6 +81,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         if (suite.name == "Cucumber" && suite.parent?.parent == null) {
             if (suite.presentableName != "Cucumber+") {
                 suite.setPresentableName("Cucumber+")
+                suite.putUserData(CUCUMBER_WRAPPER_KEY, true)
                 LOG.info("C+ decorate[$phase] wrapper 'Cucumber' -> 'Cucumber+'")
             }
             return
@@ -87,23 +106,37 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         //   - n pairs        → `File.feature  /  primary [secondary, …]`
         //                       primary = LAST in source order.
         val pairs = readFeatureKeywordPairs(project, locationUrl)
-        val decorated = when {
-            pairs.isEmpty() -> "$fileName$MARKER$current"
+        // Decompose into structured parts (fileName / primary / secondaries) so the
+        // styled cell renderer can format each fragment with its own SimpleTextAttributes.
+        // We ALSO build a fallback plain-text presentableName in case the renderer wrapper
+        // is not yet installed (e.g. tree shown before [TzCucumberTreeStyledRenderer] hooks).
+        val decoration: CucumberSuiteDecoration
+        val plain: String
+        when {
+            pairs.isEmpty() -> {
+                decoration = CucumberSuiteDecoration(fileName, current, emptyList())
+                plain = "$fileName$MARKER$current"
+            }
             pairs.size == 1 -> {
                 val (kw, name) = pairs.first()
-                if (kw.equals("Business Need", true) || kw.equals("Ability", true))
-                    "$fileName [$name]"
-                else
-                    "$fileName$MARKER$name"
+                if (kw.equals("Business Need", true) || kw.equals("Ability", true)) {
+                    decoration = CucumberSuiteDecoration(fileName, null, listOf(name))
+                    plain = "$fileName [$name]"
+                } else {
+                    decoration = CucumberSuiteDecoration(fileName, name, emptyList())
+                    plain = "$fileName$MARKER$name"
+                }
             }
             else -> {
                 val primary = pairs.last().second
-                val secondary = pairs.dropLast(1).joinToString(", ") { it.second }
-                "$fileName$MARKER$primary [$secondary]"
+                val secondaries = pairs.dropLast(1).map { it.second }
+                decoration = CucumberSuiteDecoration(fileName, primary, secondaries)
+                plain = "$fileName$MARKER$primary [${secondaries.joinToString(", ")}]"
             }
         }
-        suite.setPresentableName(decorated)
-        LOG.info("C+ decorate[$phase] '${suite.name}' loc='$locationUrl' -> '$decorated'")
+        suite.putUserData(CUCUMBER_DECORATION_KEY, decoration)
+        suite.setPresentableName(plain)
+        LOG.info("C+ decorate[$phase] '${suite.name}' loc='$locationUrl' -> file='${decoration.fileName}' primary='${decoration.primary}' sec=${decoration.secondaries}")
     }
 
     /**

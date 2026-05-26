@@ -206,6 +206,7 @@
         <testStatusListener implementation="io.nimbly.tzatziki.testdiscovery.TzTestStatusListener"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.testdiscovery.TzCucumberSuiteNameDecorator"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.testdiscovery.TzCucumberTreeDoubleClick"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.testdiscovery.TzCucumberTreeStyledRenderer"/>
         <annotator language="Gherkin" implementationClass="io.nimbly.tzatziki.testdiscovery.TzTestsResultsAnnotator" order="LAST"/>
         <additionalTextAttributes scheme="Default" file="colorSchemes/CCPDefault.xml"/>
         <additionalTextAttributes scheme="Darcula" file="colorSchemes/CCPDarcula.xml"/>
