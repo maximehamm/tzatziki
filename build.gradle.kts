@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.4"
+    version = "21.8.5"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.5</b> Fix #124 — 20s+ editor freezes on IntelliJ 2026.1.x EAP: the overridden <code>GotoDeclaration</code> action (<code>TzGotoStepDefAction</code>) is now declared with explicit <code>text</code> and <code>description</code> attributes, satisfying the platform's stricter menu validation that was throwing <code>PluginException: Empty menu item text</code> on every menu repaint. Also: test tree wrapper "Cucumber+" rendered in default style (no bold), and Windows-side VFS resolution falls back to <code>LocalFileSystem.findFileByPath</code> when <code>findFileByUrl</code> returns null on <code>file:///C:/…</code> URLs — restores the <code>file.feature  /  Feature title [Business Need title]</code> suite label that was collapsing to <code>file.feature  /  Business Need title</code> on Windows.</li>
          <li><b>21.8.4</b> Cucumber test tree: split the file name from the feature header label (file in default style, header in grey). Fix the dbl-click-to-navigate handler on Windows by mirroring the platform's <code>mouseClicked</code> event (was <code>mousePressed</code> — consume didn't propagate cross-event on Windows AWT). Also walks the file root when resolving feature/business-need keyword pairs, in case the parser splits them into sibling features.</li>
          <li><b>21.8.3</b> Cucumber test tree: surface Gherkin tags (e.g. <code>@Production @Chrome</code>) at the end of each suite node in grey — Feature-level tags written above the keyword are surfaced on the top suite, scenario / outline / background tags on their own node. Also catches tree-replacement on test re-runs so double-click-to-navigate keeps working when IntelliJ reuses the run tab.</li>
          <li><b>21.8.2</b> Cucumber test tree styled rendering: the outermost feature suite renders as multi-fragment text — file name in grey, primary header (Feature) in <b>bold</b>, secondary headers (Business Need / Ability) in <i>grey italic</i> between brackets. The "Cucumber+" wrapper node is also bolded. No change to behaviour, just a clearer visual.</li>

@@ -43,6 +43,16 @@ import org.jetbrains.plugins.cucumber.psi.GherkinStep
  */
 class TzGotoStepDefAction : GotoDeclarationAction() {
 
+    init {
+        // Fallback for IntelliJ 2026.1.x EAP, which validates action text strictly at
+        // menu paint time and throws PluginException ("Empty menu item text") otherwise
+        // — that exception was retried on every menu repaint and caused 20s+ editor
+        // freezes (issue #124). `plugin.xml` already sets these, but populating the
+        // template presentation here guards against any registration timing race.
+        templatePresentation.text = "Go to Declaration"
+        templatePresentation.description = "Navigate to the declaration of a symbol"
+    }
+
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
         val editor = e.getData(CommonDataKeys.EDITOR)

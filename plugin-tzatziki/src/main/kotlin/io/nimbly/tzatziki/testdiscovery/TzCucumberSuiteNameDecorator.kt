@@ -172,11 +172,23 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
      * sibling. Walking from the file root catches both layouts.
      */
     private fun readFeatureKeywordPairs(project: Project, locationUrl: String): List<Pair<String, String>> {
-        // Strip the trailing `:lineNumber` (teamcity locationUrl convention) before
-        // resolving — `VirtualFileManager.findFileByUrl` expects a plain `file://…` URL.
-        // Plus it transparently handles Unix vs Windows paths, escaping, etc.
+        // Strip the trailing `:lineNumber` (teamcity locationUrl convention).
         val cleanUrl = if (locationUrl.matches(Regex(".*:\\d+$"))) locationUrl.substringBeforeLast(':') else locationUrl
-        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl) ?: return emptyList()
+        // Resolve via VFS by URL first; fall back to file-system path if that fails
+        // (encountered on Windows where `file:///C:/...` URL encoding is finicky and
+        // findFileByUrl occasionally returns null — issue reported by users).
+        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl)
+            ?: run {
+                val plainPath = cleanUrl
+                    .removePrefix("file:///")
+                    .removePrefix("file://")
+                    .let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
+                com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(plainPath)
+            }
+            ?: run {
+                LOG.warn("C+ readFeatureKeywordPairs unable to resolve VFS for locationUrl='$locationUrl'")
+                return emptyList()
+            }
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val pairs = mutableListOf<Pair<String, String>>()
@@ -215,7 +227,15 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return emptyList()
         val cleanUrl = match.groupValues[1]
         val lineNumber = match.groupValues[2].toIntOrNull() ?: return emptyList()
-        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl) ?: return emptyList()
+        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl)
+            ?: run {
+                val plainPath = cleanUrl
+                    .removePrefix("file:///")
+                    .removePrefix("file://")
+                    .let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
+                com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(plainPath)
+            }
+            ?: return emptyList()
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)

@@ -104,12 +104,13 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
             if (result !is ColoredTreeCellRenderer) return result
             val proxy = SMTRunnerTestTreeView.getTestProxyFor(value) ?: return result
 
-            // "Cucumber+" wrapper node: just bold.
+            // "Cucumber+" wrapper node: default style (no bold) — matches the file-name
+            // styling on the suite below for visual consistency.
             if (proxy.getUserData(CUCUMBER_WRAPPER_KEY) == true) {
                 val savedIcon = result.icon
                 result.clear()
                 result.icon = savedIcon
-                result.append("Cucumber+", SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
+                result.append("Cucumber+", SimpleTextAttributes.REGULAR_ATTRIBUTES)
                 return result
             }
 

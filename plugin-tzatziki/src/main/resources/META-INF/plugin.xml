@@ -329,9 +329,13 @@
     <actions>
         <!-- Override Goto-Declaration so that on Gherkin steps we control the popup
              (filter via .cucumber-scope + footer hint, issue #104). For non-Gherkin
-             contexts the action delegates to the original GotoDeclarationAction. -->
+             contexts the action delegates to the original GotoDeclarationAction.
+             IntelliJ 2026.1.x EAP rejects actions without explicit text — declare it
+             here AND in the class constructor (issue #124, 20s editor freezes). -->
         <action id="GotoDeclaration"
                 class="io.nimbly.tzatziki.references.TzGotoStepDefAction"
+                text="Go to Declaration"
+                description="Navigate to the declaration of a symbol"
                 overrides="true"/>
     </actions>
 
