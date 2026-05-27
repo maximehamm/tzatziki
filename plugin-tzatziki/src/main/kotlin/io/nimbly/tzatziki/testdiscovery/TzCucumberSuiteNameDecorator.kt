@@ -164,10 +164,12 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
     }
 
     /**
-     * Returns the (keyword, name) pairs following each FEATURE_KEYWORD inside the feature,
-     * in source order. Walks the whole subtree because cucumber-plugin parses a second
-     * `Feature:` (or `Ability:`) sitting under a `Business Need:` as a FEATURE_KEYWORD
-     * *inside* the enclosing GherkinFeatureHeader — invisible to a one-level walk.
+     * Returns the (keyword, name) pairs following each FEATURE_KEYWORD in the file, in
+     * source order. We walk the WHOLE `PsiFile` (not just the first `GherkinFeature`)
+     * because the cucumber-plugin parses a second `Feature:`/`Ability:` next to a
+     * `Business Need:` differently depending on the IntelliJ build: sometimes nested
+     * inside the first GherkinFeatureHeader, sometimes as a second GherkinFeature
+     * sibling. Walking from the file root catches both layouts.
      */
     private fun readFeatureKeywordPairs(project: Project, locationUrl: String): List<Pair<String, String>> {
         // Strip the trailing `:lineNumber` (teamcity locationUrl convention) before
@@ -177,8 +179,6 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl) ?: return emptyList()
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
-            val feature = PsiTreeUtil.findChildOfType(psiFile, GherkinFeature::class.java)
-                ?: return@runReadAction emptyList()
             val pairs = mutableListOf<Pair<String, String>>()
             var pendingKeyword: String? = null
             fun walk(n: com.intellij.lang.ASTNode) {
@@ -200,7 +200,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
                     c = c.treeNext
                 }
             }
-            walk(feature.node)
+            walk(psiFile.node)
             pairs
         }
     }

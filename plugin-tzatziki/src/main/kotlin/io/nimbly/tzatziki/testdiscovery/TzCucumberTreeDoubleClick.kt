@@ -123,16 +123,30 @@ class TzCucumberTreeDoubleClick : ProjectActivity {
     }
 
     private class CucumberTreeDoubleClickAdapter(private val tree: SMTRunnerTestTreeView) : MouseAdapter() {
-        override fun mousePressed(e: MouseEvent) {
+        // Diagnostic build (21.8.4): logs every double-click attempt so we can collect
+        // Windows-side traces if the issue persists. Remove logs once confirmed working.
+        // The platform's EditSourceOnDoubleClickHandler.TreeMouseListener listens to
+        // `mouseClicked` (not `mousePressed`). On macOS Swing forwards consume across
+        // event types, but on Windows AWT it does NOT — so consuming a mousePressed
+        // didn't prevent the platform's mouseClicked toggle. We now mirror the platform's
+        // event type so our consume kills the toggle on every OS.
+        override fun mouseClicked(e: MouseEvent) {
+            if (e.clickCount >= 2) {
+                LOG.info("C+ dbl-click mouseClicked clicks=${e.clickCount} left=${SwingUtilities.isLeftMouseButton(e)} consumed=${e.isConsumed}")
+            }
             if (!TOGGLE_CUCUMBER_PL || e.clickCount != 2 || !SwingUtilities.isLeftMouseButton(e)) return
-            val path = tree.getPathForLocation(e.x, e.y) ?: return
-            val proxy = tree.getSelectedTest(path) as? SMTestProxy ?: return
+            val path = tree.getPathForLocation(e.x, e.y)
+            val proxy = path?.let { tree.getSelectedTest(it) as? SMTestProxy }
+            LOG.info("C+ dbl-click path=${path != null} proxy='${proxy?.name}' url='${proxy?.locationUrl}' kids=${proxy?.children?.size}")
+            if (path == null) return
+            if (proxy == null) return
             val url = proxy.locationUrl ?: return
             if (!url.contains(".feature", ignoreCase = true)) return
             if (proxy.children.isEmpty()) return  // leaves already navigate by default
             try {
                 proxy.navigate(true)
                 e.consume()
+                LOG.info("C+ dbl-click NAVIGATED to '${proxy.name}'")
             } catch (t: Throwable) {
                 LOG.warn("C+ tree dbl-click navigate failed: ${t.message}")
             }
