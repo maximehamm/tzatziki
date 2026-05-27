@@ -109,7 +109,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         // for the styled renderer, then bail — no name decoration needed at this level.
         if (parentUrl != null && featureFileNameOf(parentUrl) != null) {
             if (suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
-                val tags = readScenarioTags(project, locationUrl)
+                val tags = readScenarioTags(project, suite, locationUrl)
                 if (tags.isNotEmpty()) {
                     suite.putUserData(CUCUMBER_TAGS_KEY, tags.joinToString(" ", prefix = " "))
                 }
@@ -128,7 +128,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         //                    → `File.feature  /  name`
         //   - n pairs        → `File.feature  /  primary [secondary, …]`
         //                       primary = LAST in source order.
-        val pairs = readFeatureKeywordPairs(project, locationUrl)
+        val pairs = readFeatureKeywordPairs(project, suite, locationUrl)
         // Decompose into structured parts (fileName / primary / secondaries) so the
         // styled cell renderer can format each fragment with its own SimpleTextAttributes.
         // We ALSO build a fallback plain-text presentableName in case the renderer wrapper
@@ -160,7 +160,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         suite.putUserData(CUCUMBER_DECORATION_KEY, decoration)
         // Feature-level tags (e.g. `@global` above `Feature:`) — surface them too.
         if (suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
-            val featureTags = readScenarioTags(project, locationUrl)
+            val featureTags = readScenarioTags(project, suite, locationUrl)
             if (featureTags.isNotEmpty()) {
                 suite.putUserData(CUCUMBER_TAGS_KEY, featureTags.joinToString(" ", prefix = " "))
             }
@@ -177,9 +177,8 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
      * inside the first GherkinFeatureHeader, sometimes as a second GherkinFeature
      * sibling. Walking from the file root catches both layouts.
      */
-    private fun readFeatureKeywordPairs(project: Project, locationUrl: String): List<Pair<String, String>> {
-        val cleanUrl = if (locationUrl.matches(Regex(".*:\\d+$"))) locationUrl.substringBeforeLast(':') else locationUrl
-        val vfile = resolveFeatureVFile(cleanUrl) ?: run {
+    private fun readFeatureKeywordPairs(project: Project, suite: SMTestProxy, locationUrl: String): List<Pair<String, String>> {
+        val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: run {
             LOG.warn("C+ readFeatureKeywordPairs unable to resolve VFS for locationUrl='$locationUrl'")
             return emptyList()
         }
@@ -217,11 +216,10 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
      * including the leading `@`, in source order. Empty list if the holder has no tags
      * or the URL doesn't resolve. Runs inside a read action — safe to call from any thread.
      */
-    private fun readScenarioTags(project: Project, locationUrl: String): List<String> {
+    private fun readScenarioTags(project: Project, suite: SMTestProxy, locationUrl: String): List<String> {
         val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return emptyList()
-        val cleanUrl = match.groupValues[1]
         val lineNumber = match.groupValues[2].toIntOrNull() ?: return emptyList()
-        val vfile = resolveFeatureVFile(cleanUrl) ?: return emptyList()
+        val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: return emptyList()
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
@@ -264,18 +262,33 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
     }
 
     /**
-     * Robust VFS resolution for the cucumber-jvm location URL.
+     * Robust VFS resolution for a cucumber-jvm test suite.
      *
-     * Tries in order:
-     *   1. `VirtualFileManager.findFileByUrl(url)` — straight VFS lookup (works for most cases)
-     *   2. `java.net.URI(url)` parsing → drop leading `/` before a Windows drive letter
-     *      (`/C:/...` → `C:/...`) → `LocalFileSystem.findFileByPath`
-     *   3. Naive `removePrefix("file:///")` fallback for badly-formed URLs
-     *
-     * Each step is logged so post-mortem we can tell which strategy succeeded — useful
-     * for diagnosing Windows + WSL paths reported by users.
+     * Strategy in order (most reliable first):
+     *   0. `proxy.getLocation(project, allScope).virtualFile` — the SAME mechanism the
+     *      platform uses for `proxy.navigate()`, so it transparently handles
+     *      Windows-with-WSL setups where the test emits `file:///home/…` URLs that
+     *      IntelliJ stores internally as `file:////wsl.localhost/Ubuntu/home/…` (or
+     *      similar). Falls back to URL parsing only when getLocation returns null.
+     *   1. `VirtualFileManager.findFileByUrl(url)` — direct VFS lookup.
+     *   2. `URI.path` parsing → Windows `/C:/…` → `C:/…` normalisation.
+     *   3. Brute strip.
      */
-    private fun resolveFeatureVFile(cleanUrl: String): com.intellij.openapi.vfs.VirtualFile? {
+    private fun resolveFeatureVFile(
+        project: Project,
+        suite: SMTestProxy,
+        locationUrl: String
+    ): com.intellij.openapi.vfs.VirtualFile? {
+        // Prefer the platform's own resolver — works on Windows+WSL where URL string
+        // parsing alone fails.
+        runReadAction {
+            runCatching {
+                suite.getLocation(project, com.intellij.psi.search.GlobalSearchScope.allScope(project))
+                    ?.virtualFile
+            }.getOrNull()
+        }?.let { return it }
+
+        val cleanUrl = if (locationUrl.matches(Regex(".*:\\d+$"))) locationUrl.substringBeforeLast(':') else locationUrl
         val vfm = VirtualFileManager.getInstance()
         val lfs = com.intellij.openapi.vfs.LocalFileSystem.getInstance()
 
@@ -284,27 +297,17 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         runCatching {
             val uri = java.net.URI(cleanUrl)
             val uriPath = uri.path ?: return@runCatching null
-            // URI.path on Windows: `/C:/path`. IntelliJ's findFileByPath wants `C:/path`.
             val normalized = if (uriPath.length > 2 && uriPath[0] == '/' && uriPath[2] == ':') {
                 uriPath.drop(1)
-            } else {
-                uriPath
-            }
+            } else uriPath
             lfs.findFileByPath(normalized)
-        }.getOrNull()?.let {
-            LOG.info("C+ resolveFeatureVFile fallback URI.path → '${it.path}' for '$cleanUrl'")
-            return it
-        }
+        }.getOrNull()?.let { return it }
 
-        // Last-chance fallback: brute-force strip the scheme.
         val brute = cleanUrl
             .removePrefix("file:///")
             .removePrefix("file://")
             .let { runCatching { java.net.URLDecoder.decode(it, Charsets.UTF_8) }.getOrDefault(it) }
-        lfs.findFileByPath(brute)?.let {
-            LOG.info("C+ resolveFeatureVFile fallback brute → '${it.path}' for '$cleanUrl'")
-            return it
-        }
+        lfs.findFileByPath(brute)?.let { return it }
 
         LOG.warn("C+ resolveFeatureVFile FAILED for cleanUrl='$cleanUrl'")
         return null
