@@ -95,6 +95,8 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
     }
 
     private class StyledDelegateRenderer(private val delegate: TreeCellRenderer) : TreeCellRenderer {
+        private val lazyDecorator = TzCucumberSuiteNameDecorator()
+
         override fun getTreeCellRendererComponent(
             tree: JTree, value: Any?, selected: Boolean, expanded: Boolean,
             leaf: Boolean, row: Int, hasFocus: Boolean
@@ -103,6 +105,17 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
             if (!TOGGLE_CUCUMBER_PL) return result
             if (result !is ColoredTreeCellRenderer) return result
             val proxy = SMTRunnerTestTreeView.getTestProxyFor(value) ?: return result
+
+            // Safety net: some Cucumber runners (Windows + WSL setups reported by users)
+            // don't publish SMTRunnerEvents through the project bus, so our normal listener
+            // path in [TzCucumberSuiteNameDecorator] never fires. Trigger decoration here
+            // lazily — first paint of the cell computes + caches, subsequent paints reuse.
+            if (proxy.getUserData(CUCUMBER_DECORATION_KEY) == null
+                && proxy.getUserData(CUCUMBER_WRAPPER_KEY) != true
+                && proxy.getUserData(CUCUMBER_TAGS_KEY) == null
+            ) {
+                projectOf(tree)?.let { lazyDecorator.decorate(proxy, it, "lazy-render") }
+            }
 
             // "Cucumber+" wrapper node: default style (no bold) — matches the file-name
             // styling on the suite below for visual consistency.
@@ -157,5 +170,16 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
         private val LOG = Logger.getInstance(TzCucumberTreeStyledRenderer::class.java)
         private const val RENDERER_INSTALLED_KEY = "tzatziki.cucumber.styled.renderer.installed"
         private val TEST_TOOL_WINDOW_IDS = listOf("Run", "Debug")
+
+        /** Best-effort lookup of the [com.intellij.openapi.project.Project] hosting a tree. */
+        private fun projectOf(tree: JTree): com.intellij.openapi.project.Project? {
+            // The tree itself or its ancestors should provide the project via the
+            // standard DataManager mechanism (set up by IntelliJ's content/tool window).
+            return runCatching {
+                val ctx = com.intellij.ide.DataManager.getInstance().getDataContext(tree)
+                com.intellij.openapi.actionSystem.CommonDataKeys.PROJECT.getData(ctx)
+            }.getOrNull()
+                ?: com.intellij.openapi.project.ProjectManager.getInstance().openProjects.firstOrNull()
+        }
     }
 }

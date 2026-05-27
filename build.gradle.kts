@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.6"
+    version = "21.8.7"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.7</b> Test tree decoration on Windows + WSL: some Cucumber runners don't publish SMTRunner events on the project bus — our listener was silently never fired so the file-name + feature title decoration was missing. Now we (1) subscribe to BOTH the project AND application message bus, and (2) lazily run the decoration from the styled renderer on first paint as a safety net.</li>
          <li><b>21.8.6</b> Test tree suite label on Windows + WSL: more robust VFS resolution of cucumber-jvm <code>file:///…</code> location URLs — tries <code>findFileByUrl</code>, then <code>URI.path</code> with leading-slash normalisation for Windows drive letters (<code>/C:/…</code> → <code>C:/…</code>), then a brute-force fallback. The <code>file.feature  /  Feature title [Business Need title]</code> label now appears correctly on Windows + WSL setups.</li>
          <li><b>21.8.5</b> Fix #124 — 20s+ editor freezes on IntelliJ 2026.1.x EAP: the overridden <code>GotoDeclaration</code> action (<code>TzGotoStepDefAction</code>) is now declared with explicit <code>text</code> and <code>description</code> attributes, satisfying the platform's stricter menu validation that was throwing <code>PluginException: Empty menu item text</code> on every menu repaint. Also: test tree wrapper "Cucumber+" rendered in default style (no bold), and Windows-side VFS resolution falls back to <code>LocalFileSystem.findFileByPath</code> when <code>findFileByUrl</code> returns null on <code>file:///C:/…</code> URLs — restores the <code>file.feature  /  Feature title [Business Need title]</code> suite label that was collapsing to <code>file.feature  /  Business Need title</code> on Windows.</li>
          <li><b>21.8.4</b> Cucumber test tree: split the file name from the feature header label (file in default style, header in grey). Fix the dbl-click-to-navigate handler on Windows by mirroring the platform's <code>mouseClicked</code> event (was <code>mousePressed</code> — consume didn't propagate cross-event on Windows AWT). Also walks the file root when resolving feature/business-need keyword pairs, in case the parser splits them into sibling features.</li>

@@ -61,18 +61,24 @@ val CUCUMBER_TAGS_KEY: Key<String> =
 class TzCucumberSuiteNameDecorator : ProjectActivity {
 
     override suspend fun execute(project: Project) {
-        project.messageBus.connect().subscribe(
-            SMTRunnerEventsListener.TEST_STATUS,
-            object : SMTRunnerEventsAdapter() {
-                override fun onSuiteStarted(suite: SMTestProxy) = decorate(suite, project, "started")
-                override fun onSuiteTreeNodeAdded(suite: SMTestProxy) = decorate(suite, project, "treeAdded")
-                override fun onSuiteTreeStarted(suite: SMTestProxy) = decorate(suite, project, "treeStarted")
-            }
-        )
-        LOG.info("C+ TzCucumberSuiteNameDecorator subscribed for project ${project.name}")
+        val adapter = object : SMTRunnerEventsAdapter() {
+            override fun onSuiteStarted(suite: SMTestProxy) = decorate(suite, project, "started")
+            override fun onSuiteTreeNodeAdded(suite: SMTestProxy) = decorate(suite, project, "treeAdded")
+            override fun onSuiteTreeStarted(suite: SMTestProxy) = decorate(suite, project, "treeStarted")
+        }
+        // Subscribe BOTH to the project bus (standard) and the application bus — some
+        // test runners (notably some Windows+WSL cucumber-jvm setups reported by users)
+        // publish SMTRunner events on the application bus only, so the project-only
+        // subscription would silently miss every event and we'd never decorate.
+        project.messageBus.connect().subscribe(SMTRunnerEventsListener.TEST_STATUS, adapter)
+        com.intellij.openapi.application.ApplicationManager.getApplication().messageBus.connect(project)
+            .subscribe(SMTRunnerEventsListener.TEST_STATUS, adapter)
+        LOG.info("C+ TzCucumberSuiteNameDecorator subscribed (project + application bus) for project ${project.name}")
     }
 
-    private fun decorate(suite: SMTestProxy, project: Project, phase: String) {
+    /** Public — also invoked lazily by [TzCucumberTreeStyledRenderer] as a safety net
+     *  when the SMTRunner events never fire on the current setup. */
+    fun decorate(suite: SMTestProxy, project: Project, phase: String) {
         if (!TOGGLE_CUCUMBER_PL) return
 
         // The cucumber-jvm tree looks like:
