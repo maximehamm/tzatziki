@@ -172,23 +172,11 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
      * sibling. Walking from the file root catches both layouts.
      */
     private fun readFeatureKeywordPairs(project: Project, locationUrl: String): List<Pair<String, String>> {
-        // Strip the trailing `:lineNumber` (teamcity locationUrl convention).
         val cleanUrl = if (locationUrl.matches(Regex(".*:\\d+$"))) locationUrl.substringBeforeLast(':') else locationUrl
-        // Resolve via VFS by URL first; fall back to file-system path if that fails
-        // (encountered on Windows where `file:///C:/...` URL encoding is finicky and
-        // findFileByUrl occasionally returns null — issue reported by users).
-        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl)
-            ?: run {
-                val plainPath = cleanUrl
-                    .removePrefix("file:///")
-                    .removePrefix("file://")
-                    .let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
-                com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(plainPath)
-            }
-            ?: run {
-                LOG.warn("C+ readFeatureKeywordPairs unable to resolve VFS for locationUrl='$locationUrl'")
-                return emptyList()
-            }
+        val vfile = resolveFeatureVFile(cleanUrl) ?: run {
+            LOG.warn("C+ readFeatureKeywordPairs unable to resolve VFS for locationUrl='$locationUrl'")
+            return emptyList()
+        }
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val pairs = mutableListOf<Pair<String, String>>()
@@ -227,15 +215,7 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return emptyList()
         val cleanUrl = match.groupValues[1]
         val lineNumber = match.groupValues[2].toIntOrNull() ?: return emptyList()
-        val vfile = VirtualFileManager.getInstance().findFileByUrl(cleanUrl)
-            ?: run {
-                val plainPath = cleanUrl
-                    .removePrefix("file:///")
-                    .removePrefix("file://")
-                    .let { java.net.URLDecoder.decode(it, Charsets.UTF_8) }
-                com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(plainPath)
-            }
-            ?: return emptyList()
+        val vfile = resolveFeatureVFile(cleanUrl) ?: return emptyList()
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
@@ -275,6 +255,53 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
             }
             (preceding + tags).filter { it.isNotEmpty() }
         }
+    }
+
+    /**
+     * Robust VFS resolution for the cucumber-jvm location URL.
+     *
+     * Tries in order:
+     *   1. `VirtualFileManager.findFileByUrl(url)` — straight VFS lookup (works for most cases)
+     *   2. `java.net.URI(url)` parsing → drop leading `/` before a Windows drive letter
+     *      (`/C:/...` → `C:/...`) → `LocalFileSystem.findFileByPath`
+     *   3. Naive `removePrefix("file:///")` fallback for badly-formed URLs
+     *
+     * Each step is logged so post-mortem we can tell which strategy succeeded — useful
+     * for diagnosing Windows + WSL paths reported by users.
+     */
+    private fun resolveFeatureVFile(cleanUrl: String): com.intellij.openapi.vfs.VirtualFile? {
+        val vfm = VirtualFileManager.getInstance()
+        val lfs = com.intellij.openapi.vfs.LocalFileSystem.getInstance()
+
+        vfm.findFileByUrl(cleanUrl)?.let { return it }
+
+        runCatching {
+            val uri = java.net.URI(cleanUrl)
+            val uriPath = uri.path ?: return@runCatching null
+            // URI.path on Windows: `/C:/path`. IntelliJ's findFileByPath wants `C:/path`.
+            val normalized = if (uriPath.length > 2 && uriPath[0] == '/' && uriPath[2] == ':') {
+                uriPath.drop(1)
+            } else {
+                uriPath
+            }
+            lfs.findFileByPath(normalized)
+        }.getOrNull()?.let {
+            LOG.info("C+ resolveFeatureVFile fallback URI.path → '${it.path}' for '$cleanUrl'")
+            return it
+        }
+
+        // Last-chance fallback: brute-force strip the scheme.
+        val brute = cleanUrl
+            .removePrefix("file:///")
+            .removePrefix("file://")
+            .let { runCatching { java.net.URLDecoder.decode(it, Charsets.UTF_8) }.getOrDefault(it) }
+        lfs.findFileByPath(brute)?.let {
+            LOG.info("C+ resolveFeatureVFile fallback brute → '${it.path}' for '$cleanUrl'")
+            return it
+        }
+
+        LOG.warn("C+ resolveFeatureVFile FAILED for cleanUrl='$cleanUrl'")
+        return null
     }
 
     /** Extract `FooBar.feature` from `file:///…/FooBar.feature:1` or `file:///…/FooBar.feature`. */
