@@ -1,0 +1,2 @@
+io.nimbly.tzatziki::Internal class com.intellij.refactoring.suggested.UtilsKt is referenced.*
+io.nimbly.tzatziki::Internal method com.intellij.refactoring.suggested.UtilsKt.*

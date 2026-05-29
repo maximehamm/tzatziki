@@ -87,6 +87,12 @@ intellijPlatform {
             // (IU-262.4852.50 broke 21.5.0 with CucumberStepHelper.getExtensionCount removal).
             ide("IU", "262.4852.50")
         }
+        // Hide the handful of internal-API usages we've deliberately accepted —
+        // see verifier-ignored-problems.txt for the per-problem rationale.
+        freeArgs = listOf(
+            "-ignored-problems",
+            file("verifier-ignored-problems.txt").absolutePath,
+        )
     }
     publishing {
         token = System.getProperty("PublishToken")
@@ -98,6 +104,33 @@ intellijPlatform {
 kotlin {
     jvmToolchain(21)
 }
+
+// Bake the plugin version into a generated Kotlin constant so runtime code can
+// read it WITHOUT touching `PluginManager.findEnabledPlugin(PluginId)` — which the
+// Marketplace verifier flags as an internal API usage.
+val generatedVersionDir = layout.buildDirectory.dir("generated/source/pluginVersion/kotlin")
+val generatePluginVersion by tasks.registering {
+    val v = project.version.toString()
+    val outDir = generatedVersionDir
+    inputs.property("version", v)
+    outputs.dir(outDir)
+    doLast {
+        val pkgDir = outDir.get().asFile.resolve("io/nimbly/tzatziki")
+        pkgDir.mkdirs()
+        pkgDir.resolve("PluginVersion.kt").writeText(
+            """
+            // Generated — do not edit. See build.gradle.kts:generatePluginVersion.
+            package io.nimbly.tzatziki
+            internal object PluginVersion { const val VALUE: String = "$v" }
+            """.trimIndent() + "\n"
+        )
+    }
+}
+
+kotlin {
+    sourceSets["main"].kotlin.srcDir(generatedVersionDir)
+}
+tasks.named("compileKotlin") { dependsOn(generatePluginVersion) }
 
 tasks {
     jar {
