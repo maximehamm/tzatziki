@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.util.Alarm
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
@@ -14,6 +15,8 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import io.nimbly.tzatziki.Tzatziki
 import io.nimbly.tzatziki.util.*
+import java.util.Collections
+import java.util.WeakHashMap
 import org.jetbrains.plugins.cucumber.psi.*
 import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
@@ -27,21 +30,65 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
 
     private val LOG = Logger.getInstance(TzBreakpointListener::class.java)
 
-    @Volatile private var changeInProgress = false
     @Volatile private var addInProgress = false
     @Volatile private var removeInProgress = false
 
+    // Per-breakpoint signature cache (enabled flag + condition text + suspend policy).
+    // Issue #124-bis: `breakpointChanged` fires on every document edit that shifts a
+    // breakpoint's line — IntelliJ recomputes line positions and re-fires the event
+    // even though nothing semantically changed. The previous global `changeInProgress`
+    // flag only prevented overlapping work; it still ran a full project-wide
+    // `ReferencesSearch` (→ `TzCucumberStepReference.multiResolve` on every potential
+    // match) on each keystroke, freezing autocompletion on large projects + WSL.
+    // We now compare an actionable signature and bail when nothing relevant changed.
+    private val lastSignatures: MutableMap<XBreakpoint<*>, String> =
+        Collections.synchronizedMap(WeakHashMap())
+
+    // Debounce: coalesce rapid-fire CHANGED events for the same breakpoint into a
+    // single refresh ~600ms after the last event. Backed by a project-scoped Alarm
+    // (POOLED_THREAD) so it disposes cleanly when the project closes.
+    private val debounce = Alarm(Alarm.ThreadToUse.POOLED_THREAD, project)
+    private val pendingChange: MutableSet<XBreakpoint<*>> =
+        Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+
+    private fun signatureOf(b: XBreakpoint<*>): String {
+        // Position-independent — line shifts must NOT invalidate this.
+        val cond = runCatching { b.conditionExpression?.expression }.getOrNull().orEmpty()
+        val log  = runCatching { b.logExpressionObject?.expression }.getOrNull().orEmpty()
+        val susp = runCatching { b.suspendPolicy?.name }.getOrNull().orEmpty()
+        return "${b.isEnabled}|$susp|$cond|$log"
+    }
+
     override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
         if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
-        if (changeInProgress) return
-        changeInProgress = true
-        scheduleRefresh(breakpoint, EAction.CHANGED) { changeInProgress = false }
+
+        // Skip events where only the line position drifted — those re-fire on every
+        // keystroke and don't require any Cucumber+ resync work.
+        val sig = signatureOf(breakpoint)
+        val old = lastSignatures.put(breakpoint, sig)
+        if (old == sig) return
+
+        // Coalesce: cancel any pending refresh for this same breakpoint, then schedule a
+        // fresh one. Multiple CHANGED events arriving within 600ms collapse into one.
+        pendingChange.add(breakpoint)
+        debounce.cancelAllRequests()
+        debounce.addRequest({
+            val toProcess = synchronized(pendingChange) {
+                val snap = pendingChange.toList()
+                pendingChange.clear()
+                snap
+            }
+            toProcess.forEach { bp ->
+                runRefresh(bp, EAction.CHANGED) { /* no flag */ }
+            }
+        }, 600)
     }
 
     override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
         if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
         if (addInProgress) return
         addInProgress = true
+        lastSignatures[breakpoint] = signatureOf(breakpoint)
         scheduleRefresh(breakpoint, EAction.ADDED) { addInProgress = false }
     }
 
@@ -49,6 +96,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
         if (removeInProgress) return
         removeInProgress = true
+        lastSignatures.remove(breakpoint)
         scheduleRefresh(breakpoint, EAction.REMOVED) { removeInProgress = false }
     }
 
@@ -60,16 +108,20 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
      */
     private fun scheduleRefresh(breakpoint: XBreakpoint<*>, action: EAction, releaseFlag: () -> Unit) {
         DumbService.getInstance(project).smartInvokeLater {
-            ApplicationManager.getApplication().executeOnPooledThread {
-                try {
-                    ReadAction.run<Throwable> {
-                        refresh(breakpoint, action)
-                    }
-                } catch (t: Throwable) {
-                    LOG.warn("Cucumber+ refresh failed", t)
-                } finally {
-                    releaseFlag()
+            runRefresh(breakpoint, action, releaseFlag)
+        }
+    }
+
+    private fun runRefresh(breakpoint: XBreakpoint<*>, action: EAction, releaseFlag: () -> Unit) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            try {
+                ReadAction.run<Throwable> {
+                    refresh(breakpoint, action)
                 }
+            } catch (t: Throwable) {
+                LOG.warn("Cucumber+ refresh failed", t)
+            } finally {
+                releaseFlag()
             }
         }
     }
