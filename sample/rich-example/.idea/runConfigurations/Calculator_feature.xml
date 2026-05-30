@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Calculator.feature (JS + TS)" type="cucumber.js" factoryName="Cucumber.js">
+    <node-interpreter value="project" />
+    <!-- Loads ts-node into Node BEFORE cucumber-js boots, so the .ts step-defs
+         under features/step_definitions/ are picked up. Without this the IDE
+         only auto-discovers .js step-defs and the @TsBackend scenarios fail
+         with "Undefined". -->
+    <node-options value="-r ts-node/register" />
+    <cucumberJsArguments value="--require features/step_definitions/" />
+    <working-dir value="$PROJECT_DIR$/javascript" />
+    <envs />
+    <filePath value="$PROJECT_DIR$/javascript/features/calculator.feature" />
+    <nameFilter value="" />
+    <method v="2" />
+  </configuration>
+</component>

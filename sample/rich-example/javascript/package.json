@@ -1,0 +1,14 @@
+{
+  "name": "rich-example-javascript",
+  "version": "1.0.0",
+  "description": "JS/TS Cucumber+ sandbox — used to validate the JavaScript extension point.",
+  "scripts": {
+    "test": "cucumber-js"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "9.6.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

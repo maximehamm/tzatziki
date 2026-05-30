@@ -295,7 +295,15 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         val codeBreakpoints = pair.second
         val isAlreadyOurType = breakpoint.isCucumberSyncBreakpoint()
 
-        if (action == EAction.ADDED && steps.isNotEmpty() && !isAlreadyOurType) {
+        // Promotion to the `tzatziki.cucumber.code` type only applies to JVM
+        // languages — that type extends JavaLineBreakpointType and silently
+        // misbehaves on JS / TS sources. For non-JVM files we skip promotion and
+        // fall through to the steps.forEach branch below, so the Gherkin-side
+        // sync still happens (the JS / TS breakpoint keeps its native gutter icon).
+        val ext = breakpoint.sourcePosition?.file?.extension?.lowercase()
+        val isJvmLanguage = ext == "java" || ext == "kt" || ext == "kts" || ext == "scala"
+
+        if (action == EAction.ADDED && steps.isNotEmpty() && !isAlreadyOurType && isJvmLanguage) {
             // Only promote when the user's breakpoint sits at the EXACT body line that
             // Cucumber+ would itself sync from a Gherkin step. Clicks on the method
             // declaration line, on a Javadoc line, or anywhere else inside the method
@@ -329,6 +337,20 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             }
             else if (action == EAction.REMOVED && codeBreakpoints.isEmpty()) {
                 step.deleteBreakpoints()
+            }
+            else if (action == EAction.CHANGED && breakpoint is com.intellij.xdebugger.breakpoints.XLineBreakpoint<*>) {
+                // Mirror the code-side enabled state onto the paired Gherkin
+                // breakpoint(s). Without this, muting a JS / TS / Java BP leaves
+                // its Gherkin counterpart enabled (and vice-versa is already
+                // handled by refreshGherkinStep's CHANGED branch).
+                val state = breakpoint.isEnabled
+                XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
+                    .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
+                    .filter { it.sourcePosition?.line == step.getDocumentLine() }
+                    .forEach { gbp ->
+                        if (gbp.isEnabled != state) gbp.isEnabled = state
+                    }
+                step.updatePresentation(codeBreakpoints)
             }
             else {
                 step.updatePresentation(codeBreakpoints)
