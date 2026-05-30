@@ -39,10 +39,14 @@ dependencies {
             "JUnit",
             "com.intellij.properties",
             "org.jetbrains.kotlin",
+            // Bundled with IDEA Ultimate / WebStorm only — runIde sandbox needs it
+            // for the JS/TS Cucumber+ integration (see extensions/javascript).
+            "JavaScript",
         )
         plugins(
             "gherkin:${versions["gherkin"]}",
             "cucumber-java:${versions["cucumberJava"]}",
+            "cucumber-javascript:${versions["cucumberJavascript"]}",
             "org.intellij.scala:${versions["scala"]}",
             "PsiViewer:${versions["psiViewer"]}",
         )
