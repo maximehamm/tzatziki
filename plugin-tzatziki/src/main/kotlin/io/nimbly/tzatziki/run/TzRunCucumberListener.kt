@@ -331,6 +331,71 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
     }
 }
 
+/**
+ * Paints the Cucumber+ "test progression" gutter bar in the `.feature` margin,
+ * spanning [lineStart]..[lineEnd] (both 0-based, inclusive), on every open
+ * editor of [vfile]. Removes any previous progression guides held by the
+ * project's tracker first, so the bar moves with the run instead of stacking.
+ *
+ * Extracted so non-stdout runners (cucumber-js, driven by SMTRunner events in
+ * [io.nimbly.tzatziki.run] under extensions/javascript) can drive the same
+ * visual that [TzExecutionCucumberListener] drives from TeamCity stdout for
+ * cucumber-jvm. EDT-safe: schedules on the EDT when called off it.
+ */
+fun paintCucumberProgression(
+    project: Project,
+    vfile: VirtualFile,
+    lineStart: Int,
+    lineEnd: Int,
+    isExample: Boolean,
+) {
+    if (!TOGGLE_CUCUMBER_PL) return
+    if (!isShowProgressionGuide()) return
+    val tracker = project.cucumberExecutionTracker()
+
+    val runnable = Runnable {
+        // Drop previous guides so the bar rewinds (e.g. moving to the next step
+        // or the next outline example row) instead of only ever growing.
+        tracker.progressionGuides.forEach { it.first.removeHighlighter(it.second) }
+        tracker.progressionGuides.clear()
+
+        val editors = FileEditorManager.getInstance(project).getEditors(vfile)
+            .filterIsInstance<TextEditor>()
+        editors.forEach { textEditor ->
+            val markupModel = textEditor.editor.markupModel as? MarkupModelEx ?: return@forEach
+            val docLines = textEditor.editor.document.lineCount
+            val safeStart = lineStart.coerceIn(0, (docLines - 1).coerceAtLeast(0))
+            val safeEnd = lineEnd.coerceIn(0, (docLines - 1).coerceAtLeast(0))
+            val guide = markupModel to markupModel.addRangeHighlighterAndChangeAttributes(
+                null,
+                0, markupModel.document.textLength,
+                DiffDrawUtil.LST_LINE_MARKER_LAYER + 1,
+                HighlighterTargetArea.LINES_IN_RANGE,
+                false,
+            ) { it: RangeHighlighterEx ->
+                it.isGreedyToLeft = true
+                it.isGreedyToRight = true
+                it.lineMarkerRenderer = MyGutterRenderer(
+                    safeStart,
+                    safeEnd,
+                    if (isExample)
+                        EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_EXAMPLE).backgroundColor
+                    else
+                        EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_STEP).backgroundColor,
+                    "Cucumber+ test progress",
+                )
+            }
+            tracker.progressionGuides += guide
+        }
+    }
+
+    if (ApplicationManager.getApplication().isDispatchThread) {
+        runnable.run()
+    } else {
+        ApplicationManager.getApplication().invokeLater(runnable, ModalityState.any())
+    }
+}
+
 class MyGutterRenderer(
     line1: Int,
     line2: Int,

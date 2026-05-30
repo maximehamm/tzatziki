@@ -114,6 +114,7 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
                 && proxy.getUserData(CUCUMBER_WRAPPER_KEY) != true
                 && proxy.getUserData(CUCUMBER_TAGS_KEY) == null
                 && proxy.getUserData(CUCUMBER_EXAMPLE_KEY) == null
+                && proxy.getUserData(CUCUMBER_IS_STEP_KEY) == null
             ) {
                 projectOf(tree)?.let { lazyDecorator.decorate(proxy, it, "lazy-render") }
             }
@@ -157,11 +158,31 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
                 return result
             }
 
-            // Example #N row: render the example data only. We deliberately DO NOT
-            // append the inherited scenario tags here — the user only wants the
-            // row values on the Example nodes (@tag stays on the Scenario Outline).
+            // Example row: PREFIX the node with a `#N` ordinal in a distinct
+            // (bold) style so the otherwise identically named Scenario Outline
+            // iterations are distinguishable (cucumber-js repeats the outline
+            // name verbatim per row), then the scenario name, then the example
+            // data. We rebuild the fragments so `#N` lands at the START. We do
+            // NOT append the inherited scenario tags here (@tag stays on the
+            // Scenario Outline header).
             val example = proxy.getUserData(CUCUMBER_EXAMPLE_KEY)
             if (!example.isNullOrEmpty()) {
+                val index = proxy.getUserData(CUCUMBER_EXAMPLE_INDEX_KEY)
+                val name = result.getCharSequence(false).toString()
+                val savedIcon = result.icon
+                result.clear()
+                result.icon = savedIcon
+                if (index != null) {
+                    result.append("#$index  ", SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
+                }
+                result.append(name, SimpleTextAttributes.REGULAR_ATTRIBUTES)
+                // Scenario Outline tags belong on the iteration node too (it IS
+                // the outline node in the cucumber-js tree). Append before the
+                // example data so it reads `#1  Outline name  @tag  col: val, …`.
+                val outlineTags = proxy.getUserData(CUCUMBER_TAGS_KEY)
+                if (outlineTags != null && outlineTags.isNotBlank()) {
+                    result.append(outlineTags, SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                }
                 result.append("  ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
                 example.forEachIndexed { i, (header, value) ->
                     if (i > 0) result.append(", ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
@@ -172,29 +193,27 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
                 return result
             }
 
-            // Identify step leaves vs scenario/feature holders by the structural
-            // property: a step suite has no child SUITES (only its own status
-            // output if any). We can't rely on user-data keys because our
-            // decorator sets CUCUMBER_TAGS_KEY on every non-outermost suite
-            // (including step suites) whenever the scenario or feature has tags.
-            val isStepLeaf = proxy.children.none { !it.isLeaf }
+            // Step vs scenario/feature classification comes from the decorator's
+            // PSI-based CUCUMBER_IS_STEP_KEY (set in TzCucumberSuiteNameDecorator).
+            // The old `proxy.children.none { !it.isLeaf }` heuristic broke on
+            // cucumber-js, whose scenarios have leaf-test children so the scenario
+            // itself was wrongly seen as a step.
+            val isStep = proxy.getUserData(CUCUMBER_IS_STEP_KEY) == true
 
-            // Scenario-level suite tags (kept as a grey suffix) — but NEVER for
-            // step leaves: the user doesn't want `@tag` repeated on every step.
+            // Scenario-level suite tags (grey suffix) — never on step nodes.
             val tags = proxy.getUserData(CUCUMBER_TAGS_KEY)
-            if (tags != null && tags.isNotBlank() && !isStepLeaf) {
+            if (tags != null && tags.isNotBlank() && !isStep) {
                 result.append(tags, SimpleTextAttributes.GRAYED_ATTRIBUTES)
             }
 
             // Step node inside a Cucumber+ tree: render the parameter parts (quoted
             // strings, numbers, `<placeholder>`) in grey italic — same family as the
             // suffix decorations above ([@tag] / "Age: 22, …"). We only restyle when
-            // the platform's base text is plain (i.e. step PASSED): for failed /
-            // skipped steps we leave the platform's red / grey alone, which is the
-            // most important visual cue.
+            // the step PASSED: for failed / skipped steps we keep the platform's
+            // red / grey, which is the more important visual cue.
             // Detect "inside Cucumber+ subtree" by walking up the ancestor chain — a
             // step's direct parent (a plain scenario without tags) has none of our
-            // keys, but its grandparent (the feature suite) does.
+            // keys, but an ancestor (the feature suite / wrapper) does.
             var insideCucumberTree = false
             var anc = proxy.parent
             while (anc != null) {
@@ -208,7 +227,7 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
                 }
                 anc = anc.parent
             }
-            if (insideCucumberTree && isStepLeaf && proxy.isPassed) {
+            if (insideCucumberTree && isStep && proxy.isPassed) {
                 styleStepParameters(result)
             }
             return result

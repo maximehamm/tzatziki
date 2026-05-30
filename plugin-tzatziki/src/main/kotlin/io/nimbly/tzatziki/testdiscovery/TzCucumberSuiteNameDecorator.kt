@@ -51,6 +51,20 @@ val CUCUMBER_TAGS_KEY: Key<String> =
  *  each header and keep its value in plain grey. */
 val CUCUMBER_EXAMPLE_KEY: Key<List<Pair<String, String>>> =
     Key.create("tzatziki.cucumber.suite.example")
+/** 1-based position of an example data row within its `Examples:` block. Used
+ *  to prefix the node with `#1`, `#2`, … so the otherwise-identically-named
+ *  Scenario Outline iterations (cucumber-js repeats the outline name verbatim
+ *  for each row) are visually distinguishable — the lightweight equivalent of
+ *  cucumber-jvm's intermediate `Example #N` tree nodes. */
+val CUCUMBER_EXAMPLE_INDEX_KEY: Key<Int> =
+    Key.create("tzatziki.cucumber.suite.exampleIndex")
+/** `true` when the node's location line resolves to a Gherkin STEP (not a
+ *  scenario / outline header). Lets the styled renderer tell steps from
+ *  scenario suites reliably — the previous `proxy.children.none { !it.isLeaf }`
+ *  heuristic broke on cucumber-js, where a scenario's child steps are leaf
+ *  tests (no child suites) so the scenario itself was misread as a step. */
+val CUCUMBER_IS_STEP_KEY: Key<Boolean> =
+    Key.create("tzatziki.cucumber.suite.isStep")
 
 /**
  * Decorates the outermost Cucumber suite node in the Run / Debug tool window so the user
@@ -117,18 +131,42 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         // but a child carrying tags we want to surface. Compute tags via PSI once, store
         // for the styled renderer, then bail — no name decoration needed at this level.
         if (parentUrl != null && featureFileNameOf(parentUrl) != null) {
-            if (suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
+            // cucumber-js prefixes its SMTRunner suite / test nodes with a fixed
+            // English label ("Scenario: …", "Scenario Outline: …", "Step: …")
+            // that cucumber-jvm never emits. Strip it so the JS / TS test tree
+            // reads consistently with the Java one. No-op on cucumber-jvm names.
+            val prefixKind = stripRunnerPrefix(suite)
+            // Reliable scenario/step classification. cucumber-js outline-iteration
+            // STEP nodes carry their location at the DATA-ROW line (not the step
+            // line), so a PSI check there would see a GherkinTableRow and wrongly
+            // treat the step as a scenario/example. The runner's name prefix
+            // ("Step: " vs "Scenario: ") is the trustworthy signal; fall back to
+            // PSI only for cucumber-jvm (no prefix). Cached in CUCUMBER_IS_STEP_KEY.
+            val isStep = suite.getUserData(CUCUMBER_IS_STEP_KEY) ?: run {
+                val v = when (prefixKind) {
+                    RunnerNodeKind.STEP -> true
+                    RunnerNodeKind.SCENARIO -> false
+                    RunnerNodeKind.NONE -> isStepLine(project, suite, locationUrl)
+                }
+                suite.putUserData(CUCUMBER_IS_STEP_KEY, v)
+                v
+            }
+            // Tags belong to the SCENARIO / OUTLINE header only — never to a step.
+            if (!isStep && suite.getUserData(CUCUMBER_TAGS_KEY) == null) {
                 val tags = readScenarioTags(project, suite, locationUrl)
                 if (tags.isNotEmpty()) {
                     suite.putUserData(CUCUMBER_TAGS_KEY, tags.joinToString(" ", prefix = " "))
+                    LOG.info("C+ decorate[$phase] scenario '${suite.name}' loc='$locationUrl' tags=$tags")
                 }
             }
-            // Scenario Outline `Example #N` row: surface the example data (header→cell)
-            // so the user sees the actual values without having to expand the node.
-            if (suite.getUserData(CUCUMBER_EXAMPLE_KEY) == null) {
+            // Scenario Outline iteration node: surface the `#N` ordinal + example
+            // data. Only on the SCENARIO iteration node, NOT on its step children
+            // (which share the same data-row location in cucumber-js).
+            if (!isStep && suite.getUserData(CUCUMBER_EXAMPLE_KEY) == null) {
                 val example = readExampleRowData(project, suite, locationUrl)
-                if (!example.isNullOrEmpty()) {
-                    suite.putUserData(CUCUMBER_EXAMPLE_KEY, example)
+                if (example != null) {
+                    suite.putUserData(CUCUMBER_EXAMPLE_KEY, example.cells)
+                    suite.putUserData(CUCUMBER_EXAMPLE_INDEX_KEY, example.index)
                 }
             }
             return
@@ -234,28 +272,37 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
      * or the URL doesn't resolve. Runs inside a read action — safe to call from any thread.
      */
     private fun readScenarioTags(project: Project, suite: SMTestProxy, locationUrl: String): List<String> {
-        val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return emptyList()
-        val lineNumber = match.groupValues[2].toIntOrNull() ?: return emptyList()
+        // The Feature-level node's locationUrl has NO `:NN` suffix
+        // (`file:///…/Foo.feature`) — in that case resolve the tags off the
+        // GherkinFeature directly. Scenario / step nodes carry a `:NN` line.
+        val lineNumber = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl)
+            ?.groupValues?.get(2)?.toIntOrNull()
         val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: return emptyList()
         return runReadAction {
             val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction emptyList()
             val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
                 ?: return@runReadAction emptyList()
-            val lineIdx = (lineNumber - 1).coerceIn(0, document.lineCount - 1)
-            val lineStart = document.getLineStartOffset(lineIdx)
-            val lineEnd = document.getLineEndOffset(lineIdx)
-            // Skip leading whitespace — `findElementAt(lineStart)` would land on the
-            // indentation PsiWhiteSpace, whose parent is the ENCLOSING element (e.g. the
-            // GherkinFeature for a scenario line), not the scenario itself. That gave us
-            // false-positive Feature-level tags on every scenario.
-            val firstNonWs = document.charsSequence
-                .subSequence(lineStart, lineEnd)
-                .indexOfFirst { !it.isWhitespace() }
-            val offset = lineStart + firstNonWs.coerceAtLeast(0)
-            val element = psiFile.findElementAt(offset)
-            val holder = element?.let { PsiTreeUtil.getParentOfType(it, GherkinStepsHolder::class.java, false) }
-                ?: PsiTreeUtil.findChildOfType(psiFile, GherkinFeature::class.java)
-                ?: return@runReadAction emptyList()
+            val holder = if (lineNumber == null) {
+                // Feature node: anchor on the GherkinFeature itself.
+                PsiTreeUtil.findChildOfType(psiFile, GherkinFeature::class.java)
+                    ?: return@runReadAction emptyList()
+            } else {
+                val lineIdx = (lineNumber - 1).coerceIn(0, document.lineCount - 1)
+                val lineStart = document.getLineStartOffset(lineIdx)
+                val lineEnd = document.getLineEndOffset(lineIdx)
+                // Skip leading whitespace — `findElementAt(lineStart)` would land on the
+                // indentation PsiWhiteSpace, whose parent is the ENCLOSING element (e.g. the
+                // GherkinFeature for a scenario line), not the scenario itself. That gave us
+                // false-positive Feature-level tags on every scenario.
+                val firstNonWs = document.charsSequence
+                    .subSequence(lineStart, lineEnd)
+                    .indexOfFirst { !it.isWhitespace() }
+                val offset = lineStart + firstNonWs.coerceAtLeast(0)
+                val element = psiFile.findElementAt(offset)
+                element?.let { PsiTreeUtil.getParentOfType(it, GherkinStepsHolder::class.java, false) }
+                    ?: PsiTreeUtil.findChildOfType(psiFile, GherkinFeature::class.java)
+                    ?: return@runReadAction emptyList()
+            }
 
             // Collect tags from BOTH locations regardless of holder type:
             //   1) child GherkinTag of the holder (typical for scenario / background / rule)
@@ -279,13 +326,46 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
     }
 
     /**
+     * `true` when [locationUrl]'s line resolves to a Gherkin STEP (Given / When /
+     * Then / And / But). Used to tell step nodes from scenario / outline header
+     * nodes reliably — the cucumber-js test tree makes a scenario's child steps
+     * leaf tests, so the old "has no child suites" heuristic mis-classified the
+     * scenario itself as a step. Runs in a read action; safe off-EDT.
+     */
+    private fun isStepLine(project: Project, suite: SMTestProxy, locationUrl: String): Boolean {
+        val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return false
+        val lineNumber = match.groupValues[2].toIntOrNull() ?: return false
+        val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: return false
+        return runReadAction {
+            val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction false
+            val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
+                ?: return@runReadAction false
+            val lineIdx = (lineNumber - 1).coerceIn(0, document.lineCount - 1)
+            val lineStart = document.getLineStartOffset(lineIdx)
+            val lineEnd = document.getLineEndOffset(lineIdx)
+            val firstNonWs = document.charsSequence
+                .subSequence(lineStart, lineEnd)
+                .indexOfFirst { !it.isWhitespace() }
+            val offset = lineStart + firstNonWs.coerceAtLeast(0)
+            val element = psiFile.findElementAt(offset) ?: return@runReadAction false
+            PsiTreeUtil.getParentOfType(
+                element, org.jetbrains.plugins.cucumber.psi.GherkinStep::class.java, false,
+            ) != null
+        }
+    }
+
+    /**
      * If [locationUrl] points to a data row inside a `Scenarios:` / `Examples:` table
      * (i.e. the suite is an "Example #N" child of a Scenario Outline), returns a
      * `Header1: cell1, Header2: cell2, …` string. Empty cells and ones whose header
      * is empty are skipped. Returns null when the line is the header row or doesn't
      * sit inside an Examples table.
      */
-    private fun readExampleRowData(project: Project, suite: SMTestProxy, locationUrl: String): List<Pair<String, String>>? {
+    /** Result of [readExampleRowData]: the 1-based data-row index within the
+     *  Examples block + the (header, value) cell pairs. */
+    private data class ExampleRowInfo(val index: Int, val cells: List<Pair<String, String>>)
+
+    private fun readExampleRowData(project: Project, suite: SMTestProxy, locationUrl: String): ExampleRowInfo? {
         val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return null
         val lineNumber = match.groupValues[2].toIntOrNull() ?: return null
         val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: return null
@@ -306,15 +386,22 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
             if (row is GherkinTableHeaderRowImpl) return@runReadAction null
             val table = PsiTreeUtil.getParentOfType(row, GherkinTable::class.java)
                 ?: return@runReadAction null
+            val allRows = PsiTreeUtil.getChildrenOfTypeAsList(table, GherkinTableRow::class.java)
             // Header = the first row inside the table (typically GherkinTableHeaderRowImpl).
-            val header = PsiTreeUtil.getChildrenOfTypeAsList(table, GherkinTableRow::class.java)
-                .firstOrNull() ?: return@runReadAction null
+            val header = allRows.firstOrNull() ?: return@runReadAction null
+            // 1-based index of this row among the DATA rows (everything after the
+            // header). `allRows.indexOf(row)` is 0-based incl. header at 0, so the
+            // first data row (index 1) maps to #1.
+            val rowIndex = allRows.indexOf(row)
+            if (rowIndex < 1) return@runReadAction null
             val headerCells = header.psiCells.map { it.text.trim() }
             val dataCells = row.psiCells.map { it.text.trim() }
             if (headerCells.isEmpty() || dataCells.isEmpty()) return@runReadAction null
-            headerCells.zip(dataCells) { h, d -> h to d }
+            val cells = headerCells.zip(dataCells) { h, d -> h to d }
                 .filter { (h, _) -> h.isNotEmpty() }
                 .takeIf { it.isNotEmpty() }
+                ?: return@runReadAction null
+            ExampleRowInfo(index = rowIndex, cells = cells)
         }
     }
 
@@ -370,6 +457,31 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
         return null
     }
 
+    /**
+     * Removes the `Scenario: ` / `Scenario Outline: ` / `Step: ` prefix that the
+     * cucumber-javascript IntelliJ runner prepends to every test-tree node name.
+     * Idempotent: once stripped, the presentableName no longer matches a prefix
+     * so re-invocation (events + lazy-render paints) is a no-op.
+     *
+     * These labels are fixed English strings injected by the runner — NOT taken
+     * from the Gherkin source — so a literal prefix match is safe across the
+     * ~70 Gherkin dialects (the keyword in the actual .feature file is never
+     * what cucumber-js puts here).
+     */
+    /** Classification derived from the runner's node-name prefix. */
+    private enum class RunnerNodeKind { STEP, SCENARIO, NONE }
+
+    private fun stripRunnerPrefix(suite: SMTestProxy): RunnerNodeKind {
+        val current = suite.presentableName ?: suite.name
+        val prefix = RUNNER_PREFIXES.firstOrNull { current.startsWith(it) }
+            ?: return RunnerNodeKind.NONE   // cucumber-jvm (no prefix) or already stripped
+        val stripped = current.removePrefix(prefix)
+        if (stripped.isNotBlank() && stripped != current) {
+            suite.setPresentableName(stripped)
+        }
+        return if (prefix == "Step: ") RunnerNodeKind.STEP else RunnerNodeKind.SCENARIO
+    }
+
     /** Extract `FooBar.feature` from `file:///…/FooBar.feature:1` or `file:///…/FooBar.feature`. */
     private fun featureFileNameOf(locationUrl: String): String? {
         val withoutScheme = locationUrl
@@ -384,5 +496,14 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
     companion object {
         private val LOG = Logger.getInstance(TzCucumberSuiteNameDecorator::class.java)
         private const val MARKER = "  /  "
+        // Fixed English prefixes the cucumber-javascript runner prepends to its
+        // SMTRunner node names. Order matters: the longer "Scenario Outline: "
+        // must be tested before "Scenario: ".
+        private val RUNNER_PREFIXES = listOf(
+            "Scenario Outline: ",
+            "Scenario Template: ",
+            "Scenario: ",
+            "Step: ",
+        )
     }
 }

@@ -19,6 +19,12 @@
              Cucumber+ badge to step-def breakpoints on .js / .ts files instead of
              the platform's native red dot. -->
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzCucumberJsBreakpointType"/>
+        <!-- "N scenarios" gutter marker on JS / TS step definitions, mirroring
+             JavaTzatzikiUsagesMarker / KotlinTzatzikiUsagesMarker. -->
+        <codeInsight.lineMarkerProvider language="JavaScript"
+                implementationClass="io.nimbly.tzatziki.JsTzatzikiUsagesMarker"/>
+        <codeInsight.lineMarkerProvider language="TypeScript"
+                implementationClass="io.nimbly.tzatziki.JsTzatzikiUsagesMarker"/>
         <!-- Forces a cucumber-js step-def reindex at project start. Compensates
              for a sandbox-only quirk where the cucumber-javascript stub cache
              survives plugin-tzatziki rebuilds but the cached stubs become

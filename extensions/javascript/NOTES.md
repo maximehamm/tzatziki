@@ -26,17 +26,22 @@ Status: **work in progress, do NOT merge to master yet.**
   `"Cucumber Java"`) implements that filtering for the JVM debugger. Need a JS
   twin (`TzRunNodeListener`) that hooks the Node / Chrome DAP debug session and
   parses the cucumber-js stdout to track the current example. ~150 LoC + investigation.
-- **cucumber-js step-def stub index goes stale after sandbox restart.**
-  Dev-only annoyance: `CucumberJavaScriptExtension.loadStepsFor` returns an empty
-  list until the user runs `File → Invalidate Caches`. `JsCucumberIndexRefresher`
-  (project activity) requests a re-index of every `.js / .ts` file under the
-  project root at startup as a workaround. End users don't rebuild the plugin
-  jar mid-session, so they shouldn't see this.
-- **TypeScript step-defs need `-r ts-node/register` passed to Node.**
-  `cucumber.cjs` config alone is ignored by the IntelliJ cucumber-js plugin run
-  config — it passes its own `--require` flags that don't pick up our
-  `requireModule`. We ship a hand-crafted `.idea/runConfigurations/*.xml`
-  template for the sample. Users would need similar setup.
+- **[REVISIT LATER] cucumber-js step-def stub index goes stale after sandbox
+  restart.** `CucumberJavaScriptExtension.loadStepsFor` returns an empty list
+  until the user runs `File → Invalidate Caches`. Current workaround:
+  `JsCucumberIndexRefresher` (project activity) requests a re-index of step-def
+  files at startup. This is a HACK the user explicitly wants revisited — root
+  cause is the cucumber-js stub cache surviving a plugin classloader swap; find
+  a cleaner trigger (or confirm end users never hit it since they don't rebuild
+  the plugin jar mid-session) and consider removing `JsCucumberIndexRefresher`.
+- **[REVISIT LATER] TypeScript step-defs need `-r ts-node/register` passed to
+  Node.** `cucumber.cjs` config alone is ignored by the IntelliJ cucumber-js
+  run config — it passes its own `--require` flags that don't pick up our
+  `requireModule`. Current workaround: a hand-crafted
+  `.idea/runConfigurations/*.xml` template for the sample with
+  `node-options = -r ts-node/register`. Users would have to replicate this by
+  hand — investigate auto-injecting the flag (run-config extension?) or
+  documenting it, so TS step-defs run out of the box.
 - **Zero real-world testing.** Only the sample under
   `sample/rich-example/javascript/` has been exercised. No coverage on
   `@cucumber/cucumber` v7 / v8 / v11, ESM-only projects, monorepos, projects
@@ -66,34 +71,38 @@ Status: **work in progress, do NOT merge to master yet.**
       a 100k-file monorepo this would dominate startup time. Add a guard that
       only requests reindex for files matching `features/step_definitions/**`
       or similar before shipping.
-- **Test tree: @tag suffixes missing on JS / TS suites.**
-  The `TzCucumberSuiteNameDecorator` reads scenario tags via `readScenarioTags`
-  → `resolveFeatureVFile(locationUrl)`. cucumber-js emits relative location URLs
-  (`file:///features/calculator.feature:24`) which our resolver can't map to a
-  real `VirtualFile`, so the PSI lookup bails and no tags get attached. Same
-  underlying fix as TODO #11 (cache + smarter resolution): teach
-  `resolveFeatureVFile` to use `proxy.getLocation(project, scope).virtualFile`
-  (the same trick `TzNodeExecutionTrackerListener.update` already uses), or
-  thread the resolved `VirtualFile` through the decoration path so we don't
-  re-walk it for every suite.
-- **Test tree node names have noisy `Scenario: ` / `Step: ` prefixes (JS only).**
-  cucumber-js emits SMTRunner suites named `Scenario: Adding two numbers
-  (JavaScript step defs)` and tests named `Step: a calculator with value 10` —
-  whereas cucumber-jvm emits clean names without the prefix. Strip these via
-  `TzCucumberSuiteNameDecorator` / the styled renderer so the run/debug tree
-  reads consistently across languages.
-- **No gutter progression bar during JS / TS debug runs.** The vertical
-  "currently-running step" bar painted in the `.feature` margin (via
-  `TzExecutionCucumberListener.processStarting` → `MyGutterRenderer` →
-  `highlightProgression`) is driven by the same stdout `onTextAvailable`
-  channel that doesn't fire for cucumber-js. The tracker fields are now
-  populated through `TzNodeExecutionTrackerListener` (SMTRunner-based) but the
-  bar drawing code never re-runs. To restore the visual: extract the
-  `MarkupModel.addRangeHighlighterAndChangeAttributes(...) → MyGutterRenderer`
-  block into a helper, then call it from the SMTRunner adapter every time
-  `update()` advances `lineNumber` / `exampleLine`. Also need to remove
-  previous highlighters at iteration boundaries so the bar rewinds correctly
-  for outline rows.
+- ~~**Test tree: @tag on JS / TS scenario / outline / feature suites.**~~ DONE
+  (user-confirmed). `resolveFeatureVFile` uses `proxy.getLocation` first; a
+  PSI/name-prefix `CUCUMBER_IS_STEP_KEY` distinguishes scenarios from steps;
+  feature-node tags read off the `GherkinFeature` when the location URL has no
+  `:NN`; outline-iteration tags rendered on the example node.
+- **[AWAITING USER TEST] Test tree: `#N` ordinal on Scenario Outline iterations
+  (JS / TS).** Simpler than synthesizing intermediate `Example #N` tree nodes
+  (the proxy hierarchy is owned by the cucumber-js runner): the styled renderer
+  prefixes each outline-iteration node with its `#N` ordinal
+  (`CUCUMBER_EXAMPLE_INDEX_KEY`, the 1-based data-row position computed in
+  `readExampleRowData`). NOT yet confirmed by the user.
+- ~~**Test tree: strip noisy `Scenario: ` / `Step: ` prefixes (JS only).**~~
+  DONE (user-confirmed). `TzCucumberSuiteNameDecorator.stripRunnerPrefix` strips
+  the runner's fixed English prefix via `setPresentableName`; its return value
+  also drives the reliable step/scenario classification.
+- **[AWAITING USER TEST] "N usages" gutter icon on JS / TS step-defs.**
+  `JsTzatzikiUsagesMarker` (`codeInsight.lineMarkerProvider` for `JavaScript` /
+  `TypeScript`, registered in `plugin-withJavaScript.xml`) extends the shared
+  `TzStepsUsagesMarker`. Anchors the marker on the `Given`/`When`/`Then` callee
+  identifier of a step-def call, resolves the Gherkin steps via
+  `Tzatziki.findSteps(vfile, offset)` (reusing `JsTzatzikiExtensionPoint`'s
+  reverse-search), and calls `buildMarker(token, steps)`. NOT yet confirmed by
+  the user.
+- **[AWAITING USER TEST] No gutter progression bar during JS / TS debug runs.**
+  Extracted the bar-drawing into the public
+  `paintCucumberProgression(project, vfile, lineStart, lineEnd, isExample)`
+  helper in `TzRunCucumberListener.kt`; `TzNodeExecutionTrackerListener.update`
+  now calls it on every step / example-row SMTRunner event, anchoring the bar
+  at the enclosing scenario/outline header (`scenarioHeaderLine0`) down to the
+  current line. Previous guides are dropped on each paint so the bar rewinds.
+  Cleanup still rides on `TzExecutionCucumberListener.processTerminated`
+  (generic ExecutionListener, fires for JS runs too).
 
 ## Architecture sketch
 

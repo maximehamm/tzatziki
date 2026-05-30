@@ -65,20 +65,24 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
         val session = debugProcess.session
         LOG.info("C+ TzRunNodeListener processStarted: $cls, session=${session.javaClass.name}, suspended=${session.isSuspended}")
 
+        // Alarm that fires the deferred filter decision on the pooled thread,
+        // re-armed on every sessionPaused so successive pauses don't pile up
+        // background threads sleeping concurrently (#12 perf TODO).
+        val pauseAlarm = com.intellij.util.Alarm(
+            com.intellij.util.Alarm.ThreadToUse.POOLED_THREAD,
+            session.project,
+        )
+
         session.addSessionListener(object : XDebugSessionListener {
             override fun sessionPaused() {
-                // Race-condition fix: the cucumber-js test framework emits its
-                // SMTRunner `onTestStarted` events 1-3ms AFTER the JS code reaches
-                // our BP. If we consult the tracker right away, `featurePath` is
-                // still null. A short delay lets the SMTRunner adapter in
-                // TzNodeExecutionTrackerListener catch up before we decide
-                // whether to resume.
+                // Race-condition fix: cucumber-js emits its SMTRunner step events
+                // 1-3 ms AFTER the JS code reaches our BP. Defer the decision
+                // via an Alarm so the tracker has time to catch up — cancelling
+                // any previous still-armed request first to keep at most one
+                // pending check at any time.
                 LOG.info("C+ TzRunNodeListener: sessionPaused fired — scheduling delayed check")
-                com.intellij.openapi.application.ApplicationManager.getApplication()
-                    .executeOnPooledThread {
-                        Thread.sleep(250)
-                        if (session.isSuspended) handlePause(session)
-                    }
+                pauseAlarm.cancelAllRequests()
+                pauseAlarm.addRequest({ if (session.isSuspended) handlePause(session) }, 250)
             }
             override fun sessionResumed() {
                 LOG.info("C+ TzRunNodeListener: sessionResumed fired")
@@ -124,7 +128,19 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
         // Run the entire PSI-walk + BP-lookup in ONE read action — accessing
         // `step.text`, `step.stepHolder`, `getDocumentLine()` etc. outside a
         // read action throws ThreadingAssertions on 2025.3+.
-        data class Decision(val shouldResume: Boolean, val reason: String)
+        //
+        // [barHeaderLine0] / [barEndLine0] (0-based) carry the progression-bar
+        // span to paint when we KEEP the pause — computed from the actually
+        // resolved Gherkin step, NOT from the SMTRunner tracker (whose
+        // last-recorded line lags the real debugger pause, which made the bar
+        // land on the wrong line during debug).
+        data class Decision(
+            val shouldResume: Boolean,
+            val reason: String,
+            val barHeaderLine0: Int? = null,
+            val barEndLine0: Int? = null,
+            val barIsExample: Boolean = false,
+        )
         val decision: Decision = com.intellij.openapi.application.ReadAction.compute<Decision, RuntimeException> {
             // Cucumber-js reports ALL events of an outline iteration at the DATA
             // ROW line (not the step line), so `tracker.lineNumber` stays stuck on
@@ -208,12 +224,40 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
                 }
             }
 
-            Decision(false, "pause matches a flagged Gherkin step / example — keeping pause")
+            // Keeping the pause — compute the progression-bar span from the
+            // resolved step: anchor at the enclosing scenario / outline header,
+            // end at the step's own line. For an outline iteration end on the
+            // example data row instead so the bar reaches the running row.
+            val doc = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(featureVfile)
+            val headerLine0 = doc?.getLineNumber(step.stepHolder.textRange.startOffset)
+            val endLine0 = if (outline != null && exampleLine != null) {
+                (exampleLine - 1)
+            } else {
+                doc?.getLineNumber(step.textRange.startOffset)
+            }
+            Decision(
+                shouldResume = false,
+                reason = "pause matches a flagged Gherkin step / example — keeping pause",
+                barHeaderLine0 = headerLine0,
+                barEndLine0 = endLine0,
+                barIsExample = (outline != null && exampleLine != null),
+            )
         }
 
         LOG.info("C+ TzRunNodeListener sessionPaused: ${decision.reason}")
         if (decision.shouldResume) {
             session.resume()
+        } else if (decision.barHeaderLine0 != null && decision.barEndLine0 != null) {
+            // Paint the bar from the REAL pause position (overwrites any stale
+            // bar the SMTRunner-driven TzNodeExecutionTrackerListener may have
+            // drawn at the previous step's line).
+            paintCucumberProgression(
+                project = project,
+                vfile = featureVfile,
+                lineStart = decision.barHeaderLine0,
+                lineEnd = decision.barEndLine0,
+                isExample = decision.barIsExample,
+            )
         }
     }
 }
