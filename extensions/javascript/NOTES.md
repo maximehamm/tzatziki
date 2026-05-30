@@ -1,6 +1,8 @@
-# Cucumber+ JavaScript / TypeScript step-def support — branch notes
+# Cucumber+ JavaScript / TypeScript step-def support — notes
 
-Status: **work in progress, do NOT merge to master yet.**
+Status: **merged to master in 21.9.0.** Core functionality complete and
+user-tested in the sandbox; remaining open items are real-world coverage
+(other cucumber-js versions / ESM / monorepos) and the TS edge noted below.
 
 ## What works
 
