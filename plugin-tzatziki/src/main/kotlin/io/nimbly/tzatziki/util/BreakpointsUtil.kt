@@ -236,7 +236,13 @@ fun promoteToCucumberType(userBp: XLineBreakpoint<*>, project: Project) {
     val logExpr = userBp.logExpressionObject
 
     onEdtWrite {
-        val props = JavaLineBreakpointProperties().applyNoLambda()
+        // Same Java-vs-Kotlin split as `ensureCucumberCodeBreakpoint`: for Kotlin files
+        // we MUST leave encodedInlinePosition null, otherwise JavaLineBreakpointType.matchesPosition
+        // returns false on Kotlin source positions and the JDI request is silently
+        // skipped — the breakpoint never fires. Applying NO_LAMBDA here was the cause
+        // of "BP in Kotlin step-def doesn't stop" while Java step-defs worked fine.
+        val props = JavaLineBreakpointProperties()
+        if (file.extension == "java") props.applyNoLambda()
         val ourBp = manager.addLineBreakpoint(type, file.url, line, props)
         ourBp.isEnabled = wasEnabled
         ourBp.suspendPolicy = suspendPolicy

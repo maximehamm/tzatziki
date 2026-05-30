@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.10"
+    version = "21.8.11"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.11</b> Fix breakpoints set on Kotlin step definitions not stopping the debugger.</li>
          <li><b>21.8.9</b> Fix editor freezes during autocompletion when breakpoints are present — the Gherkin&#8596;Java/Kotlin breakpoint sync no longer re-scans the project on every keystroke.</li>
          <li><b>21.8.7</b> Test tree decoration on Windows + WSL: some Cucumber runners don't publish SMTRunner events on the project bus — our listener was silently never fired so the file-name + feature title decoration was missing. Now we (1) subscribe to BOTH the project AND application message bus, and (2) lazily run the decoration from the styled renderer on first paint as a safety net.</li>
          <li><b>21.8.6</b> Test tree suite label on Windows + WSL: more robust VFS resolution of cucumber-jvm <code>file:///…</code> location URLs — tries <code>findFileByUrl</code>, then <code>URI.path</code> with leading-slash normalisation for Windows drive letters (<code>/C:/…</code> → <code>C:/…</code>), then a brute-force fallback. The <code>file.feature  /  Feature title [Business Need title]</code> label now appears correctly on Windows + WSL setups.</li>
