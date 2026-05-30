@@ -20,10 +20,12 @@
              the platform's native red dot. -->
         <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzCucumberJsBreakpointType"/>
         <!-- "N scenarios" gutter marker on JS / TS step definitions, mirroring
-             JavaTzatzikiUsagesMarker / KotlinTzatzikiUsagesMarker. -->
+             JavaTzatzikiUsagesMarker / KotlinTzatzikiUsagesMarker.
+             Registered for JavaScript ONLY: TypeScript is a JavaScript dialect,
+             so the provider runs on .ts files too via base-language lookup.
+             Registering BOTH languages made it fire twice on .ts → two duplicate
+             gutter markers (the "2 Given / 2 Given" chooser popup). -->
         <codeInsight.lineMarkerProvider language="JavaScript"
-                implementationClass="io.nimbly.tzatziki.JsTzatzikiUsagesMarker"/>
-        <codeInsight.lineMarkerProvider language="TypeScript"
                 implementationClass="io.nimbly.tzatziki.JsTzatzikiUsagesMarker"/>
         <!-- Forces a cucumber-js step-def reindex at project start. Compensates
              for a sandbox-only quirk where the cucumber-javascript stub cache

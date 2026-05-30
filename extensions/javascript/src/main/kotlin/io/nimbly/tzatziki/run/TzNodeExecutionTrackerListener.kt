@@ -65,16 +65,8 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
     }
 
     private fun update(project: Project, proxy: SMTestProxy) {
-        val locationUrl = proxy.locationUrl
-        if (locationUrl == null) {
-            log.info("C+ tracker-update SKIP — locationUrl null for proxy='${proxy.name}'")
-            return
-        }
-        val match = locationRegex.matchEntire(locationUrl)
-        if (match == null) {
-            log.info("C+ tracker-update SKIP — locationUrl doesn't match `*.feature:N` regex: '$locationUrl' (proxy='${proxy.name}')")
-            return
-        }
+        val locationUrl = proxy.locationUrl ?: return
+        val match = locationRegex.matchEntire(locationUrl) ?: return
         val line = match.groupValues[2].toIntOrNull() ?: return
 
         // Resolve the .feature file via the proxy's own `getLocation()` — the
@@ -89,10 +81,7 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
                 proxy.getLocation(project, com.intellij.psi.search.GlobalSearchScope.allScope(project))?.virtualFile
             }.getOrNull()
         }
-        if (resolved == null) {
-            log.info("C+ tracker-update SKIP — proxy.getLocation null for '$locationUrl' (proxy='${proxy.name}')")
-            return
-        }
+        if (resolved == null) return
         val absolutePath = resolved.path
 
         val tracker = project.cucumberExecutionTracker()
@@ -112,10 +101,8 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
         val isExample = isDataRowLine || name.startsWith("Example #")
         if (isExample) {
             tracker.exampleLine = line
-            log.info("C+ tracker-update example proxy='$name' featurePath='$absolutePath' exampleLine=$line (1-based)")
         } else {
             tracker.lineNumber = line - 1
-            log.info("C+ tracker-update step proxy='$name' featurePath='$absolutePath' line=${line - 1} (0-based)")
         }
 
         // Drive the gutter progression bar — the stdout-based path in

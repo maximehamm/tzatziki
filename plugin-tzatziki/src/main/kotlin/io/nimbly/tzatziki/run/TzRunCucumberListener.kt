@@ -365,7 +365,12 @@ fun paintCucumberProgression(
             val markupModel = textEditor.editor.markupModel as? MarkupModelEx ?: return@forEach
             val docLines = textEditor.editor.document.lineCount
             val safeStart = lineStart.coerceIn(0, (docLines - 1).coerceAtLeast(0))
-            val safeEnd = lineEnd.coerceIn(0, (docLines - 1).coerceAtLeast(0))
+            // [lineEnd] is the INCLUSIVE 0-based last line (the paused / current step).
+            // MyGutterRenderer → LineStatusMarkerDrawUtil.paintSimpleRange treats its
+            // second line as an EXCLUSIVE bound, so pass safeEnd + 1 to make the bar
+            // actually cover the pause line itself.
+            val safeEndInclusive = lineEnd.coerceIn(0, (docLines - 1).coerceAtLeast(0))
+            val safeEndExclusive = (safeEndInclusive + 1).coerceAtMost(docLines)
             val guide = markupModel to markupModel.addRangeHighlighterAndChangeAttributes(
                 null,
                 0, markupModel.document.textLength,
@@ -377,7 +382,7 @@ fun paintCucumberProgression(
                 it.isGreedyToRight = true
                 it.lineMarkerRenderer = MyGutterRenderer(
                     safeStart,
-                    safeEnd,
+                    safeEndExclusive,
                     if (isExample)
                         EditorColorsManager.getInstance().globalScheme.getAttributes(BREAKPOINT_EXAMPLE).backgroundColor
                     else

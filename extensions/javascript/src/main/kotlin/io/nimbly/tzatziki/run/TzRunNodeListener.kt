@@ -63,7 +63,6 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
         if (!isJsDebug) return
 
         val session = debugProcess.session
-        LOG.info("C+ TzRunNodeListener processStarted: $cls, session=${session.javaClass.name}, suspended=${session.isSuspended}")
 
         // Alarm that fires the deferred filter decision on the pooled thread,
         // re-armed on every sessionPaused so successive pauses don't pile up
@@ -80,21 +79,8 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
                 // via an Alarm so the tracker has time to catch up — cancelling
                 // any previous still-armed request first to keep at most one
                 // pending check at any time.
-                LOG.info("C+ TzRunNodeListener: sessionPaused fired — scheduling delayed check")
                 pauseAlarm.cancelAllRequests()
                 pauseAlarm.addRequest({ if (session.isSuspended) handlePause(session) }, 250)
-            }
-            override fun sessionResumed() {
-                LOG.info("C+ TzRunNodeListener: sessionResumed fired")
-            }
-            override fun sessionStopped() {
-                LOG.info("C+ TzRunNodeListener: sessionStopped fired")
-            }
-            override fun stackFrameChanged() {
-                LOG.info("C+ TzRunNodeListener: stackFrameChanged fired (suspended=${session.isSuspended})")
-            }
-            override fun beforeSessionResume() {
-                LOG.info("C+ TzRunNodeListener: beforeSessionResume fired")
             }
         })
     }
@@ -105,22 +91,11 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
         val selected = RunManager.getInstance(project).selectedConfiguration
         val displayName = selected?.type?.displayName
         val typeId = selected?.type?.id
-        LOG.info("C+ TzRunNodeListener sessionPaused: run config type id='$typeId' displayName='$displayName'")
-        if (typeId != "cucumber.js" && displayName != "Cucumber.js") {
-            LOG.info("C+ TzRunNodeListener sessionPaused: ignoring (not a Cucumber.js run config)")
-            return
-        }
+        if (typeId != "cucumber.js" && displayName != "Cucumber.js") return
 
         val executionPoint = project.cucumberExecutionTracker()
-        LOG.info("C+ TzRunNodeListener sessionPaused: tracker featurePath='${executionPoint.featurePath}' line=${executionPoint.lineNumber} exampleLine=${executionPoint.exampleLine}")
-        if (executionPoint.featurePath == null) {
-            LOG.info("C+ TzRunNodeListener sessionPaused: no featurePath, ignoring")
-            return
-        }
-        val featureVfile = executionPoint.findFile() ?: run {
-            LOG.info("C+ TzRunNodeListener sessionPaused: findFile null for '${executionPoint.featurePath}'")
-            return
-        }
+        if (executionPoint.featurePath == null) return
+        val featureVfile = executionPoint.findFile() ?: return
         val lineNumber = executionPoint.lineNumber ?: return
         val sp = session.currentPosition ?: return
         val exampleLine = executionPoint.exampleLine
@@ -196,7 +171,6 @@ class TzRunNodeListener(private val project: Project) : XDebuggerManagerListener
             val codeBp = matchingByUrl.firstOrNull {
                 it.sourcePosition?.line == sp.line && it.isCucumberSyncBreakpoint()
             }
-            LOG.info("C+ TzRunNodeListener sessionPaused: sp.file=${sp.file.path} line=${sp.line}, matching-by-url=${matchingByUrl.size}, codeBp=${codeBp?.type?.id}")
             if (codeBp == null) {
                 // Fall back to a PSI lookup — useful for the case where the
                 // pause and the BP source positions don't share a VirtualFile
