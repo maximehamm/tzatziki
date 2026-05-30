@@ -35,35 +35,34 @@ Status: **work in progress, do NOT merge to master yet.**
   cause is the cucumber-js stub cache surviving a plugin classloader swap; find
   a cleaner trigger (or confirm end users never hit it since they don't rebuild
   the plugin jar mid-session) and consider removing `JsCucumberIndexRefresher`.
-- **[REVISIT LATER] TypeScript step-defs need `-r ts-node/register` passed to
-  Node.** `cucumber.cjs` config alone is ignored by the IntelliJ cucumber-js
-  run config — it passes its own `--require` flags that don't pick up our
-  `requireModule`. Current workaround: a hand-crafted
-  `.idea/runConfigurations/*.xml` template for the sample with
-  `node-options = -r ts-node/register`. Users would have to replicate this by
-  hand — investigate auto-injecting the flag (run-config extension?) or
-  documenting it, so TS step-defs run out of the box.
+- **[WON'T FIX — documented] TypeScript step-defs need `-r ts-node/register`
+  passed to Node.** This is plain cucumber-js + Node behaviour (Node can't load
+  `.ts` without a transpiling loader), NOT something Cucumber+ should paper
+  over. We do nothing in code; it's documented for users (see
+  `TYPESCRIPT.md`): add `-r ts-node/register` to the run configuration's
+  **Node options** (or use a `cucumber.cjs` with `requireModule:
+  ['ts-node/register']` when running cucumber-js from the CLI). The sample under
+  `sample/rich-example/javascript/` ships a ready-made run config showing this.
 - **Zero real-world testing.** Only the sample under
   `sample/rich-example/javascript/` has been exercised. No coverage on
   `@cucumber/cucumber` v7 / v8 / v11, ESM-only projects, monorepos, projects
   using BDD-frameworks layered on top of cucumber-js, etc.
-- **Perf hardening still TODO.** The JVM side took multiple rounds of issues
-  (#122, #124, #124-bis) before we added the right caches + debouncing to keep
-  the EDT responsive during heavy debug sessions. The JS path mirrors the same
-  hot loops without any of that hardening — places to revisit when we have
-  signals from real users:
-    * `JsTzatzikiExtensionPoint.findStepsAndBreakpoints` walks **every**
-      `.feature` file in the project scope on every `breakpointAdded /
-      Changed / Removed` event. Mirror the per-`(vfile, offset, PsiModCount)`
-      cache that already exists in `TzBreakpointListener.findStepsAndBreakpointsCached`.
+- ~~**Perf hardening for big projects.**~~ DONE — the JS hot loops are now
+  cached/debounced like the JVM side (the JVM took #122/#124/#124-bis to get
+  right). Per-item status below:
+    * ~~`JsTzatzikiExtensionPoint.findStepsAndBreakpoints` walks every `.feature`
+      file per call~~ DONE — the Gherkin reverse-search is now cached in
+      `findGherkinStepsForCallCached` by `(callFile.url, callOffset, PsiModCount)`
+      (bounded to 512 entries). Breakpoints are still recomputed fresh each call
+      (BP state changes independently of PSI). Also removed the dead
+      `loadStepsFor`/`ourDef` computation that only fed a log line.
     * `TzBreakpointListener` already coalesces JVM-side bursts via a 600ms
-      `Alarm` — we delegate JS promotion to it so we inherit the debounce, but
-      worth verifying once a JS user reports perf issues.
-    * `TzNodeExecutionTrackerListener.update` still runs `proxy.getLocation` +
-      `scenarioHeaderLine0` read-actions per SMTRunner event. The "is data row?"
-      verdict is now cached (`dataRowCache`, keyed by `(vfileUrl, line, modCount)`),
-      but the location resolution + header lookup aren't — batch/cache those too
-      on large features.
+      `Alarm` — JS promotion delegates to it so it inherits the debounce.
+    * ~~`TzNodeExecutionTrackerListener.update` read-actions per event~~ DONE —
+      `proxy.getLocation` resolution cached per feature path (`vfileCache`), the
+      "is data row?" verdict per `(vfileUrl, line, modCount)` (`dataRowCache`),
+      and the progression-bar header line per `(vfileUrl, line, modCount)`
+      (`headerCache`).
     * ~~`TzRunNodeListener.handlePause` 250ms `Thread.sleep`~~ DONE — replaced
       with a project-scoped `Alarm` (cancel-and-rearm) so concurrent pauses
       don't pile up sleeping pooled threads.

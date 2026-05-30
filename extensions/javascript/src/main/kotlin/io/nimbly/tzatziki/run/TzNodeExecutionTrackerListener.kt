@@ -53,6 +53,17 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
     private data class DataRowEntry(val modCount: Long, val isDataRow: Boolean)
     private val dataRowCache = ConcurrentHashMap<DataRowKey, DataRowEntry>()
 
+    // Cache `proxy.getLocation()` resolution by the feature path part of the
+    // location URL — the .feature file doesn't move during a run, so all of its
+    // N events share one resolution instead of a read-action each.
+    private val vfileCache = ConcurrentHashMap<String, com.intellij.openapi.vfs.VirtualFile>()
+
+    // Cache the enclosing scenario/outline header line per (vfile URL, line,
+    // modCount) — the progression-bar anchor, otherwise a read-action per event.
+    private data class HeaderKey(val vfileUrl: String, val line: Int)
+    private data class HeaderEntry(val modCount: Long, val headerLine0: Int?)
+    private val headerCache = ConcurrentHashMap<HeaderKey, HeaderEntry>()
+
     override suspend fun execute(project: Project) {
         project.messageBus.connect().subscribe(
             SMTRunnerEventsListener.TEST_STATUS,
@@ -76,12 +87,21 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
         // match anything on disk. `getLocation()` uses the same VFS resolver
         // that powers `proxy.navigate()`, so it works for both relative and
         // absolute hints.
-        val resolved = com.intellij.openapi.application.runReadAction<com.intellij.openapi.vfs.VirtualFile?> {
-            runCatching {
-                proxy.getLocation(project, com.intellij.psi.search.GlobalSearchScope.allScope(project))?.virtualFile
-            }.getOrNull()
+        val pathPart = match.groupValues[1]
+        val resolved = vfileCache[pathPart] ?: run {
+            val v = com.intellij.openapi.application.runReadAction<com.intellij.openapi.vfs.VirtualFile?> {
+                runCatching {
+                    proxy.getLocation(project, com.intellij.psi.search.GlobalSearchScope.allScope(project))?.virtualFile
+                }.getOrNull()
+            } ?: return
+            // Guard against a stale entry if the file is ever removed/recreated.
+            if (v.isValid) vfileCache[pathPart] = v
+            v
         }
-        if (resolved == null) return
+        if (!resolved.isValid) {
+            vfileCache.remove(pathPart)
+            return
+        }
         val absolutePath = resolved.path
 
         val tracker = project.cucumberExecutionTracker()
@@ -136,7 +156,10 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
         vfile: com.intellij.openapi.vfs.VirtualFile,
         line: Int,
     ): Int? {
-        return com.intellij.openapi.application.ReadAction.compute<Int?, RuntimeException> {
+        val modCount = com.intellij.psi.util.PsiModificationTracker.getInstance(project).modificationCount
+        val key = HeaderKey(vfile.url, line)
+        headerCache[key]?.let { if (it.modCount == modCount) return it.headerLine0 }
+        val computed = com.intellij.openapi.application.ReadAction.compute<Int?, RuntimeException> {
             val psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(vfile)
                 ?: return@compute null
             val doc = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
@@ -152,6 +175,11 @@ class TzNodeExecutionTrackerListener : ProjectActivity {
             ) ?: return@compute null
             doc.getLineNumber(holder.textRange.startOffset)
         }
+        headerCache[key] = HeaderEntry(modCount, computed)
+        if (headerCache.size > 512) {
+            headerCache.keys.take(headerCache.size - 512).forEach { headerCache.remove(it) }
+        }
+        return computed
     }
 
     private fun isDataRowLineCached(

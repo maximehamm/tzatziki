@@ -11,7 +11,6 @@ import com.intellij.lang.javascript.psi.JSCallExpression
 import com.intellij.lang.javascript.psi.JSFunctionExpression
 import com.intellij.lang.javascript.psi.JSReferenceExpression
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiComment
@@ -22,13 +21,14 @@ import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import com.intellij.psi.util.PsiModificationTracker
 import io.nimbly.tzatziki.breakpoints.TzCucumberJsBreakpointType
 import io.nimbly.tzatziki.util.findCucumberStepDefinitions
 import io.nimbly.tzatziki.util.findProject
 import io.nimbly.tzatziki.util.findStepUsages
 import io.nimbly.tzatziki.util.getDocumentLine
 import io.nimbly.tzatziki.util.getFile
-import org.jetbrains.plugins.cucumber.javascript.CucumberJavaScriptExtension
+import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.plugins.cucumber.javascript.JavaScriptStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
@@ -53,6 +53,15 @@ import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
     private val log = Logger.getInstance(JsTzatzikiExtensionPoint::class.java)
+
+    // Cache for the expensive Gherkin reverse-search (enumerates EVERY .feature
+    // file in the project + walks its steps). Keyed by (step-def file URL, call
+    // offset) and tagged with the project's PSI modCount so edits invalidate it.
+    // Holds GherkinStep PSI elements — valid only while modCount is unchanged,
+    // which is exactly the cache-hit condition. Big-project perf (#a).
+    private data class StepsKey(val vfileUrl: String, val callStartOffset: Int)
+    private data class StepsEntry(val modCount: Long, val steps: List<GherkinStep>)
+    private val stepsCache = ConcurrentHashMap<StepsKey, StepsEntry>()
 
     override fun isDeprecated(element: PsiElement): Boolean {
         // Walk to the surrounding call's callback function; check JSDoc `@deprecated`
@@ -94,55 +103,18 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             return null
         }
 
-        val call = findEnclosingCucumberCall(element) ?: run {
-            log.info("C+ JS findStepsAndBreakpoints: bail — no enclosing Given/When/Then call at ${vfile.name}@$offset")
-            return null
-        }
-        val callback = findCallbackOf(call) ?: run {
-            log.info("C+ JS findStepsAndBreakpoints: bail — no JSFunctionExpression callback in ${call.text.take(60)}")
-            return null
-        }
+        val call = findEnclosingCucumberCall(element) ?: return null
+        val callback = findCallbackOf(call) ?: return null
 
-        // The cucumber-javascript plugin doesn't bind Gherkin step references to the
-        // raw JSCallExpression — it indexes step-defs as JSImplicitElementImpl stubs
-        // (created in CucumberJavaScriptExtension.loadStepsFor). Searching references
-        // FROM those stubs returns 0 because the cucumber-js side resolves refs to
-        // its own internal anchors, not to the stub we get back. So we reverse the
-        // direction: enumerate all .feature files in scope, then for each Gherkin
-        // step ask `findCucumberStepDefinitions()` and match the resulting JS step-defs
-        // by file + offset against our call's textRange.
-        val module = ModuleUtilCore.findModuleForFile(file)
-        val allDefs = CucumberJavaScriptExtension().loadStepsFor(file, module)
-        val ourDef = allDefs.firstOrNull { def ->
-            val el = def.element ?: return@firstOrNull false
-            // Same-file check first — loadStepsFor returns defs from ALL step-def
-            // files in the module, not just `file`; textOffset is meaningful only
-            // when both elements live in the same file.
-            el.containingFile?.virtualFile == vfile && call.textRange.contains(el.textOffset)
-        }
-
-        val callFile = call.containingFile?.virtualFile
+        val callFile = call.containingFile?.virtualFile ?: return null
         val callRange = call.textRange
-        val gherkinScope = com.intellij.psi.search.GlobalSearchScope.projectScope(project)
-        val steps = mutableListOf<GherkinStep>()
-        if (callFile != null) {
-            val gherkinFiles = com.intellij.psi.search.FileTypeIndex.getFiles(
-                org.jetbrains.plugins.cucumber.psi.GherkinFileType.INSTANCE, gherkinScope,
-            )
-            for (gvfile in gherkinFiles) {
-                val gpsiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(gvfile) ?: continue
-                com.intellij.psi.util.PsiTreeUtil.findChildrenOfType(gpsiFile, GherkinStep::class.java).forEach { step ->
-                    val matched = step.findCucumberStepDefinitions().any { d ->
-                        d is JavaScriptStepDefinition &&
-                            d.element?.containingFile?.virtualFile == callFile &&
-                            d.element?.textOffset?.let { callRange.contains(it) } == true
-                    }
-                    if (matched) steps.add(step)
-                }
-            }
-        }
 
-        // Existing breakpoints whose source position falls inside the callback body.
+        // Gherkin steps via the cached reverse-search (the expensive part).
+        val steps = findGherkinStepsForCallCached(project, callFile, callRange)
+
+        // Existing breakpoints whose source position falls inside the callback
+        // body — computed fresh every call (breakpoint state changes
+        // independently of PSI, so it must not be cached).
         val callbackRange = callback.textRange
         val callbackVfile = callback.containingFile?.originalFile?.virtualFile
         val allBreakpoints = XDebuggerManager.getInstance(project).breakpointManager
@@ -153,8 +125,49 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 sp.file == callbackVfile && callbackRange.contains(sp.offset)
             }
 
-        log.info("C+ JS findStepsAndBreakpoints: file=${vfile.name} offset=$offset call='${call.text.take(40)}' defs=${allDefs.size} ourDef=${ourDef?.let { it.element?.text?.take(40) ?: "<no-element>" }} steps=${steps.size} bps=${allBreakpoints.size}")
         return steps to allBreakpoints
+    }
+
+    /**
+     * Reverse-search: enumerate every `.feature` file in the project and collect
+     * the Gherkin steps whose step-def resolves into [callRange] of [callFile].
+     * Cached by (file, call offset, PSI modCount) — this is the hot path
+     * triggered by both breakpoint events and every gutter-marker repaint.
+     *
+     * (We reverse the direction because the cucumber-javascript plugin indexes
+     * its step-defs as `JSImplicitElementImpl` stubs and resolves Gherkin refs to
+     * THOSE — a `ReferencesSearch` from our `JSCallExpression` returns nothing.)
+     */
+    private fun findGherkinStepsForCallCached(
+        project: com.intellij.openapi.project.Project,
+        callFile: VirtualFile,
+        callRange: com.intellij.openapi.util.TextRange,
+    ): List<GherkinStep> {
+        val modCount = PsiModificationTracker.getInstance(project).modificationCount
+        val key = StepsKey(callFile.url, callRange.startOffset)
+        stepsCache[key]?.let { if (it.modCount == modCount) return it.steps }
+
+        val steps = mutableListOf<GherkinStep>()
+        val scope = com.intellij.psi.search.GlobalSearchScope.projectScope(project)
+        val gherkinFiles = com.intellij.psi.search.FileTypeIndex.getFiles(
+            org.jetbrains.plugins.cucumber.psi.GherkinFileType.INSTANCE, scope,
+        )
+        for (gvfile in gherkinFiles) {
+            val gpsiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(gvfile) ?: continue
+            PsiTreeUtil.findChildrenOfType(gpsiFile, GherkinStep::class.java).forEach { step ->
+                val matched = step.findCucumberStepDefinitions().any { d ->
+                    d is JavaScriptStepDefinition &&
+                        d.element?.containingFile?.virtualFile == callFile &&
+                        d.element?.textOffset?.let { callRange.contains(it) } == true
+                }
+                if (matched) steps.add(step)
+            }
+        }
+        stepsCache[key] = StepsEntry(modCount, steps)
+        if (stepsCache.size > 512) {
+            stepsCache.keys.take(stepsCache.size - 512).forEach { stepsCache.remove(it) }
+        }
+        return steps
     }
 
     /** Local copy of BreakpointsUtil.onEdtWrite (private there) so we can do
