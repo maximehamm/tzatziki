@@ -15,7 +15,11 @@ public class Cocktail {
 
     @Given("I have the following books in the store")
     public void iHaveTheFollowingBooksInTheStore(DataTable table) {
-        
+        System.out.println("Start");
+
+        for (int i = 0; i < 100; i++) {
+            System.out.println("Test" + i);
+        }
     }
 
     @SuppressWarnings("test")
@@ -42,6 +46,7 @@ public class Cocktail {
 
     @Given("Bidule trucs")
     public void biduleTrucs() {
+        System.out.println("bidule");
     }
 
 

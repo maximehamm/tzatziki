@@ -144,6 +144,7 @@ val versions by extra {
         "gherkin" to "253.28294.218",       //https://plugins.jetbrains.com/plugin/9164-gherkin/versions
         "psiViewer" to "252.23892.248",     //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
         "cucumberJava" to "253.30387.20",   //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
+        "cucumberJavascript" to "253.28294.218", //https://plugins.jetbrains.com/plugin/7418-cucumber-js/versions
         "scala" to "2025.3.39",             //https://plugins.jetbrains.com/plugin/1347-scala/versions
     )
 }

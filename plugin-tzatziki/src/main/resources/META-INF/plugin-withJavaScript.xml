@@ -1,0 +1,17 @@
+<idea-plugin>
+
+    <!--
+    Activated when both the bundled `JavaScript` plugin AND the `cucumber-javascript`
+    Marketplace plugin are present (the `<depends optional="true">` in plugin.xml
+    points here only when JavaScript is loaded; cucumber-javascript is required
+    transitively by the implementation below). Cucumber+ falls back gracefully on
+    IntelliJ IDEA Community / setups without the JS plugin.
+    -->
+    <depends>JavaScript</depends>
+    <depends>cucumber-javascript</depends>
+
+    <extensions defaultExtensionNs="io.nimbly.tzatziki">
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JsTzatzikiExtensionPoint"/>
+    </extensions>
+
+</idea-plugin>

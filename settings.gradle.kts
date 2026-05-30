@@ -14,6 +14,7 @@ include("extensions")
 include("extensions:java-cucumber")
 include("extensions:kotlin")
 include("extensions:scala")
+include("extensions:javascript")
 
 include("tests")
 

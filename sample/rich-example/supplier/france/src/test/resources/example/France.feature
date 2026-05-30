@@ -1,3 +1,4 @@
+@Help
 Business Need: toto
   Business needs explanation
   - Revenue was off the chart
@@ -70,7 +71,8 @@ Feature: Cocktail Ordering
 
     Then Bidule trucs
 
-  Scenario Outline: Vérifier le score de <Prénom>
+    @Test 
+  Scenario Outline: Vérifier le score de du prénom
 
     Given l'utilisateur "<Prenom>" a <Age> ans
     When Bidule trucs
@@ -82,8 +84,3 @@ Feature: Cocktail Ordering
       | 28  | 92    | Alice  |
       | 34  | 87    | Bob    |
 
-    Examples:
-      | Prenom | Age | Score |
-      | Clara  | 22  | 75    |
-      | Alice  | 28  | 92    |
-      | Bob    | 34  | 87    |

@@ -6,13 +6,13 @@
       <GradleProjectSettings>
         <option name="delegatedBuild" value="false" />
         <option name="testRunner" value="PLATFORM" />
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/customer" />
             <option value="$PROJECT_DIR$/supplier" />
+            <option value="$PROJECT_DIR$/supplier/chinese" />
             <option value="$PROJECT_DIR$/supplier/france" />
             <option value="$PROJECT_DIR$/supplier/worldwide" />
           </set>

@@ -352,6 +352,7 @@
 
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
+    <depends optional="true" config-file="plugin-withJavaScript.xml">JavaScript</depends>
 
     <!-- Extension point
         https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->

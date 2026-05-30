@@ -29,6 +29,7 @@ dependencies {
     runtimeOnly(project(":extensions:java-cucumber"))
     runtimeOnly(project(":extensions:kotlin"))
     runtimeOnly(project(":extensions:scala"))
+    runtimeOnly(project(":extensions:javascript"))
 
     intellijPlatform {
         intellijIdeaUltimate("2025.3.4")

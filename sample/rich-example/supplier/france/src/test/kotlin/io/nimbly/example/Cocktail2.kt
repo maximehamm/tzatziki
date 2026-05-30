@@ -98,6 +98,11 @@ class Cocktail2 {
         // sdfsf sdfsdf sdfsd sdf sdf
         // dfsdfsf
         // sdfsfsf
+        println("Start")
+        for (i in arg0 ..  100) {
+            println(i);
+        }
+
         Assert.assertEquals("Wrong number of order !", arg0.toLong(), 1)
     }
 
