@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "21.8.12"
+    version = "21.8.13"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>21.8.13</b> Cucumber test tree polish: <code>Example #N</code> nodes now show their row values (<code>Age: 22, Score: 75, Prenom: Clara</code>), and step parameters (quoted strings, numbers, <code>&lt;placeholders&gt;</code>) render in grey italic in the tree.</li>
          <li><b>21.8.12</b> Enable/disable on a Gherkin step breakpoint now propagates to the paired code breakpoint (was only working in the code → Gherkin direction).</li>
          <li><b>21.8.11</b> Fix breakpoints set on Kotlin step definitions not stopping the debugger.</li>
          <li><b>21.8.9</b> Fix editor freezes during autocompletion when breakpoints are present — the Gherkin&#8596;Java/Kotlin breakpoint sync no longer re-scans the project on every keystroke.</li>

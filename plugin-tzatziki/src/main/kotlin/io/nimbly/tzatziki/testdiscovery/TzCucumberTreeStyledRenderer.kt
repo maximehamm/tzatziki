@@ -113,6 +113,7 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
             if (proxy.getUserData(CUCUMBER_DECORATION_KEY) == null
                 && proxy.getUserData(CUCUMBER_WRAPPER_KEY) != true
                 && proxy.getUserData(CUCUMBER_TAGS_KEY) == null
+                && proxy.getUserData(CUCUMBER_EXAMPLE_KEY) == null
             ) {
                 projectOf(tree)?.let { lazyDecorator.decorate(proxy, it, "lazy-render") }
             }
@@ -162,7 +163,62 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
             if (tags != null && tags.isNotBlank()) {
                 result.append(tags, SimpleTextAttributes.GRAYED_ATTRIBUTES)
             }
+            // Scenario Outline example row: append the example data with the header
+            // names in grey italic and the cell values in plain grey, so visually
+            // `Age: 22, Score: 75, …` reads as `<i>Age</i>: 22, <i>Score</i>: 75, …`.
+            val example = proxy.getUserData(CUCUMBER_EXAMPLE_KEY)
+            if (!example.isNullOrEmpty()) {
+                result.append("  ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                example.forEachIndexed { i, (header, value) ->
+                    if (i > 0) result.append(", ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                    result.append(header, SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+                    result.append(": ", SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                    result.append(value, SimpleTextAttributes.GRAYED_ATTRIBUTES)
+                }
+                return result
+            }
+
+            // Step node inside a Cucumber+ tree: render the parameter parts (quoted
+            // strings, numbers, `<placeholder>`) in grey italic — same family as the
+            // suffix decorations above ([@tag] / "Age: 22, …"). We only restyle when
+            // the platform's base text is plain (i.e. step PASSED): for failed /
+            // skipped steps we leave the platform's red / grey alone, which is the
+            // most important visual cue.
+            val parentProxy = proxy.parent
+            val insideCucumberTree = parentProxy != null && (
+                parentProxy.getUserData(CUCUMBER_DECORATION_KEY) != null
+                    || parentProxy.getUserData(CUCUMBER_TAGS_KEY) != null
+                    || parentProxy.getUserData(CUCUMBER_EXAMPLE_KEY) != null
+                )
+            if (insideCucumberTree && proxy.isPassed) {
+                styleStepParameters(result)
+            }
             return result
+        }
+
+        /**
+         * Re-renders the cell text in [comp] with Cucumber step parameters
+         * (`"quoted"` strings, numbers, `<placeholders>`) in grey italic and the
+         * surrounding step text in default attributes. No-op when no parameter
+         * pattern is found.
+         */
+        private fun styleStepParameters(comp: ColoredTreeCellRenderer) {
+            val full = comp.getCharSequence(false).toString()
+            if (full.isBlank()) return
+            val matches = STEP_PARAM_REGEX.findAll(full).toList()
+            if (matches.isEmpty()) return
+            val savedIcon = comp.icon
+            comp.clear()
+            comp.icon = savedIcon
+            var cursor = 0
+            for (m in matches) {
+                if (m.range.first > cursor) {
+                    comp.append(full.substring(cursor, m.range.first), SimpleTextAttributes.REGULAR_ATTRIBUTES)
+                }
+                comp.append(full.substring(m.range.first, m.range.last + 1), SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+                cursor = m.range.last + 1
+            }
+            if (cursor < full.length) comp.append(full.substring(cursor), SimpleTextAttributes.REGULAR_ATTRIBUTES)
         }
     }
 
@@ -170,6 +226,10 @@ class TzCucumberTreeStyledRenderer : ProjectActivity {
         private val LOG = Logger.getInstance(TzCucumberTreeStyledRenderer::class.java)
         private const val RENDERER_INSTALLED_KEY = "tzatziki.cucumber.styled.renderer.installed"
         private val TEST_TOOL_WINDOW_IDS = listOf("Run", "Debug")
+        /** Matches the common Cucumber step parameters: `"quoted"` strings, integers
+         *  and decimals, and `<placeholder>` references for un-substituted Scenario
+         *  Outline steps. */
+        private val STEP_PARAM_REGEX = Regex("""("[^"]*")|(\b\d+(?:[.,]\d+)?\b)|(<[^<>]+>)""")
 
         /** Best-effort lookup of the [com.intellij.openapi.project.Project] hosting a tree. */
         private fun projectOf(tree: JTree): com.intellij.openapi.project.Project? {

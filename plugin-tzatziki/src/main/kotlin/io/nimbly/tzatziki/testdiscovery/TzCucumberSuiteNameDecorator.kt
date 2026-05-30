@@ -20,8 +20,11 @@ import com.intellij.psi.util.PsiTreeUtil
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
 import org.jetbrains.plugins.cucumber.psi.GherkinFeature
 import org.jetbrains.plugins.cucumber.psi.GherkinStepsHolder
+import org.jetbrains.plugins.cucumber.psi.GherkinTable
+import org.jetbrains.plugins.cucumber.psi.GherkinTableRow
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinTableHeaderRowImpl
 
 /**
  * Structured decoration attached to a Cucumber+ outermost suite proxy via
@@ -42,6 +45,12 @@ val CUCUMBER_WRAPPER_KEY: Key<Boolean> =
 /** Pre-formatted tag string (e.g. " @Production @Chrome") for any scenario-level suite. */
 val CUCUMBER_TAGS_KEY: Key<String> =
     Key.create("tzatziki.cucumber.suite.tags")
+/** Ordered (header, value) pairs of a single `Examples:` row under a Scenario
+ *  Outline — e.g. `[("Age","22"), ("Score","75"), ("Prenom","Clara")]`.
+ *  Stored as pairs (not a pre-formatted string) so the renderer can italicise
+ *  each header and keep its value in plain grey. */
+val CUCUMBER_EXAMPLE_KEY: Key<List<Pair<String, String>>> =
+    Key.create("tzatziki.cucumber.suite.example")
 
 /**
  * Decorates the outermost Cucumber suite node in the Run / Debug tool window so the user
@@ -112,6 +121,14 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
                 val tags = readScenarioTags(project, suite, locationUrl)
                 if (tags.isNotEmpty()) {
                     suite.putUserData(CUCUMBER_TAGS_KEY, tags.joinToString(" ", prefix = " "))
+                }
+            }
+            // Scenario Outline `Example #N` row: surface the example data (header→cell)
+            // so the user sees the actual values without having to expand the node.
+            if (suite.getUserData(CUCUMBER_EXAMPLE_KEY) == null) {
+                val example = readExampleRowData(project, suite, locationUrl)
+                if (!example.isNullOrEmpty()) {
+                    suite.putUserData(CUCUMBER_EXAMPLE_KEY, example)
                 }
             }
             return
@@ -258,6 +275,46 @@ class TzCucumberSuiteNameDecorator : ProjectActivity {
                 prev = prev.prevSibling
             }
             (preceding + tags).filter { it.isNotEmpty() }
+        }
+    }
+
+    /**
+     * If [locationUrl] points to a data row inside a `Scenarios:` / `Examples:` table
+     * (i.e. the suite is an "Example #N" child of a Scenario Outline), returns a
+     * `Header1: cell1, Header2: cell2, …` string. Empty cells and ones whose header
+     * is empty are skipped. Returns null when the line is the header row or doesn't
+     * sit inside an Examples table.
+     */
+    private fun readExampleRowData(project: Project, suite: SMTestProxy, locationUrl: String): List<Pair<String, String>>? {
+        val match = Regex("(.*\\.feature):(\\d+)$").matchEntire(locationUrl) ?: return null
+        val lineNumber = match.groupValues[2].toIntOrNull() ?: return null
+        val vfile = resolveFeatureVFile(project, suite, locationUrl) ?: return null
+        return runReadAction {
+            val psiFile = PsiManager.getInstance(project).findFile(vfile) ?: return@runReadAction null
+            val document = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance().getDocument(vfile)
+                ?: return@runReadAction null
+            val lineIdx = (lineNumber - 1).coerceIn(0, document.lineCount - 1)
+            val lineStart = document.getLineStartOffset(lineIdx)
+            val lineEnd = document.getLineEndOffset(lineIdx)
+            val firstNonWs = document.charsSequence
+                .subSequence(lineStart, lineEnd)
+                .indexOfFirst { !it.isWhitespace() }
+            val offset = lineStart + firstNonWs.coerceAtLeast(0)
+            val element = psiFile.findElementAt(offset) ?: return@runReadAction null
+            val row = PsiTreeUtil.getParentOfType(element, GherkinTableRow::class.java, false)
+                ?: return@runReadAction null
+            if (row is GherkinTableHeaderRowImpl) return@runReadAction null
+            val table = PsiTreeUtil.getParentOfType(row, GherkinTable::class.java)
+                ?: return@runReadAction null
+            // Header = the first row inside the table (typically GherkinTableHeaderRowImpl).
+            val header = PsiTreeUtil.getChildrenOfTypeAsList(table, GherkinTableRow::class.java)
+                .firstOrNull() ?: return@runReadAction null
+            val headerCells = header.psiCells.map { it.text.trim() }
+            val dataCells = row.psiCells.map { it.text.trim() }
+            if (headerCells.isEmpty() || dataCells.isEmpty()) return@runReadAction null
+            headerCells.zip(dataCells) { h, d -> h to d }
+                .filter { (h, _) -> h.isNotEmpty() }
+                .takeIf { it.isNotEmpty() }
         }
     }
 
