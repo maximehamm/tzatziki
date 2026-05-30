@@ -258,6 +258,14 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         else if (action == EAction.CHANGED && gherkinBreakpoint != null) {
             // Code-side breakpoints are now identified by type — nothing to mark.
             val state = gherkinBreakpoint.isEnabled
+
+            // Mirror the enable/disable state onto every paired code breakpoint.
+            // (Was previously only done via the ScenarioOutline branch below — so the
+            //  Gherkin → code propagation silently did nothing for plain Scenarios.)
+            allCodeBreakpoints?.second?.forEach { cb ->
+                if (cb.isEnabled != state) cb.isEnabled = state
+            }
+
             val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
             if (scenario != null) {
                 if (gherkinBreakpoint.isEnabled ||
