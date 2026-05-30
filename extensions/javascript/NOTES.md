@@ -27,14 +27,15 @@ Status: **work in progress, do NOT merge to master yet.**
   SMTRunner tracker catch up), and on each pause resolves the running step (via
   PSI + the JS step-def `JSCallExpression` covering the pause offset), then
   `session.resume()`s when the step / example-row has no enabled Gherkin BP.
-- **[REVISIT LATER] cucumber-js step-def stub index goes stale after sandbox
-  restart.** `CucumberJavaScriptExtension.loadStepsFor` returns an empty list
-  until the user runs `File → Invalidate Caches`. Current workaround:
-  `JsCucumberIndexRefresher` (project activity) requests a re-index of step-def
-  files at startup. This is a HACK the user explicitly wants revisited — root
-  cause is the cucumber-js stub cache surviving a plugin classloader swap; find
-  a cleaner trigger (or confirm end users never hit it since they don't rebuild
-  the plugin jar mid-session) and consider removing `JsCucumberIndexRefresher`.
+- **cucumber-js step-def stub index goes stale on a plugin classloader swap.**
+  `CucumberJavaScriptExtension.loadStepsFor` returns an empty list until
+  `File → Invalidate Caches`, breaking all JS/TS Cucumber+ features. CONFIRMED
+  NOT dev-only — a Marketplace plugin UPDATE swaps the classloader the same way
+  a `runIde` rebuild does, so end users hit it too. Kept, but made non-brutal:
+  `JsCucumberIndexRefresher` now runs in smart mode, **probes** one step-def
+  file via `loadStepsFor`, and only requests a reindex when the probe comes back
+  empty (stale stub cache). On the common healthy case it does nothing beyond a
+  cheap probe — no blanket reindex on every project open.
 - **[WON'T FIX — documented] TypeScript step-defs need `-r ts-node/register`
   passed to Node.** This is plain cucumber-js + Node behaviour (Node can't load
   `.ts` without a transpiling loader), NOT something Cucumber+ should paper
