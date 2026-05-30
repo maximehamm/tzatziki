@@ -21,11 +21,12 @@ Status: **work in progress, do NOT merge to master yet.**
   instance — the JS debugger paints its own icon for the verified state. Platform
   limitation; would need a custom `XBreakpointPresentationProvider` or upstream API
   change.
-- **No "stop only on the example row I clicked" filtering for Scenario Outlines.**
-  `TzRunCodeListener` (Java-only — gated on `JavaDebugProcess` and run-config type
-  `"Cucumber Java"`) implements that filtering for the JVM debugger. Need a JS
-  twin (`TzRunNodeListener`) that hooks the Node / Chrome DAP debug session and
-  parses the cucumber-js stdout to track the current example. ~150 LoC + investigation.
+- ~~**"Stop only on the example row I clicked" filtering for Scenario Outlines.**~~
+  DONE (user-confirmed). `TzRunNodeListener` hooks the Node debug session
+  (`XDebugSessionListener.sessionPaused`, Alarm-debounced 250ms to let the
+  SMTRunner tracker catch up), and on each pause resolves the running step (via
+  PSI + the JS step-def `JSCallExpression` covering the pause offset), then
+  `session.resume()`s when the step / example-row has no enabled Gherkin BP.
 - **[REVISIT LATER] cucumber-js step-def stub index goes stale after sandbox
   restart.** `CucumberJavaScriptExtension.loadStepsFor` returns an empty list
   until the user runs `File → Invalidate Caches`. Current workaround:
@@ -58,51 +59,47 @@ Status: **work in progress, do NOT merge to master yet.**
     * `TzBreakpointListener` already coalesces JVM-side bursts via a 600ms
       `Alarm` — we delegate JS promotion to it so we inherit the debounce, but
       worth verifying once a JS user reports perf issues.
-    * `TzNodeExecutionTrackerListener.update` runs a `ReadAction.compute` per
-      SMTRunner event (suite + test). On large features with many scenarios /
-      examples this is N read-actions per run. Consider batching or caching
-      the PSI lookups (e.g. cache the "is data row?" verdict per `(vfileUrl, line)`).
-    * `TzRunNodeListener.handlePause` schedules a 250ms `Thread.sleep` on a
-      pooled thread for every pause to wait for the SMTRunner events to catch
-      up — could starve the pool if many BPs fire fast. Replace with a proper
-      `Alarm` or a condition wait.
-    * `JsCucumberIndexRefresher` calls `FileBasedIndex.requestReindex` on every
-      JS/TS file under the project root at startup. Cheap on the sample, but on
-      a 100k-file monorepo this would dominate startup time. Add a guard that
-      only requests reindex for files matching `features/step_definitions/**`
-      or similar before shipping.
+    * `TzNodeExecutionTrackerListener.update` still runs `proxy.getLocation` +
+      `scenarioHeaderLine0` read-actions per SMTRunner event. The "is data row?"
+      verdict is now cached (`dataRowCache`, keyed by `(vfileUrl, line, modCount)`),
+      but the location resolution + header lookup aren't — batch/cache those too
+      on large features.
+    * ~~`TzRunNodeListener.handlePause` 250ms `Thread.sleep`~~ DONE — replaced
+      with a project-scoped `Alarm` (cancel-and-rearm) so concurrent pauses
+      don't pile up sleeping pooled threads.
+    * ~~`JsCucumberIndexRefresher` reindexes every JS/TS file at startup~~ DONE —
+      now filtered to step-def files (under `step_definitions/` / `steps/` dirs
+      or `*.steps.{js,ts}`), skipping `node_modules` / `build` / `dist` / dot-dirs.
 - ~~**Test tree: @tag on JS / TS scenario / outline / feature suites.**~~ DONE
   (user-confirmed). `resolveFeatureVFile` uses `proxy.getLocation` first; a
   PSI/name-prefix `CUCUMBER_IS_STEP_KEY` distinguishes scenarios from steps;
   feature-node tags read off the `GherkinFeature` when the location URL has no
   `:NN`; outline-iteration tags rendered on the example node.
-- **[AWAITING USER TEST] Test tree: `#N` ordinal on Scenario Outline iterations
-  (JS / TS).** Simpler than synthesizing intermediate `Example #N` tree nodes
-  (the proxy hierarchy is owned by the cucumber-js runner): the styled renderer
-  prefixes each outline-iteration node with its `#N` ordinal
+- ~~**Test tree: `#N` ordinal on Scenario Outline iterations (JS / TS).**~~ DONE
+  (user-confirmed). Simpler than synthesizing intermediate `Example #N` tree
+  nodes (the proxy hierarchy is owned by the cucumber-js runner): the styled
+  renderer prefixes each outline-iteration node with a bold `#N` ordinal
   (`CUCUMBER_EXAMPLE_INDEX_KEY`, the 1-based data-row position computed in
-  `readExampleRowData`). NOT yet confirmed by the user.
+  `readExampleRowData`); never leaks onto step child nodes.
 - ~~**Test tree: strip noisy `Scenario: ` / `Step: ` prefixes (JS only).**~~
   DONE (user-confirmed). `TzCucumberSuiteNameDecorator.stripRunnerPrefix` strips
   the runner's fixed English prefix via `setPresentableName`; its return value
   also drives the reliable step/scenario classification.
-- **[AWAITING USER TEST] "N usages" gutter icon on JS / TS step-defs.**
-  `JsTzatzikiUsagesMarker` (`codeInsight.lineMarkerProvider` for `JavaScript` /
-  `TypeScript`, registered in `plugin-withJavaScript.xml`) extends the shared
-  `TzStepsUsagesMarker`. Anchors the marker on the `Given`/`When`/`Then` callee
-  identifier of a step-def call, resolves the Gherkin steps via
-  `Tzatziki.findSteps(vfile, offset)` (reusing `JsTzatzikiExtensionPoint`'s
-  reverse-search), and calls `buildMarker(token, steps)`. NOT yet confirmed by
-  the user.
-- **[AWAITING USER TEST] No gutter progression bar during JS / TS debug runs.**
-  Extracted the bar-drawing into the public
-  `paintCucumberProgression(project, vfile, lineStart, lineEnd, isExample)`
-  helper in `TzRunCucumberListener.kt`; `TzNodeExecutionTrackerListener.update`
-  now calls it on every step / example-row SMTRunner event, anchoring the bar
-  at the enclosing scenario/outline header (`scenarioHeaderLine0`) down to the
-  current line. Previous guides are dropped on each paint so the bar rewinds.
-  Cleanup still rides on `TzExecutionCucumberListener.processTerminated`
-  (generic ExecutionListener, fires for JS runs too).
+- ~~**"N usages" gutter icon on JS / TS step-defs.**~~ DONE (user-confirmed).
+  `JsTzatzikiUsagesMarker` (`codeInsight.lineMarkerProvider` for `JavaScript`
+  ONLY — TypeScript is a JS dialect, covered via base-language lookup;
+  registering both fired it twice on `.ts` → duplicate markers) extends the
+  shared `TzStepsUsagesMarker`. Anchors on the `Given`/`When`/`Then` callee
+  identifier, resolves steps via `Tzatziki.findSteps` (reusing
+  `JsTzatzikiExtensionPoint`'s reverse-search), `buildMarker(token, steps)` →
+  the same Cucumber+ popup as Java.
+- ~~**Gutter progression bar during JS / TS debug runs.**~~ DONE (user-confirmed).
+  Public `paintCucumberProgression(project, vfile, lineStart, lineEnd, isExample)`
+  helper in `TzRunCucumberListener.kt` (lineEnd is INCLUSIVE → +1 internally so
+  the bar covers the paused line). `TzNodeExecutionTrackerListener` drives it
+  from SMTRunner events for RUN; `TzRunNodeListener.handlePause` repaints from
+  the REAL resolved step on a kept DEBUG pause (the tracker lags the actual
+  pause line). Cleanup rides on `TzExecutionCucumberListener.processTerminated`.
 
 ## Architecture sketch
 
