@@ -43,3 +43,4 @@ bin/
 /.idea/sonarlint/
 /.intellijPlatform/
 /.idea/runConfigurations/Tzatziki___plugin_tzatziki_publishPlugin_.xml
+.kotlin/
