@@ -352,7 +352,12 @@
 
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
-    <depends optional="true" config-file="plugin-withJavaScript.xml">JavaScript</depends>
+    <!-- Triggered on `cucumber-javascript` (NOT just `JavaScript`): the classes in
+         plugin-withJavaScript.xml reference cucumber-javascript types, so scoping the
+         optional module to that plugin lets the Marketplace verifier resolve them
+         correctly. cucumber-javascript depends on com.intellij.modules.javascript, so
+         the JavaScript plugin is guaranteed present too. -->
+    <depends optional="true" config-file="plugin-withJavaScript.xml">cucumber-javascript</depends>
 
     <!-- Extension point
         https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->
