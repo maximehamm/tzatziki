@@ -24,6 +24,18 @@
              survives plugin-tzatziki rebuilds but the cached stubs become
              unreadable until `Invalidate Caches` is run manually. -->
         <postStartupActivity implementation="io.nimbly.tzatziki.JsCucumberIndexRefresher"/>
+        <!-- Populates the cucumberExecutionTracker from SMTRunner events because
+             the JS test framework swallows TeamCity messages before they reach
+             our stdout-based ProcessListener (which is how cucumber-jvm fills it). -->
+        <postStartupActivity implementation="io.nimbly.tzatziki.run.TzNodeExecutionTrackerListener"/>
     </extensions>
+
+    <projectListeners>
+        <!-- JS / TS counterpart of TzRunCodeListener: filters Node debug pauses
+             so the debugger only stops on the example row the user flagged in
+             the .feature (instead of breaking on every Scenario Outline iteration). -->
+        <listener class="io.nimbly.tzatziki.run.TzRunNodeListener"
+                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+    </projectListeners>
 
 </idea-plugin>

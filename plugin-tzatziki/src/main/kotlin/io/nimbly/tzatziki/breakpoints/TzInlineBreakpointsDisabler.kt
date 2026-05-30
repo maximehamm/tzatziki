@@ -19,6 +19,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.breakpoints.InlineBreakpointsDisabler
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import io.nimbly.tzatziki.util.isCucumberSyncBreakpoint
 
 /**
  * Suppresses IntelliJ's inline-breakpoint picker (the row of mini-icons rendered
@@ -44,7 +45,7 @@ class TzInlineBreakpointsDisabler : InlineBreakpointsDisabler {
             val manager = XDebuggerManager.getInstance(project).breakpointManager
             val hasCucumberBp = manager.allBreakpoints.any { bp ->
                 bp is XLineBreakpoint<*>
-                    && bp.type is TzCucumberCodeBreakpointType
+                    && bp.isCucumberSyncBreakpoint()  // covers JVM + JS subtypes
                     && bp.fileUrl == file.url
             }
             if (hasCucumberBp) return true
