@@ -14,4 +14,16 @@
         <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JsTzatzikiExtensionPoint"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- JS/TS counterpart of TzCucumberCodeBreakpointType — gives the green
+             Cucumber+ badge to step-def breakpoints on .js / .ts files instead of
+             the platform's native red dot. -->
+        <xdebugger.breakpointType implementation="io.nimbly.tzatziki.breakpoints.TzCucumberJsBreakpointType"/>
+        <!-- Forces a cucumber-js step-def reindex at project start. Compensates
+             for a sandbox-only quirk where the cucumber-javascript stub cache
+             survives plugin-tzatziki rebuilds but the cached stubs become
+             unreadable until `Invalidate Caches` is run manually. -->
+        <postStartupActivity implementation="io.nimbly.tzatziki.JsCucumberIndexRefresher"/>
+    </extensions>
+
 </idea-plugin>

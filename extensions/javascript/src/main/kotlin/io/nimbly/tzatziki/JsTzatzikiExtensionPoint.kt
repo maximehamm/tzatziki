@@ -6,19 +6,24 @@
  */
 package io.nimbly.tzatziki
 
+import com.intellij.javascript.debugger.breakpoints.JavaScriptLineBreakpointProperties
 import com.intellij.lang.javascript.psi.JSCallExpression
 import com.intellij.lang.javascript.psi.JSFunctionExpression
 import com.intellij.lang.javascript.psi.JSReferenceExpression
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleUtilCore
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerManager
+import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import io.nimbly.tzatziki.breakpoints.TzCucumberJsBreakpointType
+import io.nimbly.tzatziki.util.findCucumberStepDefinitions
 import io.nimbly.tzatziki.util.findProject
 import io.nimbly.tzatziki.util.findStepUsages
 import io.nimbly.tzatziki.util.getDocumentLine
@@ -100,20 +105,42 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
 
         // The cucumber-javascript plugin doesn't bind Gherkin step references to the
         // raw JSCallExpression — it indexes step-defs as JSImplicitElementImpl stubs
-        // (created in CucumberJavaScriptExtension.loadStepsFor) and resolves Gherkin
-        // refs to THOSE stubs. So `ReferencesSearch.search(call)` returns 0 hits.
-        // We round-trip through the cucumber-js extension to grab the stub for our
-        // call's location, then search references from there.
+        // (created in CucumberJavaScriptExtension.loadStepsFor). Searching references
+        // FROM those stubs returns 0 because the cucumber-js side resolves refs to
+        // its own internal anchors, not to the stub we get back. So we reverse the
+        // direction: enumerate all .feature files in scope, then for each Gherkin
+        // step ask `findCucumberStepDefinitions()` and match the resulting JS step-defs
+        // by file + offset against our call's textRange.
         val module = ModuleUtilCore.findModuleForFile(file)
         val allDefs = CucumberJavaScriptExtension().loadStepsFor(file, module)
         val ourDef = allDefs.firstOrNull { def ->
             val el = def.element ?: return@firstOrNull false
-            // The stub keeps its textOffset inside the regex/string literal first
-            // argument of the call, so the call's textRange contains it.
-            call.textRange.contains(el.textOffset)
+            // Same-file check first — loadStepsFor returns defs from ALL step-def
+            // files in the module, not just `file`; textOffset is meaningful only
+            // when both elements live in the same file.
+            el.containingFile?.virtualFile == vfile && call.textRange.contains(el.textOffset)
         }
-        val stepReferences = ourDef?.element?.let { findStepUsages(it) } ?: emptyList()
-        val steps = stepReferences.map { it.element }.filterIsInstance<GherkinStep>()
+
+        val callFile = call.containingFile?.virtualFile
+        val callRange = call.textRange
+        val gherkinScope = com.intellij.psi.search.GlobalSearchScope.projectScope(project)
+        val steps = mutableListOf<GherkinStep>()
+        if (callFile != null) {
+            val gherkinFiles = com.intellij.psi.search.FileTypeIndex.getFiles(
+                org.jetbrains.plugins.cucumber.psi.GherkinFileType.INSTANCE, gherkinScope,
+            )
+            for (gvfile in gherkinFiles) {
+                val gpsiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(gvfile) ?: continue
+                com.intellij.psi.util.PsiTreeUtil.findChildrenOfType(gpsiFile, GherkinStep::class.java).forEach { step ->
+                    val matched = step.findCucumberStepDefinitions().any { d ->
+                        d is JavaScriptStepDefinition &&
+                            d.element?.containingFile?.virtualFile == callFile &&
+                            d.element?.textOffset?.let { callRange.contains(it) } == true
+                    }
+                    if (matched) steps.add(step)
+                }
+            }
+        }
 
         // Existing breakpoints whose source position falls inside the callback body.
         val callbackRange = callback.textRange
@@ -126,8 +153,22 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
                 sp.file == callbackVfile && callbackRange.contains(sp.offset)
             }
 
-        log.info("C+ JS findStepsAndBreakpoints: file=${vfile.name} offset=$offset call='${call.text.take(40)}' defs=${allDefs.size} ourDef=${ourDef?.let { it.element?.text?.take(40) ?: "<no-element>" }} refs=${stepReferences.size} steps=${steps.size} bps=${allBreakpoints.size}")
+        log.info("C+ JS findStepsAndBreakpoints: file=${vfile.name} offset=$offset call='${call.text.take(40)}' defs=${allDefs.size} ourDef=${ourDef?.let { it.element?.text?.take(40) ?: "<no-element>" }} steps=${steps.size} bps=${allBreakpoints.size}")
         return steps to allBreakpoints
+    }
+
+    /** Local copy of BreakpointsUtil.onEdtWrite (private there) so we can do
+     *  add+remove of the JS breakpoint inside a write action from any thread. */
+    private inline fun runOnEdtWrite(crossinline block: () -> Unit) {
+        val app = com.intellij.openapi.application.ApplicationManager.getApplication()
+        if (app.isDispatchThread) {
+            com.intellij.openapi.application.WriteAction.run<Throwable> { block() }
+        } else {
+            app.invokeLater(
+                { com.intellij.openapi.application.WriteAction.run<Throwable> { block() } },
+                com.intellij.openapi.application.ModalityState.nonModal(),
+            )
+        }
     }
 
     private fun dumpParents(element: PsiElement, depth: Int): String {
@@ -140,6 +181,44 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
             i++
         }
         return parts.joinToString(" → ")
+    }
+
+    /**
+     * Promotes a user-created native JavaScript line breakpoint sitting on a
+     * cucumber-js step-def body line into a [TzCucumberJsBreakpointType] BP,
+     * preserving the user's settings.
+     */
+    override fun promoteToCucumberType(breakpoint: XLineBreakpoint<*>, project: Project): Boolean {
+        val vfile = breakpoint.sourcePosition?.file ?: return false
+        val ext = vfile.extension?.lowercase()
+        if (ext != "js" && ext != "ts" && ext != "mjs" && ext != "cjs" && ext != "jsx" && ext != "tsx") {
+            return false  // Not a JS / TS file — let another extension handle it.
+        }
+        // Already our type? nothing to do — but we still own the file, so return true
+        // to short-circuit the listener's fallback chain.
+        if (breakpoint.type is TzCucumberJsBreakpointType) return true
+
+        val line = breakpoint.line
+        val manager = XDebuggerManager.getInstance(project).breakpointManager
+        val type = XDebuggerUtil.getInstance()
+            .findBreakpointType(TzCucumberJsBreakpointType::class.java)
+            ?: return false
+
+        val wasEnabled = breakpoint.isEnabled
+        val suspendPolicy = breakpoint.suspendPolicy
+        val condition = breakpoint.conditionExpression
+        val logExpr = breakpoint.logExpressionObject
+
+        runOnEdtWrite {
+            val ourBp = manager.addLineBreakpoint(type, vfile.url, line, JavaScriptLineBreakpointProperties())
+            ourBp.isEnabled = wasEnabled
+            ourBp.suspendPolicy = suspendPolicy
+            ourBp.conditionExpression = condition
+            ourBp.logExpressionObject = logExpr
+            manager.removeBreakpoint(breakpoint)
+        }
+        log.info("C+ JS promoteToCucumberType: promoted ${vfile.name}:$line → ${type.id}")
+        return true
     }
 
     override fun findBestPositionToAddBreakpoint(

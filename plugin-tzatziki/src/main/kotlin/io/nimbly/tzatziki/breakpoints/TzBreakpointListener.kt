@@ -295,26 +295,31 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         val codeBreakpoints = pair.second
         val isAlreadyOurType = breakpoint.isCucumberSyncBreakpoint()
 
-        // Promotion to the `tzatziki.cucumber.code` type only applies to JVM
-        // languages — that type extends JavaLineBreakpointType and silently
-        // misbehaves on JS / TS sources. For non-JVM files we skip promotion and
-        // fall through to the steps.forEach branch below, so the Gherkin-side
-        // sync still happens (the JS / TS breakpoint keeps its native gutter icon).
+        // Two-language promotion paths:
+        //  - JVM files (.java / .kt / .scala): use BreakpointsUtil.promoteToCucumberType
+        //    which creates a `tzatziki.cucumber.code` BP (JavaLineBreakpointType subclass).
+        //  - JS / TS files: delegate to the extension's own promoteToCucumberType so
+        //    each language can create its language-specific Cucumber+ type
+        //    (e.g. JS → `tzatziki.cucumber.code.javascript` using JavaScriptLineBreakpointProperties).
         val ext = breakpoint.sourcePosition?.file?.extension?.lowercase()
         val isJvmLanguage = ext == "java" || ext == "kt" || ext == "kts" || ext == "scala"
 
-        if (action == EAction.ADDED && steps.isNotEmpty() && !isAlreadyOurType && isJvmLanguage) {
+        if (action == EAction.ADDED && steps.isNotEmpty() && !isAlreadyOurType) {
             // Only promote when the user's breakpoint sits at the EXACT body line that
             // Cucumber+ would itself sync from a Gherkin step. Clicks on the method
             // declaration line, on a Javadoc line, or anywhere else inside the method
-            // body remain plain Java/Kotlin breakpoints (they keep the standard red
-            // dot / red diamond gutter icon).
+            // body remain plain language breakpoints (they keep the standard gutter icon).
             val stepDefs = steps.flatMap { it.findCucumberStepDefinitions() }
             val bestLine = Tzatziki().extensionList
                 .firstNotNullOfOrNull { it.findBestPositionToAddBreakpoint(stepDefs) }
                 ?.second
             if (bestLine != null && breakpoint.line == bestLine) {
-                promoteToCucumberType(breakpoint, project)
+                if (isJvmLanguage) {
+                    promoteToCucumberType(breakpoint, project)
+                } else {
+                    // Let any matching extension handle the non-JVM promotion.
+                    Tzatziki().extensionList.firstOrNull { it.promoteToCucumberType(breakpoint, project) }
+                }
             }
             return
         }

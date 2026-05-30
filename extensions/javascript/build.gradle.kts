@@ -23,7 +23,12 @@ dependencies {
         // entry in plugin.xml keeps Cucumber+ usable on Community.
         intellijIdeaUltimate("2025.3.4")
         instrumentationTools()
-        bundledPlugin("JavaScript")
+        bundledPlugins(
+            "JavaScript",
+            // Provides JavaScriptBreakpointType + JavaScriptLineBreakpointProperties
+            // — needed to build our TzCucumberJsBreakpointType.
+            "JavaScriptDebugger",
+        )
         plugins(
             "gherkin:${versions["gherkin"]}",
             "cucumber-javascript:${versions["cucumberJavascript"]}",

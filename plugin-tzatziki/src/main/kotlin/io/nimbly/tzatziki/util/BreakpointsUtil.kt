@@ -90,12 +90,16 @@ fun GherkinPsiElement.deleteBreakpoints() {
 }
 
 /**
- * Returns `true` if [this] was created by Cucumber+'s Gherkin → code sync.
- * Single source of truth: replaces the legacy "fake condition" detection
- * ({@code conditionExpression == "Cucumber+"!=null}).
+ * Returns `true` if [this] was created by Cucumber+'s Gherkin → code sync — for
+ * any supported language. JVM uses [TzCucumberCodeBreakpointType] directly,
+ * while extension modules (e.g. JS) register their own `tzatziki.cucumber.code.<lang>`
+ * types whose classes aren't reachable from this module; we match on the
+ * shared id prefix instead.
  */
-fun XBreakpoint<*>.isCucumberSyncBreakpoint(): Boolean =
-    type is TzCucumberCodeBreakpointType
+fun XBreakpoint<*>.isCucumberSyncBreakpoint(): Boolean {
+    if (type is TzCucumberCodeBreakpointType) return true
+    return type.id.startsWith("tzatziki.cucumber.code")
+}
 
 /**
  * Idempotent: ensures a Cucumber+ code-side breakpoint exists at [codeElement]
@@ -119,10 +123,23 @@ fun ensureCucumberCodeBreakpoint(
     }
     val line = codeElement.second
     val manager = XDebuggerManager.getInstance(project).breakpointManager
-    val type = XDebuggerUtil.getInstance()
-        .findBreakpointType(TzCucumberCodeBreakpointType::class.java)
+
+    // Pick the Cucumber+ breakpoint type that matches the language of the target file.
+    // The JS type lives in extensions/javascript and is registered by its plugin-with…xml,
+    // so we resolve it by id (not by class) to avoid a hard compile dependency.
+    val ext = file.extension?.lowercase()
+    val isJs = ext == "js" || ext == "ts" || ext == "mjs" || ext == "cjs" || ext == "jsx" || ext == "tsx"
+    @Suppress("UNCHECKED_CAST")
+    val type = if (isJs) {
+        com.intellij.xdebugger.breakpoints.XBreakpointType.EXTENSION_POINT_NAME.extensionList
+            .firstOrNull { it.id == "tzatziki.cucumber.code.javascript" }
+                as? com.intellij.xdebugger.breakpoints.XLineBreakpointType<XBreakpointProperties<*>>
+    } else {
+        XDebuggerUtil.getInstance().findBreakpointType(TzCucumberCodeBreakpointType::class.java)
+            as? com.intellij.xdebugger.breakpoints.XLineBreakpointType<XBreakpointProperties<*>>
+    }
     if (type == null) {
-        log.info("C+ ensureCucumberCodeBreakpoint: TzCucumberCodeBreakpointType not registered — bailing")
+        log.info("C+ ensureCucumberCodeBreakpoint: matching Cucumber+ breakpoint type not registered (isJs=$isJs) — bailing")
         return
     }
     log.info("C+ ensureCucumberCodeBreakpoint: target=${file.path}:$line type=${type.id}")
@@ -140,30 +157,31 @@ fun ensureCucumberCodeBreakpoint(
     }
 
     onEdtWrite {
-        // Re-check existence on EDT in case another listener already created it between
-        // the off-EDT check above and now.
         val stillMissing = manager.allBreakpoints
             .filterIsInstance<XLineBreakpoint<*>>()
             .none { bp ->
                 bp.type === type && bp.fileUrl == file.url && bp.line == line
             }
         if (stillMissing) {
-            // Use a non-null JavaLineBreakpointProperties — Breakpoint.getProperties() is @NotNull
-            // and JavaBreakpointsUsageCollector NPEs in the breakpointAdded MessageBus pump if it isn't.
-            //
-            // For JAVA files we pin to the method body via NO_LAMBDA so the JVM does not
-            // target a lambda on the same source line. For KOTLIN files we MUST leave
-            // encodedInlinePosition null, otherwise JavaLineBreakpointType.matchesPosition
-            // hits its `Logger.assertTrue(lang.isKindOf(JavaLanguage), …)` check, returns
-            // false (Kotlin's getContainingMethod returns null in the Java-side code path)
-            // and the JDI request is silently skipped — the breakpoint never fires.
-            // With encodedInlinePosition == null, isAllPositions() returns true and
-            // matchesPosition short-circuits to `return true`, letting Kotlin's own
-            // PositionManager install the JDI request correctly.
-            val props = JavaLineBreakpointProperties()
-            if (file.extension == "java") props.applyNoLambda()
-            log.info("C+ ensureCucumberCodeBreakpoint: addLineBreakpoint(${type.id}, ${file.url}, line=$line, noLambda=${file.extension == "java"})")
-            val created = manager.addLineBreakpoint(type, file.url, line, props)
+            // Build properties the right way for each language:
+            //  - JAVA: pin to method body (NO_LAMBDA) so the JVM doesn't target a lambda
+            //    on the same source line.
+            //  - KOTLIN: leave encodedInlinePosition null — JavaLineBreakpointType.matchesPosition
+            //    would otherwise hit its `Logger.assertTrue(lang.isKindOf(JavaLanguage), …)` check,
+            //    return false, and the JDI request is silently skipped.
+            //  - JS / TS: ask the type itself for fresh properties (JavaScriptLineBreakpointProperties).
+            val props: XBreakpointProperties<*>? = if (isJs) {
+                type.createBreakpointProperties(file, line)
+            } else {
+                JavaLineBreakpointProperties().also { if (file.extension == "java") it.applyNoLambda() }
+            }
+            log.info("C+ ensureCucumberCodeBreakpoint: addLineBreakpoint(${type.id}, ${file.url}, line=$line, props=${props?.javaClass?.simpleName})")
+            @Suppress("UNCHECKED_CAST")
+            val created = manager.addLineBreakpoint(
+                type as com.intellij.xdebugger.breakpoints.XLineBreakpointType<XBreakpointProperties<Any>>,
+                file.url, line,
+                props as XBreakpointProperties<Any>?,
+            )
             log.info("C+ ensureCucumberCodeBreakpoint: created=$created")
         } else {
             log.info("C+ ensureCucumberCodeBreakpoint: stillMissing=false on EDT — race resolved by other path")

@@ -16,9 +16,11 @@
 package io.nimbly.tzatziki
 
 import com.intellij.openapi.extensions.ExtensionPointName
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.xdebugger.breakpoints.XBreakpoint
+import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
@@ -29,6 +31,16 @@ interface TzatzikiExtensionPoint {
 
     fun findBestPositionToAddBreakpoint(stepDefinitions: List<AbstractStepDefinition>): Pair<PsiElement, Int>?
     fun findStepsAndBreakpoints(vfile: VirtualFile?, offset: Int?): Pair<List<GherkinStep>, List<XBreakpoint<*>>>?
+
+    /**
+     * "Promotes" a user-created language-native line breakpoint that sits on a
+     * Cucumber step-def body line into the language-specific Cucumber+ breakpoint
+     * type (e.g. `TzCucumberCodeBreakpointType` for JVM, `TzCucumberJsBreakpointType`
+     * for JS/TS). Returns `true` if this extension owns the file and performed the
+     * promotion (or decided it shouldn't be promoted) — in which case the caller
+     * stops iterating. The default `false` means "I don't handle this file type".
+     */
+    fun promoteToCucumberType(breakpoint: XLineBreakpoint<*>, project: Project): Boolean = false
 }
 
 object Tzatziki {
