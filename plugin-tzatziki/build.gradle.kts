@@ -49,6 +49,10 @@ dependencies {
             "cucumber-javascript:${versions["cucumberJavascript"]}",
             "org.intellij.scala:${versions["scala"]}",
             "PsiViewer:${versions["psiViewer"]}",
+            // Python Pro (Pythonid) — for the behave sample under
+            // sample/rich-example/python/. Lets the runIde sandbox open it and
+            // probe Gherkin↔behave step navigation. Not bundled in IDEA Ultimate.
+            "Pythonid:${versions["python"]}",
         )
         pluginVerifier()
         zipSigner()
