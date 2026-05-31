@@ -49,9 +49,11 @@ dependencies {
             "cucumber-javascript:${versions["cucumberJavascript"]}",
             "org.intellij.scala:${versions["scala"]}",
             "PsiViewer:${versions["psiViewer"]}",
-            // Python Pro (Pythonid) — for the behave sample under
-            // sample/rich-example/python/. Lets the runIde sandbox open it and
-            // probe Gherkin↔behave step navigation. Not bundled in IDEA Ultimate.
+            // Python for the behave sample under sample/rich-example/python/.
+            // PythonCore provides the `com.intellij.modules.python` module that
+            // Pythonid (the Pro plugin, behave/BDD navigation) depends on — both
+            // are needed since neither is bundled in IDEA Ultimate.
+            "PythonCore:${versions["pythonCore"]}",
             "Pythonid:${versions["python"]}",
         )
         pluginVerifier()
@@ -66,6 +68,13 @@ dependencies {
                 ?.maxByOrNull { it.name }
                 ?.let { localPlugin(it) }
         }
+
+        // Co-load the independent "Cucumber for Python" POC plugin into the SAME
+        // runIde sandbox, so it can be tested in the already-configured behave
+        // project (sample/rich-example/python) without spinning up a second
+        // sandbox + re-selecting the Python interpreter. It stays a separate
+        // plugin (own id io.nimbly.cucumber.python) — this only co-installs it.
+        localPlugin(project(":cucumber-python"))
     }
 }
 

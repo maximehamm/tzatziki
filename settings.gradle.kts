@@ -16,5 +16,8 @@ include("extensions:kotlin")
 include("extensions:scala")
 include("extensions:javascript")
 
+// Independent POC plugin (own id io.nimbly.cucumber.python) — NOT part of Cucumber+.
+include("cucumber-python")
+
 include("tests")
 

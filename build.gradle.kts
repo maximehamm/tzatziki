@@ -146,7 +146,8 @@ val versions by extra {
         "psiViewer" to "252.23892.248",     //https://plugins.jetbrains.com/plugin/227-psiviewer/versions
         "cucumberJava" to "253.30387.20",   //https://plugins.jetbrains.com/plugin/7212-cucumber-for-java/versions
         "cucumberJavascript" to "253.28294.218", //https://plugins.jetbrains.com/plugin/7418-cucumber-js/versions
-        "python" to "253.31033.145",        //https://plugins.jetbrains.com/plugin/631-python (Pythonid, Pro)
+        "pythonCore" to "253.32098.101",     //https://plugins.jetbrains.com/plugin/7322-python-community-edition (provides com.intellij.modules.python)
+        "python" to "253.32098.101",         //https://plugins.jetbrains.com/plugin/631-python (Pythonid, Pro — behave/BDD nav)
         "scala" to "2025.3.39",             //https://plugins.jetbrains.com/plugin/1347-scala/versions
     )
 }

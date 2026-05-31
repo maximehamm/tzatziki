@@ -1,0 +1,22 @@
+<idea-plugin>
+    <id>io.nimbly.cucumber.python</id>
+    <name>Cucumber for Python (POC)</name>
+    <vendor email="Maxime.HAMM@nimbly-consulting.com"
+            url="https://github.com/maximehamm/tzatziki/issues">Maxime HAMM</vendor>
+
+    <description><![CDATA[
+        <b>Proof of concept</b> — resolves Gherkin steps to their <a href="https://behave.readthedocs.io/">behave</a>
+        Python step definitions (<code>@given/@when/@then</code>) in IntelliJ IDEA Ultimate, which
+        (unlike PyCharm Professional) does not ship this navigation.<br/>
+        Built on the base <code>gherkin</code> cucumber framework via the
+        <code>cucumberJvmExtensionPoint</code> extension point.
+    ]]></description>
+
+    <!-- The base Gherkin/cucumber framework + the Python plugin (PSI). -->
+    <depends>gherkin</depends>
+    <depends>com.intellij.modules.python</depends>
+
+    <extensions defaultExtensionNs="org.jetbrains.plugins.cucumber.steps">
+        <cucumberJvmExtensionPoint implementation="io.nimbly.cucumber.python.CucumberPythonExtension"/>
+    </extensions>
+</idea-plugin>
