@@ -57,14 +57,18 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
         registerTzatzikiExtensions()
     }
 
+    /** The Cucumber+ language extensions to register for the fixture. Overridable so a
+     *  language-specific test case (e.g. Python) can add its own extension point. */
+    protected open fun tzatzikiExtensions(): List<io.nimbly.tzatziki.TzatzikiExtensionPoint> = listOf(
+        io.nimbly.tzatziki.JavaTzatzikiExtensionPoint(),
+        io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint(),
+        io.nimbly.tzatziki.JsTzatzikiExtensionPoint(),
+    )
+
     private fun registerTzatzikiExtensions() {
         com.intellij.testFramework.ExtensionTestUtil.maskExtensions(
             io.nimbly.tzatziki.Tzatziki.invoke(),
-            listOf(
-                io.nimbly.tzatziki.JavaTzatzikiExtensionPoint(),
-                io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint(),
-                io.nimbly.tzatziki.JsTzatzikiExtensionPoint(),
-            ),
+            tzatzikiExtensions(),
             testRootDisposable,
         )
     }

@@ -19,6 +19,9 @@ dependencies {
     testImplementation(project(":extensions:kotlin"))
     testImplementation(project(":extensions:javascript"))
     testImplementation(project(":extensions:python"))
+    // Independent "Cucumber for Python" plugin — provides the behave step-definition
+    // resolution (CucumberPythonExtension) the Python breakpoint-sync tests rely on.
+    testImplementation(project(":cucumber-python"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
