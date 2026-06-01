@@ -172,7 +172,34 @@ fun PsiElement.collectReferences(referencesSearchScope: SearchScope): Collection
     return processor.results
 }
 
+private data class StepUsagesKey(val fileUrl: String, val offset: Int)
+private data class StepUsagesEntry(val modCount: Long, val refs: List<PsiReference>)
+private val stepUsagesCache = java.util.concurrent.ConcurrentHashMap<StepUsagesKey, StepUsagesEntry>()
+
+/**
+ * Reverse search: step-definition → the Gherkin step references that resolve to it.
+ *
+ * CACHED by (file, offset, PSI modification count). Toggling / muting a breakpoint
+ * does NOT change the PSI, so repeated lookups hit the cache instead of re-running
+ * the expensive project-wide [ReferencesSearch] — this is what made muting a
+ * breakpoint as slow as before the #124 fix. Cached [PsiReference]s are valid only
+ * while the modCount is unchanged, which is exactly the cache-hit condition.
+ */
 fun findStepUsages(element: PsiElement): List<PsiReference> {
+    val vfile = element.containingFile?.virtualFile ?: return computeStepUsages(element)
+    val modCount = com.intellij.psi.util.PsiModificationTracker.getInstance(element.project).modificationCount
+    val key = StepUsagesKey(vfile.url, element.textOffset)
+    stepUsagesCache[key]?.let { if (it.modCount == modCount) return it.refs }
+
+    val refs = computeStepUsages(element)
+    stepUsagesCache[key] = StepUsagesEntry(modCount, refs)
+    if (stepUsagesCache.size > 512) {
+        stepUsagesCache.keys.take(stepUsagesCache.size - 512).forEach { stepUsagesCache.remove(it) }
+    }
+    return refs
+}
+
+private fun computeStepUsages(element: PsiElement): List<PsiReference> {
 
     val project = element.project
     // Issue #104: when AUTO scope is on, narrow the search to the step-def's own

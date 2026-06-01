@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "22.0.0"
+    version = "22.0.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>22.0.1</b> Breakpoint sync polish &amp; performance (Java / Kotlin / JS / TS). Toggling or muting a breakpoint is faster (#124) and no longer lags. When several Gherkin steps share one step definition, muting one step no longer mutes the others — the shared code breakpoint stays active while any linked step is, and a dedicated <i>half-muted</i> icon (half red disc / half red ring) marks that mixed state. Fixes mute / unmute / removal sync on the JavaScript side.</li>
          <li><b>22.0.0</b> <b>JavaScript &amp; TypeScript support</b> — Cucumber+ now works with cucumber-js step definitions, just like Java/Kotlin/Scala: set a breakpoint on a Gherkin step and it syncs to the matching <code>Given/When/Then(...)</code> in your <code>.js</code>/<code>.ts</code> file (and back), enable/disable propagates both ways, the debugger stops only on the example row you flag, and step-defs get the "used by N scenarios" gutter icon. Requires the bundled <i>JavaScript</i> support (Ultimate / WebStorm) and the <i>Cucumber.js</i> plugin. <i>(TypeScript step-defs need <code>-r ts-node/register</code> in the run configuration.)</i><br/>This feature is brand new and hasn't been tested on large real-world projects yet — kind feedback and bug reports are very welcome!</li>
          <li><b>21.8.14</b> Cucumber test tree polish: <code>Example #N</code> nodes now show their row values (<code>Age: 22, Score: 75, Prenom: Clara</code>), step parameters (quoted strings, numbers, <code>&lt;placeholders&gt;</code>) render in grey italic, and inherited tags no longer leak onto Example or step nodes.</li>
          <li><b>21.8.12</b> Enable/disable on a Gherkin step breakpoint now propagates to the paired code breakpoint (was only working in the code → Gherkin direction).</li>

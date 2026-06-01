@@ -4,6 +4,7 @@ import com.intellij.execution.filters.Filter
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.xdebugger.XDebuggerUtil
+import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import io.nimbly.tzatziki.testdiscovery.ANALYZE_STACKTRACE_CLASS
 import io.nimbly.tzatziki.testdiscovery.ANALYZE_STACKTRACE_METHOD
 import io.nimbly.tzatziki.util.JAVA_LINE_BP_LAMBDA_ORDINAL_FIELD
@@ -50,6 +51,41 @@ class ReflectionApiTest {
         assertNotNull(
             "$implClass.$XDEBUGGER_TOGGLE_METHOD(Project, VirtualFile, Int, Boolean) not found — " +
             "update BreakpointsUtil.toggleAndReturnLineBreakpoint()",
+            method
+        )
+    }
+
+    // -------------------------------------------------------------------------
+    // XBreakpointManagerImpl.updateBreakpointPresentation  (mandatory — "partial mute" icon)
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `XBreakpointManagerImpl has updateBreakpointPresentation with expected signature`() {
+        // TzPartialMutePresentation.apply() calls this internal method reflectively to give a
+        // line breakpoint a per-instance "partial mute" icon (the half red disc / half red ring
+        // shown on a shared step-def code breakpoint whose linked Gherkin steps are partly muted).
+        // If the class or signature changes, the partial icon silently stops working — fail here
+        // so the migration is caught at build time.
+        val clazz = runCatching {
+            Class.forName("com.intellij.xdebugger.impl.breakpoints.XBreakpointManagerImpl")
+        }.getOrNull()
+        assertNotNull(
+            "com.intellij.xdebugger.impl.breakpoints.XBreakpointManagerImpl not found — " +
+            "update TzPartialMutePresentation.apply()",
+            clazz
+        )
+
+        val method = runCatching {
+            clazz!!.getMethod(
+                "updateBreakpointPresentation",
+                XLineBreakpoint::class.java,
+                javax.swing.Icon::class.java,
+                String::class.java
+            )
+        }.getOrNull()
+        assertNotNull(
+            "XBreakpointManagerImpl.updateBreakpointPresentation(XLineBreakpoint, Icon, String) not found — " +
+            "update TzPartialMutePresentation.apply()",
             method
         )
     }

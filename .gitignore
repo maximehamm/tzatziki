@@ -44,3 +44,6 @@ bin/
 /.intellijPlatform/
 /.idea/runConfigurations/Tzatziki___plugin_tzatziki_publishPlugin_.xml
 .kotlin/
+/.idea/runConfigurations/Publish_C_.xml
+/.idea/runConfigurations/Publish_Py.xml
+/.idea/runConfigurations/Publish_T_.xml
