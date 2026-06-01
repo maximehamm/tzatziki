@@ -45,11 +45,29 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         Collections.synchronizedMap(WeakHashMap())
 
     // Debounce: coalesce rapid-fire CHANGED events for the same breakpoint into a
-    // single refresh ~600ms after the last event. Backed by a project-scoped Alarm
+    // single refresh ~150ms after the last event. Backed by a project-scoped Alarm
     // (POOLED_THREAD) so it disposes cleanly when the project closes.
+    //
+    // Why only 150ms: `signatureOf` is position-independent, so keystroke-driven line
+    // drifts bail at the early-return above and never reach this debounce. The only
+    // events left to coalesce are genuine semantic changes (enable/condition/suspend/
+    // log) — which never arrive per-keystroke. A long delay only added perceived lag
+    // when muting a single breakpoint (the paired Gherkin↔code BP took ~1s to mirror).
+    // 150ms still collapses a "mute all" burst into one pass.
     private val debounce = Alarm(Alarm.ThreadToUse.POOLED_THREAD, project)
     private val pendingChange: MutableSet<XBreakpoint<*>> =
         Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+
+    // Positions (fileUrl, line) of code breakpoints we are about to create as the synced
+    // counterpart of a *Gherkin* breakpoint. `ensureCucumberCodeBreakpoint` defers the
+    // actual creation to `invokeLater`, so by the time `refreshCode`'s ADDED handler sees
+    // the new code BP, `addInProgress` has already been reset and can no longer suppress
+    // it. We use this set to recognise "this code BP was born from a Gherkin step" and
+    // skip the back-propagation that would otherwise create Gherkin BPs on the *sibling*
+    // steps sharing the same step definition. Code BPs placed directly by the user are
+    // NOT in this set and still propagate to all mapped steps (the desired behaviour).
+    private val pendingGherkinSync: MutableSet<Pair<String, Int>> =
+        Collections.synchronizedSet(HashSet())
 
     private fun signatureOf(b: XBreakpoint<*>): String {
         // Position-independent — line shifts must NOT invalidate this.
@@ -81,7 +99,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             toProcess.forEach { bp ->
                 runRefresh(bp, EAction.CHANGED) { /* no flag */ }
             }
-        }, 600)
+        }, 150)
     }
 
     override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
@@ -147,7 +165,8 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
                 refreshCode(breakpoint, action)
             }
         } catch (e: Throwable) {
-            LOG.warn("Refresh issue", e)
+            if (e !is com.intellij.openapi.progress.ProcessCanceledException)
+                LOG.warn("Refresh issue", e)
         }
     }
 
@@ -221,20 +240,31 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
         }
         LOG.info("C+ refreshGherkinStep: best position = ${codeElement.first.containingFile?.virtualFile?.path}:${codeElement.second}")
 
-        val allCodeBreakpoints = Tzatziki.findStepsAndBreakpoints(
-            codeElement.first.containingFile.virtualFile,
-            codeElement.first.containingFile.getDocument()?.getLineStartOffset(codeElement.second)
-        )
+        // #124 perf: avoid the project-wide reverse search on the hot path.
+        // For ADDED/CHANGED we only need the code-side breakpoints sitting INSIDE the
+        // resolved step-def element — a direct breakpoint-manager query, no PSI search.
+        // The reverse "which Gherkin steps map to this def" lookup is expensive and is
+        // done lazily, only on REMOVED (below).
+        val codeVfile = codeElement.first.containingFile?.originalFile?.virtualFile
+        val codeRange = codeElement.first.textRange
+        val codeBreakpoints: List<XBreakpoint<*>> =
+            if (codeVfile == null || codeRange == null) emptyList()
+            else XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints.filter {
+                val sp = it.sourcePosition
+                sp != null && sp.file == codeVfile && codeRange.contains(sp.offset)
+            }
 
         if (action == EAction.ADDED) {
-            val codeBps = allCodeBreakpoints?.second
-            LOG.info("C+ refreshGherkinStep: existing code BPs at this position = ${codeBps?.size ?: 0}, cucumberTypedNone=${codeBps?.none { it.isCucumberSyncBreakpoint() }}")
-            if (codeBps?.none { it.isCucumberSyncBreakpoint() } == true) {
-                LOG.info("C+ refreshGherkinStep: calling ensureCucumberCodeBreakpoint")
+            if (codeBreakpoints.none { it.isCucumberSyncBreakpoint() }) {
+                // Mark the code BP we're about to create as "synced from Gherkin" so that
+                // refreshCode's ADDED handler does NOT back-propagate Gherkin BPs onto the
+                // sibling steps that share this same step definition (regression: a shared
+                // impl made every other step sprout a breakpoint).
+                codeElement.first.containingFile?.virtualFile?.let { f ->
+                    pendingGherkinSync.add(f.url to codeElement.second)
+                }
                 ensureCucumberCodeBreakpoint(codeElement, project)
             }
-            // Existing code-side breakpoints are now identified by their TzCucumberCodeBreakpointType.
-            // No more fake `"Cucumber+"!=null` condition to mark them.
 
             val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
             if (scenario != null) {
@@ -249,10 +279,15 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             }
         }
         else if (action == EAction.REMOVED) {
-            val stepBreakpoints = allCodeBreakpoints?.first?.map { it.findBreakpoint() }?.filterNotNull()?.size
+            // Reverse lookup needed ONLY here: are there other Gherkin steps (still
+            // breakpointed) mapping to this same code def? If none, drop the synced
+            // code breakpoint(s).
+            val lineStart = codeElement.first.containingFile.getDocument()?.getLineStartOffset(codeElement.second)
+            val steps = Tzatziki.findSteps(codeVfile, lineStart)
+            val stepBreakpoints = steps.mapNotNull { it.findBreakpoint() }.size
 
             if (stepBreakpoints == 0) {
-                allCodeBreakpoints.second.forEach { b ->
+                codeBreakpoints.forEach { b ->
                     XDebuggerUtil.getInstance().removeBreakpoint(step.project, b)
                 }
             }
@@ -264,14 +299,19 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             }
         }
         else if (action == EAction.CHANGED && gherkinBreakpoint != null) {
-            // Code-side breakpoints are now identified by type — nothing to mark.
             val state = gherkinBreakpoint.isEnabled
 
-            // Mirror the enable/disable state onto every paired code breakpoint.
-            // (Was previously only done via the ScenarioOutline branch below — so the
-            //  Gherkin → code propagation silently did nothing for plain Scenarios.)
-            allCodeBreakpoints?.second?.forEach { cb ->
-                if (cb.isEnabled != state) cb.isEnabled = state
+            // Gherkin → code mute/unmute: only mirror the state onto the shared code BP
+            // when THIS step is its sole Gherkin reference. If several Gherkin steps map
+            // to the same step definition (one shared code BP), muting one of them must
+            // NOT mute the code BP — that would mute the sibling steps too. The reverse
+            // direction (code → Gherkin) still propagates to all steps in refreshCode.
+            val lineStart = codeElement.first.containingFile.getDocument()?.getLineStartOffset(codeElement.second)
+            val mappedStepsCount = Tzatziki.findSteps(codeVfile, lineStart).size
+            if (mappedStepsCount <= 1) {
+                codeBreakpoints.forEach { cb ->
+                    if (cb.isEnabled != state) cb.isEnabled = state
+                }
             }
 
             val scenario = step.parentOfTypeIs<GherkinScenarioOutline>(true)
@@ -332,6 +372,15 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             return
         }
 
+        // Was this code BP just created as the synced counterpart of a Gherkin step?
+        // If so, we must NOT back-propagate Gherkin breakpoints onto the sibling steps
+        // that share the same step definition — only the step the user actually clicked
+        // already has its Gherkin BP. Consume the marker (it's a one-shot).
+        val fromGherkinSync = run {
+            val url = breakpoint.sourcePosition?.file?.url
+            url != null && pendingGherkinSync.remove(url to breakpoint.line)
+        }
+
         steps.forEach { step ->
             val documentLine = step.getDocumentLine() ?: return@forEach
 
@@ -339,12 +388,17 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
                 // Always make sure each linked step has a Gherkin breakpoint. Whether the
                 // event is the original user click (now our type after promotion) or the
                 // result of a Gherkin → code sync, we only ADD when there is none yet.
-                val oldStepBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
-                    .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
-                    .filter { it.sourcePosition?.line == step.getDocumentLine() }
+                // Exception: when the code BP itself was born from a Gherkin step
+                // (fromGherkinSync), creating Gherkin BPs here would wrongly mirror it onto
+                // every sibling step sharing the impl — so we skip the creation.
+                if (!fromGherkinSync) {
+                    val oldStepBreakpoints = XDebuggerManager.getInstance(step.project).breakpointManager.allBreakpoints
+                        .filter { it.sourcePosition?.file == step.containingFile.virtualFile }
+                        .filter { it.sourcePosition?.line == step.getDocumentLine() }
 
-                if (oldStepBreakpoints.isEmpty()) {
-                    step.toggleGherkinBreakpoint(documentLine)
+                    if (oldStepBreakpoints.isEmpty()) {
+                        step.toggleGherkinBreakpoint(documentLine)
+                    }
                 }
                 step.updatePresentation(codeBreakpoints)
             }
