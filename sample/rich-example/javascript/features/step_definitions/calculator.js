@@ -18,3 +18,6 @@ Then(/^the result is (\d+)$/, function (expected) {
         throw new Error('Expected ' + expected + ' but got ' + got);
     }
 });
+Then(/^hopla hop (\d+)$/, function () {
+
+});

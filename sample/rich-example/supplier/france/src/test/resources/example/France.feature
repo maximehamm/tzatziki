@@ -70,6 +70,7 @@ Feature: Cocktail Ordering
       | Julien   | @Leroy   | Nantes    | 23  | France    | 70    |
 
     Then Bidule trucs
+    And zoup la
 
     @Test 
   Scenario Outline: Vérifier le score de du prénom

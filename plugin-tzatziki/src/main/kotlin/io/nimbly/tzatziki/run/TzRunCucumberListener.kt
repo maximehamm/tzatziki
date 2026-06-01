@@ -58,8 +58,11 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
        ##teamcity[testSuiteStarted timestamp = '2024-04-03T07:14:18.444+0000' locationHint = 'file:///Users/maxime/Development/projects-nimbly/cucumber-discovery/src/test/resources/org/maxime/cucumber/Wallet.feature:1' name = 'Manipulation d|'un portefeuille']
      */
 
-    private val LOC_REGEX  = Regex("locationHint = '(?:file:///)?((?:[A-Z]:|/)?[^:]+):(\\d+)'")
-    private val NAME_REGEX = Regex("name = '([^']+)'")
+    // Tolerate both spacing styles around '=': cucumber-jvm emits `locationHint = '…'`
+    // (spaces), while other TeamCity producers (e.g. our behave formatter) emit the
+    // canonical `locationHint='…'` (no spaces).
+    private val LOC_REGEX  = Regex("locationHint\\s*=\\s*'(?:file:///)?((?:[A-Z]:|/)?[^:]+):(\\d+)'")
+    private val NAME_REGEX = Regex("name\\s*=\\s*'([^']+)'")
 
     /**
      * True when the line at index [lineIndex] (0-based) of the `.feature` file tracked by
@@ -96,6 +99,38 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
             // The element must be ON the header line itself, not nested inside one of the
             // scenario's steps / examples block.
             doc.getLineNumber(owner.textRange.startOffset) == lineIndex
+        }
+    }
+
+    /**
+     * 0-based header line of the Scenario / Scenario-Outline ENCLOSING [lineIndex]
+     * (the line itself may be a step, an Examples row, etc.), or null if none.
+     *
+     * Unlike [isScenarioHeaderLine], this resolves the anchor even when the suite
+     * event points at an Examples data row — which is exactly how behave reports
+     * Scenario-Outline examples — so the progression bar anchors on the outline
+     * header (and grows over its template steps) instead of the examples table.
+     */
+    private fun scenarioHeaderLineFor(tracker: TzExecutionTracker, lineIndex: Int): Int? {
+        if (lineIndex < 0) return null
+        val vfile = tracker.findFile() ?: return null
+        return com.intellij.openapi.application.ReadAction.compute<Int?, RuntimeException> {
+            val psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(vfile)
+                ?: return@compute null
+            val doc = com.intellij.openapi.fileEditor.FileDocumentManager.getInstance()
+                .getDocument(vfile) ?: return@compute null
+            if (lineIndex >= doc.lineCount) return@compute null
+            val offset = doc.getLineStartOffset(lineIndex)
+            val lineEnd = doc.getLineEndOffset(lineIndex)
+            var probe = offset
+            while (probe < lineEnd && doc.charsSequence[probe].isWhitespace()) probe++
+            val element = psiFile.findElementAt(probe) ?: return@compute null
+            val owner = com.intellij.psi.util.PsiTreeUtil.getParentOfType(
+                element,
+                org.jetbrains.plugins.cucumber.psi.GherkinScenarioOutline::class.java,
+                org.jetbrains.plugins.cucumber.psi.GherkinScenario::class.java
+            ) ?: return@compute null
+            doc.getLineNumber(owner.textRange.startOffset)
         }
     }
 
@@ -217,8 +252,14 @@ class TzExecutionCucumberListener(private val project: Project) : ExecutionListe
                         // instead. Lines starting with `Scenario:` / `Scenario Outline:`
                         // (or their localized equivalents) anchor the bar; Feature lines,
                         // Examples blocks and Example #N rows never do.
-                        if (isScenarioHeaderLine(tracker, line - 1)) {
-                            tracker.scenarioStartLine = line - 1
+                        // Anchor on the ENCLOSING scenario/outline header — even when
+                        // the suite event points at an Examples data row (behave's way
+                        // of reporting outline examples). Falls back to the exact-header
+                        // check for safety.
+                        val header = scenarioHeaderLineFor(tracker, line - 1)
+                            ?: if (isScenarioHeaderLine(tracker, line - 1)) line - 1 else null
+                        if (header != null) {
+                            tracker.scenarioStartLine = header
                         }
                     }
                 } else {

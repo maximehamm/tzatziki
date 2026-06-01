@@ -1,5 +1,5 @@
 /*
- * Cucumber for Python (POC)
+ * Cucumber for Python
  * Copyright (C) 2026  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
  * Licensed under the GNU General Public License v2 or later.
  */
@@ -37,15 +37,25 @@ class CucumberPythonExtension : AbstractCucumberExtension() {
     override fun isWritableStepLikeFile(child: PsiElement, parent: PsiElement): Boolean =
         child is PyFile && child.virtualFile?.isWritable == true
 
-    /** Parse a Python step-def file into one [PythonStepDefinition] per
-     *  behave-decorated top-level function. */
+    /**
+     * Returns every behave step definition reachable from [featureFile].
+     *
+     * IMPORTANT: the base framework ([CucumberStepHelper.findStepDefinitions])
+     * calls this with the GHERKIN *feature* file (or `null`), NOT a Python file.
+     * So we locate the relevant `.py` step files ourselves and parse each into
+     * one [PythonStepDefinition] per `@given/@when/@then`-decorated function —
+     * mirroring how `CucumberJavaScriptExtension.loadStepsFor` works.
+     */
     override fun loadStepsFor(featureFile: PsiFile?, module: Module): List<AbstractStepDefinition> {
-        val pyFile = featureFile as? PyFile ?: return emptyList()
+        val gherkinFile = featureFile as? GherkinFile ?: return emptyList()
         val result = mutableListOf<AbstractStepDefinition>()
-        for (function in pyFile.topLevelFunctions) {
-            val decorators = function.decoratorList?.decorators ?: continue
-            val isStep = decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS }
-            if (isStep) result += PythonStepDefinition(function)
+        for (psiFile in getStepDefinitionContainers(gherkinFile)) {
+            val pyFile = psiFile as? PyFile ?: continue
+            for (function in pyFile.topLevelFunctions) {
+                val decorators = function.decoratorList?.decorators ?: continue
+                val isStep = decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS }
+                if (isStep) result += PythonStepDefinition(function)
+            }
         }
         return result
     }

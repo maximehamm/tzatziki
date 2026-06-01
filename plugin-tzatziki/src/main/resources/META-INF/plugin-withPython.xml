@@ -1,0 +1,27 @@
+<idea-plugin>
+
+    <!--
+    Activated only when a Python plugin is present (the
+    `<depends optional="true" config-file=...>com.intellij.modules.python</depends>`
+    in plugin.xml triggers on it). In IntelliJ IDEA Ultimate that plugin is
+    `Pythonid`, whose `intellij.python.gherkin` content module provides the
+    Gherkin <-> behave step resolution we count here. Cucumber+ falls back
+    gracefully on setups without any Python plugin.
+    -->
+
+    <extensions defaultExtensionNs="io.nimbly.tzatziki">
+        <!-- Drives Gherkin <-> behave step-def breakpoint synchronisation for .py.
+             Synced code-side breakpoints use the native `python-line` type (pydevd
+             only installs that one), so no custom breakpoint type is registered. -->
+        <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.PyTzatzikiExtensionPoint"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- "N scenarios" gutter marker on behave step definitions (.py),
+             mirroring JavaTzatzikiUsagesMarker / KotlinTzatzikiUsagesMarker /
+             JsTzatzikiUsagesMarker. -->
+        <codeInsight.lineMarkerProvider language="Python"
+                implementationClass="io.nimbly.tzatziki.PyTzatzikiUsagesMarker"/>
+    </extensions>
+
+</idea-plugin>

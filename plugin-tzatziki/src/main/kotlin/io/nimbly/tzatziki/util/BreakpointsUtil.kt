@@ -129,10 +129,21 @@ fun ensureCucumberCodeBreakpoint(
     // so we resolve it by id (not by class) to avoid a hard compile dependency.
     val ext = file.extension?.lowercase()
     val isJs = ext == "js" || ext == "ts" || ext == "mjs" || ext == "cjs" || ext == "jsx" || ext == "tsx"
+    val isPy = ext == "py"
+    // JS has its own `tzatziki.cucumber.code.javascript` type. Python must use the
+    // NATIVE `python-line` type: pydevd hard-rejects any other breakpoint-type id
+    // (it raises NameError for unknown types), so a custom Cucumber+ Python type
+    // would never actually stop. We trade the green gutter badge for a working
+    // breakpoint; sync bookkeeping stays position-based.
+    val extensionTypeId = when {
+        isJs -> "tzatziki.cucumber.code.javascript"
+        isPy -> "python-line"
+        else -> null
+    }
     @Suppress("UNCHECKED_CAST")
-    val type = if (isJs) {
+    val type = if (extensionTypeId != null) {
         com.intellij.xdebugger.breakpoints.XBreakpointType.EXTENSION_POINT_NAME.extensionList
-            .firstOrNull { it.id == "tzatziki.cucumber.code.javascript" }
+            .firstOrNull { it.id == extensionTypeId }
                 as? com.intellij.xdebugger.breakpoints.XLineBreakpointType<XBreakpointProperties<*>>
     } else {
         XDebuggerUtil.getInstance().findBreakpointType(TzCucumberCodeBreakpointType::class.java)
@@ -170,7 +181,9 @@ fun ensureCucumberCodeBreakpoint(
             //    would otherwise hit its `Logger.assertTrue(lang.isKindOf(JavaLanguage), …)` check,
             //    return false, and the JDI request is silently skipped.
             //  - JS / TS: ask the type itself for fresh properties (JavaScriptLineBreakpointProperties).
-            val props: XBreakpointProperties<*>? = if (isJs) {
+            val props: XBreakpointProperties<*>? = if (isJs || isPy) {
+                // JS uses JavaScriptLineBreakpointProperties; Python's PyLineBreakpointType
+                // has none (returns null). Either way, ask the type itself.
                 type.createBreakpointProperties(file, line)
             } else {
                 JavaLineBreakpointProperties().also { if (file.extension == "java") it.applyNoLambda() }

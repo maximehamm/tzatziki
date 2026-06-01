@@ -1,5 +1,5 @@
 /*
- * Cucumber for Python (POC)
+ * Cucumber for Python
  * Copyright (C) 2026  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
  * Licensed under the GNU General Public License v2 or later.
  */

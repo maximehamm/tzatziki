@@ -42,6 +42,10 @@ dependencies {
         plugins(
             "gherkin:${versions["gherkin"]}",
             "cucumber-java:${versions["cucumberJava"]}",
+            // Needed by PythonCucumberApiTest to load the Python run/debug + PSI
+            // classes that "Cucumber for Python" compiles against.
+            "PythonCore:${versions["pythonCore"]}",
+            "Pythonid:${versions["python"]}",
         )
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Plugin.Java)

@@ -50,3 +50,15 @@ def step_climb(context, delta):
 @then('the altitude is {expected:d} km')
 def step_check_altitude(context, expected):
     assert context.altitude == expected, 'Expected %d km but got %d' % (expected, context.altitude)
+
+@then(u'the xxx is {expected} km')
+def step_impl(context, expected):
+    raise NotImplementedError(u'STEP: Then the xxx is <expected> km')
+
+@then(u'Aaa')
+def step_impl(context):
+    raise NotImplementedError(u'STEP: And Aaa')
+
+@then(u'Bbb')
+def step_impl(context):
+    raise NotImplementedError(u'STEP: And Bbb')

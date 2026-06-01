@@ -13,7 +13,8 @@ When(/^I multiply by (\d+)$/, function (n: string) {
 });
 
 When(/^I divide by (\d+)$/, function (n: string) {
-    const divisor = parseInt(n, 10);
+    const divisor =
+        parseInt(n, 10);
     if (divisor === 0) throw new Error('Cannot divide by zero');
     tsValue = Math.floor(tsValue / divisor);
 });
