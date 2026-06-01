@@ -47,9 +47,18 @@ object ActionIcons {
      *  to identify Cucumber+'s code-side breakpoints (Java/Kotlin). */
     @JvmField val BREAKPOINT_CUCUMBER_BADGE = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-cucumber-badge.svg", javaClass)
 
+    /** Half red / half white breakpoint disc — base for the "partial mute" state (a shared
+     *  step definition whose linked Gherkin steps are partly muted). */
+    @JvmField val BREAKPOINT_HALF = IconLoader.getIcon("/io/nimbly/tzatziki/icons/breakpoint-half.svg", javaClass)
+
     /** Java/Kotlin code-side: standard breakpoint icon + Cucumber+ green badge overlay (all states). */
     @JvmField val BREAKPOINT_CUCUMBER_CODE_ENABLED: javax.swing.Icon =
         com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_set_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
+
+    /** Code-side "partial mute": half red / half white disc + the filled green Cucumber+
+     *  disc, shown via a per-instance customized breakpoint presentation. */
+    @JvmField val BREAKPOINT_CUCUMBER_CODE_PARTIAL: javax.swing.Icon =
+        com.intellij.ui.LayeredIcon(BREAKPOINT_HALF, BREAKPOINT_CUCUMBER_BADGE)
     @JvmField val BREAKPOINT_CUCUMBER_CODE_DISABLED: javax.swing.Icon =
         com.intellij.ui.LayeredIcon(com.intellij.icons.AllIcons.Debugger.Db_disabled_breakpoint, BREAKPOINT_CUCUMBER_BADGE)
     @JvmField val BREAKPOINT_CUCUMBER_CODE_MUTED_ENABLED: javax.swing.Icon =
