@@ -1,18 +1,17 @@
 # TODO — Tests d'intégration : synchronisation des breakpoints Cucumber+
 
-## État
+## État — ✅ COMPLET (Java + Kotlin + JavaScript)
 
 - ✅ **Java** : `BreakpointSyncJavaTests` (8 tests) — matrice complète.
 - ✅ **Kotlin** : `BreakpointSyncKotlinTests` (8 tests) — matrice complète.
-- ⏳ **JavaScript / TypeScript** : reste à câbler. Le module `tests` ne dépend pas de
-  `extensions:javascript` et n'enregistre pas `JsTzatzikiExtensionPoint` ni le plugin
-  `JavaScript` / `cucumber-javascript`. Pour les ajouter : (1) dans `tests/build.gradle.kts`,
-  `testImplementation(project(":extensions:javascript"))` + `bundledPlugin("JavaScript")` +
-  `plugins("cucumber-javascript:…")` ; (2) ajouter `JsTzatzikiExtensionPoint()` dans le
-  `maskExtensions(...)` de `AbstractTestCase.registerTzatzikiExtensions()` ; (3) fixture JS
-  avec step-defs cucumber-js indexés (la résolution JS passe par l'index du plugin, pas par
-  un jar lib comme cucumber-java). Le comportement JS a déjà été validé manuellement dans le
-  sandbox (création / suppression / mute / unmute, réf unique et partagée).
+- ✅ **JavaScript** : `BreakpointSyncJavascriptTests` (8 tests) — matrice complète.
+  Câblage : `tests/build.gradle.kts` dépend de `extensions:javascript` + bundledPlugins
+  `JavaScript` / `JavaScriptDebugger` + plugin `cucumber-javascript` ;
+  `AbstractTestCase.registerTzatzikiExtensions()` enregistre `JsTzatzikiExtensionPoint()` ;
+  fixture JS au format `easy(function ({ Given, When, Then }) { Given('…', function () {…}) })`.
+
+> Note : `DeprecatedJavascriptTests` est encore `@Ignore` (antérieur). Maintenant que le
+> module `tests` est câblé pour JS, il pourrait éventuellement être réactivé (hors scope ici).
 
 
 

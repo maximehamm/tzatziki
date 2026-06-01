@@ -17,6 +17,7 @@ dependencies {
     testImplementation(project(":common"))
     testImplementation(project(":extensions:java-cucumber"))
     testImplementation(project(":extensions:kotlin"))
+    testImplementation(project(":extensions:javascript"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -36,12 +37,15 @@ dependencies {
             "com.intellij.properties",
             "org.jetbrains.kotlin",
             "com.intellij.modules.json",
+            "JavaScript",
+            "JavaScriptDebugger",
         )
         bundledModule("intellij.platform.langInjection")
         bundledModule("intellij.spellchecker")
         plugins(
             "gherkin:${versions["gherkin"]}",
             "cucumber-java:${versions["cucumberJava"]}",
+            "cucumber-javascript:${versions["cucumberJavascript"]}",
         )
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Plugin.Java)

@@ -63,6 +63,7 @@ abstract class AbstractTestCase : JavaCodeInsightFixtureTestCase() {
             listOf(
                 io.nimbly.tzatziki.JavaTzatzikiExtensionPoint(),
                 io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint(),
+                io.nimbly.tzatziki.JsTzatzikiExtensionPoint(),
             ),
             testRootDisposable,
         )
