@@ -115,11 +115,19 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
     private fun runRefresh(breakpoint: XBreakpoint<*>, action: EAction, releaseFlag: () -> Unit) {
         ApplicationManager.getApplication().executeOnPooledThread {
             try {
-                ReadAction.run<Throwable> {
+                // #124: the refresh does an expensive project-wide step search
+                // (findStepUsages → ReferencesSearch). A plain blocking ReadAction.run
+                // CANNOT be cancelled by a pending write, so it starves the EDT's
+                // write-intent acquisition → UI freeze. A non-blocking read action is
+                // cancellable: when a write is requested it aborts and retries, letting
+                // the EDT proceed. `refresh` is read-only (it only *schedules* the
+                // breakpoint writes via invokeLater), so re-running it is safe.
+                ReadAction.nonBlocking<Unit> {
                     refresh(breakpoint, action)
-                }
+                }.executeSynchronously()
             } catch (t: Throwable) {
-                LOG.warn("Cucumber+ refresh failed", t)
+                if (t !is com.intellij.openapi.progress.ProcessCanceledException)
+                    LOG.warn("Cucumber+ refresh failed", t)
             } finally {
                 releaseFlag()
             }
