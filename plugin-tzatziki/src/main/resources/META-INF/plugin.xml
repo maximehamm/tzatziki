@@ -229,6 +229,7 @@
         <lang.foldingBuilder language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzDescriptionFoldingBuilder"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.editor.TzHeaderCommentAutoCollapse"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.editor.TzFoldStatePersistenceActivity"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzPartialMuteStartup"/>
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>
