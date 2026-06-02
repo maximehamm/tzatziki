@@ -6,7 +6,7 @@ plugins {
 val versions: Map<String, String> by rootProject.extra
 
 // Independent plugin — its own version (NOT the inherited Cucumber+ 22.0.0).
-version = "1.0.2"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -17,30 +17,34 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaUltimate("2025.3.4")
+        // 1.2.x build — compiled against 2026.2 (262), where CucumberJvmExtensionPoint
+        // also moved loadStepsFor to the 1-arg loadStepsFor(Module) (module-wide). isStepLikeFile
+        // is 1-arg (as in 261). Covers 262.* only; 261 → 1.1.x, 253 → 1.0.x.
+        intellijIdeaUltimate("262.4852.50")
         instrumentationTools()
         pluginVerifier()
         zipSigner()
 
         // gherkin → the base cucumber framework (AbstractCucumberExtension,
         // AbstractStepDefinition, BDDFrameworkType, the cucumberJvmExtensionPoint EP).
-        plugins("gherkin:${versions["gherkin"]}")
+        plugins("gherkin:262.4852.34")
         // PythonCore → the Python PSI (com.jetbrains.python.psi.*) we read to find
         // behave @given/@when/@then step defs. Pythonid (Pro) pulled too so the
         // runIde sandbox matches a real IDEA Ultimate + Python setup.
-        plugins("PythonCore:${versions["pythonCore"]}")
-        plugins("Pythonid:${versions["python"]}")
+        plugins("PythonCore:262.4852.50")
+        plugins("Pythonid:262.4852.50")
     }
 }
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "253"
-            untilBuild = "253.*"
+            sinceBuild = "262"
+            untilBuild = "262.*"
         }
         changeNotes = """
             <ul>
+              <li><b>1.2.0</b> — Compatibility with IntelliJ IDEA 2026.2 (build 262). (2025.3 → 1.0.2, 2026.1 → 1.1.0.)</li>
               <li><b>1.0.2</b> — Refreshed plugin icon (official Python logo combined with the Cucumber+ mark).</li>
               <li><b>1.0.1</b> — Resolve the Python interpreter via the module SDK (no internal API); run a single scenario / Scenario-Outline example; cleaner test tree.</li>
               <li><b>1.0.0</b> — Initial release: Gherkin ↔ behave step resolution &amp; navigation, Run / Debug feature files, and the "Create step definition" quick-fix.</li>
@@ -53,6 +57,11 @@ intellijPlatform {
     // (CERTIFICATE_CHAIN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD) by the zipSigner.
     publishing {
         token = System.getProperty("PublishToken")
+    }
+    pluginVerification {
+        ides {
+            ide(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaUltimate, "262.4852.50")
+        }
     }
     buildSearchableOptions = false
 }

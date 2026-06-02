@@ -32,25 +32,26 @@ class CucumberPythonExtension : AbstractCucumberExtension() {
 
     override fun getStepDefinitionCreator(): StepDefinitionCreator = PythonStepDefinitionCreator()
 
-    override fun isStepLikeFile(child: PsiElement, parent: PsiElement): Boolean = child is PyFile
+    override fun isStepLikeFile(child: PsiElement): Boolean = child is PyFile
 
-    override fun isWritableStepLikeFile(child: PsiElement, parent: PsiElement): Boolean =
+    override fun isWritableStepLikeFile(child: PsiElement): Boolean =
         child is PyFile && child.virtualFile?.isWritable == true
 
     /**
-     * Returns every behave step definition reachable from [featureFile].
+     * Returns every behave step definition in [module].
      *
-     * IMPORTANT: the base framework ([CucumberStepHelper.findStepDefinitions])
-     * calls this with the GHERKIN *feature* file (or `null`), NOT a Python file.
-     * So we locate the relevant `.py` step files ourselves and parse each into
-     * one [PythonStepDefinition] per `@given/@when/@then`-decorated function —
-     * mirroring how `CucumberJavaScriptExtension.loadStepsFor` works.
+     * 262 moved the framework call to the 1-arg `loadStepsFor(Module)` (module-wide; the old
+     * 2-arg `loadStepsFor(PsiFile, Module)` is now a default that delegates here). So instead
+     * of locating step files relative to a feature, we scan all `.py` files of the module and
+     * parse each into one [PythonStepDefinition] per `@given/@when/@then`-decorated function.
      */
-    override fun loadStepsFor(featureFile: PsiFile?, module: Module): List<AbstractStepDefinition> {
-        val gherkinFile = featureFile as? GherkinFile ?: return emptyList()
+    override fun loadStepsFor(module: Module): List<AbstractStepDefinition> {
+        val project = module.project
+        val scope = com.intellij.psi.search.GlobalSearchScope.moduleScope(module)
+        val psiManager = com.intellij.psi.PsiManager.getInstance(project)
         val result = mutableListOf<AbstractStepDefinition>()
-        for (psiFile in getStepDefinitionContainers(gherkinFile)) {
-            val pyFile = psiFile as? PyFile ?: continue
+        com.intellij.psi.search.FileTypeIndex.getFiles(PythonFileType.INSTANCE, scope).forEach { vfile ->
+            val pyFile = psiManager.findFile(vfile) as? PyFile ?: return@forEach
             for (function in pyFile.topLevelFunctions) {
                 val decorators = function.decoratorList?.decorators ?: continue
                 val isStep = decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS }
