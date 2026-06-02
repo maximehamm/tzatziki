@@ -37,9 +37,6 @@ Feature: Cocktail Ordering
 
   #  Then there is 2 cocktails in the order
     Given Romeo who wants to buy a drink
-      # @header: column
-      | Valeur 1 | Valeur 2 |
-      | Test     | Truc     |
 
     Given Bidule trucs
       # @header: column

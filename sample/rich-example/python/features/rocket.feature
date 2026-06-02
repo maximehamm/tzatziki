@@ -22,6 +22,12 @@ Feature: Rocket launch (Python / behave)
     When I jettison 2 boosters
     Then 2 boosters remain
 
+  @Boosters
+  Scenario: Bis
+    Given a rocket fitted with 4 boosters
+    When I jettison 2 boosters
+    Then 2 boosters remain
+
   Scenario Outline: Climbing to orbit
     Given a rocket cruising at <altitude> km
     When I climb by <delta> km
