@@ -6,7 +6,7 @@ plugins {
 val versions: Map<String, String> by rootProject.extra
 
 // Independent plugin — its own version (NOT the inherited Cucumber+ 22.0.0).
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -41,6 +41,7 @@ intellijPlatform {
         }
         changeNotes = """
             <ul>
+              <li><b>1.0.2</b> — Refreshed plugin icon (official Python logo combined with the Cucumber+ mark).</li>
               <li><b>1.0.1</b> — Resolve the Python interpreter via the module SDK (no internal API); run a single scenario / Scenario-Outline example; cleaner test tree.</li>
               <li><b>1.0.0</b> — Initial release: Gherkin ↔ behave step resolution &amp; navigation, Run / Debug feature files, and the "Create step definition" quick-fix.</li>
             </ul>
