@@ -32,6 +32,16 @@ dependencies {
         // runIde sandbox matches a real IDEA Ultimate + Python setup.
         plugins("PythonCore:261.22158.277")
         plugins("Pythonid:261.22158.277")
+
+        // Dev convenience (runIde sandbox only — NOT a published dependency): co-load the
+        // latest built Cucumber+ (plugin-tzatziki) so the FULL Python experience (gutter
+        // "N scenarios" + Gherkin<->PY breakpoint sync, both Cucumber+ features) is testable
+        // here on 261. The Cucumber+ zip bundles all extensions (java/kotlin/scala/js/python),
+        // so this gives the complete Cucumber+ experience on a 261 IDE alongside cucumber-python
+        // 1.1.0 — without re-pinning the 253-bound plugin-tzatziki sandbox to 261.
+        fileTree("$rootDir/plugin-tzatziki/build/distributions") { include("plugin-tzatziki-*.zip") }
+            .files.maxByOrNull { it.lastModified() }
+            ?.let { localPlugin(it) }
     }
 }
 
