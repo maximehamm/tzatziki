@@ -9,10 +9,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/common" />
+            <option value="$PROJECT_DIR$/cucumber-python" />
             <option value="$PROJECT_DIR$/extensions" />
             <option value="$PROJECT_DIR$/extensions/java-cucumber" />
             <option value="$PROJECT_DIR$/extensions/javascript" />
             <option value="$PROJECT_DIR$/extensions/kotlin" />
+            <option value="$PROJECT_DIR$/extensions/python" />
             <option value="$PROJECT_DIR$/extensions/scala" />
             <option value="$PROJECT_DIR$/i18n" />
             <option value="$PROJECT_DIR$/plugin-i18n" />

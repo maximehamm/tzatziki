@@ -392,15 +392,24 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
             val bestLine = Tzatziki().extensionList
                 .firstNotNullOfOrNull { it.findBestPositionToAddBreakpoint(stepDefs) }
                 ?.second
-            if (bestLine != null && breakpoint.line == bestLine) {
-                if (isJvmLanguage) {
-                    promoteToCucumberType(breakpoint, project)
-                } else {
-                    // Let any matching extension handle the non-JVM promotion.
-                    Tzatziki().extensionList.firstOrNull { it.promoteToCucumberType(breakpoint, project) }
-                }
+            if (bestLine == null || breakpoint.line != bestLine) {
+                // Clicks on the declaration line, a doc line, or anywhere other than the
+                // synced body line stay plain language breakpoints — nothing to do.
+                return
             }
-            return
+            val promoted = if (isJvmLanguage) {
+                promoteToCucumberType(breakpoint, project)
+                true
+            } else {
+                // Let any matching extension handle the non-JVM promotion.
+                Tzatziki().extensionList.any { it.promoteToCucumberType(breakpoint, project) }
+            }
+            // When promoted, a fresh ADDED event fires for the now-Cucumber+ breakpoint and
+            // drives the Gherkin propagation below. When NOT promoted — e.g. Python keeps the
+            // native `python-line` type — there is no follow-up event, so we must fall through
+            // and propagate to the linked Gherkin steps now, treating this native breakpoint
+            // as the synced code breakpoint.
+            if (promoted) return
         }
 
         // Was this code BP just created as the synced counterpart of a Gherkin step?

@@ -15,7 +15,6 @@ import com.intellij.xdebugger.XDebugProcess
 import com.intellij.xdebugger.XDebuggerManagerListener
 import com.intellij.xdebugger.ui.DebuggerColors
 import io.nimbly.tzatziki.TOGGLE_CUCUMBER_PL
-import io.nimbly.tzatziki.breakpoints.CUCUMBER_FAKE_EXPRESSION
 import io.nimbly.tzatziki.editor.BREAKPOINT_EXAMPLE
 import io.nimbly.tzatziki.editor.BREAKPOINT_STEP
 import io.nimbly.tzatziki.util.*
@@ -29,10 +28,29 @@ class TzRunCodeListener(private val project: Project) : XDebuggerManagerListener
     override fun processStarted(debugProcess: XDebugProcess) {
 
         LOG.info("C+ XDebuggerManager.TOPIC - processStarted : " + debugProcess::class.java)
-        if (!TOGGLE_CUCUMBER_PL || !isJavaPresent())
+        if (!TOGGLE_CUCUMBER_PL)
             return
 
-        if (debugProcess !is JavaDebugProcess) return
+        if (debugProcess !is JavaDebugProcess) {
+            // Non-Java debug processes (Python pydevd, JS Node, …) can't use the Java
+            // DebuggerContextListener used below. We drive the SAME "skip the muted step"
+            // behaviour from the generic XDebugSession pause callback: on each pause, if the
+            // current cucumber step's Gherkin breakpoint is muted, resume past it. The shared
+            // code breakpoint stays enabled (anyEnabled); the per-scenario skip is decided here
+            // at runtime — exactly like the Java path.
+            debugProcess.session.addSessionListener(object : com.intellij.xdebugger.XDebugSessionListener {
+                override fun sessionPaused() {
+                    com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                        runCatching { handleGenericPause(debugProcess) }.onFailure {
+                            if (it !is com.intellij.openapi.progress.ProcessCanceledException)
+                                LOG.warn("C+ generic pause handling failed", it)
+                        }
+                    }
+                }
+            })
+            return
+        }
+        if (!isJavaPresent()) return
         debugProcess.debuggerSession.contextManager.addListener(object : DebuggerContextListener {
 
             override fun changeEvent(newContext: DebuggerContextImpl, event: DebuggerSession.Event?) {
@@ -100,6 +118,75 @@ class TzRunCodeListener(private val project: Project) : XDebuggerManagerListener
                 highlightExecutionPosition(step)
             }
         })
+    }
+
+    /**
+     * Generic (non-Java) equivalent of the Java DebuggerContextListener logic above: on a debug
+     * pause, decide whether to skip (resume) because the current cucumber step is muted.
+     * Used for Python (pydevd) and JS (Node) debug sessions.
+     */
+    private fun handleGenericPause(debugProcess: XDebugProcess) {
+        val session = debugProcess.session
+
+        // Check we are in a cucumber run with a known current step (tracker fed from the
+        // TeamCity output by TzExecutionCucumberListener — works for cucumber-jvm, cucumber-js
+        // and our behave formatter).
+        val executionPoint = project.cucumberExecutionTracker()
+        if (executionPoint.featurePath == null) return
+        val vfile = executionPoint.findFile() ?: return
+        val line = executionPoint.lineNumber ?: return
+        val step = findStep(vfile, project, line) ?: return
+
+        val pos = session.currentStackFrame?.sourcePosition ?: return
+
+        // Act only when the pause sits at the step-def Cucumber+ syncs to:
+        //  - JS/TS: the code breakpoint is our Cucumber+ type (isCucumberSyncBreakpoint()).
+        //  - Python: the code breakpoint is the NATIVE python-line type, so instead verify the
+        //    paused position is the resolved step-def body line for this step.
+        val codeBp = breakpointAt(pos)
+        val ours = codeBp?.isCucumberSyncBreakpoint() == true || isSyncedStepDefPosition(step, pos)
+        if (!ours) {
+            highlightExecutionPosition(step)
+            return
+        }
+
+        // Skip (resume) when the step's Gherkin breakpoint is missing or muted.
+        val breakpoint = step.findBreakpoint()
+        if (breakpoint == null || !breakpoint.isEnabled) {
+            session.resume()
+            return
+        }
+
+        // Scenario Outline: skip when the current example row's breakpoint is missing/muted.
+        val outline = step.stepHolder as? GherkinScenarioOutline
+        if (outline != null) {
+            val example = outline.getExample(executionPoint.exampleLine)
+            if (example != null) {
+                val exBp = example.findBreakpoint()
+                if (exBp == null || !exBp.isEnabled) {
+                    session.resume()
+                    return
+                }
+            }
+        }
+
+        highlightExecutionPosition(step)
+    }
+
+    private fun breakpointAt(pos: com.intellij.xdebugger.XSourcePosition): com.intellij.xdebugger.breakpoints.XBreakpoint<*>? =
+        com.intellij.xdebugger.XDebuggerManager.getInstance(project).breakpointManager.allBreakpoints.firstOrNull {
+            val sp = it.sourcePosition
+            sp != null && sp.file == pos.file && sp.line == pos.line
+        }
+
+    /** True when [pos] is the step-def body line Cucumber+ would sync from [step]. */
+    private fun isSyncedStepDefPosition(step: GherkinStep, pos: com.intellij.xdebugger.XSourcePosition): Boolean {
+        val defs = step.findCucumberStepDefinitions()
+        if (defs.isEmpty()) return false
+        val best = io.nimbly.tzatziki.Tzatziki().extensionList
+            .firstNotNullOfOrNull { it.findBestPositionToAddBreakpoint(defs) } ?: return false
+        val bestFile = best.first.containingFile?.originalFile?.virtualFile
+        return bestFile == pos.file && best.second == pos.line
     }
 
     override fun processStopped(debugProcess: XDebugProcess) {

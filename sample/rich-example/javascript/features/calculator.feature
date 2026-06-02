@@ -15,6 +15,7 @@ Feature: Calculator
     Given a calculator with value 10
     When I add 5
     Then the result is 15
+    And hopla hop 199
 
   @TsBackend
   Scenario: Multiplying two numbers (TypeScript step defs)

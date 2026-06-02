@@ -15,6 +15,10 @@ include("extensions:java-cucumber")
 include("extensions:kotlin")
 include("extensions:scala")
 include("extensions:javascript")
+include("extensions:python")
+
+// Independent plugin (own id io.nimbly.cucumber.python) — NOT part of Cucumber+.
+include("cucumber-python")
 
 include("tests")
 

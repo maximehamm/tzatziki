@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- Mini Python-coloured cucumber capsule (matches the plugin icon motif). -->
+  <g transform="translate(8,8) rotate(-32)">
+    <defs>
+      <clipPath id="behaveTop"><rect x="-7.5" y="-5" width="15" height="5"/></clipPath>
+    </defs>
+    <rect x="-6.6" y="-3" width="13.2" height="6" rx="3" fill="#FFD43B"/>
+    <rect x="-6.6" y="-3" width="13.2" height="6" rx="3" fill="#3776AB" clip-path="url(#behaveTop)"/>
+    <circle cx="-4.6" cy="-1.2" r="0.95" fill="#FFD43B"/>
+    <circle cx="4.6"  cy="1.2"  r="0.95" fill="#3776AB"/>
+  </g>
+</svg>

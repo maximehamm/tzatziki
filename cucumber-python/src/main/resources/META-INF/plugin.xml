@@ -1,0 +1,38 @@
+<idea-plugin>
+    <id>io.nimbly.cucumber.python</id>
+    <name>Cucumber for Python</name>
+    <vendor email="Maxime.HAMM@nimbly-consulting.com"
+            url="https://github.com/maximehamm/tzatziki/issues">Maxime HAMM</vendor>
+
+    <description><![CDATA[
+        <b>Cucumber for Python</b> — full <a href="https://behave.readthedocs.io/">behave</a> support
+        for Gherkin features in IntelliJ IDEA:
+        <ul>
+            <li>Resolve &amp; navigate Gherkin steps to their <code>@given/@when/@then</code> Python step definitions</li>
+            <li><b>Run</b> and <b>Debug</b> feature files (breakpoints in step defs, live test tree)</li>
+            <li><b>Create step definition</b> quick-fix with parameter inference (<code>{value:d}</code>)</li>
+        </ul>
+        Built on the base <code>gherkin</code> cucumber framework via the
+        <code>cucumberJvmExtensionPoint</code> extension point.
+        <br/><br/>
+        💚 <b>Even better together with <a href="https://plugins.jetbrains.com/plugin/16289-cucumber-">Cucumber+</a></b>:
+        install both to get Gherkin ↔ behave <b>breakpoint synchronisation</b>, a
+        "N&nbsp;scenarios" gutter marker on your step definitions, and the full Cucumber+
+        editing experience on your <code>.feature</code> files.
+    ]]></description>
+
+    <!-- The base Gherkin/cucumber framework + the Python plugin (PSI). -->
+    <depends>gherkin</depends>
+    <depends>com.intellij.modules.python</depends>
+
+    <extensions defaultExtensionNs="org.jetbrains.plugins.cucumber.steps">
+        <cucumberJvmExtensionPoint implementation="io.nimbly.cucumber.python.CucumberPythonExtension"/>
+    </extensions>
+
+    <!-- behave run support: a dedicated run-configuration type + a producer that
+         takes precedence over Cucumber.js for Python-backed feature files. -->
+    <extensions defaultExtensionNs="com.intellij">
+        <configurationType implementation="io.nimbly.cucumber.python.run.BehaveConfigurationType"/>
+        <runConfigurationProducer implementation="io.nimbly.cucumber.python.run.BehaveRunConfigurationProducer"/>
+    </extensions>
+</idea-plugin>

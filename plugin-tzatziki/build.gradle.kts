@@ -30,6 +30,7 @@ dependencies {
     runtimeOnly(project(":extensions:kotlin"))
     runtimeOnly(project(":extensions:scala"))
     runtimeOnly(project(":extensions:javascript"))
+    runtimeOnly(project(":extensions:python"))
 
     intellijPlatform {
         intellijIdeaUltimate("2025.3.4")
@@ -49,6 +50,17 @@ dependencies {
             "cucumber-javascript:${versions["cucumberJavascript"]}",
             "org.intellij.scala:${versions["scala"]}",
             "PsiViewer:${versions["psiViewer"]}",
+            // Python for the behave sample under sample/rich-example/python/.
+            // BOTH are required in this Gradle-provisioned sandbox: PythonCore
+            // provides the `com.intellij.modules.python` module that Pythonid (the Pro
+            // layer) depends on — removing PythonCore makes Pythonid fail to load
+            // entirely. Note: JetBrains' NATIVE behave (intellij.python.gherkin) still
+            // won't activate here because the Pro module `intellij.python` needs
+            // `intellij.python.pyramid`, which is missing from the Gradle artifact —
+            // independent of the dual install. That's why the cucumber-python plugin
+            // (co-loaded below) provides the behave resolution/run in this sandbox.
+            "PythonCore:${versions["pythonCore"]}",
+            "Pythonid:${versions["python"]}",
         )
         pluginVerifier()
         zipSigner()
@@ -62,6 +74,15 @@ dependencies {
                 ?.maxByOrNull { it.name }
                 ?.let { localPlugin(it) }
         }
+
+        // Co-load the independent "Cucumber for Python" plugin into the SAME
+        // runIde sandbox, so it can be tested in the already-configured behave
+        // project (sample/rich-example/python) without spinning up a second
+        // sandbox + re-selecting the Python interpreter. It stays a separate
+        // plugin (own id io.nimbly.cucumber.python) — this only co-installs it.
+        // It provides the Gherkin<->behave resolution/run in this sandbox (the
+        // native intellij.python.gherkin module can't load here — see note above).
+        localPlugin(project(":cucumber-python"))
     }
 }
 

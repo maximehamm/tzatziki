@@ -18,6 +18,10 @@ dependencies {
     testImplementation(project(":extensions:java-cucumber"))
     testImplementation(project(":extensions:kotlin"))
     testImplementation(project(":extensions:javascript"))
+    testImplementation(project(":extensions:python"))
+    // Independent "Cucumber for Python" plugin — provides the behave step-definition
+    // resolution (CucumberPythonExtension) the Python breakpoint-sync tests rely on.
+    testImplementation(project(":cucumber-python"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-stdlib")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
@@ -46,6 +50,10 @@ dependencies {
             "gherkin:${versions["gherkin"]}",
             "cucumber-java:${versions["cucumberJava"]}",
             "cucumber-javascript:${versions["cucumberJavascript"]}",
+            // Needed by PythonCucumberApiTest + the Python breakpoint-sync tests to load the
+            // Python run/debug + PSI classes that "Cucumber for Python" compiles against.
+            "PythonCore:${versions["pythonCore"]}",
+            "Pythonid:${versions["python"]}",
         )
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Plugin.Java)

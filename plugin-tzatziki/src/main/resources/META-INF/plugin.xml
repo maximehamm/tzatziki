@@ -360,6 +360,14 @@
          the JavaScript plugin is guaranteed present too. -->
     <depends optional="true" config-file="plugin-withJavaScript.xml">cucumber-javascript</depends>
 
+    <!-- Python (behave) support: the "N scenarios" gutter marker on behave step
+         definitions (.py). Gated on `com.intellij.modules.python`, provided by the
+         Python plugin (Pythonid in IDEA Ultimate). The marker only references
+         Python PSI; the actual Gherkin<->step resolution comes from the Python
+         plugin's own behave integration (intellij.python.gherkin). Cucumber+ stays
+         fully usable when no Python plugin is installed. -->
+    <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>
+
     <!-- Extension point
         https://developerlife.com/2020/11/21/idea-plugin-example-intro/#extensions-and-extension-points -->
     <extensionPoints>
