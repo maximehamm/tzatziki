@@ -32,9 +32,9 @@ class CucumberPythonExtension : AbstractCucumberExtension() {
 
     override fun getStepDefinitionCreator(): StepDefinitionCreator = PythonStepDefinitionCreator()
 
-    override fun isStepLikeFile(child: PsiElement, parent: PsiElement): Boolean = child is PyFile
+    override fun isStepLikeFile(child: PsiElement): Boolean = child is PyFile
 
-    override fun isWritableStepLikeFile(child: PsiElement, parent: PsiElement): Boolean =
+    override fun isWritableStepLikeFile(child: PsiElement): Boolean =
         child is PyFile && child.virtualFile?.isWritable == true
 
     /**
