@@ -348,10 +348,25 @@
 
     <!-- Optional dependencies
     https://jetbrains.org/intellij/sdk/docs/basics/plugin_structure/plugin_dependencies.html#optional-plugin-dependencies -->
-    <!-- <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>-->
-    <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>
+    <!-- Gated on the `cucumber-java` PLUGIN (not `com.intellij.modules.java`): the classes in
+         plugin-withJava.xml (TzGherkinJavaExtension : CucumberJavaExtension) reference cucumber-java
+         types. `com.intellij.modules.java` is provided by the Java plugin and is present in any IDEA
+         (Ultimate/Community) even WITHOUT the cucumber-java plugin installed — which made this config
+         load and crash (NoClassDefFoundError: CucumberJavaExtension) in that case. Scoping it to the
+         `cucumber-java` plugin (like Scala/JS are scoped to theirs) loads the Java integration
+         exactly when it can work, and lets the Marketplace verifier resolve it.
+         NOTE: the Kotlin integration is NESTED inside plugin-withJava.xml (not declared here),
+         because TzGherkinKotlinExtension extends TzGherkinJavaExtension : CucumberJavaExtension —
+         so it ALSO needs cucumber-java. Nesting it under withJava makes it load only when BOTH
+         cucumber-java AND org.jetbrains.kotlin are present. -->
 
-    <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
+    <!-- Declare modules.java optionally (loads NOTHING — see plugin-withJavaModule.xml). Base &
+         Scala code uses Java-plugin classes (DebuggerManagerEx, CreateFromUsageUtils), so the
+         verifier/runtime need modules.java in the dependency closure. Kept SEPARATE from the
+         cucumber-java gate above so it never loads the crash-prone Java cucumber extensions. -->
+    <depends optional="true" config-file="plugin-withJavaModule.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="plugin-withJava.xml">cucumber-java</depends>
+
     <depends optional="true" config-file="plugin-withScala.xml">org.intellij.scala</depends>
     <!-- Triggered on `cucumber-javascript` (NOT just `JavaScript`): the classes in
          plugin-withJavaScript.xml reference cucumber-javascript types, so scoping the

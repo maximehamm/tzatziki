@@ -3,6 +3,13 @@
     <depends>com.intellij.modules.java</depends>
     <depends>cucumber-java</depends>
 
+    <!-- Kotlin integration is nested here (not in the main plugin.xml) because
+         TzGherkinKotlinExtension extends TzGherkinJavaExtension : CucumberJavaExtension, so it also
+         requires the cucumber-java plugin. Loading it from inside withJava (itself gated on
+         cucumber-java) ensures it activates only when BOTH cucumber-java AND the Kotlin plugin are
+         present — otherwise it would crash (NoClassDefFoundError: TzGherkinJavaExtension). -->
+    <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
+
     <extensions defaultExtensionNs="io.nimbly.tzatziki">
         <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavaTzatzikiExtensionPoint"/>
     </extensions>

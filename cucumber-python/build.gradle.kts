@@ -33,6 +33,12 @@ dependencies {
         plugins("PythonCore:261.22158.277")
         plugins("Pythonid:261.22158.277")
 
+        // Dev convenience (sandbox only): provision cucumber-java so the co-loaded Cucumber+
+        // can light up its Java/Kotlin integration here too (its plugin-withJava.xml is gated
+        // on the cucumber-java plugin since C+ 23.0.1). Lets us validate Java + Kotlin + Python
+        // all at once in this single 261 sandbox. NOT a published dependency of cucumber-python.
+        plugins("cucumber-java:261.22158.182")
+
         // Dev convenience (runIde sandbox only — NOT a published dependency): co-load the
         // latest built Cucumber+ (plugin-tzatziki) so the FULL Python experience (gutter
         // "N scenarios" + Gherkin<->PY breakpoint sync, both Cucumber+ features) is testable
