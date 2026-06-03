@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "23.0.0"
+    version = "23.0.1"
 }
 
 val notes by extra {"""
@@ -13,6 +13,7 @@ val notes by extra {"""
        Change notes :
        <ul>
 
+         <li><b>23.0.1</b> Fix a startup crash (<code>NoClassDefFoundError</code>) for users on IntelliJ IDEA who use Cucumber+ for Python/JS without the <i>Cucumber for Java</i> plugin installed: the Java integration now activates only when that plugin is present (like the Kotlin/Scala/JS integrations).</li>
          <li><b>23.0.0</b> <b>Python (behave) support</b> — Cucumber+ now syncs breakpoints with Python step definitions just like Java/Kotlin/Scala/JS: set a breakpoint on a Gherkin step and it pairs with the matching <code>@given/@when/@then</code> function (and back), and step-defs get the "used by N scenarios" gutter marker. Requires the companion <i>Cucumber for Python</i> plugin for behave step resolution.<br/>Also: <b>per-scenario muting on shared step definitions</b> now works for <b>Python and JavaScript</b> too (not just Java) — when two scenarios share one step definition, muting one scenario's breakpoint makes the debugger skip only that scenario at runtime.</li>
          <li><b>22.0.1</b> Breakpoint sync polish &amp; performance (Java / Kotlin / JS / TS). Toggling or muting a breakpoint is faster (#124) and no longer lags. When several Gherkin steps share one step definition, muting one step no longer mutes the others — the shared code breakpoint stays active while any linked step is, and a dedicated <i>half-muted</i> icon (half red disc / half red ring) marks that mixed state. Fixes mute / unmute / removal sync on the JavaScript side.</li>
          <li><b>22.0.0</b> <b>JavaScript &amp; TypeScript support</b> — Cucumber+ now works with cucumber-js step definitions, just like Java/Kotlin/Scala: set a breakpoint on a Gherkin step and it syncs to the matching <code>Given/When/Then(...)</code> in your <code>.js</code>/<code>.ts</code> file (and back), enable/disable propagates both ways, the debugger stops only on the example row you flag, and step-defs get the "used by N scenarios" gutter icon. Requires the bundled <i>JavaScript</i> support (Ultimate / WebStorm) and the <i>Cucumber.js</i> plugin. <i>(TypeScript step-defs need <code>-r ts-node/register</code> in the run configuration.)</i><br/>This feature is brand new and hasn't been tested on large real-world projects yet — kind feedback and bug reports are very welcome!</li>

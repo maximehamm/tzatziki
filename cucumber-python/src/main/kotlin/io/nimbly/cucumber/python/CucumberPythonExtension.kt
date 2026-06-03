@@ -38,24 +38,54 @@ class CucumberPythonExtension : AbstractCucumberExtension() {
         child is PyFile && child.virtualFile?.isWritable == true
 
     /**
-     * Returns every behave step definition in [module].
+     * Returns every behave step definition in the project.
      *
-     * 262 moved the framework call to the 1-arg `loadStepsFor(Module)` (module-wide; the old
-     * 2-arg `loadStepsFor(PsiFile, Module)` is now a default that delegates here). So instead
-     * of locating step files relative to a feature, we scan all `.py` files of the module and
-     * parse each into one [PythonStepDefinition] per `@given/@when/@then`-decorated function.
+     * 262 moved the framework call to the 1-arg `loadStepsFor(Module)` (the old 2-arg
+     * `loadStepsFor(PsiFile, Module)` is now a default that delegates here). Since we no longer
+     * get the feature file, we look up the behave `.py` step files ourselves.
+     *
+     * IMPORTANT — do NOT scope to [module]: behave step `.py` files frequently live OUTSIDE any
+     * configured module (Python is not a Gradle/Maven module, so a `features/steps/` folder may
+     * sit under no module at all), or in a DIFFERENT module than the `.feature`. `GlobalSearchScope.
+     * moduleScope(module)` therefore returns nothing and every step shows up unresolved (red).
+     *
+     *  1. Fast path: index over the whole PROJECT (all modules, libraries excluded).
+     *  2. Robust fallback (mirrors the pre-262 directory scan): if nothing is indexed — e.g. the
+     *     `.py` files are outside any module — walk the VFS from the project content roots and
+     *     base dir. This is index/module independent, so it works regardless of SDK setup.
      */
     override fun loadStepsFor(module: Module): List<AbstractStepDefinition> {
         val project = module.project
-        val scope = com.intellij.psi.search.GlobalSearchScope.moduleScope(module)
         val psiManager = com.intellij.psi.PsiManager.getInstance(project)
         val result = mutableListOf<AbstractStepDefinition>()
-        com.intellij.psi.search.FileTypeIndex.getFiles(PythonFileType.INSTANCE, scope).forEach { vfile ->
-            val pyFile = psiManager.findFile(vfile) as? PyFile ?: return@forEach
+        val seen = HashSet<String>()
+
+        fun harvest(pyFile: PyFile) {
+            val url = pyFile.virtualFile?.url ?: return
+            if (!seen.add(url)) return
             for (function in pyFile.topLevelFunctions) {
                 val decorators = function.decoratorList?.decorators ?: continue
-                val isStep = decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS }
-                if (isStep) result += PythonStepDefinition(function)
+                if (decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS })
+                    result += PythonStepDefinition(function)
+            }
+        }
+
+        // 1) Fast path — indexed .py files across all project modules (not just the feature's).
+        com.intellij.psi.search.FileTypeIndex
+            .getFiles(PythonFileType.INSTANCE, com.intellij.psi.search.GlobalSearchScope.projectScope(project))
+            .forEach { vf -> (psiManager.findFile(vf) as? PyFile)?.let { harvest(it) } }
+
+        // 2) Fallback — index/module independent VFS walk (for .py outside any configured module).
+        if (result.isEmpty()) {
+            val roots = LinkedHashSet<com.intellij.openapi.vfs.VirtualFile>()
+            com.intellij.openapi.roots.ProjectRootManager.getInstance(project).contentRoots.forEach { roots += it }
+            project.basePath?.let { com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(it) }?.let { roots += it }
+            roots.forEach { root ->
+                com.intellij.openapi.vfs.VfsUtilCore.iterateChildrenRecursively(root, null) { vf ->
+                    if (!vf.isDirectory && vf.fileType == PythonFileType.INSTANCE)
+                        (psiManager.findFile(vf) as? PyFile)?.let { harvest(it) }
+                    true
+                }
             }
         }
         return result

@@ -33,6 +33,22 @@ dependencies {
         // runIde sandbox matches a real IDEA Ultimate + Python setup.
         plugins("PythonCore:262.4852.50")
         plugins("Pythonid:262.4852.50")
+
+        // Dev convenience (sandbox only): provision cucumber-java so the co-loaded Cucumber+
+        // can light up its Java/Kotlin integration here too (its plugin-withJava.xml is gated
+        // on the cucumber-java plugin since C+ 23.0.1). Lets us validate Java + Kotlin + Python
+        // all at once in this single 262 sandbox. NOT a published dependency of cucumber-python.
+        plugins("cucumber-java:262.4852.50")
+
+        // Dev convenience (runIde sandbox only — NOT a published dependency): co-load the
+        // latest built Cucumber+ (plugin-tzatziki) so the FULL Python experience (gutter
+        // "N scenarios" + Gherkin<->PY breakpoint sync, both Cucumber+ features) is testable
+        // here on 262. The Cucumber+ zip bundles all extensions (java/kotlin/scala/js/python),
+        // so this gives the complete Cucumber+ experience on a 262 IDE alongside cucumber-python
+        // 1.2.0 — without re-pinning the 253-bound plugin-tzatziki sandbox to 262.
+        fileTree("$rootDir/plugin-tzatziki/build/distributions") { include("plugin-tzatziki-*.zip") }
+            .files.maxByOrNull { it.lastModified() }
+            ?.let { localPlugin(it) }
     }
 }
 
@@ -45,6 +61,7 @@ intellijPlatform {
         changeNotes = """
             <ul>
               <li><b>1.2.0</b> — Compatibility with IntelliJ IDEA 2026.2 (build 262). (2025.3 → 1.0.2, 2026.1 → 1.1.0.)</li>
+              <li><b>1.1.0</b> — Compatibility with IntelliJ IDEA 2026.1 (build 261).</li>
               <li><b>1.0.2</b> — Refreshed plugin icon (official Python logo combined with the Cucumber+ mark).</li>
               <li><b>1.0.1</b> — Resolve the Python interpreter via the module SDK (no internal API); run a single scenario / Scenario-Outline example; cleaner test tree.</li>
               <li><b>1.0.0</b> — Initial release: Gherkin ↔ behave step resolution &amp; navigation, Run / Debug feature files, and the "Create step definition" quick-fix.</li>

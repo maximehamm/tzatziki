@@ -1,0 +1,19 @@
+<!--
+  Intentionally empty optional config.
+
+  Its sole purpose is to let the main plugin DECLARE an optional dependency on
+  `com.intellij.modules.java` (the Java plugin) WITHOUT loading any extension.
+
+  Why it's needed: base and Scala code of Cucumber+ references Java-plugin classes
+  (e.g. com.intellij.debugger.DebuggerManagerEx in JavaTzatzikiExtensionPoint /
+  ScalaTzatzikiExtensionPoint, and CreateFromUsageUtils in JavaStepDefinitionCreator).
+  The Marketplace verifier (and the runtime classloader) must therefore see modules.java
+  in the dependency closure to resolve them.
+
+  Why it's SEPARATE from plugin-withJava.xml: the crash-prone cucumber Java extensions
+  (TzGherkinJavaExtension : CucumberJavaExtension) live in plugin-withJava.xml, gated on the
+  `cucumber-java` PLUGIN — so they only load when cucumber-java is installed. This file is gated
+  on modules.java only (present in any IDEA), loads nothing, and so never triggers that crash.
+-->
+<idea-plugin>
+</idea-plugin>
