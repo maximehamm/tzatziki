@@ -82,7 +82,12 @@ dependencies {
         // plugin (own id io.nimbly.cucumber.python) — this only co-installs it.
         // It provides the Gherkin<->behave resolution/run in this sandbox (the
         // native intellij.python.gherkin module can't load here — see note above).
-        localPlugin(project(":cucumber-python"))
+        //
+        // NOTE: pull the PUBLISHED 1.0.2 from the Marketplace, NOT localPlugin(project(...)).
+        // This C+ sandbox runs on 2025.3 (253), but the cucumber-python module is now at 1.2.0
+        // (sinceBuild=262, compiled against the 262 API) — building & loading it here would be
+        // incompatible on 253. 1.0.2 is the 253-compatible line (1.0.x→253, 1.1.x→261, 1.2.x→262).
+        plugins("io.nimbly.cucumber.python:1.0.2")
     }
 }
 
@@ -184,5 +189,40 @@ configurations.all {
         force("org.apache.xmlgraphics:batik-svg-dom:1.16")
         force("org.apache.xmlgraphics:batik-transcoder:1.16")
         force("org.apache.xmlgraphics:batik-util:1.16")
+    }
+}
+
+// Second sandbox runner — launches the (253-compiled) Cucumber+ plugin on a 2026.2 EAP (262) IDE,
+// so we can quickly smoke-test C+ on BOTH lines from the IDE Run configs ("Run C+" = 253 via the
+// default `runIde`; "Run C+ 262" = this `runIde262` task). The plugin loads on 262 because its
+// untilBuild is 264.* and it has no CucumberJvmExtensionPoint signature issue (it inherits from the
+// resident cucumber-java plugin). All co-installed plugins are pinned to their 262 builds; the
+// bundled ones come from the IDE itself. cucumber-python is taken from the LOCAL module here
+// (it's 1.2.0 / built against 262 → compatible), unlike the 253 sandbox which uses the published 1.0.2.
+intellijPlatformTesting {
+    runIde {
+        register("runIde262") {
+            type = org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaUltimate
+            version = "262.4852.50"
+            plugins {
+                bundledPlugins(
+                    "com.intellij.java",
+                    "JUnit",
+                    "com.intellij.properties",
+                    "org.jetbrains.kotlin",
+                    "JavaScript",
+                )
+                plugins("gherkin:262.4852.34")
+                plugins("cucumber-java:262.4852.50")
+                plugins("cucumber-javascript:262.4852.34")
+                plugins("org.intellij.scala:2026.2.2")
+                plugins("PsiViewer:252.23892.248")
+                plugins("PythonCore:262.4852.50")
+                plugins("Pythonid:262.4852.50")
+                // cucumber-python 1.2.0 (262) — the local module is compatible on this 262 runner.
+                // (register{} exposes localPlugin(ProjectDependency), not the Project overload.)
+                localPlugin(dependencyFactory.create(project(":cucumber-python")))
+            }
+        }
     }
 }

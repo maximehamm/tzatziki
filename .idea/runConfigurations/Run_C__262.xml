@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run C+" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="Run C+ 262" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$/plugin-tzatziki" />
@@ -10,7 +10,7 @@
       </option>
       <option name="taskNames">
         <list>
-          <option value="runIde" />
+          <option value="runIde262" />
         </list>
       </option>
       <option name="vmOptions" />
