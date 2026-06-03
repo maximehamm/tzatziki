@@ -38,23 +38,54 @@ class CucumberPythonExtension : AbstractCucumberExtension() {
         child is PyFile && child.virtualFile?.isWritable == true
 
     /**
-     * Returns every behave step definition reachable from [featureFile].
+     * Returns every behave step definition in the project.
      *
-     * IMPORTANT: the base framework ([CucumberStepHelper.findStepDefinitions])
-     * calls this with the GHERKIN *feature* file (or `null`), NOT a Python file.
-     * So we locate the relevant `.py` step files ourselves and parse each into
-     * one [PythonStepDefinition] per `@given/@when/@then`-decorated function —
-     * mirroring how `CucumberJavaScriptExtension.loadStepsFor` works.
+     * 262 moved the framework call to the 1-arg `loadStepsFor(Module)` (the old 2-arg
+     * `loadStepsFor(PsiFile, Module)` is now a default that delegates here). Since we no longer
+     * get the feature file, we look up the behave `.py` step files ourselves.
+     *
+     * IMPORTANT — do NOT scope to [module]: behave step `.py` files frequently live OUTSIDE any
+     * configured module (Python is not a Gradle/Maven module, so a `features/steps/` folder may
+     * sit under no module at all), or in a DIFFERENT module than the `.feature`. `GlobalSearchScope.
+     * moduleScope(module)` therefore returns nothing and every step shows up unresolved (red).
+     *
+     *  1. Fast path: index over the whole PROJECT (all modules, libraries excluded).
+     *  2. Robust fallback (mirrors the pre-262 directory scan): if nothing is indexed — e.g. the
+     *     `.py` files are outside any module — walk the VFS from the project content roots and
+     *     base dir. This is index/module independent, so it works regardless of SDK setup.
      */
-    override fun loadStepsFor(featureFile: PsiFile?, module: Module): List<AbstractStepDefinition> {
-        val gherkinFile = featureFile as? GherkinFile ?: return emptyList()
+    override fun loadStepsFor(module: Module): List<AbstractStepDefinition> {
+        val project = module.project
+        val psiManager = com.intellij.psi.PsiManager.getInstance(project)
         val result = mutableListOf<AbstractStepDefinition>()
-        for (psiFile in getStepDefinitionContainers(gherkinFile)) {
-            val pyFile = psiFile as? PyFile ?: continue
+        val seen = HashSet<String>()
+
+        fun harvest(pyFile: PyFile) {
+            val url = pyFile.virtualFile?.url ?: return
+            if (!seen.add(url)) return
             for (function in pyFile.topLevelFunctions) {
                 val decorators = function.decoratorList?.decorators ?: continue
-                val isStep = decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS }
-                if (isStep) result += PythonStepDefinition(function)
+                if (decorators.any { it.name?.lowercase() in PythonStepDefinition.STEP_DECORATORS })
+                    result += PythonStepDefinition(function)
+            }
+        }
+
+        // 1) Fast path — indexed .py files across all project modules (not just the feature's).
+        com.intellij.psi.search.FileTypeIndex
+            .getFiles(PythonFileType.INSTANCE, com.intellij.psi.search.GlobalSearchScope.projectScope(project))
+            .forEach { vf -> (psiManager.findFile(vf) as? PyFile)?.let { harvest(it) } }
+
+        // 2) Fallback — index/module independent VFS walk (for .py outside any configured module).
+        if (result.isEmpty()) {
+            val roots = LinkedHashSet<com.intellij.openapi.vfs.VirtualFile>()
+            com.intellij.openapi.roots.ProjectRootManager.getInstance(project).contentRoots.forEach { roots += it }
+            project.basePath?.let { com.intellij.openapi.vfs.LocalFileSystem.getInstance().findFileByPath(it) }?.let { roots += it }
+            roots.forEach { root ->
+                com.intellij.openapi.vfs.VfsUtilCore.iterateChildrenRecursively(root, null) { vf ->
+                    if (!vf.isDirectory && vf.fileType == PythonFileType.INSTANCE)
+                        (psiManager.findFile(vf) as? PyFile)?.let { harvest(it) }
+                    true
+                }
             }
         }
         return result
