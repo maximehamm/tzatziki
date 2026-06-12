@@ -13,8 +13,11 @@ import io.nimbly.tzatziki.view.features.nodes.CUCUMBER_JAVA_FEATURE_PRODUCER
 import io.nimbly.tzatziki.view.features.nodes.CUCUMBER_JAVA_SCENARIO_PRODUCER
 import org.jetbrains.java.debugger.breakpoints.properties.JavaLineBreakpointProperties
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
+import com.intellij.refactoring.rename.RenameHandler
+import io.nimbly.tzatziki.rename.CUCUMBER_STEP_RENAME_HANDLER
 
 /**
  * Verifies that every class, method, and field accessed via reflection still exists
@@ -165,5 +168,25 @@ class ReflectionApiTest {
                 "Update GherkinScenarioNode.getRunConfiguration() with the new producer class name."
             )
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Cucumber's GherkinStepRenameHandler — TzRenameHandlerStartup drops it (by FQN) so our
+    // table/parameter/doc-string-safe rename is the sole handler (no "choose handler" popup).
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `cucumber GherkinStepRenameHandler exists and is a RenameHandler`() {
+        val clazz = runCatching { Class.forName(CUCUMBER_STEP_RENAME_HANDLER) }.getOrNull()
+        assertNotNull(
+            "$CUCUMBER_STEP_RENAME_HANDLER not found — cucumber moved/renamed it, so " +
+            "TzRenameHandlerStartup can no longer drop it and the Gherkin step rename chooser will " +
+            "reappear. Update CUCUMBER_STEP_RENAME_HANDLER.",
+            clazz,
+        )
+        assertTrue(
+            "$CUCUMBER_STEP_RENAME_HANDLER is no longer a RenameHandler — revisit TzRenameHandlerStartup.",
+            RenameHandler::class.java.isAssignableFrom(clazz!!),
+        )
     }
 }

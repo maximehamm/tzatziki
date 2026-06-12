@@ -10,6 +10,14 @@
          present — otherwise it would crash (NoClassDefFoundError: TzGherkinJavaExtension). -->
     <depends optional="true" config-file="plugin-withKotlin.xml">org.jetbrains.kotlin</depends>
 
+    <!-- K2 compatibility must be declared in the descriptor that carries the Kotlin dependency
+         (above), not in the main plugin.xml (which has no Kotlin dependency, so the
+         `org.jetbrains.kotlin` namespace doesn't resolve there and the flag is ignored — leaving
+         plugin-withKotlin.xml unloaded in K2 mode). Our Kotlin code uses frontend PSI only. -->
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <supportsKotlinPluginMode supportsK2="true"/>
+    </extensions>
+
     <extensions defaultExtensionNs="io.nimbly.tzatziki">
         <io.nimbly.tzatziki.main implementation="io.nimbly.tzatziki.JavaTzatzikiExtensionPoint"/>
     </extensions>

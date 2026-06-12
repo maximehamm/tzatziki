@@ -190,13 +190,26 @@
     <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
 
-    <extensions defaultExtensionNs="org.jetbrains.kotlin">
-        <supportsKotlinPluginMode supportsK2="true"/>
-    </extensions>
+    <!-- NOTE: K2 compatibility (`supportsKotlinPluginMode`) is declared in plugin-withJava.xml — the
+         descriptor that actually depends on the Kotlin plugin. Declaring it here is a no-op: this
+         main descriptor has no Kotlin dependency, so the `org.jetbrains.kotlin` namespace doesn't
+         resolve and the flag is silently dropped. -->
 
     <extensions defaultExtensionNs="com.intellij">
 
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
+
+        <!-- Synchronised step rename (#8): overrides the platform Gherkin step rename, which bakes
+             parameter values into the definition and drops attached data tables / doc-strings.
+             The HANDLER is what the editor rename (Shift+F6 / in-place) goes through — cucumber's
+             GherkinStepRenameHandler is registered WITHOUT order, so our order="first" wins.
+             The processor covers programmatic renames; cucumber's processor is order="first" too
+             (so the processor alone can't override it — the handler is what matters in the editor). -->
+        <renameHandler implementation="io.nimbly.tzatziki.rename.TzGherkinStepRenameHandler" order="first"/>
+        <renamePsiElementProcessor implementation="io.nimbly.tzatziki.rename.TzGherkinStepRenameProcessor" order="first"/>
+        <!-- Proactive suggestion: an inlay "Rename step and references…" below a Gherkin step the
+             moment the user starts altering it (it resolves to a step definition). -->
+        <editorFactoryListener implementation="io.nimbly.tzatziki.rename.TzStepRenameSuggesterFactory"/>
 
         <typedHandler implementation="io.nimbly.tzatziki.TzTypedHandler"/>
 
@@ -230,6 +243,7 @@
         <postStartupActivity implementation="io.nimbly.tzatziki.editor.TzHeaderCommentAutoCollapse"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.editor.TzFoldStatePersistenceActivity"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzPartialMuteStartup"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.rename.TzRenameHandlerStartup"/>
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>

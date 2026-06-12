@@ -21,6 +21,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.xdebugger.breakpoints.XBreakpoint
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
+import io.nimbly.tzatziki.rename.StepPatternInfo
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
@@ -28,6 +29,20 @@ interface TzatzikiExtensionPoint {
 
     fun canRunStep(stepDefinitions: List<AbstractStepDefinition>): Boolean
     fun isDeprecated(element: PsiElement): Boolean
+
+    /**
+     * Synchronised step rename (feature #8) — per-language pattern access.
+     *
+     * [stepDefElement] is the PSI element of a step definition (what
+     * `AbstractStepDefinition.getElement()` returns: the `@Given/@When/@Then` annotation or method,
+     * the `Given(...)` call, the `@given(...)` decorator…).
+     *
+     * [getStepPattern] returns the raw pattern + flavour, or `null` if this extension doesn't own
+     * the element. [rewriteStepPattern] replaces the pattern literal in source with [newPattern] and
+     * returns `true` if owned & rewritten — it MUST be called inside a write action.
+     */
+    fun getStepPattern(stepDefElement: PsiElement): StepPatternInfo? = null
+    fun rewriteStepPattern(stepDefElement: PsiElement, newPattern: String): Boolean = false
 
     fun findBestPositionToAddBreakpoint(stepDefinitions: List<AbstractStepDefinition>): Pair<PsiElement, Int>?
     fun findStepsAndBreakpoints(vfile: VirtualFile?, offset: Int?): Pair<List<GherkinStep>, List<XBreakpoint<*>>>?

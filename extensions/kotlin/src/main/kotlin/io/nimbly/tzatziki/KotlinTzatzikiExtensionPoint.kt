@@ -23,14 +23,60 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
+import io.nimbly.tzatziki.rename.StepPatternInfo
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.kotlin.psi.KtAnnotated
+import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 class KotlinTzatzikiExtensionPoint : TzatzikiExtensionPoint {
+
+    // --- synchronised step rename (#8), Kotlin step definitions -------------
+
+    override fun getStepPattern(stepDefElement: PsiElement): StepPatternInfo? {
+        val raw = ktStringValue(cucumberAnnotationStringTemplate(stepDefElement) ?: return null) ?: return null
+        return StepPatternInfo.of(raw)
+    }
+
+    override fun rewriteStepPattern(stepDefElement: PsiElement, newPattern: String): Boolean {
+        val template = cucumberAnnotationStringTemplate(stepDefElement) ?: return false
+        val newExpr = KtPsiFactory(template.project).createExpression("\"" + escapeKotlinString(newPattern) + "\"")
+        template.replace(newExpr)
+        return true
+    }
+
+    /** The `@Given("…")`-style string-literal argument of the cucumber annotation on the Kotlin
+     *  step-definition function ([element] may be the function, its light method, or the annotation). */
+    private fun cucumberAnnotationStringTemplate(element: PsiElement): KtStringTemplateExpression? {
+        val nav = element.navigationElement
+        val fct = nav as? KtNamedFunction
+            ?: PsiTreeUtil.getParentOfType(nav, KtNamedFunction::class.java)
+            ?: element as? KtNamedFunction
+            ?: PsiTreeUtil.getParentOfType(element, KtNamedFunction::class.java)
+            ?: return null
+        val anno = fct.annotationEntries.find { it.isCucumberJavaAnnotation() } ?: return null
+        return anno.valueArguments.firstOrNull()?.getArgumentExpression() as? KtStringTemplateExpression
+    }
+
+    /** The literal value of a Kotlin string template, or `null` if it contains interpolation. */
+    private fun ktStringValue(template: KtStringTemplateExpression): String? = buildString {
+        for (entry in template.entries) when (entry) {
+            is KtLiteralStringTemplateEntry -> append(entry.text)
+            is KtEscapeStringTemplateEntry -> append(entry.unescapedValue)
+            else -> return null   // ${'$'}{…} / $name interpolation → not a static pattern
+        }
+    }
+
+    /** Escape for a Kotlin double-quoted string literal — note `$` must be escaped (interpolation). */
+    private fun escapeKotlinString(s: String): String = buildString {
+        for (c in s) { if (c == '\\' || c == '"' || c == '$') append('\\'); append(c) }
+    }
 
     override fun isDeprecated(element: PsiElement): Boolean {
         // In recent cucumber-java versions definition.element is the @Given/@When/@Then

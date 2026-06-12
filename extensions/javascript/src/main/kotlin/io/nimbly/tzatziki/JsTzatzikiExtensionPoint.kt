@@ -9,12 +9,16 @@ package io.nimbly.tzatziki
 import com.intellij.javascript.debugger.breakpoints.JavaScriptLineBreakpointProperties
 import com.intellij.lang.javascript.psi.JSCallExpression
 import com.intellij.lang.javascript.psi.JSFunctionExpression
+import com.intellij.lang.javascript.psi.JSLiteralExpression
 import com.intellij.lang.javascript.psi.JSReferenceExpression
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import io.nimbly.tzatziki.rename.StepPatternInfo
+import io.nimbly.tzatziki.rename.StepPatternKind
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerManager
@@ -62,6 +66,48 @@ class JsTzatzikiExtensionPoint : TzatzikiExtensionPoint {
     private data class StepsKey(val vfileUrl: String, val callStartOffset: Int)
     private data class StepsEntry(val modCount: Long, val steps: List<GherkinStep>)
     private val stepsCache = ConcurrentHashMap<StepsKey, StepsEntry>()
+
+    // --- synchronised step rename (#8) --------------------------------------
+
+    override fun getStepPattern(stepDefElement: PsiElement): StepPatternInfo? {
+        val literal = patternLiteral(stepDefElement) ?: return null
+        return when {
+            literal.isRegExpLiteral -> regexSource(literal)?.let { StepPatternInfo(it, StepPatternKind.REGEX) }
+            literal.isStringLiteral -> (literal.stringValue)?.let { StepPatternInfo(it, StepPatternKind.BRACED) }
+            else -> null
+        }
+    }
+
+    override fun rewriteStepPattern(stepDefElement: PsiElement, newPattern: String): Boolean {
+        val literal = patternLiteral(stepDefElement) ?: return false
+        val doc = PsiDocumentManager.getInstance(literal.project).getDocument(literal.containingFile) ?: return false
+        val newText = when {
+            literal.isRegExpLiteral -> "/" + newPattern.replace("/", "\\/") + "/" + literal.text.substringAfterLast('/')
+            literal.isStringLiteral -> {
+                val quote = literal.text.firstOrNull() ?: '\''
+                quote + escapeQuoted(newPattern, quote) + quote
+            }
+            else -> return false
+        }
+        doc.replaceString(literal.textRange.startOffset, literal.textRange.endOffset, newText)
+        PsiDocumentManager.getInstance(literal.project).commitDocument(doc)
+        return true
+    }
+
+    /** The cucumber-js pattern literal — the first argument of the `Given(…)`/`When(…)` call. */
+    private fun patternLiteral(element: PsiElement): JSLiteralExpression? =
+        element as? JSLiteralExpression
+            ?: findEnclosingCucumberCall(element)?.arguments?.firstOrNull() as? JSLiteralExpression
+
+    /** The regex source between the slashes of a `/…/flags` literal. */
+    private fun regexSource(literal: JSLiteralExpression): String? {
+        val t = literal.text
+        val end = t.lastIndexOf('/')
+        return if (t.startsWith("/") && end > 0) t.substring(1, end) else null
+    }
+
+    private fun escapeQuoted(s: String, quote: Char): String =
+        buildString { for (c in s) { if (c == '\\' || c == quote) append('\\'); append(c) } }
 
     override fun isDeprecated(element: PsiElement): Boolean {
         // Walk to the surrounding call's callback function; check JSDoc `@deprecated`

@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "23.0.1"
+    version = "24.0.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,10 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul>
+
+         <li><b>24.0.0</b> <b>Step rename</b> — rename a Gherkin step and Cucumber+
+rewrites the step <i>definition</i>'s pattern AND every other Gherkin step bound to it, in one go,
+preserving parameters (<code>{int}</code>/<code>{string}</code>), etc. Works from <b>Java, Kotlin, JavaScript/TypeScript and Python</b> step definitions. A preview dialog lists every reference that will change; and when you start editing a step in place, a discreet <i>"Rename steps and references…"</i> hint appears under the line. A single Undo reverts the whole rename.</li>
 
          <li><b>23.0.1</b> Fix a startup crash (<code>NoClassDefFoundError</code>) for users on IntelliJ IDEA who use Cucumber+ for Python/JS without the <i>Cucumber for Java</i> plugin installed: the Java integration now activates only when that plugin is present (like the Kotlin/Scala/JS integrations).</li>
          <li><b>23.0.0</b> <b>Python (behave) support</b> — Cucumber+ now syncs breakpoints with Python step definitions just like Java/Kotlin/Scala/JS: set a breakpoint on a Gherkin step and it pairs with the matching <code>@given/@when/@then</code> function (and back), and step-defs get the "used by N scenarios" gutter marker. Requires the companion <i>Cucumber for Python</i> plugin for behave step resolution.<br/>Also: <b>per-scenario muting on shared step definitions</b> now works for <b>Python and JavaScript</b> too (not just Java) — when two scenarios share one step definition, muting one scenario's breakpoint makes the debugger skip only that scenario at runtime.</li>

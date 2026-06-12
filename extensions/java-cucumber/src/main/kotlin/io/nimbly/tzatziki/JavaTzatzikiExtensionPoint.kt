@@ -17,17 +17,58 @@ package io.nimbly.tzatziki
 
 import com.intellij.debugger.DebuggerManagerEx
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiLiteralExpression
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.xdebugger.XDebuggerUtil
 import com.intellij.xdebugger.breakpoints.XBreakpoint
+import io.nimbly.tzatziki.rename.StepPatternInfo
 import io.nimbly.tzatziki.util.*
 import org.jetbrains.plugins.cucumber.java.steps.AbstractJavaStepDefinition
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
 import org.jetbrains.plugins.cucumber.steps.AbstractStepDefinition
 
 class JavaTzatzikiExtensionPoint : TzatzikiExtensionPoint {
+
+    // --- synchronised step rename (#8) --------------------------------------
+
+    override fun getStepPattern(stepDefElement: PsiElement): StepPatternInfo? {
+        if (isKotlinSource(stepDefElement)) return null
+        val raw = (cucumberAnnotationValue(stepDefElement) as? PsiLiteralExpression)?.value as? String ?: return null
+        return StepPatternInfo.of(raw)
+    }
+
+    override fun rewriteStepPattern(stepDefElement: PsiElement, newPattern: String): Boolean {
+        if (isKotlinSource(stepDefElement)) return false
+        val value = cucumberAnnotationValue(stepDefElement) as? PsiLiteralExpression ?: return false
+        val factory = JavaPsiFacade.getElementFactory(value.project)
+        val newLiteral = factory.createExpressionFromText("\"" + escapeJavaString(newPattern) + "\"", value)
+        value.replace(newLiteral)
+        return true
+    }
+
+    /** A Kotlin step definition resolves here too (via a light `PsiMethod`), and this EP CAN read its
+     *  pattern — but `value.replace(...)` on the light element does NOT touch the `.kt` source (silent
+     *  no-op). Since EPs are tried in order (this one before [io.nimbly.tzatziki.KotlinTzatzikiExtensionPoint]),
+     *  we must decline Kotlin sources so the Kotlin EP — which rewrites the real source — handles them. */
+    private fun isKotlinSource(element: PsiElement): Boolean =
+        element.navigationElement.containingFile?.language?.id == "kotlin"
+
+    /** The `value` attribute element of the `io.cucumber.java.*` annotation on the step-def method
+     *  ([element] may be the method itself or the annotation, per the cucumber-java version). */
+    private fun cucumberAnnotationValue(element: PsiElement): PsiAnnotationMemberValue? {
+        val method = element as? PsiMethod ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java) ?: return null
+        val annotation = method.annotations.find {
+            it.resolveAnnotationType()?.qualifiedName?.startsWith("io.cucumber.java") == true
+        } ?: return null
+        return annotation.findAttributeValue("value")
+    }
+
+    private fun escapeJavaString(s: String): String =
+        buildString { for (c in s) { if (c == '\\' || c == '"') append('\\'); append(c) } }
 
     override fun isDeprecated(element: PsiElement): Boolean {
         // In recent cucumber-java versions definition.element is the @Given/@When/@Then
