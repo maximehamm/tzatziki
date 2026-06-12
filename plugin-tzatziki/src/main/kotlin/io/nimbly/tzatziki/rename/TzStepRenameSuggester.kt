@@ -53,6 +53,21 @@ private const val DELAY_MS = 300
 private const val LABEL = "Rename steps and references…"
 
 /**
+ * Whether the proactive rename inlay should show for a step line, given its pre-edit text
+ * [originalLineText], the column where its NAME starts ([nameStartColumn], i.e. right after the
+ * keyword) and the [currentLineText] after editing.
+ *
+ * A genuine rename edits only the step NAME, so the keyword/indent PREFIX is preserved. Deleting the
+ * whole step (select line + Delete) blanks the line (or removes it, shifting another line in) — the
+ * prefix is then gone, so we must NOT offer a rename. Pure (no PSI) → unit-testable.
+ */
+fun shouldSuggestRename(originalLineText: String, nameStartColumn: Int, currentLineText: String): Boolean {
+    if (currentLineText == originalLineText) return false                       // unchanged
+    val prefix = originalLineText.substring(0, nameStartColumn.coerceIn(0, originalLineText.length))
+    return prefix.isNotBlank() && currentLineText.startsWith(prefix)            // name edited, prefix intact
+}
+
+/**
  * Proactive in-editor suggestion for feature #8: when the user starts ALTERING a Gherkin step that
  * resolves to a step definition, a clickable inlay — "Rename step and references…" — appears below
  * the line; clicking it opens the Cucumber+ rename dialog (which propagates to the definition + all
@@ -169,11 +184,11 @@ class TzStepRenameSuggester(private val editor: Editor, private val project: Pro
         return Snapshot(line, lineText(line), nameStartColumn, spm.createSmartPsiElementPointer(step), spm.createSmartPsiElementPointer(def), pattern, original)
     }
 
-    /** Show the inlay iff the snapshot step's line has been altered and the caret is still on it. */
+    /** Show the inlay iff the snapshot step's line has been altered (and the caret is still on it). */
     private fun updateInlay() {
         val s = snapshot ?: return removeInlay()
         if (dismissed || s.line >= editor.document.lineCount || caretLine() != s.line) return removeInlay()
-        if (lineText(s.line) != s.originalLineText) showInlay(s) else removeInlay()
+        if (shouldSuggestRename(s.originalLineText, s.nameStartColumn, lineText(s.line))) showInlay(s) else removeInlay()
     }
 
     private fun showInlay(s: Snapshot) {
