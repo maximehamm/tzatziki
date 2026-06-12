@@ -20,6 +20,10 @@ dependencies {
         // 1.2.x build — compiled against 2026.2 (262), where CucumberJvmExtensionPoint
         // also moved loadStepsFor to the 1-arg loadStepsFor(Module) (module-wide). isStepLikeFile
         // is 1-arg (as in 261). Covers 262.* only; 261 → 1.1.x, 253 → 1.0.x.
+        // Compile target stays on 262.4852.50: it is Kotlin-2.2 compatible (cached) — newer 262
+        // EAPs (262.7132+) bundle Kotlin metadata 2.4.0 that this project's Kotlin 2.2.0 compiler
+        // cannot read. The plugin range is 262.* so the 4852-built artifact runs fine on any 262
+        // IDE (incl. the non-expired 262.7132.23 launched by plugin-tzatziki:runIde262).
         intellijIdeaUltimate("262.4852.50")
         instrumentationTools()
         pluginVerifier()

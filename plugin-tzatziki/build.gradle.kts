@@ -116,7 +116,7 @@ intellijPlatform {
             ide("IU", "2025.3.3")
             // Latest EAP — reproduce locally the Marketplace report against 2026.2 EAP
             // (IU-262.4852.50 broke 21.5.0 with CucumberStepHelper.getExtensionCount removal).
-            ide("IU", "262.4852.50")
+                ide("IU", "262.7132.23")
         }
         // Hide the handful of internal-API usages we've deliberately accepted —
         // see verifier-ignored-problems.txt for the per-problem rationale.
@@ -203,7 +203,7 @@ intellijPlatformTesting {
     runIde {
         register("runIde262") {
             type = org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdeaUltimate
-            version = "262.4852.50"
+            version = "262.7132.23"
             plugins {
                 bundledPlugins(
                     "com.intellij.java",
@@ -212,13 +212,13 @@ intellijPlatformTesting {
                     "org.jetbrains.kotlin",
                     "JavaScript",
                 )
-                plugins("gherkin:262.4852.34")
-                plugins("cucumber-java:262.4852.50")
-                plugins("cucumber-javascript:262.4852.34")
-                plugins("org.intellij.scala:2026.2.2")
-                plugins("PsiViewer:252.23892.248")
-                plugins("PythonCore:262.4852.50")
-                plugins("Pythonid:262.4852.50")
+                plugins("gherkin:262.7132.23")
+                plugins("cucumber-java:262.7132.23")
+                plugins("cucumber-javascript:262.7132.23")
+                plugins("org.intellij.scala:2026.2.5")
+                plugins("PsiViewer:2026.1")
+                plugins("PythonCore:262.7132.23")
+                plugins("Pythonid:262.7132.23")
                 // cucumber-python 1.2.0 (262) — the local module is compatible on this 262 runner.
                 // (register{} exposes localPlugin(ProjectDependency), not the Project overload.)
                 localPlugin(dependencyFactory.create(project(":cucumber-python")))
