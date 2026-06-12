@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "24.0.0"
+    version = "24.0.1"
 }
 
 val notes by extra {"""
@@ -12,6 +12,8 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul>
+
+         <li><b>24.0.1</b> Fix: the <i>"Rename steps and references…"</i> suggestion no longer appears when you delete a whole step line — only when you actually edit a step's text.</li>
 
          <li><b>24.0.0</b> <b>Step rename</b> — rename a Gherkin step and Cucumber+
 rewrites the step <i>definition</i>'s pattern AND every other Gherkin step bound to it, in one go,
