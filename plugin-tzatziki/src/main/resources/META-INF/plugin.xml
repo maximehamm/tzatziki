@@ -199,6 +199,12 @@
 
         <notificationGroup id="io.nimbly.notification.group" displayType="BALLOON"/>
 
+        <!-- Settings → Tools → Cucumber+ : master switch + per-feature toggles. -->
+        <applicationService serviceImplementation="io.nimbly.tzatziki.config.TzSettings"/>
+        <applicationConfigurable groupId="tools" id="io.nimbly.tzatziki.settings"
+                                 displayName="Cucumber+"
+                                 instance="io.nimbly.tzatziki.config.TzSettingsConfigurable"/>
+
         <!-- Synchronised step rename (#8): overrides the platform Gherkin step rename, which bakes
              parameter values into the definition and drops attached data tables / doc-strings.
              The HANDLER is what the editor rename (Shift+F6 / in-place) goes through — cucumber's
@@ -244,6 +250,7 @@
         <postStartupActivity implementation="io.nimbly.tzatziki.editor.TzFoldStatePersistenceActivity"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.breakpoints.TzPartialMuteStartup"/>
         <postStartupActivity implementation="io.nimbly.tzatziki.rename.TzRenameHandlerStartup"/>
+        <postStartupActivity implementation="io.nimbly.tzatziki.config.TzSettingsStartup"/>
 
         // Cell completion
         <completion.contributor language="Gherkin" implementationClass="io.nimbly.tzatziki.editor.TzCellCompletion"/>

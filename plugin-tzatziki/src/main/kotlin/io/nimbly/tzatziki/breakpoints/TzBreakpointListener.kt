@@ -86,7 +86,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
     }
 
     override fun breakpointChanged(breakpoint: XBreakpoint<*>) {
-        if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
+        if (!TOGGLE_CUCUMBER_PL || !io.nimbly.tzatziki.config.TzSettings.getInstance().isBreakpointSyncEnabled() || !isJavaPresent()) return
 
         // Skip events where only the line position drifted — those re-fire on every
         // keystroke and don't require any Cucumber+ resync work.
@@ -111,7 +111,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
     }
 
     override fun breakpointAdded(breakpoint: XBreakpoint<*>) {
-        if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
+        if (!TOGGLE_CUCUMBER_PL || !io.nimbly.tzatziki.config.TzSettings.getInstance().isBreakpointSyncEnabled() || !isJavaPresent()) return
         if (addInProgress) return
         addInProgress = true
         lastSignatures[breakpoint] = signatureOf(breakpoint)
@@ -119,7 +119,7 @@ class TzBreakpointListener(private val project: Project) : XBreakpointListener<X
     }
 
     override fun breakpointRemoved(breakpoint: XBreakpoint<*>) {
-        if (!TOGGLE_CUCUMBER_PL || !isJavaPresent()) return
+        if (!TOGGLE_CUCUMBER_PL || !io.nimbly.tzatziki.config.TzSettings.getInstance().isBreakpointSyncEnabled() || !isJavaPresent()) return
         if (removeInProgress) return
         removeInProgress = true
         lastSignatures.remove(breakpoint)

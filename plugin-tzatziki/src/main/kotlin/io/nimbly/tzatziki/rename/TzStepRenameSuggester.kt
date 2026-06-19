@@ -39,6 +39,7 @@ import com.intellij.ui.JBColor
 import com.intellij.util.Alarm
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.ui.JBUI
+import io.nimbly.tzatziki.config.TzSettings
 import java.util.concurrent.Callable
 import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import org.jetbrains.plugins.cucumber.psi.GherkinStep
@@ -142,6 +143,7 @@ class TzStepRenameSuggester(private val editor: Editor, private val project: Pro
 
     private fun schedule(reSnapshot: Boolean) {
         alarm.cancelAllRequests()
+        if (!TzSettings.getInstance().isRenameSuggestionEnabled()) { removeInlay(); return }   // Settings → Tools → Cucumber+
         // The line-text comparison (updateInlay) is free → EDT. Resolving a step to its definition
         // hits the stub index (a SLOW operation, forbidden on EDT) → do it in a background read action.
         alarm.addRequest({ runCatching { if (reSnapshot) refreshSnapshotAsync() else updateInlay() } }, DELAY_MS)

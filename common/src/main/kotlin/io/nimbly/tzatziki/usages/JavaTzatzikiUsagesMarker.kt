@@ -45,6 +45,8 @@ abstract class TzStepsUsagesMarker : LineMarkerProvider {
         annotationText: String,
         result: MutableCollection<in LineMarkerInfo<*>>
     ) {
+        if (!io.nimbly.tzatziki.config.TzSettings.getInstance().isUsageMarkersEnabled()) return   // Settings → Tools → Cucumber+
+
         // Group usages by regex
         val groupedByRegex: Map<String, List<GherkinStep>> = usages.map { it.element }
             .filterIsInstance<GherkinStep>()

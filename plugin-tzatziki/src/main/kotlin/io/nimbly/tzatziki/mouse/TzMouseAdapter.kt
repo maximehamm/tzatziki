@@ -133,6 +133,7 @@ object TzSelectionModeManager {
 
     fun switchEditorSelectionModeIfNeeded(editor: Editor, offset: Int) {
 
+        if (!io.nimbly.tzatziki.config.TzSettings.getInstance().isAutoColumnModeEnabled()) return   // Settings → Tools → Cucumber+
         if (isSelectionSwitchBlocked) return
         val f = editor.file ?: return
         if (f !is GherkinFile) return

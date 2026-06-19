@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "24.0.1"
+    version = "25.0.0"
 }
 
 val notes by extra {"""
@@ -12,6 +12,12 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul>
+
+         <li><b>25.0.0</b> <b>New settings page</b> (Settings → Tools → Cucumber+) — enable/disable each
+in-editor behaviour individually, or all at once with the master switch: the <i>"Rename steps and
+references…"</i> suggestion; table auto-format, smart keys (Pipe/Enter/Tab/Del), smart copy-paste,
+column-selection switch, drag-and-drop and frame; Gherkin&#8596;step-definition breakpoint sync;
+and the <i>"used by N scenarios"</i> gutter markers.</li>
 
          <li><b>24.0.1</b> Fix: the <i>"Rename steps and references…"</i> suggestion no longer appears when you delete a whole step line — only when you actually edit a step's text.</li>
 

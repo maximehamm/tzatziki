@@ -36,7 +36,7 @@ class TzBreakpointSyncInspection : GherkinInspection() {
             override fun visitStep(step: GherkinStep) {
 
                 super.visitStep(step)
-                if (!TOGGLE_CUCUMBER_PL)
+                if (!TOGGLE_CUCUMBER_PL || !io.nimbly.tzatziki.config.TzSettings.getInstance().isBreakpointSyncEnabled())
                     return
 
                 val stepLine = step.getDocumentLine()

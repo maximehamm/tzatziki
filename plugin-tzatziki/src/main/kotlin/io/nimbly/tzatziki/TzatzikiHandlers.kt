@@ -33,7 +33,8 @@ import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun charTyped(charTyped: Char, project: Project, editor: Editor, file: PsiFile): Result {
-        if (file.gherkin && editor.document.getTextLine(editor.caretModel.offset).contains("|"))
+        if (file.gherkin && io.nimbly.tzatziki.config.TzSettings.getInstance().isTableAutoFormatEnabled() &&
+            editor.document.getTextLine(editor.caretModel.offset).contains("|"))
             editor.findTableAt(editor.caretModel.offset)?.format()
 
         if (file.gherkin)
@@ -43,10 +44,10 @@ class TzTypedHandler : TypedHandlerDelegate() {
     }
 
     override fun beforeCharTyped(c: Char, project: Project, editor: Editor, file: PsiFile, fileType: FileType): Result {
-        if (!file.gherkin)
+        if (!file.gherkin || !io.nimbly.tzatziki.config.TzSettings.getInstance().isSmartTableKeysEnabled())
             return CONTINUE
 
-        if (editor.addNewColum(c, project, fileType))
+        if (editor.addNewColum(c, project, fileType))   // Pipe → new column
             return STOP
 
         return CONTINUE
@@ -54,7 +55,8 @@ class TzTypedHandler : TypedHandlerDelegate() {
 
     override fun beforeSelectionRemoved(c: Char, project: Project, editor: Editor, file: PsiFile): Result {
 
-        if (file.gherkin && editor.stopBeforeDeletion(false, false))
+        if (file.gherkin && io.nimbly.tzatziki.config.TzSettings.getInstance().isSmartTableKeysEnabled() &&
+            editor.stopBeforeDeletion(false, false))
             return STOP
 
         return CONTINUE

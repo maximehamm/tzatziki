@@ -106,7 +106,7 @@ class TzPostStartup : ProjectActivity {
 
     private class DeletionHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (dataContext.gherkin && editor.stopBeforeDeletion(getActionId()))
+            if (dataContext.gherkinTableKeys && editor.stopBeforeDeletion(getActionId()))
                 return
             doDefault(editor, caret, dataContext)
             if (dataContext.gherkin)
@@ -116,16 +116,16 @@ class TzPostStartup : ProjectActivity {
 
     private class TabHandler(actionId: String) : AbstractWriteActionHandler(actionId) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (!dataContext.gherkin || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
+            if (!dataContext.gherkinTableKeys || !editor.navigateInTableWithTab(getActionId() == ACTION_EDITOR_TAB, editor))
                 doDefault(editor, caret, dataContext)
         }
     }
 
     private class EnterHandler : AbstractWriteActionHandler(ACTION_EDITOR_ENTER) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (dataContext.gherkin && editor.navigateInTableWithEnter())
+            if (dataContext.gherkinTableKeys && editor.navigateInTableWithEnter())
                 return
-            if (dataContext.gherkin && editor.addTableRow())
+            if (dataContext.gherkinTableKeys && editor.addTableRow())
                 return
             doDefault(editor, caret, dataContext)
         }
@@ -133,7 +133,7 @@ class TzPostStartup : ProjectActivity {
 
     private class CopyHandler : AbstractWriteActionHandler(ACTION_EDITOR_COPY) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (dataContext.gherkin && editor.smartCopy())
+            if (dataContext.gherkinClipboard && editor.smartCopy())
                 return
             doDefault(editor, caret, dataContext)
         }
@@ -141,7 +141,7 @@ class TzPostStartup : ProjectActivity {
 
     private class CutHandler : AbstractWriteActionHandler(ACTION_EDITOR_CUT) {
         override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext) {
-            if (dataContext.gherkin && editor.smartCut())
+            if (dataContext.gherkinClipboard && editor.smartCut())
                 return
             doDefault(editor, null, dataContext)
             if (dataContext.gherkin) {
@@ -162,10 +162,10 @@ class TzPostStartup : ProjectActivity {
                 return
             }
 
-            // Non-Gherkin files: delegate straight to the original handler with the real caret.
-            // Passing null would trigger executeForAllCarets, which breaks injected-language
-            // fragment range recalculoation (IllegalArgumentException: Invalid range).
-            if (!dataContext.gherkin) {
+            // Non-Gherkin files (or smart clipboard disabled): delegate straight to the original
+            // handler with the real caret. Passing null would trigger executeForAllCarets, which
+            // breaks injected-language fragment range recalculation (IllegalArgumentException).
+            if (!dataContext.gherkinClipboard) {
                 doDefault(editor, caret, dataContext)
                 return
             }
@@ -241,6 +241,15 @@ class TzPostStartup : ProjectActivity {
 val DataContext.gherkin: Boolean
     get() =
         TOGGLE_CUCUMBER_PL && GherkinFileType.INSTANCE == CommonDataKeys.PSI_FILE.getData(this)?.fileType
+
+/** A Gherkin context where the smart table KEYS (Pipe / Enter / Tab / Delete) are enabled — gated by
+ *  Settings → Tools → Cucumber+. (Auto-format and smart clipboard have their own gates.) */
+val DataContext.gherkinTableKeys: Boolean
+    get() = gherkin && io.nimbly.tzatziki.config.TzSettings.getInstance().isSmartTableKeysEnabled()
+
+/** A Gherkin context where smart table copy / cut / paste is enabled — gated by Settings → Tools → Cucumber+. */
+val DataContext.gherkinClipboard: Boolean
+    get() = gherkin && io.nimbly.tzatziki.config.TzSettings.getInstance().isSmartClipboardEnabled()
 
 
 private fun EditorActionManager.replaceHandler(handler: AbstractWriteActionHandler) {

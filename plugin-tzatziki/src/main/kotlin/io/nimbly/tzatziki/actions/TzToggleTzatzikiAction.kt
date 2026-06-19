@@ -32,6 +32,7 @@ class TzToggleTzatzikiAction : ToggleAction(), DumbAware {
 
     override fun setSelected(e: AnActionEvent, state: Boolean) {
         TOGGLE_CUCUMBER_PL = !TOGGLE_CUCUMBER_PL
+        io.nimbly.tzatziki.config.TzSettings.getInstance().state.enabled = TOGGLE_CUCUMBER_PL   // persist + sync with the Settings page
         if (!TOGGLE_CUCUMBER_PL)
             e.getData(CommonDataKeys.EDITOR)?.disableColumnSelectionMode()
         TzTableDecorator.refreshAll()

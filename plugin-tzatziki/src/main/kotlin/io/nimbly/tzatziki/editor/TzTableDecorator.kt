@@ -156,7 +156,7 @@ class TzTableDecorator : EditorFactoryListener {
 
         // When Cucumber+ is disabled, clear decorations and stop.
         // Keep the editor in the map (empty list) so refreshAll() can find it on re-enable.
-        if (!TOGGLE_CUCUMBER_PL) {
+        if (!TOGGLE_CUCUMBER_PL || !io.nimbly.tzatziki.config.TzSettings.getInstance().isTableFrameEnabled()) {
             editorHighlighters[editor] = mutableListOf()
             editorGeometries[editor] = emptyList()
             return
@@ -241,7 +241,15 @@ class TzTableDecorator : EditorFactoryListener {
     // ---- Mouse handling ----
 
     private fun handleMouseMove(editor: Editor, e: EditorMouseEvent) {
-        val hover = findHover(editor, e.mouseEvent.point)
+        var hover = findHover(editor, e.mouseEvent.point)
+        // Drag-and-drop disabled → don't change the look of the draggable frame bars on hover (no
+        // highlight, no hand cursor). The frame still opens the table menu on click (fresh findHover).
+        if (hover != null &&
+            hover.zone in setOf(HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER) &&
+            !io.nimbly.tzatziki.config.TzSettings.getInstance().isDragAndDropEnabled()
+        ) {
+            hover = null
+        }
         if (hover != editorHover[editor]) {
             val wasDraggable = editorHover[editor]?.zone in setOf(
                 HoverZone.TOP_BORDER, HoverZone.LEFT_BORDER, HoverZone.RIGHT_BORDER
@@ -293,6 +301,7 @@ class TzTableDecorator : EditorFactoryListener {
 
     private fun handleMousePressed(editor: Editor, e: EditorMouseEvent) {
         if (e.mouseEvent.button != MouseEvent.BUTTON1) return
+        if (!io.nimbly.tzatziki.config.TzSettings.getInstance().isDragAndDropEnabled()) return   // Settings → Tools → Cucumber+ (click-to-menu still works)
         val hover = findHover(editor, e.mouseEvent.point) ?: return
         when (hover.zone) {
             HoverZone.LEFT_BORDER -> {
