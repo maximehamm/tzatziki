@@ -18,6 +18,7 @@
             <option value="$PROJECT_DIR$/extensions/scala" />
             <option value="$PROJECT_DIR$/i18n" />
             <option value="$PROJECT_DIR$/plugin-i18n" />
+            <option value="$PROJECT_DIR$/plugin-remotedev" />
             <option value="$PROJECT_DIR$/plugin-tzatziki" />
             <option value="$PROJECT_DIR$/tests" />
           </set>
