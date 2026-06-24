@@ -1,0 +1,50 @@
+<!--
+  ~ WSL REMOTE COMPANION
+  ~ Copyright (C) 2026  Maxime HAMM - NIMBLY CONSULTING - Maxime.HAMM@nimbly-consulting.com
+  ~ Licensed under the GNU General Public License v2 or later.
+  -->
+
+<idea-plugin>
+    <id>io.nimbly.remotedev</id>
+    <name>WSL Remote Companion</name>
+    <vendor email="Maxime.HAMM@nimbly-consulting.com"
+            url="https://github.com/maximehamm/tzatziki/issues">Maxime HAMM</vendor>
+    <description><![CDATA[
+
+       <b>Small quality-of-life helpers for JetBrains Remote Development over WSL.</b><br/>
+       <br/>
+       When the IDE backend runs on WSL (Linux), IntelliJ hides the actions that reach the Windows
+       host. This plugin brings them back, using WSL interop (<code>wslpath</code> + <code>explorer.exe</code>):
+       <ul>
+          <li><b>Open in Explorer</b> — reveal the selected file/folder in Windows Explorer.</li>
+          <li><b>Open in Windows native application</b> — open the file with its associated Windows app.</li>
+          <li><b>Copy → Windows Path</b> — copy the Windows form of the path (e.g. <code>C:\…</code> or <code>\\wsl$\…</code>).</li>
+       </ul>
+       The actions appear only when the backend is a WSL distro.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <actions>
+        <action id="io.nimbly.remotedev.OpenInWindowsExplorer"
+                class="io.nimbly.remotedev.OpenInWindowsExplorerAction"
+                text="Open in Explorer (Windows)"
+                description="Reveal the selected file or folder in Windows Explorer (via WSL interop)">
+            <add-to-group group-id="RevealGroup" anchor="last"/>
+        </action>
+
+        <action id="io.nimbly.remotedev.OpenInWindowsApp"
+                class="io.nimbly.remotedev.OpenInWindowsAppAction"
+                text="Open in Windows Native Application"
+                description="Open the selected file with its associated Windows application (via WSL interop)">
+            <add-to-group group-id="RevealGroup" anchor="last"/>
+        </action>
+
+        <action id="io.nimbly.remotedev.CopyWindowsPath"
+                class="io.nimbly.remotedev.CopyWindowsPathAction"
+                text="Windows Path"
+                description="Copy the Windows form of the selected file's path (via WSL interop)">
+            <add-to-group group-id="CopyReferencePopupGroup" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

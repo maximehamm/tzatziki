@@ -20,5 +20,8 @@ include("extensions:python")
 // Independent plugin (own id io.nimbly.cucumber.python) — NOT part of Cucumber+.
 include("cucumber-python")
 
+// Independent plugin (own id io.nimbly.remotedev) — WSL / Remote Dev quality-of-life helpers.
+include("plugin-remotedev")
+
 include("tests")
 

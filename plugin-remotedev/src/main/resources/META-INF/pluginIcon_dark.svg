@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     width="600px" height="600px" viewBox="0 0 600 600" xml:space="preserve">
+
+  <!-- Base shared with Cucumber+ : the big soft blue disc -->
+  <ellipse style="fill:#9bb2d4;fill-opacity:0.560784" cx="300" cy="300" rx="254" ry="254" />
+
+  <!-- The Windows host window -->
+  <g stroke-linejoin="round">
+    <rect x="118" y="170" width="364" height="260" rx="28"
+          fill="#E8EEF6" stroke="#2E86E0" stroke-width="20" />
+    <!-- title bar -->
+    <rect x="128" y="180" width="344" height="50" rx="14" fill="#2E86E0" />
+    <circle cx="158" cy="205" r="9" fill="#ffffff" />
+    <circle cx="190" cy="205" r="9" fill="#ffffff" />
+    <circle cx="222" cy="205" r="9" fill="#ffffff" />
+  </g>
+
+  <!-- The "+" idea : the Windows four-pane logo inside the window -->
+  <g fill="#2E86E0">
+    <rect x="232" y="262" width="64" height="62" rx="6" />
+    <rect x="308" y="262" width="64" height="62" rx="6" />
+    <rect x="232" y="336" width="64" height="62" rx="6" />
+    <rect x="308" y="336" width="64" height="62" rx="6" />
+  </g>
+
+</svg>
