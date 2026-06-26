@@ -4,14 +4,14 @@ plugins {
 }
 
 group = "io.nimbly.remotedev"
-version = "1.0.0"
+version = "1.0.1"
 
 val notes by extra {"""
        <b>Please kindly report any problem... and Rate &amp; Review this plugin !</b><br/>
        <br/>
        Change notes :
        <ul>
-         <li><b>1.0.0</b> Initial version — restores Windows host integration when working over WSL Remote Development: <b>Open in Explorer</b>, <b>Open in Windows native application</b>, and <b>Copy Windows path</b>.</li>
+         <li><b>1.0.1</b> Initial version — restores Windows host integration when working over WSL Remote Development: <b>Open in Explorer</b>, <b>Open in Windows native application</b>, and <b>Copy Windows path</b>.</li>
        </ul>
       """
 }
