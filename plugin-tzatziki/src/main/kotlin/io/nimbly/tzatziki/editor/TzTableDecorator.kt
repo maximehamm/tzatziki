@@ -32,6 +32,27 @@ import java.awt.Cursor
 import java.awt.Point
 import java.awt.event.MouseEvent
 
+/** FQN + method of the internal `com.intellij.idea.AppMode` used (reflectively) to detect a
+ *  JetBrains Remote Development backend. Kept as constants so ReflectionApiTest can guard them. */
+const val APP_MODE_CLASS = "com.intellij.idea.AppMode"
+const val APP_MODE_REMOTE_DEV_HOST_METHOD = "isRemoteDevHost"
+
+/**
+ * True on a JetBrains Remote Development backend (the headless host whose editor is projected to a
+ * thin client). Such a host relays neither arbitrary Graphics painting (our [TableFrameRenderer])
+ * nor mouse motion/drag events to the client — only serialized markup and discrete clicks. So on a
+ * Remote Dev host we skip the painted frame and the hover/drag gestures (header text-attribute
+ * highlighting still works, as does the table menu on click).
+ *
+ * Detected reflectively on purpose: a compile-time reference to the `@ApiStatus.Internal` AppMode
+ * would make `verifyPlugin` report INTERNAL_API_USAGES and block publishing. Falls back to false.
+ */
+internal val IS_REMOTE_DEV_HOST: Boolean by lazy {
+    runCatching {
+        Class.forName(APP_MODE_CLASS).getMethod(APP_MODE_REMOTE_DEV_HOST_METHOD).invoke(null) as Boolean
+    }.getOrDefault(false)
+}
+
 /**
  * Draws a rounded-corner grid around Gherkin tables and handles hover + popup interactions.
  *
@@ -197,13 +218,17 @@ class TzTableDecorator : EditorFactoryListener {
             val geometry        = TableGeometry(firstLine, lastLine, pipeOffsets, headerLine)
             newGeometries += geometry
 
-            val h = markupModel.addRangeHighlighter(
-                null, firstLineStart, lastLineEnd,
-                HighlighterLayer.SYNTAX - 1,
-                HighlighterTargetArea.LINES_IN_RANGE
-            )
-            h.setCustomRenderer(TableFrameRenderer(editor, geometry, firstLineStart, lastLineEnd, pipeOffsets, headerLineStart, renderState))
-            newHighlighters += h
+            // The painted frame is a CustomHighlighterRenderer (arbitrary Graphics) — not relayed to
+            // a Remote Dev thin client, so skip it there. Header highlighting below still applies.
+            if (!IS_REMOTE_DEV_HOST) {
+                val h = markupModel.addRangeHighlighter(
+                    null, firstLineStart, lastLineEnd,
+                    HighlighterLayer.SYNTAX - 1,
+                    HighlighterTargetArea.LINES_IN_RANGE
+                )
+                h.setCustomRenderer(TableFrameRenderer(editor, geometry, firstLineStart, lastLineEnd, pipeOffsets, headerLineStart, renderState))
+                newHighlighters += h
+            }
 
             for (line in firstLine..lastLine) {
                 val lineStart = document.getLineStartOffset(line)
@@ -241,6 +266,7 @@ class TzTableDecorator : EditorFactoryListener {
     // ---- Mouse handling ----
 
     private fun handleMouseMove(editor: Editor, e: EditorMouseEvent) {
+        if (IS_REMOTE_DEV_HOST) return   // no painted frame / hand cursor on a Remote Dev backend
         var hover = findHover(editor, e.mouseEvent.point)
         // Drag-and-drop disabled → don't change the look of the draggable frame bars on hover (no
         // highlight, no hand cursor). The frame still opens the table menu on click (fresh findHover).
@@ -300,6 +326,7 @@ class TzTableDecorator : EditorFactoryListener {
     // ---- Drag-and-drop: row/column reorder ----
 
     private fun handleMousePressed(editor: Editor, e: EditorMouseEvent) {
+        if (IS_REMOTE_DEV_HOST) return   // drag gestures aren't relayed to a Remote Dev thin client
         if (e.mouseEvent.button != MouseEvent.BUTTON1) return
         if (!io.nimbly.tzatziki.config.TzSettings.getInstance().isDragAndDropEnabled()) return   // Settings → Tools → Cucumber+ (click-to-menu still works)
         val hover = findHover(editor, e.mouseEvent.point) ?: return

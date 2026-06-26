@@ -33,6 +33,10 @@ class TzSettingsConfigurable : BoundConfigurable("Cucumber+") {
 
     override fun createPanel(): DialogPanel {
         val s = TzSettings.getInstance().state
+        // On a Remote Dev backend the painted frame + drag gestures aren't relayed to the thin
+        // client (see TzTableDecorator.IS_REMOTE_DEV_HOST), so grey out the two checkboxes that
+        // wouldn't take effect there and say why.
+        val rd = io.nimbly.tzatziki.editor.IS_REMOTE_DEV_HOST
         lateinit var master: Cell<JBCheckBox>
         return panel {
             row {
@@ -64,13 +68,21 @@ class TzSettingsConfigurable : BoundConfigurable("Cucumber+") {
                     }
                     row {
                         checkBox("Drag-and-drop reordering of rows and columns")
-                            .comment("Drag the left frame to move a row, the top frame to move a column. Off → the frame still opens the table menu on click.")
+                            .comment(
+                                if (rd) "Not available over Remote Development — drag gestures aren't relayed to the thin client."
+                                else "Drag the left frame to move a row, the top frame to move a column. Off → the frame still opens the table menu on click."
+                            )
                             .bindSelected(s::dragAndDrop)
+                            .enabled(!rd)
                     }
                     row {
                         checkBox("Draw the table frame (border decoration)")
-                            .comment("The frame around tables (also the surface for the menu / drag gestures). Off → tables render without a frame.")
+                            .comment(
+                                if (rd) "Not available over Remote Development — the painted frame isn't relayed to the thin client."
+                                else "The frame around tables (also the surface for the menu / drag gestures). Off → tables render without a frame."
+                            )
                             .bindSelected(s::tableFrame)
+                            .enabled(!rd)
                     }
                 }
                 group("Steps & definitions") {

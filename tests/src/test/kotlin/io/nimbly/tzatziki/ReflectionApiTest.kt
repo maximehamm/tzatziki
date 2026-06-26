@@ -18,6 +18,8 @@ import org.junit.Assert.fail
 import org.junit.Test
 import com.intellij.refactoring.rename.RenameHandler
 import io.nimbly.tzatziki.rename.CUCUMBER_STEP_RENAME_HANDLER
+import io.nimbly.tzatziki.editor.APP_MODE_CLASS
+import io.nimbly.tzatziki.editor.APP_MODE_REMOTE_DEV_HOST_METHOD
 
 /**
  * Verifies that every class, method, and field accessed via reflection still exists
@@ -188,5 +190,36 @@ class ReflectionApiTest {
             "$CUCUMBER_STEP_RENAME_HANDLER is no longer a RenameHandler — revisit TzRenameHandlerStartup.",
             RenameHandler::class.java.isAssignableFrom(clazz!!),
         )
+    }
+
+    // -------------------------------------------------------------------------
+    // AppMode.isRemoteDevHost  (optional — has silent fallback)
+    //
+    // TzTableDecorator calls this reflectively to skip the painted table frame + drag gestures on a
+    // Remote Development backend (they aren't relayed to the thin client). AppMode is @Internal, so
+    // we must NOT reference it at compile time (verifyPlugin would flag INTERNAL_API_USAGES).
+    // If it disappears, production falls back to false → the frame/drag silently come back (and
+    // stay broken under Remote Dev), so warn here rather than fail the build.
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `AppMode isRemoteDevHost still exists (optional — Remote Dev frame-disable fallback)`() {
+        val clazz = runCatching { Class.forName(APP_MODE_CLASS) }.getOrNull()
+        if (clazz == null) {
+            println("WARNING: $APP_MODE_CLASS not found — TzTableDecorator can no longer detect a " +
+                    "Remote Dev backend; the painted table frame/drag will be left enabled there.")
+            return
+        }
+        val method = runCatching { clazz.getMethod(APP_MODE_REMOTE_DEV_HOST_METHOD) }.getOrNull()
+        if (method == null) {
+            println("WARNING: $APP_MODE_CLASS.$APP_MODE_REMOTE_DEV_HOST_METHOD() not found — " +
+                    "update TzTableDecorator.IS_REMOTE_DEV_HOST.")
+        } else {
+            assertTrue(
+                "$APP_MODE_CLASS.$APP_MODE_REMOTE_DEV_HOST_METHOD must return boolean",
+                method.returnType == java.lang.Boolean.TYPE,
+            )
+            println("INFO: $APP_MODE_CLASS.$APP_MODE_REMOTE_DEV_HOST_METHOD OK")
+        }
     }
 }

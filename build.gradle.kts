@@ -4,7 +4,7 @@ import java.net.URI
 
 allprojects {
     group = "io.nimbly.tzatziki"
-    version = "25.0.0"
+    version = "25.0.1"
 }
 
 val notes by extra {"""
@@ -12,6 +12,8 @@ val notes by extra {"""
        <br/>
        Change notes :
        <ul>
+
+         <li><b>25.0.1</b> Remote Development (WSL/SSH) fix: the table frame and drag-and-drop are now cleanly disabled on a remote backend (where they can't be drawn/relayed to the thin client) instead of half-working — header highlighting and the table menu still work. The two settings are greyed out there.</li>
 
          <li><b>25.0.0</b> <b>New settings page</b> (Settings → Tools → Cucumber+) — enable/disable each
 in-editor behaviour individually, or all at once with the master switch: the <i>"Rename steps and
