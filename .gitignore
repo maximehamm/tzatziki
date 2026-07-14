@@ -47,3 +47,7 @@ bin/
 
 ### Publish run configs — contain the Marketplace PublishToken, never commit ###
 /.idea/runConfigurations/Publish_*.xml
+
+### .NET / Rider test sample (sample/rider) — build output & IDE metadata ###
+sample/rider/obj/
+sample/rider/.idea/
